@@ -1,0 +1,45 @@
+import { useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { MobileNav } from "@/layouts/MobileNav";
+import { OlympusLogo } from "@/components/OlympusLogo";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
+import {
+  getActiveSectionFromPath,
+  getActiveSubItemFromPath,
+} from "@/lib/navigation";
+
+export function Header() {
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const activeSection = getActiveSectionFromPath(location.pathname);
+  const activeItem = getActiveSubItemFromPath(location.pathname);
+
+  const title = activeItem?.label ?? activeSection?.sidebarTitle ?? "Olympus";
+
+  if (isMobile) {
+    return (
+      <header className="flex items-center justify-between px-4 py-4">
+        <div className="flex items-center gap-3">
+          <MobileNav />
+          <OlympusLogo className="size-6" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" className="rounded-full px-3 text-xs">
+            0x3DC2...56GF
+          </Button>
+        </div>
+      </header>
+    );
+  }
+
+  return (
+    <header className="flex items-center justify-between px-8 py-6">
+      <h1 className="text-2xl font-bold text-primary-t">{title}</h1>
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" className="rounded-full px-4">
+          0x3DC2...56GF
+        </Button>
+      </div>
+    </header>
+  );
+}
