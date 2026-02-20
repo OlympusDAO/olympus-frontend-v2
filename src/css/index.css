@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* fonts */
+@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";
+
+@import "./variables.css";
+@import "./theme.css";
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-medium text-primary-t;
+    font-family: "Neue Haas Display", sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--background);
+    margin: 0;
+  }
+}
