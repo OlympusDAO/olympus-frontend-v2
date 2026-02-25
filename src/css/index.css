@@ -22,4 +22,14 @@
     background: var(--background);
     margin: 0;
   }
+
+  /* Fix for RainbowKit modal not being clickable in drawer */
+  [aria-labelledby="rk_connect_title"] {
+    @apply pointer-events-auto;
+  }
+
+  /* Override RainbowKit font to match app */
+  [data-rk] {
+    font-family: "Neue Haas Display", sans-serif !important;
+  }
 }
