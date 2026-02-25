@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/components/providers";
 import { IconSidebar } from "@/layouts/IconSidebar";
 import { SubNav } from "@/layouts/SubNav";
 import { Header } from "@/layouts/Header";
 
 export default function AppLayout() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="olympus-theme">
+    <Providers>
       <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
         {/* Desktop sidebars — hidden on mobile */}
         <div className="hidden md:flex">
@@ -22,6 +22,6 @@ export default function AppLayout() {
           </div>
         </main>
       </div>
-    </ThemeProvider>
+    </Providers>
   );
 }

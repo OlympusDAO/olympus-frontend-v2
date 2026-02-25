@@ -26,7 +26,7 @@ export type NavSection = {
   items: NavItem[];
 };
 
-export type BottomNavItem = {
+type BottomNavItem = {
   id: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
