@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { ConnectButton } from "@/components/connect-button";
 import { MobileNav } from "@/layouts/MobileNav";
-import { OlympusLogo } from "@/components/OlympusLogo";
+import { OlympusLogo } from "@/components/olympus-logo";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import {
   getActiveSectionFromPath,

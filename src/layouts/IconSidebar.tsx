@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { OlympusLogo } from "@/components/OlympusLogo";
-import { MoreMenu } from "@/components/MoreMenu";
+import { OlympusLogo } from "@/components/olympus-logo";
+import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   BOTTOM_NAV,
