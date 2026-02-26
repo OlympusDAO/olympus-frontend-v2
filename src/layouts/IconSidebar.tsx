@@ -27,9 +27,9 @@ function IconNavItem({
     >
       <div
         className={cn(
-          "flex items-center justify-center size-10 rounded-full transition-all",
+          "flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent",
           !isActive &&
-            "group-hover:bg-white/5 group-hover:border-[0.5px] group-hover:border-white/[0.03]"
+            "group-hover:bg-surface-a5 group-hover:border-a3-b"
         )}
         style={
           isActive
@@ -43,14 +43,14 @@ function IconNavItem({
         <Icon
           className={cn(
             "size-6 transition-colors",
-            isActive ? "text-white" : "text-secondary-t group-hover:text-white"
+            isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
           )}
         />
       </div>
       <span
         className={cn(
           "text-xs font-semibold leading-[12px] transition-colors",
-          isActive ? "text-white" : "text-secondary-t group-hover:text-white"
+          isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
         )}
       >
         {section.label}
@@ -100,9 +100,9 @@ export function IconSidebar() {
               href={docsItem.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-center size-10 rounded-full transition-all hover:bg-white/5 hover:border-[0.5px] hover:border-white/[0.03]"
+              className="group flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent hover:bg-surface-a5 hover:border-a3-b"
             >
-              <docsItem.icon className="size-6 text-secondary-t group-hover:text-white transition-colors" />
+              <docsItem.icon className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
             </a>
           )}
           <MoreMenu />
