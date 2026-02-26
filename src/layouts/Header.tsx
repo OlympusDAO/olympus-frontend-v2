@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ConnectButton } from "@/components/connect-button";
 import { MobileNav } from "@/layouts/MobileNav";
@@ -15,6 +16,13 @@ export function Header() {
   const activeItem = getActiveSubItemFromPath(location.pathname);
 
   const title = activeItem?.label ?? activeSection?.sidebarTitle ?? "Olympus";
+
+  useEffect(() => {
+    const parts: string[] = [];
+    if (activeItem?.label) parts.push(activeItem.label);
+    if (activeSection?.sidebarTitle) parts.push(activeSection.sidebarTitle);
+    document.title = parts.length > 0 ? `${parts.join(" - ")} | Olympus` : "Olympus";
+  }, [activeItem, activeSection]);
 
   if (isMobile) {
     return (
