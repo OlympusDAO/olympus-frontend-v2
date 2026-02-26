@@ -3,6 +3,7 @@ import { Providers } from "@/components/providers";
 import { IconSidebar } from "@/layouts/IconSidebar";
 import { SubNav } from "@/layouts/SubNav";
 import { Header } from "@/layouts/Header";
+import { ToasterProvider } from "@/components/ui/sonner";
 
 export default function AppLayout() {
   return (
@@ -22,6 +23,7 @@ export default function AppLayout() {
           </div>
         </main>
       </div>
+      <ToasterProvider />
     </Providers>
   );
 }

@@ -8,7 +8,7 @@ function shortenAddress(address: string): string {
 }
 
 export function ConnectButton() {
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   return (
     <RainbowConnectButton.Custom>

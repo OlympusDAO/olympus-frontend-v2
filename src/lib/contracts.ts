@@ -1,4 +1,7 @@
 import type { Address } from "viem";
+
+export type ChainId = number;
+
 import {
   mainnet,
   arbitrum,

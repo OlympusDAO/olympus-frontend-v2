@@ -10,7 +10,7 @@ import {
 
 export function Header() {
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const activeSection = getActiveSectionFromPath(location.pathname);
   const activeItem = getActiveSubItemFromPath(location.pathname);
 

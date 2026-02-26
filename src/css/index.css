@@ -8,8 +8,12 @@
 @import "./theme.css";
 
 @layer base {
-  * {
-    @apply border-border;
+  /* Remove default focus states */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
   }
 
   body {
@@ -32,4 +36,30 @@
   [data-rk] {
     font-family: "Neue Haas Display", sans-serif !important;
   }
+
+  /* Hide elements depending on the current theme */
+  .dark [data-hide-on-theme="dark"],
+  .light [data-hide-on-theme="light"] {
+    display: none;
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    @apply appearance-none;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Pointer cursor for interactive elements */
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+
 }

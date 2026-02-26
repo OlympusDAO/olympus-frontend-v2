@@ -1,6 +1,9 @@
 import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/StubPage";
+import { CDPage } from "@/modules/cds/pages";
+import { BorrowPage } from "@/modules/borrow/pages";
+import { StatisticsPage } from "@/modules/statistics/pages";
 
 export const router = createHashRouter([
   {
@@ -23,9 +26,9 @@ export const router = createHashRouter([
       { path: "cooler/metrics", element: <StubPage title="Metrics" /> },
 
       // CDs section
-      { path: "cds/deposit", element: <StubPage title="Deposit" /> },
-      { path: "cds/borrow", element: <StubPage title="Borrow" /> },
-      { path: "cds/statistics", element: <StubPage title="Statistics" /> },
+      { path: "cds/deposit", element: <CDPage /> },
+      { path: "cds/borrow", element: <BorrowPage /> },
+      { path: "cds/statistics", element: <StatisticsPage /> },
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
       // DAO section
