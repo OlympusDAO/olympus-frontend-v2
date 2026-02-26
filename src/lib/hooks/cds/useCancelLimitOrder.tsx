@@ -1,0 +1,205 @@
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useAccount,
+  useChainId,
+} from "wagmi";
+import type { ContractFunctionArgs } from "viem";
+import {
+  useTransactionToast,
+  TransactionToastConfig,
+} from "@/lib/hooks/useTransactionToast";
+import { getContractAddress, ContractName } from "@/lib/contracts";
+import { getTokenAddress } from "@/lib/tokens";
+import LimitOrdersABI from "@/abis/LimitOrders";
+
+type CancelOrderArgs = ContractFunctionArgs<
+  typeof LimitOrdersABI,
+  "nonpayable",
+  "cancelOrder"
+>;
+
+export function useCancelLimitOrder() {
+  const queryClient = useQueryClient();
+  const { address } = useAccount();
+  const chainId = useChainId();
+
+  const {
+    data: hash,
+    writeContract,
+    isPending: isWritePending,
+    error: writeError,
+    reset: resetWrite,
+  } = useWriteContract();
+
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
+    hash,
+    confirmations: 1,
+  });
+
+  // Toast configuration for cancelOrder transactions
+  const toastConfig: TransactionToastConfig = {
+    pending: {
+      title: "Cancelling order...",
+      description: "Please wait while your order is cancelled.",
+    },
+    success: {
+      title: "Order cancelled!",
+      description: "Your limit order has been cancelled and USDS returned.",
+    },
+    error: {
+      title: "Order cancellation failed",
+      description:
+        "There was an error cancelling your order. Please try again.",
+      userRejected: {
+        title: "Cancellation cancelled",
+        description: "You cancelled the transaction.",
+      },
+      insufficientFunds: {
+        title: "Insufficient funds",
+        description: "You don't have enough ETH for gas fees.",
+      },
+    },
+  };
+
+  // Handle toast notifications using the reusable hook
+  const { reset: resetToast } = useTransactionToast({
+    hash,
+    isWritePending,
+    isConfirmed,
+    writeError,
+    confirmError,
+    config: toastConfig,
+  });
+
+  // Invalidate relevant queries when order cancellation succeeds
+  useEffect(() => {
+    if (isConfirmed && address && chainId) {
+      const limitOrdersAddress = getContractAddress(
+        ContractName.LIMIT_ORDERS,
+        chainId
+      );
+
+      if (limitOrdersAddress) {
+        // Invalidate user's limit orders query
+        queryClient.invalidateQueries({
+          queryKey: [
+            "readContract",
+            {
+              address: limitOrdersAddress,
+              functionName: "getOrdersForUser",
+              args: [address],
+            },
+          ],
+        });
+
+        // Invalidate all getOrder queries
+        queryClient.invalidateQueries({
+          queryKey: [
+            "readContracts",
+            {
+              contracts: [
+                {
+                  address: limitOrdersAddress,
+                  functionName: "getOrder",
+                },
+              ],
+            },
+          ],
+        });
+
+        // Invalidate USDS token balance (funds returned)
+        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        if (usdsTokenAddress) {
+          queryClient.invalidateQueries({
+            queryKey: [
+              "readContract",
+              {
+                address: usdsTokenAddress,
+                functionName: "balanceOf",
+              },
+            ],
+          });
+        }
+
+        // Invalidate token balances
+        queryClient.invalidateQueries({
+          queryKey: ["tokenBalances"],
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: ["readContracts"],
+        });
+      }
+    }
+  }, [isConfirmed, address, chainId, queryClient]);
+
+  const cancelOrder = ({
+    orderId,
+    queryKey,
+  }: {
+    orderId: CancelOrderArgs[0];
+    queryKey?: readonly unknown[];
+  }) => {
+    const limitOrdersAddress = getContractAddress(
+      ContractName.LIMIT_ORDERS,
+      chainId
+    );
+
+    if (!limitOrdersAddress) {
+      console.error(
+        `Limit Orders contract not found on chain ${chainId}`
+      );
+      return;
+    }
+
+    // Reset both Wagmi state and toast state for new transaction
+    resetWrite();
+    resetToast();
+
+    writeContract(
+      {
+        address: limitOrdersAddress,
+        abi: LimitOrdersABI,
+        functionName: "cancelOrder",
+        args: [orderId],
+      },
+      {
+        onSuccess: () => {
+          if (queryKey) {
+            queryClient.invalidateQueries({ queryKey });
+          }
+        },
+      }
+    );
+  };
+
+  const reset = () => {
+    resetWrite();
+    resetToast();
+  };
+
+  const isPending = isWritePending || isConfirming;
+  const isSuccess = isConfirmed;
+  const error = writeError || confirmError;
+
+  return {
+    cancelOrder,
+    isPending,
+    isSuccess,
+    error,
+    hash,
+    reset,
+    // Granular states for advanced use cases
+    isWritePending,
+    isConfirming,
+    writeError,
+    confirmError,
+  };
+}

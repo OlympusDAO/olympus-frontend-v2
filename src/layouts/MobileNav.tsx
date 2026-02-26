@@ -4,8 +4,8 @@ import { Menu, ExternalLink, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { OlympusLogo } from "@/components/OlympusLogo";
-import { MoreMenu } from "@/components/MoreMenu";
+import { OlympusLogo } from "@/components/olympus-logo";
+import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   getActiveSectionFromPath,
