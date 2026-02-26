@@ -23,6 +23,16 @@ pnpm tsc --noEmit # Type check (no emit)
 
 Package manager: **pnpm 10** (do not use npm or yarn).
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in values:
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect Cloud project ID for wallet connections |
+| `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
+| `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
+
 ## Project Structure
 
 ```
