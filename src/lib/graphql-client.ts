@@ -1,7 +1,7 @@
 import { GraphQLClient } from "graphql-request";
-import { GRAPHQL_ENDPOINT } from "@/lib/constants";
+import { CDS_GRAPHQL_ENDPOINT } from "@/lib/constants";
 
-export const cdsGraphqlClient = new GraphQLClient(GRAPHQL_ENDPOINT);
+export const cdsGraphqlClient = new GraphQLClient(CDS_GRAPHQL_ENDPOINT);
 
 const COOLER_SUBGRAPH_URL = import.meta.env.VITE_COOLER_METRICS_SUBGRAPH;
 
