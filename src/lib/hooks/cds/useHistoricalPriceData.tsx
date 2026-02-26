@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { GRAPHQL_ENDPOINT } from "@/lib/constants";
+import { cdsGraphqlClient } from "@/lib/graphql-client";
 
 export interface HistoricalBid {
   timestamp: number;
@@ -131,14 +131,7 @@ export function useHistoricalPriceData(
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       return {
         bids: (data?.convertibleDepositAuctioneerBids?.items || []).map(

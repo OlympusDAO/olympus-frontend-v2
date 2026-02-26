@@ -118,7 +118,7 @@ export function getActiveSectionFromPath(pathname: string): NavSection | undefin
 export function getActiveSubItemFromPath(pathname: string): NavItem | undefined {
   const section = getActiveSectionFromPath(pathname);
   if (!section) return undefined;
-  return section.items.find((item) => !item.external && pathname === item.path);
+  return section.items.find((item) => !item.external && (pathname === item.path || pathname.startsWith(item.path + "/")));
 }
 
 export function getDefaultPathForSection(section: NavSection): string {

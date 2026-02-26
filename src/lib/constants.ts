@@ -1,1 +1,1 @@
-export const GRAPHQL_ENDPOINT = "https://olympus-convertible-deposits-indexer.up.railway.app/";
+export const CDS_GRAPHQL_ENDPOINT = import.meta.env.VITE_CDS_GRAPHQL_ENDPOINT as string;

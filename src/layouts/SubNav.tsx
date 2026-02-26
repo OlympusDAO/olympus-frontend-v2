@@ -64,7 +64,7 @@ export function SubNav() {
             <SubNavItem
               key={item.path}
               item={item}
-              isActive={!item.external && location.pathname === item.path}
+              isActive={!item.external && (location.pathname === item.path || location.pathname.startsWith(item.path + "/"))}
             />
           ))}
         </nav>

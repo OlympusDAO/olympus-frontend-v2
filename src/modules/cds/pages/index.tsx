@@ -361,8 +361,8 @@ export const CDPage = () => {
               {isLimitOrdersEnabled && (
                 <Tabs value={orderType} onValueChange={(v) => setOrderType(v as "market" | "limit")}>
                   <TabsList className="rounded-full w-fit">
-                    <TabsTrigger value="market">Market</TabsTrigger>
-                    <TabsTrigger value="limit">Limit</TabsTrigger>
+                    <TabsTrigger value="market" className="rounded-full">Market</TabsTrigger>
+                    <TabsTrigger value="limit" className="rounded-full">Limit</TabsTrigger>
                   </TabsList>
                 </Tabs>
               )}
@@ -592,8 +592,8 @@ export const CDPage = () => {
       <div>
         <Tabs value={positionTab} onValueChange={(v) => setPositionTab(v as "active" | "orders")}>
           <TabsList className="rounded-full w-fit mb-3">
-            <TabsTrigger value="active">Active Positions</TabsTrigger>
-            <TabsTrigger value="orders">Open Orders</TabsTrigger>
+            <TabsTrigger value="active" className="rounded-full">Active Positions</TabsTrigger>
+            <TabsTrigger value="orders" className="rounded-full">Open Orders</TabsTrigger>
           </TabsList>
         </Tabs>
 

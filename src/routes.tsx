@@ -4,6 +4,12 @@ import { StubPage } from "@/pages/StubPage";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
+import { CoolerMetricsPage } from "@/modules/cooler-metrics/pages";
+import { CoolerActivityLayout } from "@/modules/cooler-activity/pages";
+import { V2ActivityFeed } from "@/modules/cooler-activity/components/v2-activity-feed";
+import { AccountsView } from "@/modules/cooler-activity/components/accounts-view";
+import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
+import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 
 export const router = createHashRouter([
   {
@@ -22,8 +28,18 @@ export const router = createHashRouter([
 
       // Cooler section
       { path: "cooler/borrow", element: <StubPage title="Borrow" /> },
-      { path: "cooler/activity", element: <StubPage title="Activity" /> },
-      { path: "cooler/metrics", element: <StubPage title="Metrics" /> },
+      {
+        path: "cooler/activity",
+        element: <CoolerActivityLayout />,
+        children: [
+          { index: true, element: <Navigate to="/cooler/activity/feed" replace /> },
+          { path: "feed", element: <V2ActivityFeed /> },
+          { path: "accounts", element: <AccountsView /> },
+          { path: "active-loans", element: <V1ActiveLoansTable /> },
+          { path: "defaulted-loans", element: <V1DefaultedLoansTable /> },
+        ],
+      },
+      { path: "cooler/metrics", element: <CoolerMetricsPage /> },
 
       // CDs section
       { path: "cds/deposit", element: <CDPage /> },
