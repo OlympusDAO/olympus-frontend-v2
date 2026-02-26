@@ -216,8 +216,8 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
               onValueChange={(v) => onOrderTypeChange?.(v as "market" | "limit")}
             >
               <TabsList className="rounded-full w-fit">
-                <TabsTrigger value="market">Market</TabsTrigger>
-                <TabsTrigger value="limit">Limit</TabsTrigger>
+                <TabsTrigger value="market" className="rounded-full">Market</TabsTrigger>
+                <TabsTrigger value="limit" className="rounded-full">Limit</TabsTrigger>
               </TabsList>
             </Tabs>
           )}

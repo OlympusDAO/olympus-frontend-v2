@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { GRAPHQL_ENDPOINT } from "@/lib/constants";
+import { cdsGraphqlClient } from "@/lib/graphql-client";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -177,14 +177,7 @@ export function useStatisticsData(timeRange: TimeRange = "7d") {
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       return {
         depositSnapshots: (data?.depositFacilityAssetSnapshots?.items || []).map(
@@ -259,14 +252,7 @@ export function useCurrentStatistics() {
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       const snapshots = (data?.depositFacilityAssetSnapshots?.items || []).map(
         (item: Record<string, string>) => ({
@@ -310,14 +296,7 @@ export function useAllTimeDeposits() {
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       const bids = data?.convertibleDepositAuctioneerBids?.items || [];
       return bids.reduce(
@@ -356,14 +335,7 @@ export function useAllTimeConvertibleOhm() {
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       const bids = data?.convertibleDepositAuctioneerBids?.items || [];
       return bids.reduce(
@@ -416,14 +388,7 @@ export function useCurrentConvertibleOhm() {
         }
       `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "GraphQL error");
+      const data = await cdsGraphqlClient.request(query);
 
       // Get total deposits USD from snapshot (totalDeposited + borrowedAmount)
       const snapshot = data?.depositFacilityAssetSnapshots?.items?.[0];
