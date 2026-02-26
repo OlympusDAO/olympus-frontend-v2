@@ -27,33 +27,20 @@ export function MoreMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="group flex items-center justify-center size-10 rounded-full transition-all hover:bg-white/5 hover:border-[0.5px] hover:border-white/[0.03] cursor-pointer outline-none">
-          <MoreHorizontal className="size-6 text-secondary-t group-hover:text-white transition-colors" />
+        <button className="group flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent hover:bg-surface-a5 hover:border-a3-b cursor-pointer outline-none">
+          <MoreHorizontal className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="right"
         align="end"
         sideOffset={12}
-        className="w-[200px] p-0 overflow-hidden"
-        style={{
-          background: "#353742",
-          border: "0.5px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "24px",
-          boxShadow:
-            "0px 0px 0px 1px rgba(0,0,0,0.01), 0px 1px 1px -0.5px rgba(0,0,0,0.02), 0px 3px 3px -1.5px rgba(0,0,0,0.02), 0px 6px 6px -3px rgba(0,0,0,0.02), 0px 12px 12px -6px rgba(0,0,0,0.02), 0px 24px 24px -12px rgba(0,0,0,0.03)",
-        }}
+        className="w-[200px] p-0 overflow-hidden bg-surface-tooltip border-a10-b rounded-3xl"
       >
         {/* Row 1: Theme picker — 48px */}
         <div className="flex items-center justify-between h-12 pl-4 pr-1">
-          <span className="text-[15px] font-semibold text-white">Theme</span>
-          <div
-            className="flex items-center gap-0.5 rounded-full p-1"
-            style={{
-              background: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.03)",
-            }}
-          >
+          <span className="text-[15px] font-semibold text-primary-t">Theme</span>
+          <div className="flex items-center gap-0.5 rounded-full p-1 bg-surface-a3 border border-a3-b">
             {THEME_OPTIONS.map((option) => {
               const Icon = option.icon;
               const isActive = theme === option.value;
@@ -63,9 +50,8 @@ export function MoreMenu() {
                   onClick={() => setTheme(option.value)}
                   className={cn(
                     "flex items-center justify-center size-8 rounded-full transition-colors cursor-pointer",
-                    isActive ? "text-white" : "text-white/60 hover:text-white/80"
+                    isActive ? "bg-surface-a10 text-primary-t" : "text-secondary-t hover:text-primary-t"
                   )}
-                  style={isActive ? { background: "#474955" } : undefined}
                   title={option.label}
                 >
                   <Icon className="size-5" />
@@ -80,20 +66,16 @@ export function MoreMenu() {
           href="https://immunefi.com/bounty/olympus/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between h-12 px-3 hover:bg-white/5 transition-colors"
-          style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
+          className="flex items-center justify-between h-12 px-3 hover:bg-surface-a5 transition-colors border-t border-a10-b"
         >
           <div className="flex items-center gap-2 px-1.5 py-2.5">
-            <span className="text-[15px] font-semibold text-white">Bug Bounty</span>
+            <span className="text-[15px] font-semibold text-primary-t">Bug Bounty</span>
           </div>
-          <ExternalLink className="size-5 text-white/40" />
+          <ExternalLink className="size-5 text-tertiary-t" />
         </a>
 
         {/* Row 3: Social links — 48px */}
-        <div
-          className="flex items-center justify-center h-12 gap-1 px-1"
-          style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
-        >
+        <div className="flex items-center justify-center h-12 gap-1 px-1 border-t border-a10-b">
           {SOCIAL_LINKS.map((link) => {
             const Icon = link.icon;
             return (
@@ -102,7 +84,7 @@ export function MoreMenu() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center h-10 rounded-full text-white/60 hover:text-white/80 transition-colors"
+                className="flex-1 flex items-center justify-center h-10 rounded-full text-secondary-t hover:text-primary-t transition-colors"
                 title={link.label}
               >
                 <Icon className="size-5" />

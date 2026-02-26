@@ -17,6 +17,8 @@ Requires Node.js 20+ and pnpm.
 | Variable | Required | Description |
 |---|---|---|
 | `VITE_WALLETCONNECT_PROJECT_ID` | Yes | [WalletConnect Cloud](https://cloud.walletconnect.com) project ID |
+| `VITE_CDS_GRAPHQL_ENDPOINT` | Yes (CDs) | Convertible Deposits indexer URL |
+| `VITE_COOLER_METRICS_SUBGRAPH` | Yes (Cooler) | Cooler Loans subgraph URL |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 
