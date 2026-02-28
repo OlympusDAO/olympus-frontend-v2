@@ -7,7 +7,6 @@ import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 import { RiExternalLinkLine } from "@remixicon/react";
-import { CD_APP_URL } from "@/lib/constants";
 
 export function CdStatistics() {
   const { data: cd, isLoading: cdLoading } = useCdStatistics();
@@ -51,7 +50,7 @@ export function CdStatistics() {
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between">
         <a
-          href={CD_APP_URL}
+          href="/#/cds/deposit"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-1.5 transition-colors hover:text-green"

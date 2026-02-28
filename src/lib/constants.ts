@@ -15,10 +15,6 @@ export const TREASURY_API_URL =
 export const DEFILLAMA_YIELDS_URL = "https://yields.llama.fi";
 export const ETHERSCAN_BASE_URL = "https://etherscan.io";
 
-// Olympus App URLs
-export const CD_APP_URL = "https://deposit.olympusdao.finance";
-export const COOLER_APP_URL = "https://app.olympusdao.finance/#/lending";
-
 // DeFiLlama Pool IDs for yield-bearing reserves
 export const DEFILLAMA_POOLS = {
   SUSDE: "66985a81-9c51-46ca-9977-42b4fe7bc6df",

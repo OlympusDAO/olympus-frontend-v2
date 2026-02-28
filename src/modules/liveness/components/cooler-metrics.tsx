@@ -6,7 +6,6 @@ import { useCoolerMetrics } from "@/lib/hooks/liveness/useCoolerMetrics";
 import { useWeeklyRevenue } from "@/lib/hooks/liveness/useWeeklyRevenue";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 import { RiExternalLinkLine } from "@remixicon/react";
-import { COOLER_APP_URL } from "@/lib/constants";
 
 export function CoolerMetrics() {
   const { data: cooler, isLoading } = useCoolerMetrics();
@@ -34,7 +33,7 @@ export function CoolerMetrics() {
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between">
         <a
-          href={COOLER_APP_URL}
+          href="/#/cooler/borrow"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-1.5 transition-colors hover:text-green"
