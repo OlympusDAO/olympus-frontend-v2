@@ -10,6 +10,7 @@ import { V2ActivityFeed } from "@/modules/cooler-activity/components/v2-activity
 import { AccountsView } from "@/modules/cooler-activity/components/accounts-view";
 import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
+import { LivenessPage } from "@/modules/liveness/pages";
 
 export const router = createHashRouter([
   {
@@ -25,6 +26,7 @@ export const router = createHashRouter([
       { path: "home/bridge", element: <StubPage title="Bridge OHM" /> },
       { path: "home/treasury", element: <StubPage title="Treasury Dashboard" /> },
       { path: "home/feed", element: <StubPage title="Protocol Feed" /> },
+      { path: "home/liveness", element: <LivenessPage /> },
 
       // Cooler section
       { path: "cooler/borrow", element: <StubPage title="Borrow" /> },
