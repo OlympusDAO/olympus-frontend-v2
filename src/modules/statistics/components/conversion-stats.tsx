@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
 import { RiInformationFill } from "@remixicon/react";
 import { useCurrentConvertibleOhm } from "@/lib/hooks/cds/useStatisticsData";
-import { useTreasuryMetrics } from "@/lib/hooks/cds/useTreasuryMetrics";
+import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
 
 interface StatCardProps {
   title: string;

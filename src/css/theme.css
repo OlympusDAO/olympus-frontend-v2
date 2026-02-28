@@ -55,6 +55,7 @@
   --color-red: var(--red);
   --color-blue: var(--blue);
   --color-purple: var(--purple);
+  --color-orange: var(--orange);
 
   /*custom variables*/
   --color-primary-t: var(--text-primary);
@@ -97,6 +98,9 @@
   --shadow-card-dark: 0px 4px 16px rgba(255,255,255,0.05), 0px 0px 0px 0.5px rgba(255,255,255,0.1), inset 1px 1px 2px --alpha(var(--slate) / 0.1);
 
   --animate-spinner: spinner 1200ms linear infinite;
+  --animate-heartbeat-ring: heartbeat-ring 2.5s ease-out infinite;
+  --animate-heartbeat-ring-delayed: heartbeat-ring 2.5s ease-out 1.25s infinite;
+  --animate-shimmer-green: shimmer-green 3s ease-in-out infinite;
 
   @keyframes spinner {
     0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
@@ -104,6 +108,17 @@
     50%  { transform: scale(1) rotate(  0deg); opacity: 1; }
     62.5%{ transform: scale(0) rotate( 45deg); opacity: 0; }
     100% { transform: scale(0) rotate( 45deg); opacity: 0; }
+  }
+
+  @keyframes heartbeat-ring {
+    0%   { transform: scale(1); opacity: 0.6; }
+    70%  { transform: scale(3.5); opacity: 0; }
+    100% { transform: scale(3.5); opacity: 0; }
+  }
+
+  @keyframes shimmer-green {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
   }
 
   --text-xs: 0.75rem;

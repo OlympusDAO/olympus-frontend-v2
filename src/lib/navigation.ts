@@ -47,6 +47,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Bridge OHM", path: "/home/bridge" },
       { label: "Treasury Dashboard", path: "/home/treasury" },
       { label: "Protocol Feed", path: "/home/feed" },
+      { label: "Liveness", path: "/home/liveness" },
     ],
   },
   {
