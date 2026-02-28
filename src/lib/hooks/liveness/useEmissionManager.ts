@@ -75,7 +75,8 @@ export function useEmissionManager() {
       const { data, errors } = await response.json();
       if (errors) throw new Error(errors[0]?.message || "Emission manager query error");
 
-      const cs = data.contractStates[0];
+      const cs = data.contractStates?.[0];
+      if (!cs) throw new Error("No contract state found");
       const state: EmissionManagerState = {
         isActive: cs.isActive,
         isEnabled: cs.isEnabled,

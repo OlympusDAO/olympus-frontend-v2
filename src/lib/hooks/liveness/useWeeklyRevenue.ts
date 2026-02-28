@@ -34,7 +34,6 @@ export function useWeeklyRevenue() {
   return useMemo<WeeklyRevenue | undefined>(() => {
     if (!yields || !reserves) return undefined;
 
-    console.log("susde value", reserves.susdeValue);
     // Use actual reserve balances from treasury subgraph
     const susdeWeekly =
       ((reserves.susdeValue || 0) * ((yields.susdeApy || 0) / 100)) / 52;
