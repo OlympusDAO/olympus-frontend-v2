@@ -41,10 +41,11 @@
   --color-white: var(--white);
   --color-black: var(--black);
   --color-slate: var(--slate);
-  --color-greyscale-1000: var(--greyscale-1000);
   --color-greyscale-900: var(--greyscale-900);
   --color-greyscale-800: var(--greyscale-800);
   --color-greyscale-700: var(--greyscale-700);
+  --color-greyscale-600: var(--greyscale-600);
+  --color-greyscale-500: var(--greyscale-500);
   --color-greyscale-400: var(--greyscale-400);
   --color-greyscale-300: var(--greyscale-300);
   --color-greyscale-200: var(--greyscale-200);
@@ -71,13 +72,16 @@
   --color-surface-bg-l1: var(--surface-bg-l1);
   --color-surface-bg-l2: var(--surface-bg-l2);
   --color-surface-bg-overlay: var(--surface-bg-overlay);
+  --color-surface-toast: var(--surface-toast);
   --color-surface-tooltip: var(--surface-tooltip);
+  --color-surface-dropdown: var(--surface-dropdown);
+  --color-surface-modal: var(--surface-modal);
   --color-surface-button-primary: var(--surface-button-primary);
   --color-surface-button-primary-hover: var(--surface-button-primary-hover);
   --color-surface-button-secondary: var(--surface-button-secondary);
   --color-surface-button-secondary-hover: var(--surface-button-secondary-hover);
   --color-surface-elastic-tab: var(--surface-elastic-tab);
-  --color-surface-toast: var(--surface-toast);
+  --color-surface-mobile-sidebar: var(--surface-mobile-sidebar);
 
   --color-a3-b: var(--border-a3);
   --color-a5-b: var(--border-a5);

@@ -16,7 +16,7 @@ import { useTransactionToast, TransactionToastConfig } from "@/lib/hooks/useTran
 import MockERC20Abi from "@/abis/MockERC20";
 
 interface MintTestnetUsdsModalProps {
-  trigger: React.ReactNode;
+  trigger: React.ReactElement;
 }
 
 export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
@@ -103,7 +103,7 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger render={trigger} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Mint Testnet USDS</DialogTitle>

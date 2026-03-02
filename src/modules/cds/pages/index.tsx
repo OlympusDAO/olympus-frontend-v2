@@ -400,10 +400,8 @@ export const CDPage = () => {
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium">Deposit</label>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <Settings className="h-4 w-4" />
-                    </Button>
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-6 w-6 p-0" />}>
+                    <Settings className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
                     <div className="p-3 space-y-4">

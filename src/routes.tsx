@@ -1,6 +1,6 @@
 import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
-import { StubPage } from "@/pages/StubPage";
+import { StubPage } from "@/pages/stub-page.tsx";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";

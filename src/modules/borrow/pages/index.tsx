@@ -300,23 +300,21 @@ export const BorrowPage = () => {
                   Select Redemption
                 </label>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-between gap-2 rounded-full bg-surface-a3 p-4 border border-a3-b hover:bg-surface-a5">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={cdUSDSIcon}
-                          alt="cdUSDS"
-                          className="w-6 h-6"
-                        />
-                        <div className="text-left">
-                          <div className="font-medium">{selectedTokenName}</div>
-                          <div className="text-xs text-secondary-t">
-                            {parseFloat(collateralAmount).toFixed(2)} available
-                          </div>
+                  <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-full bg-surface-a3 p-4 border border-a3-b hover:bg-surface-a5">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={cdUSDSIcon}
+                        alt="cdUSDS"
+                        className="w-6 h-6"
+                      />
+                      <div className="text-left">
+                        <div className="font-medium">{selectedTokenName}</div>
+                        <div className="text-xs text-secondary-t">
+                          {parseFloat(collateralAmount).toFixed(2)} available
                         </div>
                       </div>
-                      <span className="text-xs">▼</span>
-                    </button>
+                    </div>
+                    <span className="text-xs">▼</span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[300px]">
                     {availableRedemptions.map(

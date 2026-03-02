@@ -26,10 +26,8 @@ export function MoreMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="group flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent hover:bg-surface-a5 hover:border-a3-b cursor-pointer outline-none">
-          <MoreHorizontal className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
-        </button>
+      <DropdownMenuTrigger className="group flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent hover:bg-surface-a5 hover:border-a3-b cursor-pointer outline-none">
+        <MoreHorizontal className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="right"
