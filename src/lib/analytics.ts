@@ -4,9 +4,7 @@ const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
 export function initializeAnalytics(): void {
   if (!GA_MEASUREMENT_ID) {
-    console.warn(
-      "[Analytics] VITE_GA_MEASUREMENT_ID not set, skipping GA initialization"
-    );
+    console.warn("[Analytics] VITE_GA_MEASUREMENT_ID not set, skipping GA initialization");
     return;
   }
   ReactGA.initialize(GA_MEASUREMENT_ID);

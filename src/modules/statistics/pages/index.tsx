@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { UserDepositsChart } from "../components/user-deposits-chart";
 import { CumulativeYieldChart } from "../components/cumulative-yield-chart";
 import { OhmRepurchasesChart } from "../components/ohm-repurchases-chart";

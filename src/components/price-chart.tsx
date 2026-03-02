@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import {
   ComposedChart,
   Line,
@@ -46,19 +47,13 @@ interface PriceChartMiniProps {
 type TimeRange = "1d" | "7d" | "30d" | "all";
 type MiniTimeRange = "1d" | "7d" | "30d";
 
-export const PriceChart: React.FC<PriceChartProps> = ({
-  depositPeriod,
-  className = "",
-}) => {
+export const PriceChart: React.FC<PriceChartProps> = ({ depositPeriod, className = "" }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { tickStep } = useAuctionParameters();
 
   // Fetch historical data from GraphQL
-  const { data: historicalData, isLoading } = useHistoricalPriceData(
-    depositPeriod,
-    timeRange
-  );
+  const { data: historicalData, isLoading } = useHistoricalPriceData(depositPeriod, timeRange);
 
   // Process historical data into chart format
   const chartData = useMemo((): ChartDataPoint[] => {
@@ -68,7 +63,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       historicalData.depositPeriodSnapshots,
       historicalData.bids,
       historicalData.snapshots,
-      tickStep
+      tickStep,
     );
 
     return toChartData(tickData);
@@ -112,32 +107,24 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
     return (
       <div className="bg-surface-tooltip border border-a10 rounded-xl p-3 shadow-lg min-w-[180px]">
-        <p className="text-xs text-secondary-t mb-2">
-          {format(date, "MMM dd, yyyy HH:mm")}
-        </p>
+        <p className="text-xs text-secondary-t mb-2">{format(date, "MMM dd, yyyy HH:mm")}</p>
 
         {data.tickPrice !== undefined && (
           <div className="space-y-1">
             <p className="text-sm">
               <span className="text-secondary-t">Tick Price:</span>{" "}
-              <span className="font-medium text-blue">
-                {data.tickPrice.toFixed(4)}
-              </span>
+              <span className="font-medium text-blue">{data.tickPrice.toFixed(4)}</span>
             </p>
             {data.minPrice !== undefined && (
               <p className="text-sm">
                 <span className="text-secondary-t">Min Price:</span>{" "}
-                <span className="font-medium text-red">
-                  {data.minPrice.toFixed(4)}
-                </span>
+                <span className="font-medium text-red">{data.minPrice.toFixed(4)}</span>
               </p>
             )}
             {data.bidPrice !== undefined && (
               <p className="text-sm">
                 <span className="text-secondary-t">Bid Price:</span>{" "}
-                <span className="font-medium text-green">
-                  {data.bidPrice.toFixed(4)}
-                </span>
+                <span className="font-medium text-green">{data.bidPrice.toFixed(4)}</span>
               </p>
             )}
           </div>
@@ -145,7 +132,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       </div>
     );
   };
-
 
   if (isLoading) {
     return (
@@ -167,10 +153,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     <div className={className}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
         <h2 className="text-xl font-semibold">Price History</h2>
-        <Tabs
-          value={timeRange}
-          onValueChange={(v) => setTimeRange(v as TimeRange)}
-        >
+        <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
           <TabsList>
             <TabsTrigger value="1d">1D</TabsTrigger>
             <TabsTrigger value="7d">7D</TabsTrigger>
@@ -180,20 +163,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         </Tabs>
       </div>
       <Card className="p-6">
-
-      {!hasData ? (
-        <div className="w-full h-[300px] flex items-center justify-center text-secondary-t">
-          No price data available for this period
-        </div>
-      ) : (
-        <>
+        {!hasData ? (
+          <div className="w-full h-[300px] flex items-center justify-center text-secondary-t">
+            No price data available for this period
+          </div>
+        ) : (
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={chartData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={CHART_COLORS.grid}
-                vertical={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
 
               <XAxis
                 dataKey="timestamp"
@@ -258,9 +235,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               />
             </ComposedChart>
           </ResponsiveContainer>
-
-        </>
-      )}
+        )}
       </Card>
     </div>
   );
@@ -279,10 +254,7 @@ export const PriceChartMini: React.FC<PriceChartMiniProps> = ({
   const { tickStep } = useAuctionParameters();
 
   // Fetch historical data from GraphQL
-  const { data: historicalData, isLoading } = useHistoricalPriceData(
-    depositPeriod,
-    timeRange
-  );
+  const { data: historicalData, isLoading } = useHistoricalPriceData(depositPeriod, timeRange);
 
   // Process historical data into chart format
   const chartData = useMemo((): ChartDataPoint[] => {
@@ -292,7 +264,7 @@ export const PriceChartMini: React.FC<PriceChartMiniProps> = ({
       historicalData.depositPeriodSnapshots,
       historicalData.bids,
       historicalData.snapshots,
-      tickStep
+      tickStep,
     );
 
     return toChartData(tickData);
@@ -342,32 +314,24 @@ export const PriceChartMini: React.FC<PriceChartMiniProps> = ({
           <div className="space-y-0.5">
             <p>
               <span className="text-secondary-t">Tick Price:</span>{" "}
-              <span className="font-medium text-blue">
-                {data.tickPrice.toFixed(4)}
-              </span>
+              <span className="font-medium text-blue">{data.tickPrice.toFixed(4)}</span>
             </p>
             {data.decayPrice !== undefined && (
               <p>
                 <span className="text-secondary-t">Decay To:</span>{" "}
-                <span className="font-medium text-purple">
-                  {data.decayPrice.toFixed(4)}
-                </span>
+                <span className="font-medium text-purple">{data.decayPrice.toFixed(4)}</span>
               </p>
             )}
             {data.bidPrice !== undefined && (
               <p>
                 <span className="text-secondary-t">Bid Price:</span>{" "}
-                <span className="font-medium text-green">
-                  {data.bidPrice.toFixed(4)}
-                </span>
+                <span className="font-medium text-green">{data.bidPrice.toFixed(4)}</span>
               </p>
             )}
             {data.minPrice !== undefined && (
               <p>
                 <span className="text-secondary-t">Min Price:</span>{" "}
-                <span className="font-medium text-red">
-                  {data.minPrice.toFixed(4)}
-                </span>
+                <span className="font-medium text-red">{data.minPrice.toFixed(4)}</span>
               </p>
             )}
           </div>
@@ -394,10 +358,7 @@ export const PriceChartMini: React.FC<PriceChartMiniProps> = ({
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Conversion Price History</span>
-        <Tabs
-          value={timeRange}
-          onValueChange={(v) => setTimeRange(v as MiniTimeRange)}
-        >
+        <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as MiniTimeRange)}>
           <TabsList className="h-6 p-0.5 gap-0">
             <TabsTrigger value="1d" className="h-5 px-2 text-xs rounded-sm">
               1D
@@ -419,10 +380,7 @@ export const PriceChartMini: React.FC<PriceChartMiniProps> = ({
       ) : (
         <div className="relative">
           <ResponsiveContainer width="100%" height={160}>
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
-            >
+            <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke={CHART_COLORS.grid}

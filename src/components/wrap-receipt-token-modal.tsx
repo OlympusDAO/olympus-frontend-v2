@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckCircle2, ExternalLink } from "lucide-react";
@@ -58,7 +54,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   const { allowance } = useFlexibleReceiptTokenAllowance(
     unwrappedBalance?.tokenId,
     userAddress,
-    receiptTokenManagerAddress
+    receiptTokenManagerAddress,
   );
 
   const {
@@ -81,14 +77,14 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
     // For very small or very large numbers, use compact notation
     if (num < 0.01 || num > 999999) {
       return num.toLocaleString(undefined, {
-        notation: 'compact',
-        maximumFractionDigits: 2
+        notation: "compact",
+        maximumFractionDigits: 2,
       });
     }
     // Otherwise use standard notation with 2 decimals
     return num.toLocaleString(undefined, {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     });
   };
 
@@ -110,9 +106,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    wrapAmountBigInt > 0n &&
-    allowance < wrapAmountBigInt;
+    allowance !== undefined && wrapAmountBigInt > 0n && allowance < wrapAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
@@ -143,12 +137,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   };
 
   const handleApprove = async () => {
-    if (
-      !unwrappedBalance ||
-      !receiptTokenManagerAddress ||
-      wrapAmountBigInt === 0n
-    )
-      return;
+    if (!unwrappedBalance || !receiptTokenManagerAddress || wrapAmountBigInt === 0n) return;
 
     try {
       await approveReceiptToken({
@@ -217,15 +206,12 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                   Tokens wrapped successfully!
                 </p>
                 <p className="text-sm text-secondary-t text-center">
-                  Your ERC-6909 tokens have been converted to wrapped ERC-20
-                  tokens.
+                  Your ERC-6909 tokens have been converted to wrapped ERC-20 tokens.
                 </p>
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">
-                  Wrap Receipt Tokens
-                </DialogTitle>
+                <DialogTitle className="text-xl">Wrap Receipt Tokens</DialogTitle>
                 <p className="text-sm text-secondary-t font-light">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
@@ -257,9 +243,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                               : "bg-surface-a10 text-secondary-t"
                           }`}
                         >
-                          <span className="text-sm font-medium">
-                            {step.number}
-                          </span>
+                          <span className="text-sm font-medium">{step.number}</span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -268,16 +252,14 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                             step.isActive
                               ? "text-primary-t"
                               : step.isCompleted
-                              ? "text-primary-t"
-                              : "text-secondary-t"
+                                ? "text-primary-t"
+                                : "text-secondary-t"
                           }`}
                         >
                           {step.title}
                         </p>
                         {step.detail && (
-                          <p className="text-xs text-secondary-t mt-0.5 truncate">
-                            {step.detail}
-                          </p>
+                          <p className="text-xs text-secondary-t mt-0.5 truncate">{step.detail}</p>
                         )}
                         {step.hash && (
                           <a
@@ -293,9 +275,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a3-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a3-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -362,8 +342,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
           {/* Info box */}
           <div className="bg-blue/10 border border-blue/20 rounded-lg p-4">
             <p className="text-sm text-primary-t">
-              Wrapping converts your ERC-6909 receipt tokens to standard ERC-20
-              tokens.
+              Wrapping converts your ERC-6909 receipt tokens to standard ERC-20 tokens.
             </p>
           </div>
 
@@ -394,9 +373,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
               </Button>
             </div>
 
-            {hasInsufficientBalance && (
-              <p className="text-xs text-red-500">Insufficient balance</p>
-            )}
+            {hasInsufficientBalance && <p className="text-xs text-red-500">Insufficient balance</p>}
           </div>
 
           {/* You Receive section */}
@@ -415,11 +392,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
           {/* Action button */}
           <Button
             onClick={handleStartWrap}
-            disabled={
-              !wrapAmount ||
-              parseFloat(wrapAmount) === 0 ||
-              !!hasInsufficientBalance
-            }
+            disabled={!wrapAmount || parseFloat(wrapAmount) === 0 || !!hasInsufficientBalance}
             className="w-full"
           >
             Wrap Tokens

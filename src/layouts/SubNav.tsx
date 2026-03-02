@@ -1,18 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  getActiveSectionFromPath,
-  type NavItem,
-} from "@/lib/navigation";
+import { getActiveSectionFromPath, type NavItem } from "@/lib/navigation";
 
-function SubNavItem({
-  item,
-  isActive,
-}: {
-  item: NavItem;
-  isActive: boolean;
-}) {
+function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
   if (item.external) {
     return (
       <a
@@ -34,7 +25,7 @@ function SubNavItem({
         "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
         isActive
           ? "bg-surface-a10 text-primary-t font-medium"
-          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t"
+          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
       )}
     >
       {item.label}
@@ -52,9 +43,7 @@ export function SubNav() {
     <aside className="w-[220px] h-screen flex flex-col border-r border-a10-b shrink-0 bg-surface-bg-l1">
       {/* Section title */}
       <div className="px-5 pt-8 pb-4">
-        <h2 className="text-lg font-bold text-primary-t">
-          {activeSection.sidebarTitle}
-        </h2>
+        <h2 className="text-lg font-bold text-primary-t">{activeSection.sidebarTitle}</h2>
       </div>
 
       {/* Sub-nav items */}
@@ -64,7 +53,10 @@ export function SubNav() {
             <SubNavItem
               key={item.path}
               item={item}
-              isActive={!item.external && (location.pathname === item.path || location.pathname.startsWith(item.path + "/"))}
+              isActive={
+                !item.external &&
+                (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
+              }
             />
           ))}
         </nav>

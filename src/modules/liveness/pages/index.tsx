@@ -9,12 +9,7 @@ import { ProtocolFlywheel } from "../components/protocol-flywheel";
 import { CdStatistics } from "../components/cd-statistics";
 import { CoolerMetrics } from "../components/cooler-metrics";
 import { ActivityFeed } from "../components/activity-feed";
-import {
-  RiLoopLeftFill,
-  RiScales3Fill,
-  RiSafe2Fill,
-  RiHandCoinFill,
-} from "@remixicon/react";
+import { RiLoopLeftFill, RiScales3Fill, RiSafe2Fill, RiHandCoinFill } from "@remixicon/react";
 
 export function LivenessPage() {
   return (

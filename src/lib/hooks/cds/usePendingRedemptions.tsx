@@ -1,9 +1,4 @@
-import {
-  useReadContract,
-  useReadContracts,
-  useAccount,
-  useChainId,
-} from "wagmi";
+import { useReadContract, useReadContracts, useAccount, useChainId } from "wagmi";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import DepositRedemptionVaultAbi from "@/abis/DepositRedemptionVault";
 import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
@@ -23,20 +18,14 @@ export function usePendingRedemptions() {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
 
-  const contractAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const contractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const receiptTokenManagerAddress = getContractAddress(
     ContractName.RECEIPT_TOKEN_MANAGER,
-    chainId
+    chainId,
   );
 
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   // Get the count of user redemptions
   const { data: redemptionCount, isLoading: isLoadingCount } = useReadContract({
@@ -51,12 +40,7 @@ export function usePendingRedemptions() {
 
   // Prepare contracts array for batch reading individual redemptions
   const redemptionContracts = useMemo(() => {
-    if (
-      !contractAddress ||
-      !userAddress ||
-      !redemptionCount ||
-      redemptionCount === 0
-    ) {
+    if (!contractAddress || !userAddress || !redemptionCount || redemptionCount === 0) {
       return [];
     }
 
@@ -76,13 +60,12 @@ export function usePendingRedemptions() {
   }, [contractAddress, userAddress, redemptionCount]);
 
   // Query individual redemptions using useReadContracts
-  const { data: redemptionResults = [], isLoading: isLoadingRedemptions } =
-    useReadContracts({
-      contracts: redemptionContracts,
-      query: {
-        enabled: redemptionContracts.length > 0,
-      },
-    });
+  const { data: redemptionResults = [], isLoading: isLoadingRedemptions } = useReadContracts({
+    contracts: redemptionContracts,
+    query: {
+      enabled: redemptionContracts.length > 0,
+    },
+  });
 
   // Process the redemption results
   const redemptions = useMemo(() => {
@@ -93,8 +76,7 @@ export function usePendingRedemptions() {
     redemptionResults.forEach((result, index) => {
       if (result.status === "success" && result.result) {
         //@ts-expect-error - result type is incorrect
-        const { depositToken, depositPeriod, redeemableAt, amount, facility } =
-          result.result;
+        const { depositToken, depositPeriod, redeemableAt, amount, facility } = result.result;
 
         // Skip canceled redemptions (amount = 0)
         if (amount && amount > 0n) {
@@ -123,23 +105,17 @@ export function usePendingRedemptions() {
       address: receiptTokenManagerAddress,
       abi: ReceiptTokenManagerABI,
       functionName: "getReceiptTokenId",
-      args: [
-        facilityAddress,
-        redemption.depositToken,
-        redemption.depositPeriod,
-        facilityAddress,
-      ],
+      args: [facilityAddress, redemption.depositToken, redemption.depositPeriod, facilityAddress],
     }));
   }, [receiptTokenManagerAddress, facilityAddress, redemptions]);
 
   // Fetch receipt token IDs
-  const { data: tokenIdResults = [], isLoading: isLoadingTokenIds } =
-    useReadContracts({
-      contracts: tokenIdContracts,
-      query: {
-        enabled: tokenIdContracts.length > 0,
-      },
-    });
+  const { data: tokenIdResults = [], isLoading: isLoadingTokenIds } = useReadContracts({
+    contracts: tokenIdContracts,
+    query: {
+      enabled: tokenIdContracts.length > 0,
+    },
+  });
 
   // Prepare contracts to fetch token symbols using the token IDs
   const symbolContracts = useMemo(() => {
@@ -158,13 +134,12 @@ export function usePendingRedemptions() {
   }, [receiptTokenManagerAddress, tokenIdResults]);
 
   // Fetch token symbols
-  const { data: symbolResults = [], isLoading: isLoadingSymbols } =
-    useReadContracts({
-      contracts: symbolContracts,
-      query: {
-        enabled: symbolContracts.length > 0,
-      },
-    });
+  const { data: symbolResults = [], isLoading: isLoadingSymbols } = useReadContracts({
+    contracts: symbolContracts,
+    query: {
+      enabled: symbolContracts.length > 0,
+    },
+  });
 
   // Transform redemptions to individual pending redemptions
   const individualRedemptions = useMemo(() => {
@@ -197,13 +172,9 @@ export function usePendingRedemptions() {
   };
 }
 
-
 export function formatPendingAmount(amount: bigint): string {
-  return parseFloat((Number(amount) / 1e18).toFixed(2)).toLocaleString(
-    undefined,
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }
-  );
+  return parseFloat((Number(amount) / 1e18).toFixed(2)).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }

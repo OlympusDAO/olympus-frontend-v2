@@ -10,9 +10,15 @@ export function calculateNextTick(
   auctionParameters: { target: bigint; tickSize: bigint; minPrice?: bigint } | undefined,
   depositPeriodsCount: bigint | number | undefined,
   tickStep: bigint | number | undefined,
-  currentTickSize?: bigint
+  currentTickSize?: bigint,
 ): NextTickInfo | null {
-  if (!auctionParameters?.target || !auctionParameters?.tickSize || !depositPeriodsCount || !tickStep || !tickData) {
+  if (
+    !auctionParameters?.target ||
+    !auctionParameters?.tickSize ||
+    !depositPeriodsCount ||
+    !tickStep ||
+    !tickData
+  ) {
     return null;
   }
 
@@ -33,9 +39,10 @@ export function calculateNextTick(
   }
 
   // If next price would be below minimum, cap it at minimum (contract behavior)
-  const effectiveNextPrice = auctionParameters.minPrice && nextPrice < auctionParameters.minPrice
-    ? auctionParameters.minPrice
-    : nextPrice;
+  const effectiveNextPrice =
+    auctionParameters.minPrice && nextPrice < auctionParameters.minPrice
+      ? auctionParameters.minPrice
+      : nextPrice;
 
   // Calculate capacity addition per second
   const capacityToAddPerSecond = auctionParameters.target / 86400n / BigInt(depositPeriodsCount);
@@ -75,10 +82,12 @@ interface DailyCapacityReset {
   isNow: boolean;
 }
 
-export function calculateDailyCapacityReset(initTimestamp: bigint | number | undefined): DailyCapacityReset | null {
+export function calculateDailyCapacityReset(
+  initTimestamp: bigint | number | undefined,
+): DailyCapacityReset | null {
   if (!initTimestamp) return null;
 
-  const initTime = typeof initTimestamp === 'bigint' ? Number(initTimestamp) : initTimestamp;
+  const initTime = typeof initTimestamp === "bigint" ? Number(initTimestamp) : initTimestamp;
   const now = Math.floor(Date.now() / 1000);
   const secondsSinceInit = now - initTime;
   const secondsInDay = 86400;

@@ -30,9 +30,7 @@ export function useSupplyHistory() {
     queryKey: ["supplyHistory"],
     queryFn: async () => {
       // Fetch ~90 days of daily metrics
-      const startDate = new Date(Date.now() - 90 * 86_400_000)
-        .toISOString()
-        .split("T")[0];
+      const startDate = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate,
         crossChainDataComplete: true,
@@ -40,7 +38,7 @@ export function useSupplyHistory() {
       });
 
       const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`
+        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
       );
       if (!response.ok) throw new Error("Failed to fetch supply history");
 
@@ -54,13 +52,10 @@ export function useSupplyHistory() {
       records.sort((a, b) => a.date.localeCompare(b.date));
 
       // Group by ISO week (Monday-Sunday)
-      const weekMap = new Map<
-        string,
-        { dates: string[]; supplies: number[] }
-      >();
+      const weekMap = new Map<string, { dates: string[]; supplies: number[] }>();
 
       for (const rec of records) {
-        const monday = getMonday(new Date(rec.date + "T00:00:00Z"));
+        const monday = getMonday(new Date(`${rec.date}T00:00:00Z`));
         const key = monday.toISOString().split("T")[0];
         if (!weekMap.has(key)) {
           weekMap.set(key, { dates: [], supplies: [] });
@@ -77,7 +72,7 @@ export function useSupplyHistory() {
         const startSupply = supplies[0];
         const endSupply = supplies[supplies.length - 1];
         const change = endSupply - startSupply;
-        const d = new Date(weekStart + "T00:00:00Z");
+        const d = new Date(`${weekStart}T00:00:00Z`);
         const weekLabel = d.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
@@ -89,17 +84,13 @@ export function useSupplyHistory() {
       // Sort by date and drop the current incomplete week if it just started
       weeks.sort((a, b) => a.weekStart.localeCompare(b.weekStart));
 
-      const currentSupply = records.length
-        ? records[records.length - 1].ohmTotalSupply
-        : 0;
+      const currentSupply = records.length ? records[records.length - 1].ohmTotalSupply : 0;
 
       // Use completed weeks for average (exclude the most recent incomplete one)
-      const completedWeeks =
-        weeks.length > 1 ? weeks.slice(0, -1) : weeks;
+      const completedWeeks = weeks.length > 1 ? weeks.slice(0, -1) : weeks;
       const weeklyAvgChange =
         completedWeeks.length > 0
-          ? completedWeeks.reduce((sum, w) => sum + w.change, 0) /
-            completedWeeks.length
+          ? completedWeeks.reduce((sum, w) => sum + w.change, 0) / completedWeeks.length
           : 0;
 
       const annualizedChangeRate =

@@ -184,31 +184,31 @@ export function useStatisticsData(timeRange: TimeRange = "7d") {
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+          }),
         ),
         bids: (data?.convertibleDepositAuctioneerBids?.items || []).map(
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+          }),
         ),
         auctioneerSnapshots: (data?.auctioneerSnapshots?.items || []).map(
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+          }),
         ),
         convertedDeposits: (data?.convertibleDepositFacilityConvertedDeposits?.items || []).map(
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+          }),
         ),
         claimedYields: (data?.convertibleDepositFacilityClaimedYields?.items || []).map(
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+          }),
         ),
       };
     },
@@ -258,7 +258,7 @@ export function useCurrentStatistics() {
         (item: Record<string, string>) => ({
           ...item,
           timestamp: Number(item.timestamp),
-        })
+        }),
       );
 
       return {
@@ -302,7 +302,7 @@ export function useAllTimeDeposits() {
       return bids.reduce(
         (sum: number, bid: { depositAmountDecimal: string }) =>
           sum + parseFloat(bid.depositAmountDecimal),
-        0
+        0,
       );
     },
     staleTime: 60000,
@@ -341,7 +341,7 @@ export function useAllTimeConvertibleOhm() {
       return bids.reduce(
         (sum: number, bid: { convertedAmountDecimal: string }) =>
           sum + parseFloat(bid.convertedAmountDecimal),
-        0
+        0,
       );
     },
     staleTime: 60000,
@@ -399,7 +399,10 @@ export function useCurrentConvertibleOhm() {
       // Calculate convertible OHM from positions (remainingAmount / conversionPrice)
       const positions = data?.convertibleDepositPositions?.items || [];
       const convertibleOhm = positions.reduce(
-        (sum: number, position: { remainingAmountDecimal: string; conversionPriceDecimal: string }) => {
+        (
+          sum: number,
+          position: { remainingAmountDecimal: string; conversionPriceDecimal: string },
+        ) => {
           const remaining = parseFloat(position.remainingAmountDecimal);
           const price = parseFloat(position.conversionPriceDecimal);
           if (remaining > 0 && price > 0) {
@@ -407,7 +410,7 @@ export function useCurrentConvertibleOhm() {
           }
           return sum;
         },
-        0
+        0,
       );
 
       return { convertibleOhm, totalDepositsUsd };

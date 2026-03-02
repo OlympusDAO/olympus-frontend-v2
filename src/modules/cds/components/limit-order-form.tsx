@@ -47,8 +47,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
   const { isEnabled: isLimitOrdersEnabled } = useLimitOrdersEnabled();
 
   // Get available deposit periods from auctioneer
-  const { enabledPeriods: auctioneerPeriods, isLoading: isLoadingPeriods } =
-    useDepositPeriods();
+  const { enabledPeriods: auctioneerPeriods, isLoading: isLoadingPeriods } = useDepositPeriods();
 
   // Filter to only deposit periods enabled on limit orders contract
   const auctioneerPeriodMonths = auctioneerPeriods.map((p) => p.months);
@@ -57,15 +56,13 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
 
   // Create final list of enabled periods for limit orders
   const enabledPeriods = auctioneerPeriods.filter((p) =>
-    limitOrderEnabledMonths.includes(p.months)
+    limitOrderEnabledMonths.includes(p.months),
   );
 
   // Auto-select valid term if current selection isn't available for limit orders
   useEffect(() => {
     if (enabledPeriods.length > 0 && selectedTerm) {
-      const isCurrentTermAvailable = enabledPeriods.some(
-        (p) => p.displayName === selectedTerm
-      );
+      const isCurrentTermAvailable = enabledPeriods.some((p) => p.displayName === selectedTerm);
       if (!isCurrentTermAvailable) {
         // Current term not available, select first available term
         onSelectedTermChange(enabledPeriods[0].displayName);
@@ -88,7 +85,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
     if (term.includes("3 months")) return 3;
     if (term.includes("6 months")) return 6;
     const match = term.match(/(\d+)\s*months?/);
-    return match ? parseInt(match[1]) : 1;
+    return match ? parseInt(match[1], 10) : 1;
   };
 
   const selectedTermMonths = getMonthsFromTerm(selectedTerm);
@@ -112,9 +109,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
   const currentMarketPrice = tickData?.price || 0n;
 
   // Format minimum bid for display
-  const formattedMinBid = minimumBid
-    ? (Number(minimumBid) / 1e18).toFixed(1)
-    : "1.0";
+  const formattedMinBid = minimumBid ? (Number(minimumBid) / 1e18).toFixed(1) : "1.0";
 
   // Validate max price
   const priceValidation =
@@ -125,10 +120,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
   // Handle quick price adjustment buttons
   const handlePriceAdjustment = (percentage: number) => {
     if (currentMarketPrice > 0n) {
-      const adjustedPrice = calculateMaxPriceAdjustment(
-        currentMarketPrice,
-        percentage
-      );
+      const adjustedPrice = calculateMaxPriceAdjustment(currentMarketPrice, percentage);
       setMaxPrice(formatMaxPrice(adjustedPrice));
     }
   };
@@ -155,18 +147,13 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
 
     // Parse incentive budget
     const incentiveBudgetBigInt =
-      incentiveBudget && incentiveBudget !== "0"
-        ? parseEther(incentiveBudget)
-        : 0n;
+      incentiveBudget && incentiveBudget !== "0" ? parseEther(incentiveBudget) : 0n;
 
     // Total amount needed = deposit + incentive
     const totalAmount = depositAmountBigInt + incentiveBudgetBigInt;
 
     // Check minimum deposit
-    if (
-      assetConfig?.minimumDeposit &&
-      depositAmountBigInt < assetConfig.minimumDeposit
-    ) {
+    if (assetConfig?.minimumDeposit && depositAmountBigInt < assetConfig.minimumDeposit) {
       return { valid: false, reason: "Below minimum deposit" };
     }
 
@@ -211,13 +198,14 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
         <div className="space-y-4">
           {/* Order Type Tabs - Only show if limit orders are enabled */}
           {isLimitOrdersEnabled && (
-            <Tabs
-              value="limit"
-              onValueChange={(v) => onOrderTypeChange?.(v as "market" | "limit")}
-            >
+            <Tabs value="limit" onValueChange={(v) => onOrderTypeChange?.(v as "market" | "limit")}>
               <TabsList className="rounded-full w-fit">
-                <TabsTrigger value="market" className="rounded-full">Market</TabsTrigger>
-                <TabsTrigger value="limit" className="rounded-full">Limit</TabsTrigger>
+                <TabsTrigger value="market" className="rounded-full">
+                  Market
+                </TabsTrigger>
+                <TabsTrigger value="limit" className="rounded-full">
+                  Limit
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           )}
@@ -234,9 +222,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
               {isLoadingPeriods ? (
                 <div className="text-sm text-secondary-t">Loading terms...</div>
               ) : enabledPeriods.length === 0 ? (
-                <div className="text-sm text-secondary-t">
-                  No terms available
-                </div>
+                <div className="text-sm text-secondary-t">No terms available</div>
               ) : (
                 enabledPeriods.map((period) => (
                   <TabsTrigger
@@ -326,16 +312,14 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
 
             {/* Price Warning */}
             {priceValidation.warning && (
-              <div className="text-sm text-yellow-500 mt-2">
-                ⚠️ {priceValidation.warning}
-              </div>
+              <div className="text-sm text-yellow-500 mt-2">⚠️ {priceValidation.warning}</div>
             )}
           </div>
 
           {/* Deposit Amount Input */}
           <div className="bg-surface-a3 rounded-3xl p-6 border border-a3-b">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium">Deposit</label>
+              <span className="text-sm font-medium">Deposit</span>
             </div>
             <div className="relative">
               <Input
@@ -359,15 +343,11 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
               <span></span>
               <div className="flex items-center gap-1 text-secondary-t">
                 <span>Balance:</span>
-                <span>
-                  {Number(usdsToken?.formattedBalance).toFixed(2) || "0"}
-                </span>
+                <span>{Number(usdsToken?.formattedBalance).toFixed(2) || "0"}</span>
                 <Button
                   variant="secondary"
                   className="h-6"
-                  onClick={() =>
-                    setDepositAmount(usdsToken?.formattedBalance || "0")
-                  }
+                  onClick={() => setDepositAmount(usdsToken?.formattedBalance || "0")}
                 >
                   Max
                 </Button>
@@ -376,9 +356,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
 
             {/* Advanced Settings - Compact section */}
             <div className="mt-4 pt-4 border-t border-a5-b space-y-2">
-              <div className="text-xs text-secondary-t font-medium mb-2">
-                Advanced
-              </div>
+              <div className="text-xs text-secondary-t font-medium mb-2">Advanced</div>
 
               {/* MEV Incentive */}
               <div className="space-y-1">
@@ -406,8 +384,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
                 </div>
                 {(!incentiveBudget || incentiveBudget === "0") && (
                   <div className="text-xs text-yellow-500">
-                    ⚠️ A zero budget is unlikely to result in your order being
-                    filled.
+                    ⚠️ A zero budget is unlikely to result in your order being filled.
                   </div>
                 )}
               </div>
@@ -456,9 +433,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between border-b border-a5-b pb-2">
               <span className="text-secondary-t">Max Price</span>
-              <span className="font-medium">
-                {maxPrice || "0.0000"} USDS/OHM
-              </span>
+              <span className="font-medium">{maxPrice || "0.0000"} USDS/OHM</span>
             </div>
 
             <div className="flex justify-between border-b border-a5-b pb-2">
@@ -470,9 +445,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
               </TooltipInfo>
               <div className="flex items-center gap-1">
                 <img src={OHMIcon} alt="OHM" className="w-4 h-4" />
-                <span className="font-medium">
-                  {formatOhm(expectedOhm)} OHM
-                </span>
+                <span className="font-medium">{formatOhm(expectedOhm)} OHM</span>
               </div>
             </div>
 
@@ -498,17 +471,14 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
 
             <div className="flex justify-between pb-2">
               <span className="text-secondary-t">Min Fill Size</span>
-              <span className="font-medium">
-                {minFillSize || formattedMinBid} USDS
-              </span>
+              <span className="font-medium">{minFillSize || formattedMinBid} USDS</span>
             </div>
           </div>
 
           <div className="pt-3 border-t border-a5-b">
             <p className="text-xs text-secondary-t">
-              Your order will be filled when the market price reaches or goes
-              below your max price. You'll receive positions as your order
-              fills.
+              Your order will be filled when the market price reaches or goes below your max price.
+              You'll receive positions as your order fills.
             </p>
           </div>
         </div>

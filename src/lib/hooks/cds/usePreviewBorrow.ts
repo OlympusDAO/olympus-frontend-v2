@@ -14,24 +14,15 @@ type PreviewBorrowResult = {
  * Hook to preview borrowing against a redemption
  * Returns the principal amount, interest, and due date
  */
-export function usePreviewBorrow(
-  userAddress?: `0x${string}`,
-  redemptionId?: number
-) {
+export function usePreviewBorrow(userAddress?: `0x${string}`, redemptionId?: number) {
   const chainId = useChainId();
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { data, isLoading, error } = useReadContract({
     address: vaultAddress,
     abi: DepositRedemptionVaultABI,
     functionName: "previewBorrowAgainstRedemption",
-    args:
-      userAddress && redemptionId !== undefined
-        ? [userAddress, redemptionId]
-        : undefined,
+    args: userAddress && redemptionId !== undefined ? [userAddress, redemptionId] : undefined,
     query: {
       enabled: !!userAddress && redemptionId !== undefined && !!vaultAddress,
     },
@@ -49,9 +40,7 @@ export function usePreviewBorrow(
     : undefined;
 
   // Format values for display
-  const formattedPrincipal = previewData
-    ? formatEther(previewData.principal)
-    : "0";
+  const formattedPrincipal = previewData ? formatEther(previewData.principal) : "0";
   const formattedInterest = previewData ? formatEther(previewData.interest) : "0";
   const dueDateFormatted = previewData
     ? new Date(previewData.dueDate * 1000).toLocaleDateString("en-US", {

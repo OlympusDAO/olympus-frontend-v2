@@ -6,24 +6,14 @@ import {
   RiAlertFill,
   RiCheckboxFill,
 } from "@remixicon/react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 /** I recommend abstracting the toast function
  *  so that you can call it without having to use toast.custom everytime. */
-export function toast(
-  toast: Omit<ToastProps, "id">,
-  options?: { duration?: number }
-) {
+export function toast(toast: Omit<ToastProps, "id">, options?: { duration?: number }) {
   return sonnerToast.custom(
-    (id) => (
-      <Toast
-        id={id}
-        type={toast.type}
-        title={toast.title}
-        description={toast.description}
-      />
-    ),
-    options
+    (id) => <Toast id={id} type={toast.type} title={toast.title} description={toast.description} />,
+    options,
   );
 }
 
@@ -45,11 +35,10 @@ function Toast(props: ToastProps) {
       <div className="size-4">{ICONS_TYPES[type]}</div>
       <div className="w-full flex flex-col gap-y-1">
         <p className="text-sm font-medium text-primary-t">{title}</p>
-        {description && (
-          <p className="text-sm text-secondary-t">{description}</p>
-        )}
+        {description && <p className="text-sm text-secondary-t">{description}</p>}
       </div>
       <button
+        type="button"
         className="text-tertiary-t"
         onClick={() => {
           sonnerToast.dismiss(id);

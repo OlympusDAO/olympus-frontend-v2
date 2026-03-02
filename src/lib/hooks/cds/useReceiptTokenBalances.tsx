@@ -31,7 +31,7 @@ export function useReceiptTokenBalances(userAddress?: string) {
   const chainId = useChainId();
   const receiptTokenManagerAddress = getContractAddress(
     ContractName.RECEIPT_TOKEN_MANAGER,
-    chainId
+    chainId,
   );
 
   // Get all wrappable tokens from ReceiptTokenManager
@@ -64,8 +64,7 @@ export function useReceiptTokenBalances(userAddress?: string) {
       args: [userAddress, tokenId],
     })),
     query: {
-      enabled:
-        !!receiptTokenManagerAddress && !!userAddress && tokenIds.length > 0,
+      enabled: !!receiptTokenManagerAddress && !!userAddress && tokenIds.length > 0,
     },
   });
 
@@ -125,12 +124,12 @@ export function useReceiptTokenBalances(userAddress?: string) {
       args: [userAddress as `0x${string}`],
     })),
     query: {
-      enabled:
-        !!userAddress && wrappedTokens.length > 0,
+      enabled: !!userAddress && wrappedTokens.length > 0,
     },
   });
 
-  const isLoading = isLoadingTokens || isLoadingBalances || isLoadingMetadata || isLoadingWrappedBalances;
+  const isLoading =
+    isLoadingTokens || isLoadingBalances || isLoadingMetadata || isLoadingWrappedBalances;
   const error = tokensError || balancesError || metadataError || wrappedBalancesError;
 
   // Process the data
@@ -148,14 +147,10 @@ export function useReceiptTokenBalances(userAddress?: string) {
 
       const metadataIndex = index * 5;
       const name = (metadataResults[metadataIndex]?.result as string) || "";
-      const symbol =
-        (metadataResults[metadataIndex + 1]?.result as string) || "";
-      const decimals =
-        (metadataResults[metadataIndex + 2]?.result as number) || 18;
-      const asset =
-        (metadataResults[metadataIndex + 3]?.result as string) || "";
-      const periodMonths =
-        (metadataResults[metadataIndex + 4]?.result as number) || 0;
+      const symbol = (metadataResults[metadataIndex + 1]?.result as string) || "";
+      const decimals = (metadataResults[metadataIndex + 2]?.result as number) || 18;
+      const asset = (metadataResults[metadataIndex + 3]?.result as string) || "";
+      const periodMonths = (metadataResults[metadataIndex + 4]?.result as number) || 0;
 
       // Include in receiptTokenBalances if user has unwrapped balance
       if (balance && balance > 0n) {

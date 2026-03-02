@@ -143,22 +143,21 @@ export function useCdStatistics() {
       if (!response.ok) throw new Error("Failed to fetch CD statistics");
 
       const { data, errors } = await response.json();
-      if (errors)
-        throw new Error(errors[0]?.message || "CD subgraph error");
+      if (errors) throw new Error(errors[0]?.message || "CD subgraph error");
 
-      const depositSnapshots = (
-        data?.depositFacilityAssetSnapshots?.items || []
-      ).map((item: Record<string, string>) => ({
-        ...item,
-        timestamp: Number(item.timestamp),
-      }));
+      const depositSnapshots = (data?.depositFacilityAssetSnapshots?.items || []).map(
+        (item: Record<string, string>) => ({
+          ...item,
+          timestamp: Number(item.timestamp),
+        }),
+      );
 
-      const bids = (
-        data?.convertibleDepositAuctioneerBids?.items || []
-      ).map((item: Record<string, string>) => ({
-        ...item,
-        timestamp: Number(item.timestamp),
-      }));
+      const bids = (data?.convertibleDepositAuctioneerBids?.items || []).map(
+        (item: Record<string, string>) => ({
+          ...item,
+          timestamp: Number(item.timestamp),
+        }),
+      );
 
       const convertedDeposits = (
         data?.convertibleDepositFacilityConvertedDeposits?.items || []
@@ -177,11 +176,8 @@ export function useCdStatistics() {
         ? parseFloat(latestSnapshot.borrowedAmountDecimal) || 0
         : 0;
 
-      const rateConfig =
-        data?.depositRedemptionVaultAssetConfigurations?.items?.[0];
-      const annualInterestRate = rateConfig
-        ? parseFloat(rateConfig.interestRateDecimal) || 0
-        : 0;
+      const rateConfig = data?.depositRedemptionVaultAssetConfigurations?.items?.[0];
+      const annualInterestRate = rateConfig ? parseFloat(rateConfig.interestRateDecimal) || 0 : 0;
 
       // Market status
       const latestAuctioneerSnapshot = data?.auctioneerSnapshots?.items?.[0];
@@ -191,12 +187,15 @@ export function useCdStatistics() {
 
       // Supply impact - sum of (remainingAmount / conversionPrice) for all positions
       const positions = data?.convertibleDepositPositions?.items || [];
-      const supplyGrowthOhm = positions.reduce((sum: number, pos: { remainingAmountDecimal: string; conversionPriceDecimal: string }) => {
-        const remaining = parseFloat(pos.remainingAmountDecimal) || 0;
-        const price = parseFloat(pos.conversionPriceDecimal) || 0;
-        if (remaining > 0 && price > 0) return sum + remaining / price;
-        return sum;
-      }, 0);
+      const supplyGrowthOhm = positions.reduce(
+        (sum: number, pos: { remainingAmountDecimal: string; conversionPriceDecimal: string }) => {
+          const remaining = parseFloat(pos.remainingAmountDecimal) || 0;
+          const price = parseFloat(pos.conversionPriceDecimal) || 0;
+          if (remaining > 0 && price > 0) return sum + remaining / price;
+          return sum;
+        },
+        0,
+      );
 
       return {
         depositSnapshots,

@@ -4,21 +4,21 @@
  */
 export async function getCountryCode(): Promise<string | null> {
   try {
-    const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+    const response = await fetch("https://www.cloudflare.com/cdn-cgi/trace");
     const data = await response.text();
 
     // Parse the trace response which is in key=value format
-    const lines = data.split('\n');
-    const locLine = lines.find(line => line.startsWith('loc='));
+    const lines = data.split("\n");
+    const locLine = lines.find((line) => line.startsWith("loc="));
 
     if (locLine) {
-      const countryCode = locLine.split('=')[1];
+      const countryCode = locLine.split("=")[1];
       return countryCode.trim();
     }
 
     return null;
   } catch (error) {
-    console.error('Failed to fetch geolocation data:', error);
+    console.error("Failed to fetch geolocation data:", error);
     return null;
   }
 }
@@ -31,12 +31,12 @@ const GEO_BLOCKING_ENABLED = import.meta.env.PROD;
 /**
  * List of blocked country codes (ISO 3166-1 alpha-2)
  */
-export const BLOCKED_COUNTRIES = ['US'];
+export const BLOCKED_COUNTRIES = ["US"];
 
 /**
  * List of routes that should not be geoblocked (public routes)
  */
-export const PUBLIC_ROUTES = ['/statistics'];
+export const PUBLIC_ROUTES = ["/statistics"];
 
 /**
  * Checks if a country code is blocked
@@ -65,6 +65,6 @@ export async function isUserBlocked(): Promise<boolean> {
  */
 export function shouldApplyGeoblocking(pathname: string): boolean {
   // Remove hash and query parameters for comparison
-  const cleanPath = pathname.split('?')[0].split('#')[0];
-  return !PUBLIC_ROUTES.some(route => cleanPath === route || cleanPath.startsWith(route + '/'));
+  const cleanPath = pathname.split("?")[0].split("#")[0];
+  return !PUBLIC_ROUTES.some((route) => cleanPath === route || cleanPath.startsWith(`${route}/`));
 }

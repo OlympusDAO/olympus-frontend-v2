@@ -2,7 +2,7 @@
 
 :root {
   /*shadcn*/
-  --font-faculty: 'Faculty Glyphic', sans-serif;
+  --font-faculty: "Faculty Glyphic", sans-serif;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -54,7 +54,7 @@
   --red: oklch(0.6742 0.1894 23.68);
   --blue: oklch(0.5906 0.1379 267.34);
   --purple: oklch(0.6281 0.167 306.1);
-  --orange: oklch(0.6800 0.155 52.5);
+  --orange: oklch(0.68 0.155 52.5);
 
   /*custom variables*/
   --text-primary: var(--slate);
@@ -91,8 +91,7 @@
   --e-btn-secondary-is-top: var(--white);
   --e-btn-secondary-is-bottom: --alpha(var(--slate) / 0.1);
   --e-surface-l2-drop-shadow: --alpha(var(--slate) / 0.1);
-  --e-surface-l2-liner-shadow:  var(--white);
-
+  --e-surface-l2-liner-shadow: var(--white);
 }
 
 .dark {
@@ -132,13 +131,13 @@
   --text-disabled: --alpha(var(--white) / 0.2);
   --text-inverted-primary: var(--slate);
 
-  --surface-a3:  --alpha(var(--white) / 0.03);
-  --surface-a5:  --alpha(var(--white) / 0.05);
+  --surface-a3: --alpha(var(--white) / 0.03);
+  --surface-a5: --alpha(var(--white) / 0.05);
   --surface-a10: --alpha(var(--white) / 0.1);
   --surface-a20: --alpha(var(--white) / 0.2);
   --surface-bg-l1: var(--slate);
   --surface-bg-l2: --alpha(var(--white) / 0.05);
-  --surface-bg-overlay:  --alpha(var(--slate) / 0.9);
+  --surface-bg-overlay: --alpha(var(--slate) / 0.9);
   --surface-toast: var(--greyscale-600);
   --surface-tooltip: var(--greyscale-500);
   --surface-dropdown: var(--greyscale-600);

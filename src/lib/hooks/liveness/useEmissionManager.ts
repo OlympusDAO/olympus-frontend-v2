@@ -105,23 +105,15 @@ export function useEmissionManager() {
         }),
       );
 
-      const totalSupplyEmitted = recentBackingUpdates.reduce(
-        (sum, u) => sum + u.supplyAdded,
-        0,
-      );
-      const totalReservesAdded = recentBackingUpdates.reduce(
-        (sum, u) => sum + u.reservesAdded,
-        0,
-      );
+      const totalSupplyEmitted = recentBackingUpdates.reduce((sum, u) => sum + u.supplyAdded, 0);
+      const totalReservesAdded = recentBackingUpdates.reduce((sum, u) => sum + u.reservesAdded, 0);
 
-      const lastActivation =
-        data.activations?.[0]
-          ? Number(data.activations[0].blockTimestamp)
-          : null;
-      const lastDeactivation =
-        data.deactivations?.[0]
-          ? Number(data.deactivations[0].blockTimestamp)
-          : null;
+      const lastActivation = data.activations?.[0]
+        ? Number(data.activations[0].blockTimestamp)
+        : null;
+      const lastDeactivation = data.deactivations?.[0]
+        ? Number(data.deactivations[0].blockTimestamp)
+        : null;
 
       return {
         state,

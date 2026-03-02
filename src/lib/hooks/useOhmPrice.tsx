@@ -8,7 +8,11 @@ export function useOhmPrice() {
   const chainId = useChainId();
   const priceContractAddress = getContractAddress(ContractName.PRICE, chainId);
 
-  const { data: currentPrice, isLoading, error } = useReadContract({
+  const {
+    data: currentPrice,
+    isLoading,
+    error,
+  } = useReadContract({
     address: priceContractAddress,
     abi: PriceAbi,
     functionName: "getCurrentPrice",
@@ -18,7 +22,7 @@ export function useOhmPrice() {
   });
 
   // Format the price to a readable number (assuming 18 decimals)
-  const formattedPrice = currentPrice 
+  const formattedPrice = currentPrice
     ? parseFloat(formatUnits(currentPrice, 18)).toFixed(2)
     : "0.00";
 

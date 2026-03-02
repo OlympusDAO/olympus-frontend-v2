@@ -1,10 +1,6 @@
 import { InfoIcon } from "lucide-react";
 
-export const InsufficientReceiptTokens = ({
-  tokenName,
-}: {
-  tokenName: string;
-}) => {
+export const InsufficientReceiptTokens = ({ tokenName }: { tokenName: string }) => {
   return (
     <div className="bg-blue/10 rounded-3xl p-4 border border-blue/5">
       <div className="flex items-start gap-3">
@@ -16,9 +12,8 @@ export const InsufficientReceiptTokens = ({
           <div className="text-sm text-secondary-t font-light leading-relaxed">
             Conversion requires {tokenName} receipt tokens to burn.
             <span className="ml-1">
-              You don't have enough receipt tokens to cover your entire CD
-              position. Mint more receipt tokens to unlock all your available
-              capacity.
+              You don't have enough receipt tokens to cover your entire CD position. Mint more
+              receipt tokens to unlock all your available capacity.
             </span>
           </div>
         </div>

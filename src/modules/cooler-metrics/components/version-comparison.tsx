@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Card } from "@/components/ui/card";
 import { useClearinghouseStats, useBorrowers } from "@/lib/hooks/cooler/useV1Data";
 import { useV2ProtocolData, useV2Accounts } from "@/lib/hooks/cooler/useV2Data";
@@ -12,7 +12,8 @@ export const VersionComparison: React.FC = () => {
   const { data: v2Data, isLoading: v2Loading } = useV2ProtocolData();
   const { data: v2Accounts, isLoading: v2AccountsLoading } = useV2Accounts();
 
-  const isLoading = v1StatsLoading || v1UtilLoading || v1BorrowersLoading || v2Loading || v2AccountsLoading;
+  const isLoading =
+    v1StatsLoading || v1UtilLoading || v1BorrowersLoading || v2Loading || v2AccountsLoading;
 
   if (isLoading) {
     return (
@@ -35,25 +36,24 @@ export const VersionComparison: React.FC = () => {
   }
 
   // V1 data
-  const allV1Borrowers = v1BorrowersData?.pages.flatMap(
-    (page) => page.borrowerStats_collection,
-  ) ?? [];
+  const allV1Borrowers =
+    v1BorrowersData?.pages.flatMap((page) => page.borrowerStats_collection) ?? [];
   const v1TotalCollateral = allV1Borrowers.reduce(
     (acc, curr) => acc + Number(curr.currentCollateral || 0),
     0,
   );
-  const latestV1Util = v1UtilData.length > 0
-    ? v1UtilData[v1UtilData.length - 1]
-    : null;
+  const latestV1Util = v1UtilData.length > 0 ? v1UtilData[v1UtilData.length - 1] : null;
   const v1TotalDebt = latestV1Util?.totalPrincipalReceivables ?? 0;
-  const v1TotalBorrowers = v1Stats?.clearinghouseCumulativeStats_collection.reduce(
-    (acc, curr) => acc + curr.totalUniqueBorrowers,
-    0,
-  ) ?? 0;
-  const v1ActiveLoans = v1Stats?.clearinghouseCumulativeStats_collection.reduce(
-    (acc, curr) => acc + curr.currentActiveLoans,
-    0,
-  ) ?? 0;
+  const v1TotalBorrowers =
+    v1Stats?.clearinghouseCumulativeStats_collection.reduce(
+      (acc, curr) => acc + curr.totalUniqueBorrowers,
+      0,
+    ) ?? 0;
+  const v1ActiveLoans =
+    v1Stats?.clearinghouseCumulativeStats_collection.reduce(
+      (acc, curr) => acc + curr.currentActiveLoans,
+      0,
+    ) ?? 0;
 
   // V2 data
   const v2TotalCollateral = v2Data?.totalCollateral ?? 0;

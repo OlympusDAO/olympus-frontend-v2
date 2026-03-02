@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import type { Address } from "viem";
 import * as dn from "dnum";
 import {
   type Duration,
@@ -28,13 +28,13 @@ export const handleInputNumberChange = (value: string) => {
 export function shortenAddress(address: Address, chars = 4) {
   return address.length < chars * 2 + 2
     ? address
-    : address.slice(0, chars + 2) + "\u2026" + address.slice(-chars);
+    : `${address.slice(0, chars + 2)}\u2026${address.slice(-chars)}`;
 }
 
 export const validateInsufficientBalance = (
   value = "0",
   tokenInfo: { decimals: number; balance?: bigint },
-  errorMessage?: string
+  errorMessage?: string,
 ) => {
   try {
     if (tokenInfo.balance) {

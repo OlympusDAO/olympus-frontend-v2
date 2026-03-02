@@ -16,10 +16,7 @@ export function useDepositPeriods() {
   const publicClient = usePublicClient({ chainId });
 
   const contractAddress = chainId
-    ? requireContractAddress(
-        ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-        chainId
-      )
+    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
     : undefined;
 
   // Get all available deposit periods
@@ -36,12 +33,7 @@ export function useDepositPeriods() {
   const { data: depositPeriods = [], isLoading: isLoadingStatus } = useQuery({
     queryKey: ["depositPeriodsStatus", contractAddress, rawPeriods],
     queryFn: async () => {
-      if (
-        !contractAddress ||
-        !publicClient ||
-        !rawPeriods ||
-        rawPeriods.length === 0
-      ) {
+      if (!contractAddress || !publicClient || !rawPeriods || rawPeriods.length === 0) {
         return [];
       }
 
@@ -72,12 +64,7 @@ export function useDepositPeriods() {
       // Sort by months ascending
       return periodsWithStatus.sort((a, b) => a.months - b.months);
     },
-    enabled: !!(
-      contractAddress &&
-      chainId &&
-      rawPeriods &&
-      rawPeriods.length > 0
-    ),
+    enabled: !!(contractAddress && chainId && rawPeriods && rawPeriods.length > 0),
   });
 
   // Filter to only enabled periods

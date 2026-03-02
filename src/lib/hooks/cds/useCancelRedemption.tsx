@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import DepositRedemptionVaultAbi from "@/abis/DepositRedemptionVault";
 
@@ -49,13 +41,11 @@ export function useCancelRedemption() {
     },
     success: {
       title: "Redemption canceled successfully!",
-      description:
-        "Your redemption has been canceled and tokens are available again.",
+      description: "Your redemption has been canceled and tokens are available again.",
     },
     error: {
       title: "Cancel redemption failed",
-      description:
-        "There was an error canceling your redemption. Please try again.",
+      description: "There was an error canceling your redemption. Please try again.",
       userRejected: {
         title: "Cancellation cancelled",
         description: "You cancelled the transaction.",
@@ -102,16 +92,10 @@ export function useCancelRedemption() {
     }
   }, [isConfirmed, address, chainId, queryClient]);
 
-  const cancelRedemption = ({
-    redemptionId,
-    amount,
-  }: UseCancelRedemptionParams) => {
+  const cancelRedemption = ({ redemptionId, amount }: UseCancelRedemptionParams) => {
     if (!chainId) throw new Error("No chain connected");
 
-    const contractAddress = getContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+    const contractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
     if (!contractAddress) {
       throw new Error("Deposit redemption vault address not found");

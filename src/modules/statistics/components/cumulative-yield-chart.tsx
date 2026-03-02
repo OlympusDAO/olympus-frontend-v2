@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -13,7 +14,11 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
 import { RiInformationFill } from "@remixicon/react";
-import { useStatisticsData, useCurrentStatistics, TimeRange } from "@/lib/hooks/cds/useStatisticsData";
+import {
+  useStatisticsData,
+  useCurrentStatistics,
+  type TimeRange,
+} from "@/lib/hooks/cds/useStatisticsData";
 
 const CHART_COLORS = {
   area: "var(--purple)",
@@ -40,7 +45,7 @@ export const CumulativeYieldChart: React.FC = () => {
 
     // Sort by timestamp and compute cumulative sum
     const sortedYields = [...statisticsData.claimedYields].sort(
-      (a, b) => a.timestamp - b.timestamp
+      (a, b) => a.timestamp - b.timestamp,
     );
 
     // Group by day and sum yields per day
@@ -71,7 +76,7 @@ export const CumulativeYieldChart: React.FC = () => {
     if (!statisticsData?.claimedYields) return 0;
     return statisticsData.claimedYields.reduce(
       (sum, claim) => sum + parseFloat(claim.amountDecimal),
-      0
+      0,
     );
   }, [statisticsData]);
 
@@ -88,7 +93,7 @@ export const CumulativeYieldChart: React.FC = () => {
     if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0) return 0;
 
     const sortedYields = [...statisticsData.claimedYields].sort(
-      (a, b) => a.timestamp - b.timestamp
+      (a, b) => a.timestamp - b.timestamp,
     );
     const firstTimestamp = sortedYields[0].timestamp;
     const lastTimestamp = sortedYields[sortedYields.length - 1].timestamp;
@@ -136,9 +141,7 @@ export const CumulativeYieldChart: React.FC = () => {
         <p className="text-xs text-secondary-t mb-1">
           {format(new Date(data.timestamp), "MMM dd, yyyy")}
         </p>
-        <p className="text-sm font-medium">
-          USD Earned: {formatCurrency(data.cumulativeYield)}
-        </p>
+        <p className="text-sm font-medium">USD Earned: {formatCurrency(data.cumulativeYield)}</p>
       </div>
     );
   };
@@ -200,9 +203,15 @@ export const CumulativeYieldChart: React.FC = () => {
         </div>
         <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
           <TabsList className="h-7">
-            <TabsTrigger value="7d" className="text-xs px-2 h-6">7D</TabsTrigger>
-            <TabsTrigger value="30d" className="text-xs px-2 h-6">1M</TabsTrigger>
-            <TabsTrigger value="1y" className="text-xs px-2 h-6">1Y</TabsTrigger>
+            <TabsTrigger value="7d" className="text-xs px-2 h-6">
+              7D
+            </TabsTrigger>
+            <TabsTrigger value="30d" className="text-xs px-2 h-6">
+              1M
+            </TabsTrigger>
+            <TabsTrigger value="1y" className="text-xs px-2 h-6">
+              1Y
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -220,11 +229,7 @@ export const CumulativeYieldChart: React.FC = () => {
                 <stop offset="100%" stopColor={CHART_COLORS.areaFill} stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
               stroke={CHART_COLORS.text}

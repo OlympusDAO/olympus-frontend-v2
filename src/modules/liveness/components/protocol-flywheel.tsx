@@ -16,9 +16,7 @@ export function ProtocolFlywheel() {
   if (isLoading) {
     return (
       <div>
-        <p className="mb-4 text-xs font-medium uppercase tracking-widest">
-          Protocol Flywheel
-        </p>
+        <p className="mb-4 text-xs font-medium uppercase tracking-widest">Protocol Flywheel</p>
         <Card className="p-6">
           <Skeleton className="h-[200px] w-full rounded-xl" />
         </Card>
@@ -31,25 +29,18 @@ export function ProtocolFlywheel() {
   const annualBurns = weeklyBurns * 52;
   const backing = treasury.treasuryLiquidBackingPerOhmBacked;
   const supplyReduction =
-    treasury.ohmTotalSupply > 0
-      ? (annualBurns / treasury.ohmTotalSupply) * 100
-      : 0;
+    treasury.ohmTotalSupply > 0 ? (annualBurns / treasury.ohmTotalSupply) * 100 : 0;
 
   const flowSources = revenue.sources.map((s) => ({
     name: s.name,
     value: s.weeklyAmount,
     color: s.color,
-    percentage:
-      revenue.totalWeekly > 0
-        ? (s.weeklyAmount / revenue.totalWeekly) * 100
-        : 0,
+    percentage: revenue.totalWeekly > 0 ? (s.weeklyAmount / revenue.totalWeekly) * 100 : 0,
   }));
 
   return (
     <div>
-      <p className="mb-4 text-xs font-medium uppercase tracking-widest">
-        Protocol Flywheel
-      </p>
+      <p className="mb-4 text-xs font-medium uppercase tracking-widest">Protocol Flywheel</p>
       <Card className="p-6">
         <RevenueFlowDiagram
           sources={flowSources}
@@ -59,9 +50,7 @@ export function ProtocolFlywheel() {
           backingValue={formatUsd(backing)}
           deflationRate={supplyReduction.toFixed(2)}
         />
-        <DataSource
-          sources={["Treasury API", "DefiLlama", "Cooler Subgraph"]}
-        />
+        <DataSource sources={["Treasury API", "DefiLlama", "Cooler Subgraph"]} />
       </Card>
     </div>
   );

@@ -59,15 +59,4 @@ export const transports: Record<number, Transport> = {
 };
 
 // Re-export chain objects for convenience
-export {
-  mainnet,
-  arbitrum,
-  polygon,
-  optimism,
-  avalanche,
-  boba,
-  fantom,
-  base,
-  berachain,
-  sepolia,
-};
+export { mainnet, arbitrum, polygon, optimism, avalanche, boba, fantom, base, berachain, sepolia };

@@ -113,7 +113,7 @@ function parseBigInt(value: string): number {
   try {
     // Handle BigInt values from subgraph properly
     const num = Number(value);
-    if (isNaN(num) || num < 0) {
+    if (Number.isNaN(num) || num < 0) {
       console.warn("Invalid BigInt value:", value);
       return 0;
     }
@@ -131,13 +131,13 @@ function parseTimestamp(value: string): number {
     if (typeof value === "string") {
       // Try parsing as ISO string first
       const date = new Date(value);
-      if (!isNaN(date.getTime())) {
+      if (!Number.isNaN(date.getTime())) {
         return date.getTime() * 1000; // Convert to microseconds for compatibility
       }
 
       // If not ISO, try parsing as number (unix timestamp)
       const num = Number(value);
-      if (!isNaN(num) && num > 0) {
+      if (!Number.isNaN(num) && num > 0) {
         // Check if it's already in microseconds (very large number) or seconds
         if (num > 1e12) {
           return num; // Already in microseconds
@@ -309,15 +309,13 @@ export function useV2HistoricalData(days: number = 30) {
         monoCoolerGlobalStats_collection: MonoCoolerGlobalStats[];
       }>(MONOCOOLER_HISTORICAL_DATA_QUERY, { first: days, interval: "day" });
 
-      const result = response.monoCoolerGlobalStats_collection.map(
-        (stats) => ({
-          timestamp: parseTimestamp(stats.timestamp),
-          totalCollateral: parseBigDecimal(stats.totalCollateral),
-          totalDebt: parseBigDecimal(stats.totalDebt),
-          interestRate: parseWadToPercent(stats.interestRateWad),
-          maxOriginationLtv: parseBigDecimal(stats.maxOriginationLtv),
-        }),
-      );
+      const result = response.monoCoolerGlobalStats_collection.map((stats) => ({
+        timestamp: parseTimestamp(stats.timestamp),
+        totalCollateral: parseBigDecimal(stats.totalCollateral),
+        totalDebt: parseBigDecimal(stats.totalDebt),
+        interestRate: parseWadToPercent(stats.interestRateWad),
+        maxOriginationLtv: parseBigDecimal(stats.maxOriginationLtv),
+      }));
 
       return result;
     },
@@ -344,10 +342,7 @@ export function useV2Accounts(limit: number = 1000) {
   });
 }
 
-export function useV2AtRiskAccounts(
-  limit: number = 20,
-  threshold: number = 1.2,
-) {
+export function useV2AtRiskAccounts(limit: number = 20, threshold: number = 1.2) {
   return useQuery({
     queryKey: ["v2-at-risk-accounts", limit, threshold],
     queryFn: async (): Promise<V2Account[]> => {
@@ -383,9 +378,7 @@ export function useV2RecentActivity(limit: number = 50) {
         type: activity.type,
         account: activity.account.address,
         amount: parseBigDecimal(activity.amount),
-        collateral: activity.collateral
-          ? parseBigDecimal(activity.collateral)
-          : undefined,
+        collateral: activity.collateral ? parseBigDecimal(activity.collateral) : undefined,
         debt: activity.debt ? parseBigDecimal(activity.debt) : undefined,
         timestamp: parseBigInt(activity.timestamp),
         txHash: activity.txHash,
@@ -407,9 +400,7 @@ export function useV2Liquidations(limit: number = 20) {
         type: activity.type,
         account: activity.account.address,
         amount: parseBigDecimal(activity.amount),
-        collateral: activity.collateral
-          ? parseBigDecimal(activity.collateral)
-          : undefined,
+        collateral: activity.collateral ? parseBigDecimal(activity.collateral) : undefined,
         debt: activity.debt ? parseBigDecimal(activity.debt) : undefined,
         timestamp: parseBigInt(activity.timestamp),
         txHash: activity.txHash,

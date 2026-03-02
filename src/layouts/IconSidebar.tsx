@@ -10,26 +10,16 @@ import {
   type NavSection,
 } from "@/lib/navigation";
 
-function IconNavItem({
-  section,
-  isActive,
-}: {
-  section: NavSection;
-  isActive: boolean;
-}) {
+function IconNavItem({ section, isActive }: { section: NavSection; isActive: boolean }) {
   const Icon = section.icon;
   const to = getDefaultPathForSection(section);
 
   return (
-    <Link
-      to={to}
-      className="group flex flex-col items-center gap-1 pb-3 w-16"
-    >
+    <Link to={to} className="group flex flex-col items-center gap-1 pb-3 w-16">
       <div
         className={cn(
           "flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent",
-          !isActive &&
-            "group-hover:bg-surface-a5 group-hover:border-a3-b"
+          !isActive && "group-hover:bg-surface-a5 group-hover:border-a3-b",
         )}
         style={
           isActive
@@ -43,14 +33,14 @@ function IconNavItem({
         <Icon
           className={cn(
             "size-6 transition-colors",
-            isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
+            isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
         />
       </div>
       <span
         className={cn(
           "text-xs font-semibold leading-[12px] transition-colors",
-          isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
+          isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
         )}
       >
         {section.label}

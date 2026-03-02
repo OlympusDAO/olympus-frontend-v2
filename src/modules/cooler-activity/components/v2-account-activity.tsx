@@ -1,9 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Search,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -15,10 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  useV2Accounts,
-  type V2Account,
-} from "@/lib/hooks/cooler/useV2Data";
+import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data";
 import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils";
 
 type SortField = "collateral" | "debt";
@@ -129,11 +122,7 @@ export function V2AccountsTable() {
             >
               <div className="flex items-center gap-1">
                 Collateral (gOHM)
-                <SortIcon
-                  field="collateral"
-                  currentField={sortField}
-                  direction={sortDirection}
-                />
+                <SortIcon field="collateral" currentField={sortField} direction={sortDirection} />
               </div>
             </TableHead>
             <TableHead
@@ -142,11 +131,7 @@ export function V2AccountsTable() {
             >
               <div className="flex items-center gap-1">
                 Debt (DAI)
-                <SortIcon
-                  field="debt"
-                  currentField={sortField}
-                  direction={sortDirection}
-                />
+                <SortIcon field="debt" currentField={sortField} direction={sortDirection} />
               </div>
             </TableHead>
           </TableRow>
@@ -171,10 +156,7 @@ export function V2AccountsTable() {
             ))
           ) : (
             <TableRow className="border-b-0">
-              <TableCell
-                colSpan={3}
-                className="h-24 text-center text-secondary-t py-4"
-              >
+              <TableCell colSpan={3} className="h-24 text-center text-secondary-t py-4">
                 {searchQuery ? "No matching accounts" : "No accounts found"}
               </TableCell>
             </TableRow>
@@ -186,8 +168,7 @@ export function V2AccountsTable() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-secondary-t">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(endIndex, sortedAccounts.length)} of{" "}
+            Showing {startIndex + 1} to {Math.min(endIndex, sortedAccounts.length)} of{" "}
             {sortedAccounts.length} accounts
           </p>
           <div className="flex items-center gap-2">
@@ -205,9 +186,7 @@ export function V2AccountsTable() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
               Next

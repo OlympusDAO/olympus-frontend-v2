@@ -11,8 +11,11 @@
   /* Remove default focus states */
   *:focus,
   *:focus-visible {
+    /* biome-ignore lint: needed to override library styles */
     outline: none !important;
+    /* biome-ignore lint: needed to override library styles */
     box-shadow: none !important;
+    /* biome-ignore lint: needed to override library styles */
     border-color: inherit !important;
   }
 
@@ -34,6 +37,7 @@
 
   /* Override RainbowKit font to match app */
   [data-rk] {
+    /* biome-ignore lint: needed to override library styles */
     font-family: "Neue Haas Display", sans-serif !important;
   }
 
@@ -58,8 +62,4 @@
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
-}
-
-@layer components {
-
 }

@@ -23,9 +23,7 @@ export function CoolerMetrics() {
     );
   }
 
-  const coolerRevenue = revenue?.sources.find(
-    (s) => s.name === "Cooler Interest",
-  );
+  const coolerRevenue = revenue?.sources.find((s) => s.name === "Cooler Interest");
   const weeklyIncome = coolerRevenue?.weeklyAmount ?? 0;
   const annualIncome = weeklyIncome * 52;
 
@@ -44,7 +42,10 @@ export function CoolerMetrics() {
           >
             Cooler Loans
           </TooltipInfo>
-          <RiExternalLinkLine size={13} className="text-tertiary-t/60 transition-colors group-hover:text-green" />
+          <RiExternalLinkLine
+            size={13}
+            className="text-tertiary-t/60 transition-colors group-hover:text-green"
+          />
         </a>
         <span className="rounded-md border border-a10-b bg-surface-a3 px-2 py-0.5 text-[10px] font-medium tabular-nums text-secondary-t">
           {cooler.interestRate.toFixed(1)}% APR
@@ -87,9 +88,7 @@ export function CoolerMetrics() {
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-tertiary-t">MonoCooler (v2)</span>
-              <span className="tabular-nums font-medium">
-                {formatUsd(cooler.monoDebt, true)}
-              </span>
+              <span className="tabular-nums font-medium">{formatUsd(cooler.monoDebt, true)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-tertiary-t">Clearinghouse (v1)</span>

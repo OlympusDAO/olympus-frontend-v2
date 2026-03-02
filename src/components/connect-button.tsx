@@ -31,9 +31,7 @@ export function ConnectButton() {
         return (
           <div
             aria-hidden={!ready}
-            className={
-              !ready ? "opacity-0 pointer-events-none select-none" : undefined
-            }
+            className={!ready ? "opacity-0 pointer-events-none select-none" : undefined}
           >
             {(() => {
               if (!connected) {
@@ -49,11 +47,7 @@ export function ConnectButton() {
               }
               if (chain.unsupported) {
                 return (
-                  <Button
-                    variant="secondary"
-                    onClick={openChainModal}
-                    type="button"
-                  >
+                  <Button variant="secondary" onClick={openChainModal} type="button">
                     Wrong network
                   </Button>
                 );
@@ -89,11 +83,7 @@ export function ConnectButton() {
                     size={isMobile ? "icon" : "default"}
                     className="px-3"
                   >
-                    {isMobile ? (
-                      <UserIcon />
-                    ) : (
-                      shortenAddress(account.address)
-                    )}
+                    {isMobile ? <UserIcon /> : shortenAddress(account.address)}
                   </Button>
                 </div>
               );

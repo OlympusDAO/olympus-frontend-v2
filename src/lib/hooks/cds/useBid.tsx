@@ -1,26 +1,14 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
 import type { Address } from "viem";
-import { type ContractFunctionArgs } from "viem";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import type { ContractFunctionArgs } from "viem";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress } from "@/lib/tokens";
 import ConvertibleDepositAuctioneerABI from "@/abis/ConvertibleDepositAuctioneer";
 
-type BidArgs = ContractFunctionArgs<
-  typeof ConvertibleDepositAuctioneerABI,
-  "nonpayable",
-  "bid"
->;
+type BidArgs = ContractFunctionArgs<typeof ConvertibleDepositAuctioneerABI, "nonpayable", "bid">;
 
 export function useBid() {
   const queryClient = useQueryClient();
@@ -56,8 +44,7 @@ export function useBid() {
     },
     error: {
       title: "Deposit failed",
-      description:
-        "There was an error submitting your deposit. Please try again.",
+      description: "There was an error submitting your deposit. Please try again.",
       userRejected: {
         title: "Deposit cancelled",
         description: "You cancelled the transaction.",
@@ -84,7 +71,7 @@ export function useBid() {
     if (isConfirmed && address && chainId) {
       const positionManagerAddress = getContractAddress(
         ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-        chainId
+        chainId,
       );
 
       if (positionManagerAddress) {
@@ -137,7 +124,7 @@ export function useBid() {
         // Invalidate getCurrentTick queries for the auctioneer contract
         const auctioneerAddress = getContractAddress(
           ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-          chainId
+          chainId,
         );
 
         if (auctioneerAddress) {
@@ -157,7 +144,7 @@ export function useBid() {
         });
       }
     }
-  }, [isConfirmed, address, chainId]);
+  }, [isConfirmed, address, chainId, queryClient]);
 
   const bid = ({
     contractAddress,
@@ -180,9 +167,7 @@ export function useBid() {
   }) => {
     // Prevent bids on disabled auctions (target === 0)
     if (isAuctionDisabled) {
-      console.error(
-        `Cannot bid on disabled auction for deposit period ${depositPeriod}`
-      );
+      console.error(`Cannot bid on disabled auction for deposit period ${depositPeriod}`);
       return;
     }
 
@@ -195,13 +180,7 @@ export function useBid() {
         address: contractAddress,
         abi: ConvertibleDepositAuctioneerABI,
         functionName: "bid",
-        args: [
-          depositPeriod,
-          depositAmount,
-          minOhmOut,
-          wrapPosition,
-          wrapReceipt,
-        ],
+        args: [depositPeriod, depositAmount, minOhmOut, wrapPosition, wrapReceipt],
       },
       {
         onSuccess: () => {
@@ -209,7 +188,7 @@ export function useBid() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

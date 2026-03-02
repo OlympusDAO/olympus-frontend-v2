@@ -1,14 +1,5 @@
-import {
-  Home,
-  Gift,
-  FileText,
-  MoreHorizontal,
-  Building2,
-} from "lucide-react";
-import {
-  RiSettings3Line,
-  RiLoopLeftLine,
-} from "@remixicon/react";
+import { Home, Gift, FileText, MoreHorizontal, Building2 } from "lucide-react";
+import { RiSettings3Line, RiLoopLeftLine } from "@remixicon/react";
 import type { ComponentType } from "react";
 
 export type NavItem = {
@@ -119,7 +110,9 @@ export function getActiveSectionFromPath(pathname: string): NavSection | undefin
 export function getActiveSubItemFromPath(pathname: string): NavItem | undefined {
   const section = getActiveSectionFromPath(pathname);
   if (!section) return undefined;
-  return section.items.find((item) => !item.external && (pathname === item.path || pathname.startsWith(item.path + "/")));
+  return section.items.find(
+    (item) => !item.external && (pathname === item.path || pathname.startsWith(`${item.path}/`)),
+  );
 }
 
 export function getDefaultPathForSection(section: NavSection): string {

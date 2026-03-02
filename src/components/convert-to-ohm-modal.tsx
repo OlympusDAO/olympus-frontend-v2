@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
@@ -53,28 +49,20 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   const { address: userAddress } = useAccount();
 
   // Convert hooks
-  const {
-    convert,
-    isPending: isConverting,
-    isSuccess,
-    hash: convertHash,
-  } = useConvertPosition();
+  const { convert, isPending: isConverting, isSuccess, hash: convertHash } = useConvertPosition();
 
   // Receipt token balance check
   const { balance: receiptTokenBalance, tokenId } = useReceiptTokenBalance(
     position?.data.asset,
     position?.data.periodMonths,
-    userAddress
+    userAddress,
   );
 
   // Get the token name dynamically
   const { tokenName } = useReceiptTokenName(tokenId);
 
   // Receipt token allowance check
-  const { allowance, refetch: refetchAllowance } = useReceiptTokenAllowance(
-    tokenId,
-    userAddress
-  );
+  const { allowance, refetch: refetchAllowance } = useReceiptTokenAllowance(tokenId, userAddress);
 
   // Receipt token approval
   const {
@@ -90,15 +78,12 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
     return parseFloat(formatEther(amount)).toFixed(2);
   };
 
-
   const formatConversionPrice = (price: bigint) => {
     return parseFloat(formatEther(price)).toFixed(4);
   };
 
   // Position data
-  const term = position
-    ? formatTermSuffix(position.data.periodMonths)
-    : "3m";
+  const term = position ? formatTermSuffix(position.data.periodMonths) : "3m";
 
   // Use dynamic token name with fallback (no loading state to avoid jerkiness)
   const displayTokenName = tokenName || `Receipt-${term}`;
@@ -120,12 +105,10 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   const calculatedReceive = previewData
     ? (Number(previewData.convertedTokenOut) / 1e9).toFixed(2) // OHM has 9 decimals
     : convertAmount && position
-    ? (
-        (Number(convertAmountBigInt) * 1e9) /
-        Number(position.data.conversionPrice) /
-        1e9
-      ).toFixed(2)
-    : "0";
+      ? ((Number(convertAmountBigInt) * 1e9) / Number(position.data.conversionPrice) / 1e9).toFixed(
+          2,
+        )
+      : "0";
 
   // Calculate the maximum convertible amount (minimum of receipt balance and remaining deposit)
   const maxConvertibleAmount =
@@ -141,9 +124,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    convertAmountBigInt > 0n &&
-    allowance < convertAmountBigInt;
+    allowance !== undefined && convertAmountBigInt > 0n && allowance < convertAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
@@ -250,9 +231,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your transactions have been executed.
                 </p>
@@ -279,8 +258,8 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                           step.isCompleted
                             ? "text-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t"
+                              : "text-secondary-t ring-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
@@ -312,14 +291,10 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && (
-                        <img src={step.icon} alt="" className="w-5 h-5" />
-                      )}
+                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -394,10 +369,13 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
             {/* Amount Section */}
             <div>
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Amount</label>
+                <label htmlFor="amount" className="text-sm font-medium">
+                  Amount
+                </label>
               </div>
               <div className="flex items-center justify-between">
                 <Input
+                  id="amount"
                   type="number"
                   value={convertAmount}
                   onChange={(e) => setConvertAmount(e.target.value)}
@@ -432,7 +410,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
             {/* You Receive Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">You Receive</label>
+                <p className="text-sm font-medium">You Receive</p>
                 <div className="flex items-center gap-2">
                   <img src={OHMIcon} alt="OHM" className="w-5 h-5" />
                   <span>{calculatedReceive} OHM</span>
@@ -441,9 +419,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-secondary-t font-light">
-                    Conversion Price
-                  </div>
+                  <div className="text-xs text-secondary-t font-light">Conversion Price</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs">{conversionRate}</div>
@@ -453,17 +429,12 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
           </div>
 
           {/* Receipt Token Info */}
-          {hasInsufficientReceiptTokens && (
-            <InsufficientReceiptTokens tokenName={term} />
-          )}
+          {hasInsufficientReceiptTokens && <InsufficientReceiptTokens tokenName={term} />}
 
           <Button
             onClick={handleStartConversion}
             disabled={
-              !convertAmount ||
-              convertAmount === "0" ||
-              !position ||
-              hasInsufficientReceiptTokens
+              !convertAmount || convertAmount === "0" || !position || hasInsufficientReceiptTokens
             }
             className="w-full"
             size="lg"
@@ -471,8 +442,8 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
             {hasInsufficientReceiptTokens
               ? "Insufficient Receipt Tokens"
               : !convertAmount || convertAmount === "0"
-              ? "Enter Amount"
-              : "Convert to OHM"}
+                ? "Enter Amount"
+                : "Convert to OHM"}
           </Button>
         </div>
       </DialogContent>

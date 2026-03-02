@@ -72,12 +72,8 @@ export function useCoolerMetrics() {
       // MonoCooler: values are BigInt WAD format (need /1e18)
       // Matches cooler-metrics parseBigDecimal pattern
       const monoState = data?.monoCoolerGlobalStates?.[0];
-      const monoDebt = monoState
-        ? parseFloat(monoState.totalDebt) / 1e18
-        : 0;
-      const monoCollateralGohm = monoState
-        ? parseFloat(monoState.totalCollateral) / 1e18
-        : 0;
+      const monoDebt = monoState ? parseFloat(monoState.totalDebt) / 1e18 : 0;
+      const monoCollateralGohm = monoState ? parseFloat(monoState.totalCollateral) / 1e18 : 0;
       // interestRateWad is annual rate in WAD: divide by 1e18, multiply by 100 for percent
       const interestRate = monoState?.interestRateWad
         ? (parseFloat(monoState.interestRateWad) / 1e18) * 100

@@ -31,9 +31,7 @@ export function CdStatistics() {
   const premiumPct = backing > 0 ? ((ohmPrice - backing) / backing) * 100 : 0;
 
   const latestBid = cd.bids[0];
-  const latestTickPrice = latestBid
-    ? parseFloat(latestBid.tickPriceDecimal)
-    : 0;
+  const latestTickPrice = latestBid ? parseFloat(latestBid.tickPriceDecimal) : 0;
 
   const supplyGrowthOhm = cd.supplyGrowthOhm;
   const treasuryGrowthUsd = cd.totalDepositsUsd;
@@ -61,10 +59,17 @@ export function CdStatistics() {
           >
             Convertible Deposits
           </TooltipInfo>
-          <RiExternalLinkLine size={13} className="text-tertiary-t/60 transition-colors group-hover:text-green" />
+          <RiExternalLinkLine
+            size={13}
+            className="text-tertiary-t/60 transition-colors group-hover:text-green"
+          />
         </a>
         <div className="flex items-center gap-2">
-          <div className={cd.isMarketActive ? "size-2 rounded-full bg-green" : "size-2 rounded-full bg-yellow"} />
+          <div
+            className={
+              cd.isMarketActive ? "size-2 rounded-full bg-green" : "size-2 rounded-full bg-yellow"
+            }
+          />
           <span className="text-xs text-secondary-t">
             {cd.isMarketActive ? "Active" : "Paused"}
           </span>
@@ -78,7 +83,8 @@ export function CdStatistics() {
           {formatUsd(cd.totalDepositsUsd, true)}
         </p>
         <p className="mt-0.5 text-xs tabular-nums text-tertiary-t">
-          {cd.activeBidsCount} recent bids · {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"} premium
+          {cd.activeBidsCount} recent bids · {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
+          premium
         </p>
       </div>
 
@@ -92,9 +98,7 @@ export function CdStatistics() {
         </div>
         <div>
           <p className="text-xs text-tertiary-t">Backing Per OHM</p>
-          <p className="tabular-nums text-lg font-semibold">
-            {formatUsd(backing)}
-          </p>
+          <p className="tabular-nums text-lg font-semibold">{formatUsd(backing)}</p>
         </div>
       </div>
 
@@ -124,7 +128,8 @@ export function CdStatistics() {
           <div>
             <p className="text-[10px] text-tertiary-t">Backing</p>
             <p className="tabular-nums text-sm font-semibold text-green">
-              {backingGrowthPercent >= 0 ? "+" : ""}{backingGrowthPercent.toFixed(2)}%
+              {backingGrowthPercent >= 0 ? "+" : ""}
+              {backingGrowthPercent.toFixed(2)}%
             </p>
           </div>
         </div>

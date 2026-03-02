@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import ConvertibleDepositPositionManagerABI from "@/abis/ConvertibleDepositPositionManager";
 
@@ -44,8 +36,7 @@ export const useWrapPosition = () => {
   const toastConfig: TransactionToastConfig = {
     pending: {
       title: "Wrapping position...",
-      description:
-        "Please wait while your position is being wrapped as an NFT.",
+      description: "Please wait while your position is being wrapped as an NFT.",
     },
     success: {
       title: "Position wrapped successfully!",
@@ -53,8 +44,7 @@ export const useWrapPosition = () => {
     },
     error: {
       title: "Wrap failed",
-      description:
-        "There was an error wrapping your position. Please try again.",
+      description: "There was an error wrapping your position. Please try again.",
       userRejected: {
         title: "Wrap cancelled",
         description: "You cancelled the transaction.",
@@ -81,7 +71,7 @@ export const useWrapPosition = () => {
     if (isConfirmed && address && chainId) {
       const positionManagerAddress = getContractAddress(
         ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-        chainId
+        chainId,
       );
 
       if (positionManagerAddress) {
@@ -127,7 +117,7 @@ export const useWrapPosition = () => {
   const wrap = ({ positionId, queryKey }: WrapPositionParams) => {
     const positionManagerAddress = getContractAddress(
       ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-      chainId
+      chainId,
     );
 
     if (!positionManagerAddress) {
@@ -151,7 +141,7 @@ export const useWrapPosition = () => {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

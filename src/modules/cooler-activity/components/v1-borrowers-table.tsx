@@ -18,10 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  useBorrowers,
-  type BorrowerStat,
-} from "@/lib/hooks/cooler/useV1Data";
+import { useBorrowers, type BorrowerStat } from "@/lib/hooks/cooler/useV1Data";
 import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils";
 
 function formatCollateral(value: string): string {
@@ -59,14 +56,12 @@ const columns: ColumnDef<BorrowerStat>[] = [
   {
     accessorKey: "totalDefaultedLoans",
     header: "Defaulted",
-    sortingFn: (a, b) =>
-      a.original.totalDefaultedLoans - b.original.totalDefaultedLoans,
+    sortingFn: (a, b) => a.original.totalDefaultedLoans - b.original.totalDefaultedLoans,
   },
   {
     accessorKey: "totalLoanExtensions",
     header: "Extensions",
-    sortingFn: (a, b) =>
-      a.original.totalLoanExtensions - b.original.totalLoanExtensions,
+    sortingFn: (a, b) => a.original.totalLoanExtensions - b.original.totalLoanExtensions,
   },
   {
     accessorKey: "totalLoans",
@@ -78,16 +73,14 @@ const columns: ColumnDef<BorrowerStat>[] = [
     header: "Interest Due",
     cell: ({ row }) => formatUSDFromString(row.original.currentInterestDue),
     sortingFn: (a, b) =>
-      Number(a.original.currentInterestDue) -
-      Number(b.original.currentInterestDue),
+      Number(a.original.currentInterestDue) - Number(b.original.currentInterestDue),
   },
   {
     accessorKey: "currentCollateral",
     header: "Collateral",
     cell: ({ row }) => formatCollateral(row.original.currentCollateral),
     sortingFn: (a, b) =>
-      Number(a.original.currentCollateral) -
-      Number(b.original.currentCollateral),
+      Number(a.original.currentCollateral) - Number(b.original.currentCollateral),
   },
 ];
 
@@ -101,8 +94,7 @@ function LoadingSkeleton() {
 }
 
 export function V1BorrowersTable() {
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useBorrowers();
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useBorrowers();
 
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -111,14 +103,11 @@ export function V1BorrowersTable() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const borrowers = useMemo(
-    () =>
-      data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
+    () => data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
     [data],
   );
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "totalLoans", desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "totalLoans", desc: true }]);
 
   const table = useReactTable({
     data: borrowers,
@@ -161,10 +150,7 @@ export function V1BorrowersTable() {
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   <span className="inline-flex items-center gap-1">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getIsSorted() === "asc" && " \u25B2"}
                     {header.column.getIsSorted() === "desc" && " \u25BC"}
                   </span>
@@ -212,8 +198,7 @@ export function V1BorrowersTable() {
             Previous
           </Button>
           <span className="text-sm text-secondary-t">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
           </span>
           <Button
             variant="secondary"

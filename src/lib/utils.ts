@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -32,10 +32,7 @@ export function formatPeriodDisplayName(months: number): string {
 /**
  * Creates a display name for a token with term suffix (e.g., "USDS-3m", "cdUSDS-6m")
  */
-export function createTokenDisplayName(
-  baseSymbol: string,
-  periodMonths: number
-): string {
+export function createTokenDisplayName(baseSymbol: string, periodMonths: number): string {
   const termSuffix = formatTermSuffix(periodMonths);
   return `${baseSymbol}-${termSuffix}`;
 }

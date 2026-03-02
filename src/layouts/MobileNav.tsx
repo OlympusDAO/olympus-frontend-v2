@@ -27,22 +27,23 @@ function MobileSectionItem({
 
   return (
     <button
+      type="button"
       onClick={() => onSelect(section)}
       className={cn(
         "flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl transition-colors w-full cursor-pointer",
-        isActive ? "bg-surface-a10" : "hover:bg-surface-a5"
+        isActive ? "bg-surface-a10" : "hover:bg-surface-a5",
       )}
     >
       <Icon
         className={cn(
           "size-5 transition-colors",
-          isActive ? "text-brand-sand-1000" : "text-secondary-t"
+          isActive ? "text-brand-sand-1000" : "text-secondary-t",
         )}
       />
       <span
         className={cn(
           "text-[10px] leading-tight transition-colors",
-          isActive ? "text-primary-t font-medium" : "text-secondary-t"
+          isActive ? "text-primary-t font-medium" : "text-secondary-t",
         )}
       >
         {section.label}
@@ -83,7 +84,7 @@ function MobileSubNavItem({
         "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
         isActive
           ? "bg-surface-a10 text-primary-t font-medium"
-          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t"
+          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
       )}
     >
       {item.label}
@@ -172,9 +173,7 @@ export function MobileNav() {
             <div className="flex-1 flex flex-col min-w-0 py-4">
               {/* Section title */}
               <div className="px-4 pb-4">
-                <h2 className="text-lg font-bold text-primary-t">
-                  {displaySection.sidebarTitle}
-                </h2>
+                <h2 className="text-lg font-bold text-primary-t">{displaySection.sidebarTitle}</h2>
               </div>
 
               {/* Sub-nav links */}

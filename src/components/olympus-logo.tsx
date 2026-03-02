@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 export function OlympusLogo({ className }: { className?: string }) {
   return (
     <svg
+      role="img"
+      aria-label="Olympus Logo"
       width="28"
       height="28"
       viewBox="0 0 28 28"

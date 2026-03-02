@@ -16,7 +16,7 @@ export const useUserPositions = () => {
 
   const positionManagerAddress = getContractAddress(
     ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-    chainId
+    chainId,
   );
 
   // Get user's position IDs
@@ -50,8 +50,7 @@ export const useUserPositions = () => {
   } = useReadContracts({
     contracts: positionContracts,
     query: {
-      enabled:
-        !!positionIds && positionIds.length > 0 && !!positionManagerAddress,
+      enabled: !!positionIds && positionIds.length > 0 && !!positionManagerAddress,
     },
   });
 

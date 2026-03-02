@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import {
   useClearinghouseStats,
@@ -29,9 +30,7 @@ export const V1StatsCards: React.FC = () => {
     let value = 0;
 
     allLoans.forEach((loan) => {
-      const daysLeft = calculateDaysUntilDefault(
-        parseInt(loan.currentExpiryTimestamp),
-      );
+      const daysLeft = calculateDaysUntilDefault(parseInt(loan.currentExpiryTimestamp, 10));
       if (daysLeft <= defaultDays && daysLeft > 0) {
         count += 1;
         value += Number(loan.principal);
@@ -57,37 +56,19 @@ export const V1StatsCards: React.FC = () => {
 
   const cumulativeStats = stats?.clearinghouseCumulativeStats_collection ?? [];
 
-  const totalBorrowers = cumulativeStats.reduce(
-    (acc, curr) => acc + curr.totalUniqueBorrowers,
-    0,
-  );
-  const activeLoopers = cumulativeStats.reduce(
-    (acc, curr) => acc + curr.currentActiveLoopers,
-    0,
-  );
-  const totalLoans = cumulativeStats.reduce(
-    (acc, curr) => acc + curr.totalLoans,
-    0,
-  );
-  const totalActiveLoans = cumulativeStats.reduce(
-    (acc, curr) => acc + curr.currentActiveLoans,
-    0,
-  );
-  const totalDefaults = cumulativeStats.reduce(
-    (acc, curr) => acc + curr.totalDefaultedLoans,
-    0,
-  );
+  const totalBorrowers = cumulativeStats.reduce((acc, curr) => acc + curr.totalUniqueBorrowers, 0);
+  const activeLoopers = cumulativeStats.reduce((acc, curr) => acc + curr.currentActiveLoopers, 0);
+  const totalLoans = cumulativeStats.reduce((acc, curr) => acc + curr.totalLoans, 0);
+  const totalActiveLoans = cumulativeStats.reduce((acc, curr) => acc + curr.currentActiveLoans, 0);
+  const totalDefaults = cumulativeStats.reduce((acc, curr) => acc + curr.totalDefaultedLoans, 0);
 
-  const highestLoop =
-    topLooperData?.borrowerStats_collection?.[0]?.maxActiveLoans ?? 0;
-  const highestBorrow =
-    topBorrowData?.clearLoanRequestEvents?.[0]?.loan?.principal
-      ? Number(topBorrowData.clearLoanRequestEvents[0].loan.principal)
-      : 0;
-  const highestTotalBorrow =
-    topTotalBorrowsData?.borrowerStats_collection?.[0]?.maxBorrowedValue
-      ? Number(topTotalBorrowsData.borrowerStats_collection[0].maxBorrowedValue)
-      : 0;
+  const highestLoop = topLooperData?.borrowerStats_collection?.[0]?.maxActiveLoans ?? 0;
+  const highestBorrow = topBorrowData?.clearLoanRequestEvents?.[0]?.loan?.principal
+    ? Number(topBorrowData.clearLoanRequestEvents[0].loan.principal)
+    : 0;
+  const highestTotalBorrow = topTotalBorrowsData?.borrowerStats_collection?.[0]?.maxBorrowedValue
+    ? Number(topTotalBorrowsData.borrowerStats_collection[0].maxBorrowedValue)
+    : 0;
 
   const cards = [
     {
@@ -138,9 +119,7 @@ export const V1StatsCards: React.FC = () => {
         <Card key={card.label} className="p-6">
           <span className="text-sm text-secondary-t">{card.label}</span>
           <p className="text-2xl font-semibold mt-1">{card.value}</p>
-          {card.sub && (
-            <span className="text-xs text-tertiary-t">{card.sub}</span>
-          )}
+          {card.sub && <span className="text-xs text-tertiary-t">{card.sub}</span>}
         </Card>
       ))}
 
@@ -153,14 +132,12 @@ export const V1StatsCards: React.FC = () => {
             min={1}
             max={365}
             value={defaultDays}
-            onChange={(e) => setDefaultDays(parseInt(e.target.value) || 5)}
+            onChange={(e) => setDefaultDays(parseInt(e.target.value, 10) || 5)}
             className="w-12 h-6 text-sm text-center bg-surface-a5 border border-a10 rounded px-1"
           />
           <span className="text-sm text-secondary-t">days</span>
         </div>
-        <p className="text-2xl font-semibold mt-1">
-          {formatUSD(defaultingStats.value)}
-        </p>
+        <p className="text-2xl font-semibold mt-1">{formatUSD(defaultingStats.value)}</p>
         <span className="text-xs text-tertiary-t">
           {defaultingStats.count} loan{defaultingStats.count !== 1 ? "s" : ""} will default
         </span>

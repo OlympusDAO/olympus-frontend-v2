@@ -351,9 +351,7 @@ export function useClearinghouseStats() {
     queryKey: ["cooler-v1-clearinghouse-stats"],
     queryFn: async () => {
       const data =
-        await coolerGraphqlClient.request<ClearinghouseStatsResponse>(
-          CLEARINGHOUSE_STATS_QUERY,
-        );
+        await coolerGraphqlClient.request<ClearinghouseStatsResponse>(CLEARINGHOUSE_STATS_QUERY);
       return data;
     },
   });
@@ -363,10 +361,7 @@ export function useClearinghouses() {
   return useQuery({
     queryKey: ["cooler-v1-clearinghouses"],
     queryFn: async () => {
-      const data =
-        await coolerGraphqlClient.request<ClearinghousesResponse>(
-          CLEARINGHOUSES_QUERY,
-        );
+      const data = await coolerGraphqlClient.request<ClearinghousesResponse>(CLEARINGHOUSES_QUERY);
       return data;
     },
   });
@@ -378,15 +373,12 @@ export function useActiveLoans() {
   return useInfiniteQuery({
     queryKey: ["cooler-v1-active-loans"],
     queryFn: async ({ pageParam = 0 }) => {
-      const data = await coolerGraphqlClient.request<ActiveLoansResponse>(
-        ACTIVE_LOANS_QUERY,
-        {
-          first: 1000,
-          skip: pageParam,
-          principal: "0",
-          date: nowTimestamp,
-        },
-      );
+      const data = await coolerGraphqlClient.request<ActiveLoansResponse>(ACTIVE_LOANS_QUERY, {
+        first: 1000,
+        skip: pageParam,
+        principal: "0",
+        date: nowTimestamp,
+      });
       return data;
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -422,13 +414,10 @@ export function useBorrowers() {
   return useInfiniteQuery({
     queryKey: ["cooler-v1-borrowers"],
     queryFn: async ({ pageParam = 0 }) => {
-      const data = await coolerGraphqlClient.request<BorrowersResponse>(
-        BORROWERS_QUERY,
-        {
-          first: 1000,
-          skip: pageParam,
-        },
-      );
+      const data = await coolerGraphqlClient.request<BorrowersResponse>(BORROWERS_QUERY, {
+        first: 1000,
+        skip: pageParam,
+      });
       return data;
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -443,10 +432,7 @@ export function useProtocolIncome() {
   return useQuery({
     queryKey: ["cooler-v1-protocol-income"],
     queryFn: async () => {
-      const data =
-        await coolerGraphqlClient.request<ProtocolIncomeResponse>(
-          PROTOCOL_INCOME_QUERY,
-        );
+      const data = await coolerGraphqlClient.request<ProtocolIncomeResponse>(PROTOCOL_INCOME_QUERY);
       return data;
     },
   });
@@ -456,8 +442,7 @@ export function useTopBorrow() {
   return useQuery({
     queryKey: ["cooler-v1-top-borrow"],
     queryFn: async () => {
-      const data =
-        await coolerGraphqlClient.request<TopBorrowResponse>(TOP_BORROW_QUERY);
+      const data = await coolerGraphqlClient.request<TopBorrowResponse>(TOP_BORROW_QUERY);
       return data;
     },
   });
@@ -467,8 +452,7 @@ export function useTopLooper() {
   return useQuery({
     queryKey: ["cooler-v1-top-looper"],
     queryFn: async () => {
-      const data =
-        await coolerGraphqlClient.request<TopLooperResponse>(TOP_LOOPER_QUERY);
+      const data = await coolerGraphqlClient.request<TopLooperResponse>(TOP_LOOPER_QUERY);
       return data;
     },
   });
@@ -479,9 +463,7 @@ export function useTopTotalBorrows() {
     queryKey: ["cooler-v1-top-total-borrows"],
     queryFn: async () => {
       const data =
-        await coolerGraphqlClient.request<TopTotalBorrowsResponse>(
-          TOP_TOTAL_BORROWS_QUERY,
-        );
+        await coolerGraphqlClient.request<TopTotalBorrowsResponse>(TOP_TOTAL_BORROWS_QUERY);
       return data;
     },
   });
@@ -491,11 +473,9 @@ export function useUtilization(clearinghouseAddress: string) {
   return useQuery({
     queryKey: ["cooler-v1-utilization", clearinghouseAddress],
     queryFn: async () => {
-      const data =
-        await coolerGraphqlClient.request<UtilizationResponse>(
-          UTILIZATION_QUERY,
-          { clearinghouseAddress },
-        );
+      const data = await coolerGraphqlClient.request<UtilizationResponse>(UTILIZATION_QUERY, {
+        clearinghouseAddress,
+      });
       return data;
     },
     enabled: !!clearinghouseAddress,

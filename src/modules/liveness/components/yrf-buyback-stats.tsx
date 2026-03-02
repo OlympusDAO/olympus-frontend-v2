@@ -49,9 +49,7 @@ export function YrfBuybackStats() {
   // Supply impact from YRF at current buyback rate
   const annualBurnsAtCurrentRate = weeklyBurns * 52;
   const supplyDeflationRate =
-    treasury.ohmTotalSupply > 0
-      ? (annualBurnsAtCurrentRate / treasury.ohmTotalSupply) * -100
-      : 0;
+    treasury.ohmTotalSupply > 0 ? (annualBurnsAtCurrentRate / treasury.ohmTotalSupply) * -100 : 0;
 
   // YRF subgraph data
   const totalYieldDeployed = yrfHistory?.totalYieldDeployed ?? 0;
@@ -62,9 +60,7 @@ export function YrfBuybackStats() {
   const allWeeks = yrfHistory?.weeklyYields ?? [];
   const currentWeekUsdSpent = yrfHistory?.currentWeekUsdSpent ?? 0;
   const budgetDeployed =
-    currentWeeklyYield > 0
-      ? (currentWeekUsdSpent / currentWeeklyYield) * 100
-      : 0;
+    currentWeeklyYield > 0 ? (currentWeekUsdSpent / currentWeeklyYield) * 100 : 0;
 
   // Today's market capacity (most recent bid amount from YRF contract)
   const todayCapacity = yrfHistory?.recentBids?.[0]?.bidAmount ?? 0;
@@ -118,9 +114,7 @@ export function YrfBuybackStats() {
                   <span className="bg-gradient-to-r from-green via-green/70 to-green bg-[length:200%_100%] bg-clip-text text-transparent animate-shimmer-green">
                     {formatNumber(Math.round(totalOhmBurned))}
                   </span>
-                  <span className="ml-1.5 text-xl font-medium text-secondary-t">
-                    OHM
-                  </span>
+                  <span className="ml-1.5 text-xl font-medium text-secondary-t">OHM</span>
                 </>
               ) : (
                 <span>{formatUsd(totalYieldDeployed, true)}</span>
@@ -160,8 +154,7 @@ export function YrfBuybackStats() {
             <div className="flex items-center justify-between text-xs text-tertiary-t">
               <span>Deployed</span>
               <span className="tabular-nums">
-                {formatUsd(currentWeekUsdSpent, true)} (
-                {budgetDeployed.toFixed(0)}%)
+                {formatUsd(currentWeekUsdSpent, true)} ({budgetDeployed.toFixed(0)}%)
               </span>
             </div>
             <Progress
@@ -180,12 +173,8 @@ export function YrfBuybackStats() {
           >
             Est. Weekly Burns
           </TooltipInfo>
-          <p className="tabular-nums text-xl font-semibold">
-            {formatNumber(weeklyBurns)} OHM
-          </p>
-          <p className="text-xs text-tertiary-t">
-            {formatUsd(weeklyBurns * ohmPrice, true)} value
-          </p>
+          <p className="tabular-nums text-xl font-semibold">{formatNumber(weeklyBurns)} OHM</p>
+          <p className="text-xs text-tertiary-t">{formatUsd(weeklyBurns * ohmPrice, true)} value</p>
         </div>
 
         {/* Current Market Capacity */}
@@ -196,9 +185,7 @@ export function YrfBuybackStats() {
           >
             Current Capacity
           </TooltipInfo>
-          <p className="tabular-nums text-xl font-semibold">
-            {formatUsd(todayCapacity, true)}
-          </p>
+          <p className="tabular-nums text-xl font-semibold">{formatUsd(todayCapacity, true)}</p>
           <p className="tabular-nums text-xs text-tertiary-t">
             Resets in {pad(epoch.hours)}:{pad(epoch.minutes)}:{pad(epoch.seconds)}
           </p>
@@ -209,34 +196,17 @@ export function YrfBuybackStats() {
       {chartData.length > 0 && (
         <div className="mt-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-secondary-t">
-            {hasBondData
-              ? "OHM Repurchased per Week"
-              : "Est. OHM Repurchased per Week"}
+            {hasBondData ? "OHM Repurchased per Week" : "Est. OHM Repurchased per Week"}
           </p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart
-              data={chartData}
-              margin={{ top: 5, right: 0, bottom: 0, left: 0 }}
-            >
+            <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="gradYrfBurn" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="var(--green)"
-                    stopOpacity={0.05}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--green)"
-                    stopOpacity={0.4}
-                  />
+                  <stop offset="0%" stopColor="var(--green)" stopOpacity={0.05} />
+                  <stop offset="100%" stopColor="var(--green)" stopOpacity={0.4} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border-a10)"
-                vertical={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-a10)" vertical={false} />
               <XAxis
                 dataKey="name"
                 fontSize={10}
@@ -260,9 +230,7 @@ export function YrfBuybackStats() {
                   return (
                     <div className="rounded-lg border border-a10-b bg-surface-tooltip px-3 py-2 text-sm shadow-lg">
                       <p className="font-medium">Week of {data.name}</p>
-                      <p className="tabular-nums text-green">
-                        {formatNumber(data.ohmBurned)} OHM
-                      </p>
+                      <p className="tabular-nums text-green">{formatNumber(data.ohmBurned)} OHM</p>
                       <p className="text-xs text-tertiary-t">
                         {data.usdSpent > 0
                           ? `${formatUsd(data.usdSpent, true)} spent`

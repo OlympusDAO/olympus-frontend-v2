@@ -4,10 +4,7 @@ import { ConnectButton } from "@/components/connect-button";
 import { MobileNav } from "@/layouts/MobileNav";
 import { OlympusLogo } from "@/components/olympus-logo";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
-import {
-  getActiveSectionFromPath,
-  getActiveSubItemFromPath,
-} from "@/lib/navigation";
+import { getActiveSectionFromPath, getActiveSubItemFromPath } from "@/lib/navigation";
 
 export function Header() {
   const location = useLocation();

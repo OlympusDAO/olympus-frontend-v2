@@ -95,11 +95,22 @@
   --color-e-surface-l2-drop-shadow: var(--e-surface-l2-drop-shadow);
   --color-e-surface-l2-liner-shadow: var(--e-surface-l2-liner-shadow);
 
-
   /*shadow*/
-  --shadow-cds: 0px 0px 0px 0.5px rgba(20, 23, 34, 0.20) inset, 0px 1px 1px 1px rgba(255, 255, 255, 0.40) inset, 0px -1px 1px 1px rgba(0, 0, 0, 0.20) inset, 0px 4px 8px 0px --alpha(var(--slate) / 0.1);
-  --shadow-card: 0px 4px 16px rgba(20,23,34,0.05), 0px 0px 0px 0.5px rgba(20,23,34,0.1), inset 1px 1px 2px #FFFFFF;
-  --shadow-card-dark: 0px 4px 16px rgba(255,255,255,0.05), 0px 0px 0px 0.5px rgba(255,255,255,0.1), inset 1px 1px 2px --alpha(var(--slate) / 0.1);
+  --shadow-cds:
+    0px 0px 0px 0.5px rgba(20, 23, 34, 0.2) inset, 0px 1px 1px 1px rgba(255, 255, 255, 0.4) inset, 0px -1px 1px 1px rgba(
+      0,
+      0,
+      0,
+      0.2
+    ) inset, 0px 4px 8px 0px --alpha(var(--slate) / 0.1);
+  --shadow-card:
+    0px 4px 16px rgba(20, 23, 34, 0.05), 0px 0px 0px 0.5px rgba(20, 23, 34, 0.1),
+    inset 1px 1px 2px #ffffff;
+  --shadow-card-dark:
+    0px 4px 16px rgba(255, 255, 255, 0.05), 0px 0px 0px 0.5px rgba(255, 255, 255, 0.1), inset 1px 1px 2px --alpha(
+      var(--slate) /
+      0.1
+    );
 
   --animate-spinner: spinner 1200ms linear infinite;
   --animate-heartbeat-ring: heartbeat-ring 2.5s ease-out infinite;
@@ -107,22 +118,51 @@
   --animate-shimmer-green: shimmer-green 3s ease-in-out infinite;
 
   @keyframes spinner {
-    0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
-    12.5%{ transform: scale(1) rotate(  0deg); opacity: 1; }
-    50%  { transform: scale(1) rotate(  0deg); opacity: 1; }
-    62.5%{ transform: scale(0) rotate( 45deg); opacity: 0; }
-    100% { transform: scale(0) rotate( 45deg); opacity: 0; }
+    0% {
+      transform: scale(0) rotate(-45deg);
+      opacity: 0;
+    }
+    12.5% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    62.5% {
+      transform: scale(0) rotate(45deg);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(0) rotate(45deg);
+      opacity: 0;
+    }
   }
 
   @keyframes heartbeat-ring {
-    0%   { transform: scale(1); opacity: 0.6; }
-    70%  { transform: scale(3.5); opacity: 0; }
-    100% { transform: scale(3.5); opacity: 0; }
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    70% {
+      transform: scale(3.5);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(3.5);
+      opacity: 0;
+    }
   }
 
   @keyframes shimmer-green {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 
   --text-xs: 0.75rem;

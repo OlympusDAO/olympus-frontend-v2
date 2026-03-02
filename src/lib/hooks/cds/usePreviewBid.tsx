@@ -9,25 +9,16 @@ interface UsePreviewBidParams {
   enabled?: boolean;
 }
 
-export function usePreviewBid({
-  depositPeriod,
-  bidAmount,
-  enabled = true,
-}: UsePreviewBidParams) {
+export function usePreviewBid({ depositPeriod, bidAmount, enabled = true }: UsePreviewBidParams) {
   const chainId = useChainId();
 
   const contractAddress = chainId
-    ? requireContractAddress(
-        ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-        chainId
-      )
+    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
     : undefined;
 
   // Convert bidAmount to wei (18 decimals for USDS)
   const bidAmountWei =
-    bidAmount && bidAmount !== "0" && bidAmount !== ""
-      ? parseEther(bidAmount)
-      : 0n;
+    bidAmount && bidAmount !== "0" && bidAmount !== "" ? parseEther(bidAmount) : 0n;
 
   const {
     data: ohmOut,
@@ -40,12 +31,7 @@ export function usePreviewBid({
     functionName: "previewBid",
     args: [depositPeriod, bidAmountWei],
     query: {
-      enabled: !!(
-        contractAddress &&
-        depositPeriod &&
-        bidAmountWei > 0n &&
-        enabled
-      ),
+      enabled: !!(contractAddress && depositPeriod && bidAmountWei > 0n && enabled),
     },
   });
 

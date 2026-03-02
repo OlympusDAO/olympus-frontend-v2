@@ -34,7 +34,10 @@ const CapacityProgressBar = ({ consumed, target }: CapacityProgressBarProps) => 
 
   return (
     <div className="flex w-full h-full rounded-full overflow-hidden">
-      <div className="h-full bg-green shadow-[var(--shadow-cds)]" style={{ width: `${greenWidth}%` }} />
+      <div
+        className="h-full bg-green shadow-[var(--shadow-cds)]"
+        style={{ width: `${greenWidth}%` }}
+      />
       <div className="h-full bg-red flex-1 shadow-[var(--shadow-cds)]" />
     </div>
   );
@@ -43,10 +46,7 @@ const CapacityProgressBar = ({ consumed, target }: CapacityProgressBarProps) => 
 export const DailyCapacityCard = ({ dayState, target }: DailyCapacityCardProps) => {
   const consumed = dayState ? Number(dayState.convertible) : 0;
   const targetNum = target ? Number(target) : 0;
-  const percentage =
-    dayState && target
-      ? ((consumed / targetNum) * 100).toFixed(0)
-      : "--";
+  const percentage = dayState && target ? ((consumed / targetNum) * 100).toFixed(0) : "--";
 
   const resetInfo = calculateDailyCapacityReset(dayState?.initTimestamp);
 
@@ -65,15 +65,17 @@ export const DailyCapacityCard = ({ dayState, target }: DailyCapacityCardProps) 
         </div>
 
         <div className="relative w-full h-3 bg-surface-a10 rounded-full overflow-hidden shadow-[0px_0px_0px_0.5px_rgba(20,23,34,0.20)_inset]">
-          {dayState && target && (
-            <CapacityProgressBar consumed={consumed} target={targetNum} />
-          )}
+          {dayState && target && <CapacityProgressBar consumed={consumed} target={targetNum} />}
         </div>
 
         <div className="text-xs text-secondary-t flex justify-between w-full">
           <span>
-            <span className="font-medium text-primary-t">{dayState ? formatTickCapacity(dayState.convertible) : "--"}</span>{" "}
-            <span className="text-secondary-t">/ {target ? formatTickCapacity(target) : "--"} OHM</span>
+            <span className="font-medium text-primary-t">
+              {dayState ? formatTickCapacity(dayState.convertible) : "--"}
+            </span>{" "}
+            <span className="text-secondary-t">
+              / {target ? formatTickCapacity(target) : "--"} OHM
+            </span>
           </span>
           {resetInfo && (
             <span className="flex items-center gap-1">

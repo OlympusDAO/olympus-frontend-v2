@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -72,9 +73,10 @@ export const ProtocolUtilizationChart: React.FC = () => {
     });
   }, [v1UtilData, v2Data]);
 
-  const currentTotal = chartData.length > 0
-    ? chartData[chartData.length - 1].v1 + chartData[chartData.length - 1].v2
-    : 0;
+  const currentTotal =
+    chartData.length > 0
+      ? chartData[chartData.length - 1].v1 + chartData[chartData.length - 1].v2
+      : 0;
 
   const formatCurrency = (value: number) => {
     if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -124,9 +126,7 @@ export const ProtocolUtilizationChart: React.FC = () => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-base font-medium text-secondary-t">Protocol Utilization</h3>
-          <p className="text-2xl font-semibold mt-1">
-            {formatUSD(currentTotal)}
-          </p>
+          <p className="text-2xl font-semibold mt-1">{formatUSD(currentTotal)}</p>
           <span className="text-xs text-tertiary-t">Total borrowed</span>
         </div>
       </div>
@@ -148,11 +148,7 @@ export const ProtocolUtilizationChart: React.FC = () => {
                 <stop offset="100%" stopColor={CHART_COLORS.v2} stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
               stroke={CHART_COLORS.text}

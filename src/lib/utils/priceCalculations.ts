@@ -15,7 +15,7 @@ const OHM_SCALE = 1e9;
  */
 export function calculateMaxPriceAdjustment(
   currentPrice: bigint,
-  percentageAdjustment: number
+  percentageAdjustment: number,
 ): bigint {
   const adjustmentFactor = BigInt(Math.floor(10000 + percentageAdjustment * 100));
   return (currentPrice * adjustmentFactor) / 10000n;
@@ -27,10 +27,7 @@ export function calculateMaxPriceAdjustment(
  * @param maxPrice - Max price in contract format (scaled by 1e18)
  * @returns Expected OHM output (9 decimals)
  */
-export function calculateOhmAtMaxPrice(
-  depositAmount: bigint,
-  maxPrice: bigint
-): bigint {
+export function calculateOhmAtMaxPrice(depositAmount: bigint, maxPrice: bigint): bigint {
   if (maxPrice === 0n) return 0n;
   // depositAmount (18 decimals) * 1e9 / maxPrice (18 decimals) = OHM (9 decimals)
   return (depositAmount * BigInt(OHM_SCALE)) / maxPrice;
@@ -52,7 +49,7 @@ export function formatMaxPrice(price: bigint): string {
  */
 export function parseMaxPrice(priceString: string): bigint {
   const priceFloat = parseFloat(priceString);
-  if (isNaN(priceFloat) || priceFloat <= 0) {
+  if (Number.isNaN(priceFloat) || priceFloat <= 0) {
     return 0n;
   }
   return BigInt(Math.floor(priceFloat * PRICE_SCALE));
@@ -66,7 +63,7 @@ export function parseMaxPrice(priceString: string): bigint {
  */
 export function validateMaxPrice(
   maxPrice: bigint,
-  currentMarketPrice: bigint
+  currentMarketPrice: bigint,
 ): {
   valid: boolean;
   warning?: string;
@@ -78,7 +75,7 @@ export function validateMaxPrice(
   if (maxPrice > currentMarketPrice) {
     return {
       valid: true,
-      warning: "Price above market - order may fill immediately at current market price"
+      warning: "Price above market - order may fill immediately at current market price",
     };
   }
 
@@ -87,7 +84,7 @@ export function validateMaxPrice(
   if (maxPrice < minReasonablePrice) {
     return {
       valid: true,
-      warning: "Price significantly below market - order may never fill"
+      warning: "Price significantly below market - order may never fill",
     };
   }
 

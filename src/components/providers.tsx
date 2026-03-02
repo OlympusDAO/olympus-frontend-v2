@@ -1,10 +1,6 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
-import {
-  RainbowKitProvider,
-  darkTheme,
-  lightTheme,
-} from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { hashFn } from "@wagmi/core/query";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -21,8 +17,7 @@ const queryClient = new QueryClient({
         }
         return false;
       },
-      retryDelay: (attemptIndex) =>
-        Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
       retry: false,
@@ -38,8 +33,7 @@ function ThemedRainbowKit({ children }: { children: React.ReactNode }) {
 
   const resolvedDark =
     theme === "dark" ||
-    (theme === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const themeFactory = resolvedDark ? darkTheme : lightTheme;
   const rkTheme = themeFactory({
