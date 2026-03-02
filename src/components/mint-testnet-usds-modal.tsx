@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { requireTokenAddress } from "@/lib/tokens";
-import { useTransactionToast, TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import MockERC20Abi from "@/abis/MockERC20";
 
 interface MintTestnetUsdsModalProps {
@@ -86,17 +86,20 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
     resetWrite();
     resetToast();
 
-    writeContract({
-      address: usdsAddress,
-      abi: MockERC20Abi,
-      functionName: "mint",
-      args: [address, amountBigInt],
-    }, {
-      onSuccess: () => {
-        setAmount("");
-        setIsOpen(false);
+    writeContract(
+      {
+        address: usdsAddress,
+        abi: MockERC20Abi,
+        functionName: "mint",
+        args: [address, amountBigInt],
       },
-    });
+      {
+        onSuccess: () => {
+          setAmount("");
+          setIsOpen(false);
+        },
+      },
+    );
   };
 
   const isPending = isWritePending || isConfirming;
@@ -110,8 +113,11 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Amount</label>
+            <label htmlFor="amount" className="text-sm font-medium">
+              Amount
+            </label>
             <Input
+              id="amount"
               type="number"
               placeholder="Enter amount to mint"
               value={amount}

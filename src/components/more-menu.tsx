@@ -1,5 +1,13 @@
 import { MoreHorizontal, ExternalLink } from "lucide-react";
-import { RiMoonFill, RiSunFill, RiContrastFill, RiDiscordFill, RiTwitterXFill, RiMediumFill, RiGithubFill } from "@remixicon/react";
+import {
+  RiMoonFill,
+  RiSunFill,
+  RiContrastFill,
+  RiDiscordFill,
+  RiTwitterXFill,
+  RiMediumFill,
+  RiGithubFill,
+} from "@remixicon/react";
 import { cn } from "@/lib/utils";
 import { useTheme, type Theme } from "@/components/theme-provider";
 import {
@@ -44,11 +52,14 @@ export function MoreMenu() {
               const isActive = theme === option.value;
               return (
                 <button
+                  type="button"
                   key={option.value}
                   onClick={() => setTheme(option.value)}
                   className={cn(
                     "flex items-center justify-center size-8 rounded-full transition-colors cursor-pointer",
-                    isActive ? "bg-surface-a10 text-primary-t" : "text-secondary-t hover:text-primary-t"
+                    isActive
+                      ? "bg-surface-a10 text-primary-t"
+                      : "text-secondary-t hover:text-primary-t",
                   )}
                   title={option.label}
                 >

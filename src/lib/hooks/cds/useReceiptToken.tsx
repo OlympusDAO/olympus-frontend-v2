@@ -5,15 +5,9 @@ import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { useDepositManager } from "./useDepositManager";
 
-export function useReceiptTokenId(
-  asset: Address | undefined,
-  periodMonths: number | undefined
-) {
+export function useReceiptTokenId(asset: Address | undefined, periodMonths: number | undefined) {
   const chainId = useChainId();
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
   const { depositManagerAddress } = useDepositManager(facilityAddress);
@@ -23,10 +17,7 @@ export function useReceiptTokenId(
     abi: ReceiptTokenManagerABI,
     functionName: "getReceiptTokenId",
     args:
-      depositManagerAddress &&
-      asset &&
-      periodMonths !== undefined &&
-      facilityAddress
+      depositManagerAddress && asset && periodMonths !== undefined && facilityAddress
         ? [depositManagerAddress, asset, periodMonths, facilityAddress]
         : undefined,
     query: {
@@ -44,7 +35,7 @@ export function useReceiptTokenId(
 
 export function useReceiptTokenAddress(
   asset: Address | undefined,
-  periodMonths: number | undefined
+  periodMonths: number | undefined,
 ) {
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
 
@@ -76,13 +67,10 @@ export function useReceiptTokenAddress(
 export function useReceiptTokenBalance(
   asset: Address | undefined,
   periodMonths: number | undefined,
-  userAddress: Address | undefined
+  userAddress: Address | undefined,
 ) {
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
-  const { receiptTokenAddress, tokenId } = useReceiptTokenAddress(
-    asset,
-    periodMonths
-  );
+  const { receiptTokenAddress, tokenId } = useReceiptTokenAddress(asset, periodMonths);
 
   // Use ReceiptTokenManager's balanceOf for ERC6909 tokens
   const {
@@ -93,14 +81,9 @@ export function useReceiptTokenBalance(
     address: receiptTokenManagerAddress,
     abi: ReceiptTokenManagerABI,
     functionName: "balanceOf",
-    args:
-      userAddress && tokenId !== undefined ? [userAddress, tokenId] : undefined,
+    args: userAddress && tokenId !== undefined ? [userAddress, tokenId] : undefined,
     query: {
-      enabled: !!(
-        receiptTokenManagerAddress &&
-        userAddress &&
-        tokenId !== undefined
-      ),
+      enabled: !!(receiptTokenManagerAddress && userAddress && tokenId !== undefined),
     },
   });
 
@@ -131,9 +114,7 @@ export function useReceiptTokenName(tokenId: bigint | undefined) {
   });
 
   return {
-    tokenName: tokenName
-      ? (tokenName as string).replace(/\0/g, "").trim()
-      : undefined,
+    tokenName: tokenName ? (tokenName as string).replace(/\0/g, "").trim() : undefined,
     isLoading,
     error,
   };

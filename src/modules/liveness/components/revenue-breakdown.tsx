@@ -89,9 +89,7 @@ export function RevenueBreakdown() {
       value: s.weeklyAmount,
       color: s.color,
       pct:
-        revenue.totalWeekly > 0
-          ? ((s.weeklyAmount / revenue.totalWeekly) * 100).toFixed(0)
-          : "0",
+        revenue.totalWeekly > 0 ? ((s.weeklyAmount / revenue.totalWeekly) * 100).toFixed(0) : "0",
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -120,11 +118,7 @@ export function RevenueBreakdown() {
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="var(--border-a10)"
-            horizontal={false}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-a10)" horizontal={false} />
           <XAxis
             type="number"
             fontSize={11}
@@ -147,7 +141,9 @@ export function RevenueBreakdown() {
             content={({ active, payload }) => (
               <ChartTooltip
                 active={active}
-                payload={payload as Array<{ payload: { name: string; value: number; pct: string } }>}
+                payload={
+                  payload as Array<{ payload: { name: string; value: number; pct: string } }>
+                }
                 lpBreakdown={revenue.lpBreakdown}
               />
             )}
@@ -155,7 +151,7 @@ export function RevenueBreakdown() {
           <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={28}>
             {chartData.map((entry, index) => (
               <Cell
-                key={index}
+                key={entry.name}
                 fill={`url(#${GRADIENT_COLORS[entry.name]?.id ?? "gradSusde"})`}
               />
             ))}

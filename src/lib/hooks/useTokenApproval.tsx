@@ -1,12 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import type { Address } from "viem";
 import { erc20Abi } from "viem";
-import { useTransactionToast, TransactionToastConfig } from "./useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "./useTransactionToast";
 
 export function useTokenApproval() {
   const queryClient = useQueryClient();

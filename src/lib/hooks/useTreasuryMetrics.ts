@@ -13,9 +13,7 @@ export function useTreasuryMetrics() {
   return useQuery<TreasuryMetrics>({
     queryKey: ["treasuryMetrics"],
     queryFn: async () => {
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/latest/metrics`
-      );
+      const response = await fetch(`${TREASURY_API_URL}/operations/latest/metrics`);
       if (!response.ok) throw new Error("Failed to fetch treasury metrics");
 
       const response_data = await response.json();
@@ -25,8 +23,7 @@ export function useTreasuryMetrics() {
         ohmTotalSupply: data.ohmTotalSupply || 0,
         ohmBackedSupply: data.ohmBackedSupply || 0,
         treasuryLiquidBacking: data.treasuryLiquidBacking || 0,
-        treasuryLiquidBackingPerOhmBacked:
-          data.treasuryLiquidBackingPerOhmBacked || 0,
+        treasuryLiquidBackingPerOhmBacked: data.treasuryLiquidBackingPerOhmBacked || 0,
         ohmPrice: data.ohmPrice || 0,
       };
     },

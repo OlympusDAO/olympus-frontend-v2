@@ -6,14 +6,11 @@ import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 export function usePreviewExtendLoan(
   userAddress: `0x${string}` | undefined,
   redemptionId: number | undefined,
-  months: number | undefined
+  months: number | undefined,
 ) {
   const chainId = useChainId();
 
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { data, isLoading, isError, refetch } = useReadContract({
     address: vaultAddress,
@@ -24,7 +21,12 @@ export function usePreviewExtendLoan(
         ? [userAddress, redemptionId, months]
         : undefined,
     query: {
-      enabled: !!(userAddress && redemptionId !== undefined && months !== undefined && vaultAddress),
+      enabled: !!(
+        userAddress &&
+        redemptionId !== undefined &&
+        months !== undefined &&
+        vaultAddress
+      ),
     },
   });
 

@@ -6,10 +6,7 @@ export function useDayState() {
   const chainId = useChainId();
 
   const contractAddress = chainId
-    ? requireContractAddress(
-        ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-        chainId
-      )
+    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
     : undefined;
 
   const { data, isLoading, error } = useReadContract({

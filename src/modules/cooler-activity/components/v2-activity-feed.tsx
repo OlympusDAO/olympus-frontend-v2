@@ -1,9 +1,4 @@
-import {
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  ExternalLink,
-} from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   useV2RecentActivity,
@@ -67,19 +62,14 @@ function ActivityItem({ activity }: { activity: V2Activity }) {
       <div className="flex items-center gap-3">
         {getActivityIcon(activity.type)}
         <div>
-          <div className="font-medium text-sm">
-            {getActivityLabel(activity.type)}
-          </div>
+          <div className="font-medium text-sm">{getActivityLabel(activity.type)}</div>
           <div className="text-xs text-secondary-t">
-            {formatAddress(activity.account)} &middot;{" "}
-            {formatDate(activity.timestamp)}
+            {formatAddress(activity.account)} &middot; {formatDate(activity.timestamp)}
           </div>
         </div>
       </div>
       <div className="text-right">
-        <div className="font-semibold text-sm">
-          {formatActivityAmount(activity)}
-        </div>
+        <div className="font-semibold text-sm">{formatActivityAmount(activity)}</div>
         <a
           href={`https://etherscan.io/tx/${activity.txHash}`}
           target="_blank"
@@ -101,10 +91,7 @@ function LoadingSkeleton() {
         <div className="h-5 w-32 bg-surface-a5 rounded animate-pulse mb-4" />
         <div className="flex flex-col gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-a5 rounded-xl animate-pulse"
-            />
+            <div key={i} className="h-16 bg-surface-a5 rounded-xl animate-pulse" />
           ))}
         </div>
       </Card>
@@ -113,10 +100,8 @@ function LoadingSkeleton() {
 }
 
 export function V2ActivityFeed() {
-  const { data: recentActivity, isLoading: activityLoading } =
-    useV2RecentActivity();
-  const { data: liquidations, isLoading: liquidationsLoading } =
-    useV2Liquidations();
+  const { data: recentActivity, isLoading: activityLoading } = useV2RecentActivity();
+  const { data: liquidations, isLoading: liquidationsLoading } = useV2Liquidations();
 
   if (activityLoading || liquidationsLoading) {
     return <LoadingSkeleton />;
@@ -131,13 +116,9 @@ export function V2ActivityFeed() {
           {recentActivity && recentActivity.length > 0 ? (
             recentActivity
               .slice(0, 10)
-              .map((activity: V2Activity) => (
-                <ActivityItem key={activity.id} activity={activity} />
-              ))
+              .map((activity: V2Activity) => <ActivityItem key={activity.id} activity={activity} />)
           ) : (
-            <p className="text-sm text-secondary-t py-4 text-center">
-              No recent activity
-            </p>
+            <p className="text-sm text-secondary-t py-4 text-center">No recent activity</p>
           )}
         </div>
       </Card>
@@ -166,9 +147,7 @@ export function V2ActivityFeed() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold text-sm">
-                    {formatUSD(liquidation.amount)}
-                  </div>
+                  <div className="font-semibold text-sm">{formatUSD(liquidation.amount)}</div>
                   <a
                     href={`https://etherscan.io/tx/${liquidation.txHash}`}
                     target="_blank"

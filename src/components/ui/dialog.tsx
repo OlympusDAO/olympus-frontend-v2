@@ -4,10 +4,7 @@ import { XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-function Dialog({
-  onOpenChange,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog({ onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   const lastPointerDownTargetRef = React.useRef<EventTarget | null>(null);
 
   React.useEffect(() => {
@@ -23,40 +20,26 @@ function Dialog({
       if (!open && eventDetails.reason === "outside-press") {
         const target = lastPointerDownTargetRef.current as HTMLElement | null;
         const toasts = document.querySelectorAll("[data-sonner-toaster]");
-        const isInsideToast = Array.from(toasts).some((toast) =>
-          toast.contains(target)
-        );
+        const isInsideToast = Array.from(toasts).some((toast) => toast.contains(target));
         if (isInsideToast) return;
       }
       onOpenChange?.(open, eventDetails);
     },
-    [onOpenChange]
+    [onOpenChange],
   );
 
-  return (
-    <DialogPrimitive.Root
-      data-slot="dialog"
-      onOpenChange={handleOpenChange}
-      {...props}
-    />
-  );
+  return <DialogPrimitive.Root data-slot="dialog" onOpenChange={handleOpenChange} {...props} />;
 }
 
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
@@ -69,7 +52,7 @@ function DialogOverlay({
       data-slot="dialog-overlay"
       className={cn(
         "data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
-        className
+        className,
       )}
       {...props}
     />
@@ -92,7 +75,7 @@ function DialogContent({
           data-slot="dialog-content"
           className={cn(
             "bg-surface-toast data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-3xl border border-a5-b p-6 shadow-lg duration-200 sm:max-w-lg focus:border-0 focus-visible:border-0",
-            className
+            className,
           )}
           {...props}
         >
@@ -126,19 +109,13 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"

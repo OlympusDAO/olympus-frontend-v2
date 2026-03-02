@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckIcon, AlertTriangleIcon } from "lucide-react";
 import { useCancelRedemption } from "@/lib/hooks/cds/useCancelRedemption";
@@ -28,22 +23,17 @@ export const CancelRedemptionModal: React.FC<CancelRedemptionModalProps> = ({
   onClose,
   pendingRedemption,
 }) => {
-  const {
-    cancelRedemption,
-    isPending: isCancelling,
-    isSuccess,
-    hash,
-  } = useCancelRedemption();
+  const { cancelRedemption, isPending: isCancelling, isSuccess, hash } = useCancelRedemption();
 
   // Get the period text for display
   const periodText =
     pendingRedemption?.periodMonths === 1
       ? "30-day"
       : pendingRedemption?.periodMonths === 3
-      ? "90-day"
-      : pendingRedemption?.periodMonths === 6
-      ? "180-day"
-      : `${(pendingRedemption?.periodMonths || 0) * 30}-day`;
+        ? "90-day"
+        : pendingRedemption?.periodMonths === 6
+          ? "180-day"
+          : `${(pendingRedemption?.periodMonths || 0) * 30}-day`;
 
   const handleCancel = async () => {
     if (!pendingRedemption) return;
@@ -71,23 +61,16 @@ export const CancelRedemptionModal: React.FC<CancelRedemptionModalProps> = ({
               </div>
               <div>
                 <h3 className="text-xl font-semibold">Congrats, all done!</h3>
-                <p className="text-sm text-secondary-t mt-2">
-                  Your transaction has been executed.
-                </p>
+                <p className="text-sm text-secondary-t mt-2">Your transaction has been executed.</p>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CheckIcon className="h-4 w-4 text-green" />
-                  <span className="text-sm font-medium">
-                    Cancel Redemption Process
-                  </span>
+                  <span className="text-sm font-medium">Cancel Redemption Process</span>
                 </div>
                 <div className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer">
-                  {hash
-                    ? `${hash.slice(0, 4)}...${hash.slice(-4)}`
-                    : "0xF4...3G57"}{" "}
-                  ↗
+                  {hash ? `${hash.slice(0, 4)}...${hash.slice(-4)}` : "0xF4...3G57"} ↗
                 </div>
               </div>
 
@@ -106,9 +89,7 @@ export const CancelRedemptionModal: React.FC<CancelRedemptionModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full sm:max-w-lg mx-auto p-0 gap-0">
         <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl">
-            Cancel Redemption Process
-          </DialogTitle>
+          <DialogTitle className="text-xl">Cancel Redemption Process</DialogTitle>
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-6">
@@ -123,10 +104,9 @@ export const CancelRedemptionModal: React.FC<CancelRedemptionModalProps> = ({
                   Cancelling will restart your {periodText} timer
                 </div>
                 <div className="text-sm text-secondary-t leading-relaxed font-light">
-                  If you cancel the redemption queue now, your {periodText}{" "}
-                  waiting period will restart. You'll need to wait the full{" "}
-                  {periodText.replace("-day", " days")} again before your tokens
-                  become redeemable.
+                  If you cancel the redemption queue now, your {periodText} waiting period will
+                  restart. You'll need to wait the full {periodText.replace("-day", " days")} again
+                  before your tokens become redeemable.
                 </div>
               </div>
             </div>

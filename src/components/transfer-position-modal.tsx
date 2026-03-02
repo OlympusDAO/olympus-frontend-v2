@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink } from "lucide-react";
@@ -39,12 +35,7 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
   const [addressError, setAddressError] = useState("");
   const { address: userAddress } = useAccount();
 
-  const {
-    transferPosition,
-    isPending: isTransferring,
-    isSuccess,
-    hash,
-  } = useTransferPosition();
+  const { transferPosition, isPending: isTransferring, isSuccess, hash } = useTransferPosition();
 
   const handleTransfer = () => {
     if (!position) return;
@@ -56,10 +47,7 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
       setAddressError("Invalid wallet address");
       return;
     }
-    if (
-      userAddress &&
-      recipientAddress.toLowerCase() === userAddress.toLowerCase()
-    ) {
+    if (userAddress && recipientAddress.toLowerCase() === userAddress.toLowerCase()) {
       setAddressError("Cannot transfer to your own wallet address");
       return;
     }
@@ -106,9 +94,7 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
               </div>
               <div>
                 <h3 className="text-xl font-semibold">Congrats, all done!</h3>
-                <p className="text-sm text-secondary-t mt-2">
-                  Your transaction has been executed.
-                </p>
+                <p className="text-sm text-secondary-t mt-2">Your transaction has been executed.</p>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between">
@@ -122,9 +108,7 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
                     to={`${blockExplorerTxBaseUrl}/${hash}`}
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
                   >
-                    <span className="text-sm font-mono">
-                      {formatTxHash(hash)}
-                    </span>
+                    <span className="text-sm font-mono">{formatTxHash(hash)}</span>
                     <ExternalLink className="h-3 w-3" />
                   </Link>
                 )}
@@ -151,21 +135,21 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
         <div className="px-6 pb-6 space-y-6">
           {/* Recipient Address Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label
+              htmlFor="recipientAddress"
+              className="text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
               Recipient Wallet Address
             </label>
             <Input
+              id="recipientAddress"
               type="text"
               placeholder="0x...123"
               value={recipientAddress}
               onChange={(e) => handleAddressChange(e.target.value)}
-              className={
-                addressError ? "border-red-500 focus:ring-red-500" : ""
-              }
+              className={addressError ? "border-red-500 focus:ring-red-500" : ""}
             />
-            {addressError && (
-              <p className="text-sm text-red-600">{addressError}</p>
-            )}
+            {addressError && <p className="text-sm text-red-600">{addressError}</p>}
           </div>
 
           {/* Transfer Button */}

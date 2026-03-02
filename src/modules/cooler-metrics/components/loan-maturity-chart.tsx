@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -51,7 +52,7 @@ export const LoanMaturityChart: React.FC = () => {
 
       const categories = allLoans.reduce(
         (acc, loan) => {
-          const expiryDate = new Date(parseInt(loan.currentExpiryTimestamp) * 1000);
+          const expiryDate = new Date(parseInt(loan.currentExpiryTimestamp, 10) * 1000);
           const daysFromTodayToExpiry = differenceInDays(expiryDate, today);
           const remainingDays = daysFromTodayToExpiry - i;
           const principal = Number(loan.principal);
@@ -132,10 +133,9 @@ export const LoanMaturityChart: React.FC = () => {
   return (
     <Card className="p-6">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-base font-medium text-secondary-t">
-          Projected Loan Maturities
-        </h3>
+        <h3 className="text-base font-medium text-secondary-t">Projected Loan Maturities</h3>
         <button
+          type="button"
           onClick={() => setShowValues(!showValues)}
           className="text-xs text-secondary-t bg-surface-a5 hover:bg-surface-a10 px-2.5 py-1 rounded-lg transition-colors"
         >
@@ -150,11 +150,7 @@ export const LoanMaturityChart: React.FC = () => {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
               stroke={CHART_COLORS.text}

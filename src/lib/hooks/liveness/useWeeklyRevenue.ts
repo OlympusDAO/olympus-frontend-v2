@@ -35,17 +35,11 @@ export function useWeeklyRevenue() {
     if (!yields || !reserves) return undefined;
 
     // Use actual reserve balances from treasury subgraph
-    const susdeWeekly =
-      ((reserves.susdeValue || 0) * ((yields.susdeApy || 0) / 100)) / 52;
-    const susdsWeekly =
-      ((reserves.susdsValue || 0) * ((yields.susdsApy || 0) / 100)) / 52;
-    const coolerWeekly = cooler
-      ? ((cooler.totalBorrowed || 0) * COOLER_APR) / 52
-      : 0;
+    const susdeWeekly = ((reserves.susdeValue || 0) * ((yields.susdeApy || 0) / 100)) / 52;
+    const susdsWeekly = ((reserves.susdsValue || 0) * ((yields.susdsApy || 0) / 100)) / 52;
+    const coolerWeekly = cooler ? ((cooler.totalBorrowed || 0) * COOLER_APR) / 52 : 0;
     // CD borrow interest: borrowedAmount * annualRate / 52
-    const cdBorrowWeekly = cd
-      ? ((cd.borrowedAmount || 0) * (cd.annualInterestRate || 0)) / 52
-      : 0;
+    const cdBorrowWeekly = cd ? ((cd.borrowedAmount || 0) * (cd.annualInterestRate || 0)) / 52 : 0;
     // LP fees: sum (position value * DeFiLlama fee APY) for each LP
     let lpFeesWeekly = 0;
     const lpBreakdown: LpBreakdownItem[] = [];
@@ -64,8 +58,7 @@ export function useWeeklyRevenue() {
       lpBreakdown.sort((a, b) => b.weeklyAmount - a.weeklyAmount);
     }
 
-    const totalWeekly =
-      susdeWeekly + susdsWeekly + coolerWeekly + cdBorrowWeekly + lpFeesWeekly;
+    const totalWeekly = susdeWeekly + susdsWeekly + coolerWeekly + cdBorrowWeekly + lpFeesWeekly;
 
     const sources: RevenueSource[] = [
       {

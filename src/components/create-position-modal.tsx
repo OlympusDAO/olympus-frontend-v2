@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink } from "lucide-react";
 import { parseEther } from "viem";
@@ -48,12 +43,9 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const tokenAddress = getTokenAddress("USDS", chainId);
   const auctioneerAddress = getContractAddress(
     ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-    chainId
+    chainId,
   );
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   // Get the DepositManager address from the ConvertibleDepositFacility
   const { depositManagerAddress } = useDepositManager(facilityAddress);
@@ -62,13 +54,10 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const depositAmountBigInt = parseEther(depositAmount);
 
   // Parse term to get period in months
-  const periodMonths = parseInt(selectedTerm.replace("m", "")) || 1;
+  const periodMonths = parseInt(selectedTerm.replace("m", ""), 10) || 1;
 
   // Get receipt token ID and name
-  const { tokenId } = useReceiptTokenId(
-    tokenAddress as `0x${string}` | undefined,
-    periodMonths
-  );
+  const { tokenId } = useReceiptTokenId(tokenAddress as `0x${string}` | undefined, periodMonths);
   const { tokenName } = useReceiptTokenName(tokenId);
 
   // Use dynamic token name with fallback (no loading state to avoid jerkiness)
@@ -78,15 +67,11 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const { ohmOut } = usePreviewBid({
     depositPeriod: periodMonths,
     bidAmount: depositAmount,
-    enabled:
-      !!auctioneerAddress && depositAmount !== "0" && depositAmount !== "",
+    enabled: !!auctioneerAddress && depositAmount !== "0" && depositAmount !== "",
   });
 
   // Helper function to calculate minimum OHM output based on slippage
-  const calculateMinOhmOut = (
-    expectedOhm: bigint,
-    slippagePercent: string
-  ): bigint => {
+  const calculateMinOhmOut = (expectedOhm: bigint, slippagePercent: string): bigint => {
     if (!expectedOhm || expectedOhm === 0n) return 0n;
 
     const slippageFloat = parseFloat(slippagePercent);
@@ -96,11 +81,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   };
 
   // Check current allowance (approval needs to go to DepositManager)
-  const { allowance, queryKey } = useTokenAllowance(
-    tokenAddress!,
-    address,
-    depositManagerAddress
-  );
+  const { allowance, queryKey } = useTokenAllowance(tokenAddress!, address, depositManagerAddress);
 
   // Check if user has sufficient allowance
   const hasSufficientAllowance = allowance && allowance >= depositAmountBigInt;
@@ -114,12 +95,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   } = useTokenApproval();
 
   // Bid hook
-  const {
-    bid,
-    isPending: isBidding,
-    isSuccess: bidSuccess,
-    hash: bidHash,
-  } = useBid();
+  const { bid, isPending: isBidding, isSuccess: bidSuccess, hash: bidHash } = useBid();
 
   useEffect(() => {
     if (bidSuccess) {
@@ -207,31 +183,20 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
             <div className="w-16 h-16 bg-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckIcon className="h-8 w-8 text-green" />
             </div>
-            <DialogTitle className="text-xl font-semibold mb-2">
-              Congrats, all done!
-            </DialogTitle>
-            <p className="text-sm text-gray-600 mb-6">
-              Your transactions have been executed.
-            </p>
+            <DialogTitle className="text-xl font-semibold mb-2">Congrats, all done!</DialogTitle>
+            <p className="text-sm text-gray-600 mb-6">Your transactions have been executed.</p>
           </div>
 
           <div className="space-y-3">
             {steps.map((step) => (
-              <div
-                key={step.number}
-                className="flex items-center justify-between"
-              >
+              <div key={step.number} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-green/20 flex items-center justify-center">
                     <CheckIcon className="h-4 w-4 text-green" />
                   </div>
                   <div>
                     <div className="font-medium text-sm">{step.title}</div>
-                    {step.detail && (
-                      <div className="text-xs text-secondary-t">
-                        {step.detail}
-                      </div>
-                    )}
+                    {step.detail && <div className="text-xs text-secondary-t">{step.detail}</div>}
                   </div>
                 </div>
                 {step.hash && (
@@ -281,8 +246,8 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
                         step.isCompleted
                           ? "text-green"
                           : step.isActive
-                          ? "text-primary-t"
-                          : "text-secondary-t ring-a10-b"
+                            ? "text-primary-t"
+                            : "text-secondary-t ring-a10-b"
                       }`}
                     >
                       {step.isLoading ? (
@@ -314,14 +279,10 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {step.icon && (
-                      <img src={step.icon} alt="" className="w-5 h-5" />
-                    )}
+                    {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
                   </div>
                 </div>
-                {index < steps.length - 1 && (
-                  <div className="border-b border-a5-b mx-4" />
-                )}
+                {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
               </div>
             ))}
           </div>

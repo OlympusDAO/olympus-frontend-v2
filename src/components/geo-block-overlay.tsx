@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { RiEarthLine } from "@remixicon/react";
 
 interface GeoBlockOverlayProps {
@@ -17,14 +17,15 @@ export const GeoBlockOverlay: FC<GeoBlockOverlayProps> = ({ countryCode }) => {
           <div className="space-y-3">
             <h2 className="text-2xl font-semibold text-primary-t">Service Unavailable</h2>
             <p className="text-secondary-t text-sm leading-relaxed">
-              We're sorry, but this service is not available in your region ({countryCode}).
-              Access is restricted based on your location to comply with local regulations.
+              We're sorry, but this service is not available in your region ({countryCode}). Access
+              is restricted based on your location to comply with local regulations.
             </p>
           </div>
 
           <div className="bg-surface-a3 w-full rounded-xl border border-a5-b p-4">
             <p className="text-secondary-t text-xs">
-              If you believe this is an error or you're using a VPN, please try disabling it and refreshing the page.
+              If you believe this is an error or you're using a VPN, please try disabling it and
+              refreshing the page.
             </p>
           </div>
         </div>

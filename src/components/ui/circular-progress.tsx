@@ -9,10 +9,7 @@ interface CircularProgressProps extends React.SVGProps<SVGSVGElement> {
   indicatorColor?: string;
 }
 
-export const CircularProgress = React.forwardRef<
-  SVGSVGElement,
-  CircularProgressProps
->(
+export const CircularProgress = React.forwardRef<SVGSVGElement, CircularProgressProps>(
   (
     {
       value,
@@ -23,7 +20,7 @@ export const CircularProgress = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
@@ -31,6 +28,8 @@ export const CircularProgress = React.forwardRef<
 
     return (
       <svg
+        role="img"
+        aria-label="progress"
         ref={ref}
         width={size}
         height={size}
@@ -63,7 +62,7 @@ export const CircularProgress = React.forwardRef<
         />
       </svg>
     );
-  }
+  },
 );
 
 CircularProgress.displayName = "CircularProgress";

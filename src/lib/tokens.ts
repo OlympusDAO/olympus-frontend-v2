@@ -1,6 +1,6 @@
 import type { Address } from "viem";
-import { IconName } from "@/components/icon.tsx";
-import { type ChainId } from "./contracts";
+import type { IconName } from "@/components/icon.tsx";
+import type { ChainId } from "./contracts";
 import { mainnet, sepolia } from "viem/chains";
 
 export type TokenInfo = {
@@ -24,17 +24,11 @@ export const TOKENS: Record<TokensList, TokenInfo> = {
   },
 };
 
-export function getTokenAddress(
-  token: TokensList,
-  chainId: ChainId
-): Address | undefined {
+export function getTokenAddress(token: TokensList, chainId: ChainId): Address | undefined {
   return TOKENS[token].addresses[chainId];
 }
 
-export function requireTokenAddress(
-  token: TokensList,
-  chainId: ChainId
-): Address {
+export function requireTokenAddress(token: TokensList, chainId: ChainId): Address {
   const address = getTokenAddress(token, chainId);
   if (!address) {
     throw new Error(`Token ${token} not found on chain ${chainId}`);

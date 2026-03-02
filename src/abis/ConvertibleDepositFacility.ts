@@ -393,9 +393,7 @@ export default [
   {
     inputs: [],
     name: "DEPOSIT_MANAGER",
-    outputs: [
-      { internalType: "contract IDepositManager", name: "", type: "address" },
-    ],
+    outputs: [{ internalType: "contract IDepositManager", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -452,9 +450,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
@@ -478,9 +474,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract IERC20", name: "asset_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract IERC20", name: "asset_", type: "address" }],
     name: "claimYield",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "nonpayable",
@@ -489,9 +483,7 @@ export default [
   {
     inputs: [],
     name: "configureDependencies",
-    outputs: [
-      { internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" },
-    ],
+    outputs: [{ internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -638,9 +630,7 @@ export default [
   {
     inputs: [],
     name: "getOperators",
-    outputs: [
-      { internalType: "address[]", name: "operators", type: "address[]" },
-    ],
+    outputs: [{ internalType: "address[]", name: "operators", type: "address[]" }],
     stateMutability: "view",
     type: "function",
   },
@@ -788,13 +778,9 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract IERC20", name: "asset_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract IERC20", name: "asset_", type: "address" }],
     name: "previewClaimYield",
-    outputs: [
-      { internalType: "uint256", name: "yieldAssets", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "yieldAssets", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },

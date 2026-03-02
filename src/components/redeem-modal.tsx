@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
@@ -17,18 +13,11 @@ import {
   useReclaimRate,
 } from "@/lib/hooks/cds/useInstantRedemption";
 import { useFullRedemption } from "@/lib/hooks/cds/useFullRedemption";
-import {
-  ContractName,
-  getContractAddress,
-  requireContractAddress,
-} from "@/lib/contracts";
+import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
 import { useAccount, useChainId } from "wagmi";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
-import {
-  useReceiptTokenBalance,
-  useReceiptTokenId,
-} from "@/lib/hooks/cds/useReceiptToken";
+import { useReceiptTokenBalance, useReceiptTokenId } from "@/lib/hooks/cds/useReceiptToken";
 import {
   useFlexibleReceiptTokenAllowance,
   useFlexibleApproveReceiptToken,
@@ -52,14 +41,9 @@ interface RedeemModalProps {
 
 type RedemptionType = "instant" | "full";
 
-export const RedeemModal: React.FC<RedeemModalProps> = ({
-  isOpen,
-  onClose,
-  tokenBalance,
-}) => {
+export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, tokenBalance }) => {
   const [redeemAmount, setRedeemAmount] = useState("");
-  const [redemptionType, setRedemptionType] =
-    useState<RedemptionType>("full");
+  const [redemptionType, setRedemptionType] = useState<RedemptionType>("full");
   const [showSteps, setShowSteps] = useState(false);
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
@@ -82,19 +66,16 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
   // Receipt token hooks for instant redemption approval
   const { tokenId } = useReceiptTokenId(
     tokenBalance?.asset as `0x${string}` | undefined,
-    tokenBalance?.periodMonths
+    tokenBalance?.periodMonths,
   );
 
   const { balance: receiptTokenBalance } = useReceiptTokenBalance(
     tokenBalance?.asset as `0x${string}` | undefined,
     tokenBalance?.periodMonths,
-    userAddress
+    userAddress,
   );
 
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   const { depositManagerAddress } = useDepositManager(facilityAddress);
 
@@ -108,7 +89,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
   const { allowance } = useFlexibleReceiptTokenAllowance(
     tokenId,
     userAddress,
-    targetContractAddress
+    targetContractAddress,
   );
 
   const {
@@ -129,20 +110,14 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
   };
 
   // Token balance data
-  const availableAmount = tokenBalance
-    ? formatAmount(tokenBalance.totalBalance)
-    : "0";
-  const term = tokenBalance
-    ? formatTermSuffix(tokenBalance.periodMonths)
-    : "3m";
+  const availableAmount = tokenBalance ? formatAmount(tokenBalance.totalBalance) : "0";
+  const term = tokenBalance ? formatTermSuffix(tokenBalance.periodMonths) : "3m";
 
   // Use the display name from tokenBalance (already fetched from ReceiptTokenManager)
   const displayTokenName = tokenBalance?.displayName || `Receipt-${term}`;
-  
+
   // Calculate redemption timeline based on deposit period
-  const redemptionTimelineDays = tokenBalance 
-    ? tokenBalance.periodMonths * 30
-    : 30;
+  const redemptionTimelineDays = tokenBalance ? tokenBalance.periodMonths * 30 : 30;
 
   // Parse redeem amount as bigint
   const redeemAmountBigInt = redeemAmount ? parseEther(redeemAmount) : 0n;
@@ -152,8 +127,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
     depositToken: tokenBalance?.asset || "",
     depositPeriod: tokenBalance?.periodMonths || 3,
     amount: redeemAmountBigInt,
-    enabled:
-      redemptionType === "instant" && !!tokenBalance && redeemAmountBigInt > 0n,
+    enabled: redemptionType === "instant" && !!tokenBalance && redeemAmountBigInt > 0n,
   });
 
   // Fetch the actual reclaim rate from the contract
@@ -169,23 +143,19 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
     redemptionType === "instant" && previewReclaimData
       ? formatAmount(previewReclaimData as bigint)
       : redemptionType === "full" && redeemAmount
-      ? parseFloat(redeemAmount).toFixed(2)
-      : "0.00";
+        ? parseFloat(redeemAmount).toFixed(2)
+        : "0.00";
 
   const instantFee =
     redemptionType === "instant" && redeemAmount && previewReclaimData
       ? (parseFloat(redeemAmount) - parseFloat(calculatedReceive)).toFixed(2)
       : "0";
 
-  const dollarValue = redeemAmount
-    ? (parseFloat(redeemAmount) * 1).toFixed(2)
-    : "0.00";
+  const dollarValue = redeemAmount ? (parseFloat(redeemAmount) * 1).toFixed(2) : "0.00";
 
   // Check if user has sufficient balance and receipt tokens (for instant redemption)
   const hasInsufficientBalance =
-    tokenBalance &&
-    redeemAmountBigInt > 0n &&
-    tokenBalance.totalBalance < redeemAmountBigInt;
+    tokenBalance && redeemAmountBigInt > 0n && tokenBalance.totalBalance < redeemAmountBigInt;
 
   const hasInsufficientReceiptTokens =
     redemptionType === "instant" &&
@@ -195,9 +165,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
 
   // Check if approval is needed for both instant and full redemption
   const needsApproval =
-    allowance !== undefined &&
-    redeemAmountBigInt > 0n &&
-    allowance < redeemAmountBigInt;
+    allowance !== undefined && redeemAmountBigInt > 0n && allowance < redeemAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
@@ -241,8 +209,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
   };
 
   const handleRedeem = async () => {
-    if (!tokenBalance || !redeemAmount || redeemAmountBigInt === 0n || !chainId)
-      return;
+    if (!tokenBalance || !redeemAmount || redeemAmountBigInt === 0n || !chainId) return;
 
     try {
       if (redemptionType === "instant") {
@@ -257,7 +224,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
         // Call DepositRedemptionVault.startRedemption()
         const facilityAddress = requireContractAddress(
           ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-          chainId
+          chainId,
         );
 
         await startRedemption({
@@ -283,8 +250,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
     },
     {
       number: 2,
-      title:
-        redemptionType === "instant" ? "Instant Redemption" : "Full Redemption",
+      title: redemptionType === "instant" ? "Instant Redemption" : "Full Redemption",
       detail:
         redemptionType === "instant"
           ? `${redeemAmount} USDS-${term} → ${calculatedReceive} USDS`
@@ -293,11 +259,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
       isActive: currentStep === 2,
       isCompleted: isSuccess,
       isLoading: currentStep === 2 && isRedeeming,
-      hash: isSuccess
-        ? redemptionType === "instant"
-          ? instantHash
-          : fullHash
-        : undefined,
+      hash: isSuccess ? (redemptionType === "instant" ? instantHash : fullHash) : undefined,
     },
   ];
 
@@ -349,9 +311,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your transactions have been executed.
                 </p>
@@ -359,9 +319,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
             ) : (
               <>
                 <DialogTitle className="text-xl">
-                  {redemptionType === "instant"
-                    ? "Instant Redemption"
-                    : "Full Redemption"}
+                  {redemptionType === "instant" ? "Instant Redemption" : "Full Redemption"}
                 </DialogTitle>
                 <p className="text-sm text-secondary-t font-light">
                   Step {currentStep}/2. Proceed with your wallet.
@@ -382,8 +340,8 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                           step.isCompleted
                             ? "text-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t"
+                              : "text-secondary-t ring-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
@@ -415,14 +373,10 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && (
-                        <img src={step.icon} alt="" className="w-5 h-5" />
-                      )}
+                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -466,9 +420,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                     ) : isRedeeming ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {redemptionType === "instant"
-                          ? "Redeeming..."
-                          : "Starting Redemption..."}
+                        {redemptionType === "instant" ? "Redeeming..." : "Starting Redemption..."}
                       </>
                     ) : currentStep === 2 ? (
                       redemptionType === "instant" ? (
@@ -501,11 +453,10 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
           {/* Redemption Type Selection */}
           <div className="space-y-3">
             {/* Instant Redemption Option */}
-            <div
+            <button
+              type="button"
               className={`p-4 cursor-pointer transition-all border rounded-2xl ${
-                redemptionType === "instant"
-                  ? "border-primary"
-                  : "border-a10-b hover:border-20-b"
+                redemptionType === "instant" ? "border-primary" : "border-a10-b hover:border-20-b"
               }`}
               onClick={() => setRedemptionType("instant")}
             >
@@ -523,9 +474,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                 </div>
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    redemptionType === "instant"
-                      ? "border-primary bg-primary-t"
-                      : "border-gray-300"
+                    redemptionType === "instant" ? "border-primary bg-primary-t" : "border-gray-300"
                   }`}
                 >
                   {redemptionType === "instant" && (
@@ -533,14 +482,13 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                   )}
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Full Redemption Option */}
-            <div
+            <button
+              type="button"
               className={`p-4 cursor-pointer transition-all border rounded-2xl ${
-                redemptionType === "full"
-                  ? "border-primary"
-                  : "border-a10-b hover:border-20-b"
+                redemptionType === "full" ? "border-primary" : "border-a10-b hover:border-20-b"
               }`}
               onClick={() => setRedemptionType("full")}
             >
@@ -553,16 +501,14 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                     </div>
                   </div>
                   <p className="text-secondary-t text-sm font-light">
-                    Deposit receipt tokens into the vault and redeem the full deposit
-                    amount after {redemptionTimelineDays} days. Can be canceled at any time before the
+                    Deposit receipt tokens into the vault and redeem the full deposit amount after{" "}
+                    {redemptionTimelineDays} days. Can be canceled at any time before the
                     redemption.
                   </p>
                 </div>
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    redemptionType === "full"
-                      ? "border-primary bg-primary-t"
-                      : "border-gray-300"
+                    redemptionType === "full" ? "border-primary bg-primary-t" : "border-gray-300"
                   }`}
                 >
                   {redemptionType === "full" && (
@@ -570,17 +516,20 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                   )}
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Amount Section */}
           <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium">Amount to Redeem</label>
+                <label htmlFor="redeemAmount" className="text-sm font-medium">
+                  Amount to Redeem
+                </label>
               </div>
               <div className="flex items-center justify-between">
                 <Input
+                  id="redeemAmount"
                   type="number"
                   value={redeemAmount}
                   onChange={(e) => setRedeemAmount(e.target.value)}
@@ -618,7 +567,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
           <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">You Receive</label>
+                <p className="text-sm font-medium">You Receive</p>
                 <div className="flex items-center gap-2">
                   <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
                   <span>{calculatedReceive} USDS</span>
@@ -631,14 +580,10 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
                     <div className="text-xs text-secondary-t">
                       Redemption Fee ({instantFeePercentage}%)
                     </div>
-                    <div className="text-xs text-red/80">
-                      -{instantFee} USDS
-                    </div>
+                    <div className="text-xs text-red/80">-{instantFee} USDS</div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-secondary-t">
-                      Processing Time
-                    </div>
+                    <div className="text-xs text-secondary-t">Processing Time</div>
                     <div className="text-xs">Immediate</div>
                   </div>
                 </div>
@@ -647,15 +592,11 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
               {redemptionType === "full" && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-secondary-t">
-                      Redemption Fee
-                    </div>
+                    <div className="text-xs text-secondary-t">Redemption Fee</div>
                     <div className="text-xs text-green">0%</div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-secondary-t">
-                      Waiting Period
-                    </div>
+                    <div className="text-xs text-secondary-t">Waiting Period</div>
                     <div className="text-xs">{redemptionTimelineDays} days</div>
                   </div>
                 </div>
@@ -678,12 +619,12 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({
             {hasInsufficientBalance
               ? "Insufficient Balance"
               : hasInsufficientReceiptTokens
-              ? "Insufficient Receipt Tokens"
-              : !redeemAmount || redeemAmount === "0"
-              ? "Enter Amount"
-              : redemptionType === "instant"
-              ? "Redeem Instantly"
-              : "Start Full Redemption"}
+                ? "Insufficient Receipt Tokens"
+                : !redeemAmount || redeemAmount === "0"
+                  ? "Enter Amount"
+                  : redemptionType === "instant"
+                    ? "Redeem Instantly"
+                    : "Start Full Redemption"}
           </Button>
         </div>
       </DialogContent>

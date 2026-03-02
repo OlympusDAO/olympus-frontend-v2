@@ -35,8 +35,7 @@ export function EmissionManager() {
       : "size-2 rounded-full bg-red";
 
   const ohmPrice = price?.price ?? 0;
-  const currentPremium =
-    state.backing > 0 ? ((ohmPrice - state.backing) / state.backing) * 100 : 0;
+  const currentPremium = state.backing > 0 ? ((ohmPrice - state.backing) / state.backing) * 100 : 0;
 
   const thresholdPct = state.minimumPremium * 100;
   const premiumProgress = thresholdPct > 0 ? Math.max(0, (currentPremium / thresholdPct) * 100) : 0;
@@ -60,11 +59,13 @@ export function EmissionManager() {
       </div>
 
       {/* Premium Gauge — hero element */}
-      <div className={`mb-5 rounded-2xl border px-5 py-4 ${
-        premiumExceedsThreshold
-          ? "border-green/10 bg-green/[0.03]"
-          : "border-yellow/10 bg-yellow/[0.03]"
-      }`}>
+      <div
+        className={`mb-5 rounded-2xl border px-5 py-4 ${
+          premiumExceedsThreshold
+            ? "border-green/10 bg-green/[0.03]"
+            : "border-yellow/10 bg-yellow/[0.03]"
+        }`}
+      >
         <TooltipInfo
           title={`Emissions activate when OHM premium over EM backing ($${state.backing.toFixed(2)}) exceeds ${thresholdPct.toFixed(0)}%. Current premium: ${currentPremium.toFixed(1)}%. OHM needs to reach ${formatUsd(emissionTriggerPrice)} to trigger.`}
           className="text-xs text-tertiary-t"
@@ -73,8 +74,12 @@ export function EmissionManager() {
         </TooltipInfo>
         <div className="mt-2 flex items-end justify-between gap-4">
           <div>
-            <p className={`tabular-nums text-3xl font-bold tracking-tight ${premiumExceedsThreshold ? "text-green" : ""}`}>
-              {currentPremium > 0 ? `+${currentPremium.toFixed(1)}%` : `${currentPremium.toFixed(1)}%`}
+            <p
+              className={`tabular-nums text-3xl font-bold tracking-tight ${premiumExceedsThreshold ? "text-green" : ""}`}
+            >
+              {currentPremium > 0
+                ? `+${currentPremium.toFixed(1)}%`
+                : `${currentPremium.toFixed(1)}%`}
             </p>
             <p className="mt-0.5 text-xs text-tertiary-t tabular-nums">
               {thresholdPct.toFixed(0)}% needed to trigger
@@ -82,9 +87,7 @@ export function EmissionManager() {
           </div>
           <div className="text-right">
             <p className="text-xs text-tertiary-t">Trigger price</p>
-            <p className="tabular-nums text-lg font-semibold">
-              {formatUsd(emissionTriggerPrice)}
-            </p>
+            <p className="tabular-nums text-lg font-semibold">{formatUsd(emissionTriggerPrice)}</p>
           </div>
         </div>
         <Progress
@@ -117,9 +120,7 @@ export function EmissionManager() {
           >
             EM Backing
           </TooltipInfo>
-          <p className="tabular-nums text-lg font-semibold">
-            {formatUsd(state.backing)}
-          </p>
+          <p className="tabular-nums text-lg font-semibold">{formatUsd(state.backing)}</p>
         </div>
       </div>
 

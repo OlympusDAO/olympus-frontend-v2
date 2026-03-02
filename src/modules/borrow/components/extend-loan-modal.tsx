@@ -1,10 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
@@ -57,8 +53,8 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
   // Use custom months if in custom mode and valid, otherwise use selected preset
   const effectiveMonths = useMemo(() => {
     if (isCustomMode && customMonths) {
-      const parsed = parseInt(customMonths);
-      if (!isNaN(parsed) && parsed > 0 && parsed <= 255) {
+      const parsed = parseInt(customMonths, 10);
+      if (!Number.isNaN(parsed) && parsed > 0 && parsed <= 255) {
         return parsed;
       }
     }
@@ -66,11 +62,11 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
   }, [isCustomMode, customMonths, selectedMonths]);
 
   // Preview extension cost using effective months
-  const { newDueDate, interestPayable, isLoading: isLoadingPreview } = usePreviewExtendLoan(
-    userAddress,
-    redemptionId ?? undefined,
-    effectiveMonths
-  );
+  const {
+    newDueDate,
+    interestPayable,
+    isLoading: isLoadingPreview,
+  } = usePreviewExtendLoan(userAddress, redemptionId ?? undefined, effectiveMonths);
 
   // Get USDS token address and balance
   const usdsTokenAddress = getTokenAddress("USDS", chainId);
@@ -82,11 +78,11 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
     : undefined;
 
   // Token approval hooks
-  const { allowance, refetch: refetchAllowance, queryKey } = useTokenAllowance(
-    usdsTokenAddress!,
-    userAddress,
-    targetContractAddress
-  );
+  const {
+    allowance,
+    refetch: refetchAllowance,
+    queryKey,
+  } = useTokenAllowance(usdsTokenAddress!, userAddress, targetContractAddress);
 
   const {
     approve,
@@ -204,7 +200,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
       resetApproval();
       resetExtend();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - reset only when modal opens/closes
   }, [isOpen]);
 
   // Steps configuration
@@ -240,9 +236,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your loan has been extended successfully.
                 </p>
@@ -269,8 +263,8 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                           step.isCompleted
                             ? "text-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t"
+                              : "text-secondary-t ring-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
@@ -301,9 +295,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -369,9 +361,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
         <div className="px-6 pb-6 space-y-4">
           {/* Extension Period Selection */}
           <div>
-            <label className="text-sm font-medium mb-3 block">
-              Extension Period
-            </label>
+            <span className="text-sm font-medium mb-3 block">Extension Period</span>
             <div className="grid grid-cols-5 gap-2">
               {EXTENSION_PERIODS.map((months) => (
                 <Button
@@ -394,7 +384,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                 Custom
               </Button>
             </div>
-            
+
             {/* Custom input - only show when custom mode active */}
             {isCustomMode && (
               <div className="mt-3">
@@ -406,7 +396,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                   value={customMonths}
                   onChange={(e) => {
                     const value = e.target.value;
-                    const numValue = parseInt(value);
+                    const numValue = parseInt(value, 10);
                     // Prevent values above 255
                     if (value === "" || (numValue >= 1 && numValue <= 255)) {
                       setCustomMonths(value);
@@ -422,7 +412,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
           {/* Interest Cost Display */}
           <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium">Interest Cost</label>
+              <span className="text-sm font-medium">Interest Cost</span>
             </div>
             <div className="relative">
               <div className="text-3xl h-12 flex items-center font-medium">
@@ -438,11 +428,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
             <div className="flex justify-between items-center mt-2 text-sm">
               <div className="flex items-center gap-1 text-secondary-t">
                 <span>USDS Balance:</span>
-                <span>
-                  {usdsBalance
-                    ? parseFloat(formatEther(usdsBalance)).toFixed(2)
-                    : "0"}
-                </span>
+                <span>{usdsBalance ? parseFloat(formatEther(usdsBalance)).toFixed(2) : "0"}</span>
               </div>
             </div>
           </div>
@@ -469,9 +455,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-secondary-t">New Due Date</span>
-              <span className="font-medium">
-                {isLoadingPreview ? "..." : formattedNewDueDate}
-              </span>
+              <span className="font-medium">{isLoadingPreview ? "..." : formattedNewDueDate}</span>
             </div>
           </div>
 
@@ -484,8 +468,8 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
             {isLoadingPreview
               ? "Loading..."
               : !isValidExtension
-              ? "Insufficient balance"
-              : `Extend for ${parseFloat(interestCost).toFixed(2)} USDS`}
+                ? "Insufficient balance"
+                : `Extend for ${parseFloat(interestCost).toFixed(2)} USDS`}
           </Button>
         </div>
       </DialogContent>

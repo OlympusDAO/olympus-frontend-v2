@@ -11,9 +11,7 @@ export function useBackingHistory() {
   return useQuery<BackingHistory>({
     queryKey: ["backingHistory"],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 90 * 86_400_000)
-        .toISOString()
-        .split("T")[0];
+      const startDate = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate,
         crossChainDataComplete: true,
@@ -38,8 +36,7 @@ export function useBackingHistory() {
         backing: r.treasuryLiquidBackingPerOhmBacked || 0,
       }));
 
-      const currentBacking =
-        dataPoints.length > 0 ? dataPoints[dataPoints.length - 1].backing : 0;
+      const currentBacking = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1].backing : 0;
 
       const sevenDaysAgoIdx = Math.max(0, dataPoints.length - 8);
       const change7d =

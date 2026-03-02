@@ -9,7 +9,7 @@ import {
 function formatDate(timestamp: string): string {
   try {
     const timestampNum = Number(timestamp);
-    if (isNaN(timestampNum) || timestampNum <= 0) {
+    if (Number.isNaN(timestampNum) || timestampNum <= 0) {
       return "";
     }
     // Convert from microseconds to milliseconds by dividing by 1000
@@ -45,28 +45,23 @@ export interface V1UtilizationDataPoint {
 }
 
 export function useV1UtilizationData() {
-  const { data: clearinghousesData, isLoading: clearinghousesLoading } =
-    useClearinghouses();
+  const { data: clearinghousesData, isLoading: clearinghousesLoading } = useClearinghouses();
   const clearinghouses = clearinghousesData?.clearinghouses ?? [];
 
   const utilizationQueries = useQueries({
     queries: clearinghouses.map((ch) => ({
       queryKey: ["cooler-v1-utilization", ch.address],
       queryFn: async () => {
-        const data =
-          await coolerGraphqlClient.request<UtilizationResponse>(
-            UTILIZATION_QUERY,
-            { clearinghouseAddress: ch.address },
-          );
+        const data = await coolerGraphqlClient.request<UtilizationResponse>(UTILIZATION_QUERY, {
+          clearinghouseAddress: ch.address,
+        });
         return data;
       },
       enabled: !clearinghousesLoading,
     })),
   });
 
-  const isLoading =
-    clearinghousesLoading ||
-    utilizationQueries.some((query) => query.isLoading);
+  const isLoading = clearinghousesLoading || utilizationQueries.some((query) => query.isLoading);
   const hasError = utilizationQueries.some((query) => query.error);
 
   if (isLoading || hasError || clearinghouses.length === 0) {
@@ -112,23 +107,16 @@ export function useV1UtilizationData() {
       }
 
       const values = {
-        principalReceivables:
-          parseFloat(snapshot.totalPrincipalReceivables.toString()) || 0,
-        interestReceivables:
-          parseFloat(snapshot.totalInterestReceivables.toString()) || 0,
-        sReserveInReserveBalance:
-          parseFloat(snapshot.sReserveInReserveBalance.toString()) || 0,
+        principalReceivables: parseFloat(snapshot.totalPrincipalReceivables.toString()) || 0,
+        interestReceivables: parseFloat(snapshot.totalInterestReceivables.toString()) || 0,
+        sReserveInReserveBalance: parseFloat(snapshot.sReserveInReserveBalance.toString()) || 0,
         treasurySReserveInReserveBalance:
-          parseFloat(
-            snapshot.treasurySReserveInReserveBalance.toString(),
-          ) || 0,
-        reserveBalance:
-          parseFloat(snapshot.reserveBalance.toString()) || 0,
-        treasuryReserveBalance:
-          parseFloat(snapshot.treasuryReserveBalance.toString()) || 0,
+          parseFloat(snapshot.treasurySReserveInReserveBalance.toString()) || 0,
+        reserveBalance: parseFloat(snapshot.reserveBalance.toString()) || 0,
+        treasuryReserveBalance: parseFloat(snapshot.treasuryReserveBalance.toString()) || 0,
       };
 
-      valuesByDate.get(date)!.set(clearinghouse.address, values);
+      valuesByDate.get(date)?.set(clearinghouse.address, values);
     });
   });
 
@@ -173,16 +161,11 @@ export function useV1UtilizationData() {
       const address = clearinghouse.address;
       const valuesForDate = valuesByDate.get(date)?.get(address);
 
-      let values;
       if (valuesForDate) {
-        // Use actual values from this date
-        values = valuesForDate;
         // Update last known values since we're processing chronologically
-        lastKnownValues.set(address, values);
-      } else {
-        // Use last known values from the past
-        values = lastKnownValues.get(address);
+        lastKnownValues.set(address, valuesForDate);
       }
+      const values = valuesForDate ?? lastKnownValues.get(address);
 
       if (values) {
         // Store individual clearinghouse data
@@ -192,8 +175,7 @@ export function useV1UtilizationData() {
         dateData.totalPrincipalReceivables += values.principalReceivables;
         dateData.totalInterestReceivables += values.interestReceivables;
         dateData.sReserveInReserveBalance += values.sReserveInReserveBalance;
-        dateData.treasurySReserveInReserveBalance +=
-          values.treasurySReserveInReserveBalance;
+        dateData.treasurySReserveInReserveBalance += values.treasurySReserveInReserveBalance;
         dateData.reserveBalance += values.reserveBalance;
         dateData.treasuryReserveBalance += values.treasuryReserveBalance;
       }

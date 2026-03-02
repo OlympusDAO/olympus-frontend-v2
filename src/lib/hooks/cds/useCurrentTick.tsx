@@ -8,10 +8,7 @@ interface UseCurrentTickParams {
   enabled?: boolean;
 }
 
-export function useCurrentTick({
-  depositPeriod,
-  enabled = true,
-}: UseCurrentTickParams) {
+export function useCurrentTick({ depositPeriod, enabled = true }: UseCurrentTickParams) {
   const chainId = useChainId();
   const prevDepositPeriod = useRef(depositPeriod);
   const shouldPoll = useRef(true);
@@ -30,10 +27,7 @@ export function useCurrentTick({
   }, [depositPeriod]);
 
   const contractAddress = chainId
-    ? requireContractAddress(
-        ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-        chainId
-      )
+    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
     : undefined;
 
   const {

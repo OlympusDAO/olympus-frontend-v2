@@ -1,10 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
@@ -49,7 +45,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
   // Fetch loan data
   const { loanData, refetch: refetchLoan } = useRedemptionLoan(
     userAddress,
-    redemptionId ?? undefined
+    redemptionId ?? undefined,
   );
 
   // Get USDS token address and balance
@@ -62,11 +58,11 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     : undefined;
 
   // Token approval hooks
-  const { allowance, refetch: refetchAllowance, queryKey } = useTokenAllowance(
-    usdsTokenAddress!,
-    userAddress,
-    targetContractAddress
-  );
+  const {
+    allowance,
+    refetch: refetchAllowance,
+    queryKey,
+  } = useTokenAllowance(usdsTokenAddress!, userAddress, targetContractAddress);
 
   const {
     approve,
@@ -99,7 +95,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     try {
       const repayAmountBigInt = parseEther(repayAmount);
       // Need to approve for repayment amount + slippage buffer (0.1% of principal)
-      const maxSlippage = loanData.principal * 10n / 10000n;
+      const maxSlippage = (loanData.principal * 10n) / 10000n;
       const requiredAllowance = repayAmountBigInt + maxSlippage;
       return allowance < requiredAllowance;
     } catch {
@@ -133,7 +129,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     try {
       const amount = parseEther(repayAmount);
       // Approve for the repayment amount plus slippage buffer (0.1% of principal)
-      const maxSlippage = loanData.principal * 10n / 10000n;
+      const maxSlippage = (loanData.principal * 10n) / 10000n;
       const approvalAmount = amount + maxSlippage;
       approve({
         tokenAddress: usdsTokenAddress,
@@ -154,7 +150,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
       // Allow for up to 0.1% overpayment due to rounding in asset->share conversion
       // This is checked against the principal portion only, not the total payment
       // Using percentage instead of fixed amount to handle varying loan sizes
-      const maxSlippage = loanData.principal * 10n / 10000n;
+      const maxSlippage = (loanData.principal * 10n) / 10000n;
 
       repayLoan({
         redemptionId,
@@ -198,7 +194,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, redemptionId]);
+  }, [isOpen, redemptionId, refetchLoan, resetApproval, resetRepay]);
 
   // Steps configuration
   const steps = [
@@ -234,9 +230,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your loan has been repaid successfully.
                 </p>
@@ -263,8 +257,8 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
                           step.isCompleted
                             ? "text-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t"
+                              : "text-secondary-t ring-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
@@ -296,14 +290,10 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && (
-                        <img src={step.icon} alt="" className="w-5 h-5" />
-                      )}
+                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -371,7 +361,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
           <div>
             <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Repay</label>
+                <span className="text-sm font-medium">Repay</span>
               </div>
               <div className="relative">
                 <Input
@@ -395,20 +385,12 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
               <div className="flex justify-between items-center mt-2 text-sm">
                 <div className="flex items-center gap-1 text-secondary-t">
                   <span>USDS Balance:</span>
-                  <span>
-                    {usdsBalance
-                      ? parseFloat(formatEther(usdsBalance)).toFixed(2)
-                      : "0"}
-                  </span>
+                  <span>{usdsBalance ? parseFloat(formatEther(usdsBalance)).toFixed(2) : "0"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-secondary-t">Max debt:</span>
                   <span>{totalDebt}</span>
-                  <Button
-                    variant="secondary"
-                    className="h-6"
-                    onClick={handleMaxClick}
-                  >
+                  <Button variant="secondary" className="h-6" onClick={handleMaxClick}>
                     Max
                   </Button>
                 </div>
@@ -452,17 +434,12 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
             )}
           </div>
 
-          <Button
-            size="lg"
-            className="w-full"
-            disabled={!isValidAmount}
-            onClick={handleStartRepay}
-          >
+          <Button size="lg" className="w-full" disabled={!isValidAmount} onClick={handleStartRepay}>
             {!repayAmount || repayAmount === "0"
               ? "Enter amount"
               : !isValidAmount
-              ? "Invalid amount"
-              : `Repay ${parseFloat(repayAmount).toFixed(2)} USDS`}
+                ? "Invalid amount"
+                : `Repay ${parseFloat(repayAmount).toFixed(2)} USDS`}
           </Button>
         </div>
       </DialogContent>

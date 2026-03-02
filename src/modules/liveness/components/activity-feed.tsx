@@ -13,10 +13,7 @@ import { formatAddress } from "@/lib/liveness/formatters";
 import { RiExternalLinkLine } from "@remixicon/react";
 import { ETHERSCAN_BASE_URL } from "@/lib/constants";
 
-const TYPE_CONFIG: Record<
-  ActivityType,
-  { label: string; verb: string; badgeClass: string }
-> = {
+const TYPE_CONFIG: Record<ActivityType, { label: string; verb: string; badgeClass: string }> = {
   "cd-bid": {
     label: "CD Bid",
     verb: "deposited",
@@ -105,18 +102,15 @@ function FeedRow({ item }: { item: ActivityItem }) {
           <p className="text-sm leading-snug">
             {item.address ? (
               <>
-                <span className="font-mono font-medium">{formatAddress(item.address)}</span>
-                {" "}
+                <span className="font-mono font-medium">{formatAddress(item.address)}</span>{" "}
                 <span className="text-secondary-t">{config.verb}</span>
               </>
             ) : (
               <>
-                <span className="font-medium">Protocol</span>
-                {" "}
+                <span className="font-medium">Protocol</span>{" "}
                 <span className="text-secondary-t">{config.verb}</span>
               </>
-            )}
-            {" "}
+            )}{" "}
             <span className="font-medium">{item.primaryValue}</span>
           </p>
           <span className="text-xs tabular-nums text-tertiary-t whitespace-nowrap">
@@ -149,9 +143,7 @@ function FeedRow({ item }: { item: ActivityItem }) {
     );
   }
 
-  return (
-    <div className="border-b border-a10-b last:border-b-0">{row}</div>
-  );
+  return <div className="border-b border-a10-b last:border-b-0">{row}</div>;
 }
 
 export function ActivityFeed() {
@@ -185,10 +177,7 @@ export function ActivityFeed() {
         <p className="text-xs font-medium uppercase tracking-widest text-secondary-t">
           Activity Feed
         </p>
-        <Tabs
-          value={filter}
-          onValueChange={(v) => setFilter(v as Filter)}
-        >
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="cd">CD</TabsTrigger>
@@ -199,9 +188,7 @@ export function ActivityFeed() {
       </div>
 
       {filteredItems.length === 0 ? (
-        <p className="py-8 text-center text-sm text-tertiary-t">
-          No recent activity
-        </p>
+        <p className="py-8 text-center text-sm text-tertiary-t">No recent activity</p>
       ) : (
         <div className="max-h-[480px] overflow-y-auto [scrollbar-width:thin] [scrollbar-color:var(--surface-a10)_transparent]">
           {filteredItems.map((item) => (

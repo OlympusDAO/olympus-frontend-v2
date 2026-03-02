@@ -9,18 +9,10 @@ function TooltipProvider({
   delay = 0,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delay={delay}
-      {...props}
-    />
-  );
+  return <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />;
 }
 
-function TooltipCore({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+function TooltipCore({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
   return (
     <TooltipProvider>
       <TooltipPrimitive.Root data-slot="tooltip" {...props} />
@@ -28,9 +20,7 @@ function TooltipCore({
   );
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
@@ -53,7 +43,7 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           className={cn(
             "shadow-tooltip rounded-lg animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-            className
+            className,
           )}
         >
           <div className="p-2 text-xs clip-corners-4 clip-border-4 after:bg-separator-bottom-b bg-surface-tooltip rounded-lg">
@@ -65,15 +55,10 @@ function TooltipContent({
   );
 }
 
-interface ITooltipProps
-  extends React.ComponentPropsWithoutRef<typeof TooltipCore> {
+interface ITooltipProps extends React.ComponentPropsWithoutRef<typeof TooltipCore> {
   title: React.ReactNode;
-  triggerProps?: React.ComponentPropsWithoutRef<
-    typeof TooltipPrimitive.Trigger
-  >;
-  contentProps?: React.ComponentPropsWithoutRef<
-    typeof TooltipPrimitive.Positioner
-  >;
+  triggerProps?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>;
+  contentProps?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Positioner>;
   classNameContent?: string;
   className?: string;
 }
@@ -114,10 +99,7 @@ function Tooltip({
           {children}
         </TooltipTrigger>
         <TooltipContent
-          className={cn(
-            "font-normal max-w-[250px] text-center",
-            classNameContent
-          )}
+          className={cn("font-normal max-w-[250px] text-center", classNameContent)}
           {...contentProps}
         >
           {title}
@@ -155,11 +137,4 @@ function TooltipInfo({
   );
 }
 
-export {
-  TooltipCore,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-  Tooltip,
-  TooltipInfo,
-};
+export { TooltipCore, TooltipTrigger, TooltipContent, TooltipProvider, Tooltip, TooltipInfo };

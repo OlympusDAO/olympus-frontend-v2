@@ -10,7 +10,11 @@ export function useLimitOrdersEnabled() {
   const chainId = useChainId();
   const contractAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
-  const { data: isEnabled, isLoading, error } = useReadContract({
+  const {
+    data: isEnabled,
+    isLoading,
+    error,
+  } = useReadContract({
     address: contractAddress,
     abi: LimitOrdersAbi,
     functionName: "isEnabled",

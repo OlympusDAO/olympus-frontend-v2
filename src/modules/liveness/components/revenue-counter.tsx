@@ -6,13 +6,7 @@ import { useRevenueCounter } from "@/lib/hooks/liveness/useRevenueCounter";
 import { formatUsd } from "@/lib/liveness/formatters";
 
 export function RevenueCounter() {
-  const {
-    displayValue,
-    timeWindow,
-    setTimeWindow,
-    weeklyTotal,
-    isLoading,
-  } = useRevenueCounter();
+  const { displayValue, timeWindow, setTimeWindow, weeklyTotal, isLoading } = useRevenueCounter();
 
   if (isLoading) {
     return (
@@ -40,9 +34,7 @@ export function RevenueCounter() {
           <div className="absolute size-2 rounded-full bg-green/40 animate-heartbeat-ring" />
           <div className="absolute size-2 rounded-full bg-green/20 animate-heartbeat-ring-delayed" />
         </div>
-        <p className="text-xs font-medium uppercase tracking-widest">
-          Protocol Revenue
-        </p>
+        <p className="text-xs font-medium uppercase tracking-widest">Protocol Revenue</p>
       </div>
 
       <div className="mb-2">
@@ -70,9 +62,7 @@ export function RevenueCounter() {
 
       <Tabs
         value={timeWindow}
-        onValueChange={(v) =>
-          setTimeWindow(v as "daily" | "weekly" | "annualized")
-        }
+        onValueChange={(v) => setTimeWindow(v as "daily" | "weekly" | "annualized")}
       >
         <TabsList>
           <TabsTrigger value="daily">Daily</TabsTrigger>

@@ -517,9 +517,7 @@ export default [
   {
     inputs: [{ internalType: "uint8", name: "depositPeriod", type: "uint8" }],
     name: "receiptTokens",
-    outputs: [
-      { internalType: "contract ERC20", name: "receiptToken", type: "address" },
-    ],
+    outputs: [{ internalType: "contract ERC20", name: "receiptToken", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -538,9 +536,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "address", name: "newRecipient_", type: "address" },
-    ],
+    inputs: [{ internalType: "address", name: "newRecipient_", type: "address" }],
     name: "setYieldRecipient",
     outputs: [],
     stateMutability: "nonpayable",

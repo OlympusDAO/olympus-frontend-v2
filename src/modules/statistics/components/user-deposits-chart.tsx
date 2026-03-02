@@ -1,19 +1,16 @@
-import React, { useMemo, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import type React from "react";
+import { useMemo, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, startOfDay, eachDayOfInterval, subDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
 import { RiInformationFill } from "@remixicon/react";
-import { useStatisticsData, useAllTimeDeposits, TimeRange } from "@/lib/hooks/cds/useStatisticsData";
+import {
+  useStatisticsData,
+  useAllTimeDeposits,
+  type TimeRange,
+} from "@/lib/hooks/cds/useStatisticsData";
 
 const CHART_COLORS = {
   barGradientStart: "var(--green)",
@@ -85,10 +82,7 @@ export const UserDepositsChart: React.FC = () => {
   // Period deposits = sum of new deposits in the selected time period
   const periodDeposits = useMemo(() => {
     if (!statisticsData?.bids) return 0;
-    return statisticsData.bids.reduce(
-      (acc, bid) => acc + parseFloat(bid.depositAmountDecimal),
-      0
-    );
+    return statisticsData.bids.reduce((acc, bid) => acc + parseFloat(bid.depositAmountDecimal), 0);
   }, [statisticsData]);
 
   const formatCurrency = (value: number) => {
@@ -117,9 +111,7 @@ export const UserDepositsChart: React.FC = () => {
         <p className="text-xs text-secondary-t mb-1">
           {format(new Date(data.date), "MMM dd, yyyy")}
         </p>
-        <p className="text-sm font-medium">
-          Depositor USD: {formatCurrency(data.amount)}
-        </p>
+        <p className="text-sm font-medium">Depositor USD: {formatCurrency(data.amount)}</p>
       </div>
     );
   };
@@ -174,9 +166,15 @@ export const UserDepositsChart: React.FC = () => {
         </div>
         <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
           <TabsList className="h-7">
-            <TabsTrigger value="7d" className="text-xs px-2 h-6">7D</TabsTrigger>
-            <TabsTrigger value="30d" className="text-xs px-2 h-6">1M</TabsTrigger>
-            <TabsTrigger value="1y" className="text-xs px-2 h-6">1Y</TabsTrigger>
+            <TabsTrigger value="7d" className="text-xs px-2 h-6">
+              7D
+            </TabsTrigger>
+            <TabsTrigger value="30d" className="text-xs px-2 h-6">
+              1M
+            </TabsTrigger>
+            <TabsTrigger value="1y" className="text-xs px-2 h-6">
+              1Y
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -194,11 +192,7 @@ export const UserDepositsChart: React.FC = () => {
                 <stop offset="100%" stopColor={CHART_COLORS.barGradientStart} stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
               stroke={CHART_COLORS.text}

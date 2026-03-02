@@ -1,21 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import DepositRedemptionVaultAbi from "@/abis/DepositRedemptionVault";
-import {
-  ContractName,
-  getContractAddress,
-  requireContractAddress,
-} from "@/lib/contracts";
+import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
 import { getTokenAddress } from "@/lib/tokens";
 
 interface UseFullRedemptionParams {
@@ -55,13 +43,11 @@ export function useFullRedemption() {
     },
     success: {
       title: "Full redemption started!",
-      description:
-        "Your redemption has been queued. You can claim after the waiting period.",
+      description: "Your redemption has been queued. You can claim after the waiting period.",
     },
     error: {
       title: "Redemption failed",
-      description:
-        "There was an error starting your redemption. Please try again.",
+      description: "There was an error starting your redemption. Please try again.",
       userRejected: {
         title: "Redemption cancelled",
         description: "You cancelled the transaction.",
@@ -86,10 +72,7 @@ export function useFullRedemption() {
   // Invalidate queries when redemption succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const contractAddress = getContractAddress(
-        ContractName.DEPOSIT_REDEMPTION_VAULT,
-        chainId
-      );
+      const contractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
       if (contractAddress) {
         // Invalidate getUserRedemptionCount query - this will trigger usePendingRedemptions to refetch
@@ -147,10 +130,7 @@ export function useFullRedemption() {
   }: UseFullRedemptionParams) => {
     if (!chainId) throw new Error("No chain connected");
 
-    const contractAddress = requireContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+    const contractAddress = requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
     const tokenAddress = getTokenAddress("USDS", chainId);
     if (!tokenAddress) throw new Error("Token address not found");
 
@@ -171,7 +151,7 @@ export function useFullRedemption() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

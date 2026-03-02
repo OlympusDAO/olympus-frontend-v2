@@ -1,13 +1,6 @@
-import React, { useMemo } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import type React from "react";
+import { useMemo } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
 import { useProtocolIncome } from "@/lib/hooks/cooler/useV1Data";
 import { formatUSD } from "@/lib/hooks/cooler/utils";
@@ -22,7 +15,7 @@ const CHART_COLORS = {
 function formatTimestamp(timestamp: string): string {
   try {
     const timestampNum = Number(timestamp);
-    if (isNaN(timestampNum) || timestampNum <= 0) return "";
+    if (Number.isNaN(timestampNum) || timestampNum <= 0) return "";
     const date = new Date(timestampNum / 1000);
     if (date.toString() === "Invalid Date") return "";
     return date.toISOString().split("T")[0];
@@ -48,7 +41,11 @@ export const ProtocolIncomeChart: React.FC = () => {
 
   const { chartData, cumulativeDefaultIncome, cumulativeInterestIncome } = useMemo(() => {
     if (!data) {
-      return { chartData: [] as IncomeDataPoint[], cumulativeDefaultIncome: 0, cumulativeInterestIncome: 0 };
+      return {
+        chartData: [] as IncomeDataPoint[],
+        cumulativeDefaultIncome: 0,
+        cumulativeInterestIncome: 0,
+      };
     }
 
     const combinedData = new Map<
@@ -69,8 +66,7 @@ export const ProtocolIncomeChart: React.FC = () => {
     data.defaultStats_collection.forEach((item) => {
       if (!item.timestamp) return;
       const defaultIncome =
-        parseFloat(item.totalValueClaimed || "0") -
-        parseFloat(item.totalPrincipalDefaulted || "0");
+        parseFloat(item.totalValueClaimed || "0") - parseFloat(item.totalPrincipalDefaulted || "0");
       cumDefaultIncome += defaultIncome;
 
       combinedData.set(item.timestamp, {
@@ -172,21 +168,13 @@ export const ProtocolIncomeChart: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
           <span className="text-sm text-secondary-t">Total Default Income</span>
-          <p className="text-2xl font-semibold mt-1">
-            {formatUSD(cumulativeDefaultIncome)}
-          </p>
-          <span className="text-xs text-tertiary-t">
-            Claimed value minus defaulted principal
-          </span>
+          <p className="text-2xl font-semibold mt-1">{formatUSD(cumulativeDefaultIncome)}</p>
+          <span className="text-xs text-tertiary-t">Claimed value minus defaulted principal</span>
         </Card>
         <Card className="p-6">
           <span className="text-sm text-secondary-t">Total Interest Income</span>
-          <p className="text-2xl font-semibold mt-1">
-            {formatUSD(cumulativeInterestIncome)}
-          </p>
-          <span className="text-xs text-tertiary-t">
-            From extensions and repayments
-          </span>
+          <p className="text-2xl font-semibold mt-1">{formatUSD(cumulativeInterestIncome)}</p>
+          <span className="text-xs text-tertiary-t">From extensions and repayments</span>
         </Card>
       </div>
 
@@ -209,8 +197,21 @@ export const ProtocolIncomeChart: React.FC = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-                <XAxis dataKey="dateLabel" stroke={CHART_COLORS.text} fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={formatCurrency} stroke={CHART_COLORS.text} fontSize={11} tickLine={false} axisLine={false} width={55} />
+                <XAxis
+                  dataKey="dateLabel"
+                  stroke={CHART_COLORS.text}
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tickFormatter={formatCurrency}
+                  stroke={CHART_COLORS.text}
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  width={55}
+                />
                 <Tooltip
                   cursor={{ fill: "var(--surface-a5)" }}
                   content={({ active, payload }) => {
@@ -255,8 +256,21 @@ export const ProtocolIncomeChart: React.FC = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-                <XAxis dataKey="dateLabel" stroke={CHART_COLORS.text} fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={formatCurrency} stroke={CHART_COLORS.text} fontSize={11} tickLine={false} axisLine={false} width={55} />
+                <XAxis
+                  dataKey="dateLabel"
+                  stroke={CHART_COLORS.text}
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tickFormatter={formatCurrency}
+                  stroke={CHART_COLORS.text}
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  width={55}
+                />
                 <Tooltip
                   cursor={{ fill: "var(--surface-a5)" }}
                   content={({ active, payload }) => {

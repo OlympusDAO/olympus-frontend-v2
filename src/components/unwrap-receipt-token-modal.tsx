@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckCircle2, ExternalLink } from "lucide-react";
@@ -56,7 +52,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
   const { allowance, queryKey: allowanceQueryKey } = useTokenAllowance(
     wrappedBalance?.wrappedTokenAddress as `0x${string}`,
     userAddress,
-    receiptTokenManagerAddress
+    receiptTokenManagerAddress,
   );
 
   const {
@@ -79,14 +75,14 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
     // For very small or very large numbers, use compact notation
     if (num < 0.01 || num > 999999) {
       return num.toLocaleString(undefined, {
-        notation: 'compact',
-        maximumFractionDigits: 2
+        notation: "compact",
+        maximumFractionDigits: 2,
       });
     }
     // Otherwise use standard notation with 2 decimals
     return num.toLocaleString(undefined, {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     });
   };
 
@@ -108,9 +104,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    unwrapAmountBigInt > 0n &&
-    allowance < unwrapAmountBigInt;
+    allowance !== undefined && unwrapAmountBigInt > 0n && allowance < unwrapAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
@@ -249,9 +243,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
                               : "bg-surface-a10 text-secondary-t"
                           }`}
                         >
-                          <span className="text-sm font-medium">
-                            {step.number}
-                          </span>
+                          <span className="text-sm font-medium">{step.number}</span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -260,16 +252,14 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
                             step.isActive
                               ? "text-primary-t"
                               : step.isCompleted
-                              ? "text-primary-t"
-                              : "text-secondary-t"
+                                ? "text-primary-t"
+                                : "text-secondary-t"
                           }`}
                         >
                           {step.title}
                         </p>
                         {step.detail && (
-                          <p className="text-xs text-secondary-t mt-0.5 truncate">
-                            {step.detail}
-                          </p>
+                          <p className="text-xs text-secondary-t mt-0.5 truncate">{step.detail}</p>
                         )}
                         {step.hash && (
                           <a
@@ -285,9 +275,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
                       </div>
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a3-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a3-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -354,8 +342,8 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
           {/* Info box */}
           <div className="bg-blue/10 border border-blue/20 rounded-lg p-4">
             <p className="text-sm text-primary-t">
-              Unwrapping converts your wrapped ERC-20 tokens back to ERC-6909 receipt tokens.
-              You need unwrapped tokens to redeem for underlying assets.
+              Unwrapping converts your wrapped ERC-20 tokens back to ERC-6909 receipt tokens. You
+              need unwrapped tokens to redeem for underlying assets.
             </p>
           </div>
 
@@ -387,9 +375,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
             </div>
 
             {hasInsufficientBalance && (
-              <p className="text-xs text-red-500">
-                Insufficient wrapped balance
-              </p>
+              <p className="text-xs text-red-500">Insufficient wrapped balance</p>
             )}
           </div>
 
@@ -412,11 +398,7 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
           {/* Action button */}
           <Button
             onClick={handleStartUnwrap}
-            disabled={
-              !unwrapAmount ||
-              parseFloat(unwrapAmount) === 0 ||
-              !!hasInsufficientBalance
-            }
+            disabled={!unwrapAmount || parseFloat(unwrapAmount) === 0 || !!hasInsufficientBalance}
             className="w-full"
           >
             Unwrap Tokens

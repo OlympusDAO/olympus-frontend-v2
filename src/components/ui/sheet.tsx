@@ -1,45 +1,36 @@
-import * as React from "react"
-import { DrawerPreview as Drawer } from "@base-ui/react/drawer"
-import { XIcon } from "lucide-react"
+import type * as React from "react";
+import { DrawerPreview as Drawer } from "@base-ui/react/drawer";
+import { XIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: React.ComponentProps<typeof Drawer.Root>) {
-  return <Drawer.Root data-slot="sheet" {...props} />
+  return <Drawer.Root data-slot="sheet" {...props} />;
 }
 
-function SheetTrigger({
-  ...props
-}: React.ComponentProps<typeof Drawer.Trigger>) {
-  return <Drawer.Trigger data-slot="sheet-trigger" {...props} />
+function SheetTrigger({ ...props }: React.ComponentProps<typeof Drawer.Trigger>) {
+  return <Drawer.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
-function SheetClose({
-  ...props
-}: React.ComponentProps<typeof Drawer.Close>) {
-  return <Drawer.Close data-slot="sheet-close" {...props} />
+function SheetClose({ ...props }: React.ComponentProps<typeof Drawer.Close>) {
+  return <Drawer.Close data-slot="sheet-close" {...props} />;
 }
 
-function SheetPortal({
-  ...props
-}: React.ComponentProps<typeof Drawer.Portal>) {
-  return <Drawer.Portal data-slot="sheet-portal" {...props} />
+function SheetPortal({ ...props }: React.ComponentProps<typeof Drawer.Portal>) {
+  return <Drawer.Portal data-slot="sheet-portal" {...props} />;
 }
 
-function SheetOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof Drawer.Backdrop>) {
+function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Drawer.Backdrop>) {
   return (
     <Drawer.Backdrop
       data-slot="sheet-overlay"
       className={cn(
         "data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function SheetContent({
@@ -48,7 +39,7 @@ function SheetContent({
   side = "left",
   ...props
 }: React.ComponentProps<typeof Drawer.Popup> & {
-  side?: "top" | "right" | "bottom" | "left"
+  side?: "top" | "right" | "bottom" | "left";
 }) {
   return (
     <SheetPortal>
@@ -65,7 +56,7 @@ function SheetContent({
             "data-[closed]:slide-out-to-top data-[open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
           side === "bottom" &&
             "data-[closed]:slide-out-to-bottom data-[open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
-          className
+          className,
         )}
         {...props}
       >
@@ -76,20 +67,17 @@ function SheetContent({
         </Drawer.Close>
       </Drawer.Popup>
     </SheetPortal>
-  )
+  );
 }
 
-function SheetTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof Drawer.Title>) {
+function SheetTitle({ className, ...props }: React.ComponentProps<typeof Drawer.Title>) {
   return (
     <Drawer.Title
       data-slot="sheet-title"
       className={cn("text-foreground font-semibold", className)}
       {...props}
     />
-  )
+  );
 }
 
 function SheetDescription({
@@ -102,14 +90,7 @@ function SheetDescription({
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
-  )
+  );
 }
 
-export {
-  Sheet,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-}
+export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetTitle, SheetDescription };

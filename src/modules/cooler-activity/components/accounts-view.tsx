@@ -8,11 +8,7 @@ import {
   getFilteredRowModel,
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import {
-  ChevronUp,
-  ChevronDown,
-  Search,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -26,14 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import {
-  useV2Accounts,
-  type V2Account,
-} from "@/lib/hooks/cooler/useV2Data";
-import {
-  useBorrowers,
-  type BorrowerStat,
-} from "@/lib/hooks/cooler/useV1Data";
+import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data";
+import { useBorrowers, type BorrowerStat } from "@/lib/hooks/cooler/useV1Data";
 import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils";
 
 // ── V2 Accounts ──
@@ -68,6 +58,7 @@ function V2AccountsView() {
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 25;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setCurrentPage is a stable state setter
   useEffect(() => {
     setCurrentPage(1);
   }, [sortField, sortDirection, searchQuery]);
@@ -245,14 +236,12 @@ const v1Columns: ColumnDef<BorrowerStat>[] = [
   {
     accessorKey: "totalDefaultedLoans",
     header: "Defaulted",
-    sortingFn: (a, b) =>
-      a.original.totalDefaultedLoans - b.original.totalDefaultedLoans,
+    sortingFn: (a, b) => a.original.totalDefaultedLoans - b.original.totalDefaultedLoans,
   },
   {
     accessorKey: "totalLoanExtensions",
     header: "Extensions",
-    sortingFn: (a, b) =>
-      a.original.totalLoanExtensions - b.original.totalLoanExtensions,
+    sortingFn: (a, b) => a.original.totalLoanExtensions - b.original.totalLoanExtensions,
   },
   {
     accessorKey: "totalLoans",
@@ -264,22 +253,19 @@ const v1Columns: ColumnDef<BorrowerStat>[] = [
     header: "Interest Due",
     cell: ({ row }) => formatUSDFromString(row.original.currentInterestDue),
     sortingFn: (a, b) =>
-      Number(a.original.currentInterestDue) -
-      Number(b.original.currentInterestDue),
+      Number(a.original.currentInterestDue) - Number(b.original.currentInterestDue),
   },
   {
     accessorKey: "currentCollateral",
     header: "Collateral",
     cell: ({ row }) => formatCollateral(row.original.currentCollateral),
     sortingFn: (a, b) =>
-      Number(a.original.currentCollateral) -
-      Number(b.original.currentCollateral),
+      Number(a.original.currentCollateral) - Number(b.original.currentCollateral),
   },
 ];
 
 function V1BorrowersView() {
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useBorrowers();
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useBorrowers();
 
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -288,14 +274,11 @@ function V1BorrowersView() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const borrowers = useMemo(
-    () =>
-      data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
+    () => data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
     [data],
   );
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "totalLoans", desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "totalLoans", desc: true }]);
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
@@ -353,10 +336,7 @@ function V1BorrowersView() {
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   <span className="inline-flex items-center gap-1">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getIsSorted() === "asc" && " ▲"}
                     {header.column.getIsSorted() === "desc" && " ▼"}
                   </span>
@@ -405,8 +385,7 @@ function V1BorrowersView() {
             Previous
           </Button>
           <span className="text-sm text-secondary-t">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
           </span>
           <Button
             variant="secondary"
@@ -424,15 +403,6 @@ function V1BorrowersView() {
 
 // ── Combined Accounts View ──
 
-function LoadingSkeleton() {
-  return (
-    <Card className="p-6">
-      <div className="h-5 w-32 bg-surface-a5 rounded animate-pulse mb-4" />
-      <div className="h-64 bg-surface-a5 rounded animate-pulse" />
-    </Card>
-  );
-}
-
 export function AccountsView() {
   const [version, setVersion] = useState<"v2" | "v1">("v2");
 
@@ -442,8 +412,12 @@ export function AccountsView() {
         <h3 className="text-lg font-semibold">Accounts</h3>
         <Tabs value={version} onValueChange={(v) => setVersion(v as "v2" | "v1")}>
           <TabsList className="rounded-full">
-            <TabsTrigger value="v2" className="rounded-full">V2</TabsTrigger>
-            <TabsTrigger value="v1" className="rounded-full">V1</TabsTrigger>
+            <TabsTrigger value="v2" className="rounded-full">
+              V2
+            </TabsTrigger>
+            <TabsTrigger value="v1" className="rounded-full">
+              V1
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

@@ -136,15 +136,10 @@ export function getContractAddress(
 /**
  * Look up a contract address, throwing if not found.
  */
-export function requireContractAddress(
-  contractName: ContractName,
-  chainId: number,
-): Address {
+export function requireContractAddress(contractName: ContractName, chainId: number): Address {
   const address = getContractAddress(contractName, chainId);
   if (!address) {
-    throw new Error(
-      `Contract ${contractName} not deployed on chain ${chainId}`,
-    );
+    throw new Error(`Contract ${contractName} not deployed on chain ${chainId}`);
   }
   return address;
 }

@@ -44,19 +44,16 @@ type Position = {
 const PositionDiscount = ({ conversionPrice }: { conversionPrice: bigint }) => {
   const { formattedDiscount, isLoading } = useDiscount(conversionPrice);
 
-  if (isLoading)
-    return <span className="text-secondary-t font-medium">Loading...</span>;
+  if (isLoading) return <span className="text-secondary-t font-medium">Loading...</span>;
 
-  return (
-    <span className="text-secondary-t font-medium">{formattedDiscount}</span>
-  );
+  return <span className="text-secondary-t font-medium">{formattedDiscount}</span>;
 };
 
 // Component to display dynamic token name
 const PositionTokenName = ({
   asset,
   periodMonths,
-  amount
+  amount,
 }: {
   asset: `0x${string}`;
   periodMonths: number;
@@ -76,8 +73,7 @@ const PositionTokenName = ({
 };
 
 export const ActivePositions = () => {
-  const { formattedPrice: ohmPrice, isLoading: isOhmPriceLoading } =
-    useOhmPrice();
+  const { formattedPrice: ohmPrice, isLoading: isOhmPriceLoading } = useOhmPrice();
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isWrapModalOpen, setIsWrapModalOpen] = useState(false);
   const [wrapModalMode, setWrapModalMode] = useState<"wrap" | "unwrap">("wrap");
@@ -118,11 +114,7 @@ export const ActivePositions = () => {
   const [selectedRedeemPosition, setSelectedRedeemPosition] = useState<Position | null>(null);
 
   // Get user positions
-  const {
-    positions,
-    isLoading: isLoadingPositions,
-    error: positionsError,
-  } = useUserPositions();
+  const { positions, isLoading: isLoadingPositions, error: positionsError } = useUserPositions();
 
   // Helper function to format position data
   const formatPositionAmount = (remainingDeposit: bigint) => {
@@ -146,10 +138,7 @@ export const ActivePositions = () => {
     return diffDays;
   };
 
-  const calculateOhmReceived = (
-    remainingDeposit: bigint,
-    conversionPrice: bigint
-  ) => {
+  const calculateOhmReceived = (remainingDeposit: bigint, conversionPrice: bigint) => {
     // remainingDeposit is in 18 decimals, conversionPrice is in 18 decimals
     // OHM has 9 decimals, so we need to adjust the result
     // Formula: (remainingDeposit * 1e9) / conversionPrice
@@ -228,9 +217,7 @@ export const ActivePositions = () => {
   const handleTransfer = (position: Position) => {
     if (!position.data) return;
     // Note: displayName will be fetched dynamically in the modal using ReceiptTokenManager
-    const displayName = `cdUSDS-${formatTermSuffix(
-      position.data.periodMonths
-    )}`;
+    const displayName = `cdUSDS-${formatTermSuffix(position.data.periodMonths)}`;
     setSelectedTransferPosition({
       positionId: Number(position.id),
       asset: position.data.asset || "",
@@ -263,17 +250,11 @@ export const ActivePositions = () => {
       <h2 className="text-xl font-semibold mb-3">Active Positions</h2>
       <Card className="p-6 space-y-4">
         {isLoadingPositions ? (
-          <div className="text-center py-8 text-secondary-t">
-            Loading positions...
-          </div>
+          <div className="text-center py-8 text-secondary-t">Loading positions...</div>
         ) : positionsError ? (
-          <div className="text-center py-8 text-red-600">
-            Error loading positions
-          </div>
+          <div className="text-center py-8 text-red-600">Error loading positions</div>
         ) : positions.length === 0 ? (
-          <div className="text-center py-8 text-secondary-t">
-            No active positions
-          </div>
+          <div className="text-center py-8 text-secondary-t">No active positions</div>
         ) : (
           <>
             {/* Mobile cards view */}
@@ -281,24 +262,19 @@ export const ActivePositions = () => {
               {positions.map((position) => {
                 if (!position.data) return null;
 
-                const amount = formatPositionAmount(
-                  position.data.remainingDeposit
-                );
+                const amount = formatPositionAmount(position.data.remainingDeposit);
                 const expiryDate = formatExpiryDate(position.data.expiry);
                 const daysLeft = getDaysUntilExpiry(position.data.expiry);
                 const conversionPrice = parseFloat(
-                  formatEther(position.data.conversionPrice)
+                  formatEther(position.data.conversionPrice),
                 ).toFixed(2);
                 const ohmReceived = calculateOhmReceived(
                   position.data.remainingDeposit,
-                  position.data.conversionPrice
+                  position.data.conversionPrice,
                 );
 
                 return (
-                  <div
-                    key={position.id.toString()}
-                    className="rounded-lg p-4 space-y-3"
-                  >
+                  <div key={position.id.toString()} className="rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8" />
                       <div>
@@ -309,9 +285,7 @@ export const ActivePositions = () => {
                             amount={amount}
                           />
                         </div>
-                        <div className="text-sm text-secondary-t">
-                          ${amount}
-                        </div>
+                        <div className="text-sm text-secondary-t">${amount}</div>
                       </div>
                       <span className="text-gray-400 mx-2">→</span>
                       <img src={OHMIcon} alt="OHM" className="w-8 h-8" />
@@ -340,16 +314,12 @@ export const ActivePositions = () => {
                       <div>
                         <span className="text-secondary-t">Discount:</span>
                         <div className="mt-1">
-                          <PositionDiscount
-                            conversionPrice={position.data.conversionPrice}
-                          />
+                          <PositionDiscount conversionPrice={position.data.conversionPrice} />
                         </div>
                       </div>
                       <div>
                         <span className="text-secondary-t">Price:</span>
-                        <div className="mt-1 font-medium">
-                          {conversionPrice} USDS/OHM
-                        </div>
+                        <div className="mt-1 font-medium">{conversionPrice} USDS/OHM</div>
                       </div>
                       <div>
                         <span className="text-secondary-t">Expiry:</span>
@@ -361,11 +331,7 @@ export const ActivePositions = () => {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleConvert(position)}
-                      >
+                      <Button size="sm" className="flex-1" onClick={() => handleConvert(position)}>
                         Convert
                       </Button>
                       <Button
@@ -405,48 +371,31 @@ export const ActivePositions = () => {
             <Table className="hidden md:table">
               <TableHeader className="[&_tr]:border-b-0">
                 <TableRow className="border-b-0">
-                  <TableHead className="text-secondary-t font-normal">
-                    Convertible
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Price
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Discount
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Conversion Expiry
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal text-end">
-                    Actions
-                  </TableHead>
+                  <TableHead className="text-secondary-t font-normal">Convertible</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Status</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Price</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Discount</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Conversion Expiry</TableHead>
+                  <TableHead className="text-secondary-t font-normal text-end">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {positions.map((position) => {
                   if (!position.data) return null;
 
-                  const amount = formatPositionAmount(
-                    position.data.remainingDeposit
-                  );
+                  const amount = formatPositionAmount(position.data.remainingDeposit);
                   const expiryDate = formatExpiryDate(position.data.expiry);
                   const daysLeft = getDaysUntilExpiry(position.data.expiry);
                   const conversionPrice = parseFloat(
-                    formatEther(position.data.conversionPrice)
+                    formatEther(position.data.conversionPrice),
                   ).toFixed(2);
                   const ohmReceived = calculateOhmReceived(
                     position.data.remainingDeposit,
-                    position.data.conversionPrice
+                    position.data.conversionPrice,
                   );
 
                   return (
-                    <TableRow
-                      key={position.id.toString()}
-                      className="border-b-0"
-                    >
+                    <TableRow key={position.id.toString()} className="border-b-0">
                       <TableCell className="py-4">
                         <div className="flex items-center gap-3 w-fit">
                           <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 shrink-0 w-fit">
@@ -472,9 +421,7 @@ export const ActivePositions = () => {
                           <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 shrink-0 w-fit">
                             <img src={OHMIcon} alt="OHM" className="w-8 h-8 shrink-0" />
                             <div className="flex flex-col">
-                              <div className="font-medium whitespace-nowrap">
-                                {ohmReceived} OHM
-                              </div>
+                              <div className="font-medium whitespace-nowrap">{ohmReceived} OHM</div>
                               <div className="text-sm text-secondary-t whitespace-nowrap">
                                 {calculateOhmUsdValue(ohmReceived)}
                               </div>
@@ -496,15 +443,11 @@ export const ActivePositions = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="space-y-1">
-                          <div className="font-medium">
-                            {conversionPrice} USDS/OHM
-                          </div>
+                          <div className="font-medium">{conversionPrice} USDS/OHM</div>
                         </div>
                       </TableCell>
                       <TableCell className="py-4">
-                        <PositionDiscount
-                          conversionPrice={position.data.conversionPrice}
-                        />
+                        <PositionDiscount conversionPrice={position.data.conversionPrice} />
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="space-y-1">
@@ -516,10 +459,7 @@ export const ActivePositions = () => {
                       </TableCell>
                       <TableCell className="py-4 text-right">
                         <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            onClick={() => handleConvert(position)}
-                          >
+                          <Button size="sm" onClick={() => handleConvert(position)}>
                             Convert
                           </Button>
                           <Button

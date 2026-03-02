@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -34,7 +35,7 @@ interface ProcessedDataPoint {
 
 function formatDate(timestamp: number): string {
   try {
-    if (isNaN(timestamp) || timestamp <= 0) return "";
+    if (Number.isNaN(timestamp) || timestamp <= 0) return "";
     const date = new Date(timestamp / 1000);
     if (date.toString() === "Invalid Date") return "";
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -45,7 +46,7 @@ function formatDate(timestamp: number): string {
 
 function formatDateFull(timestamp: number): string {
   try {
-    if (isNaN(timestamp) || timestamp <= 0) return "";
+    if (Number.isNaN(timestamp) || timestamp <= 0) return "";
     const date = new Date(timestamp / 1000);
     if (date.toString() === "Invalid Date") return "";
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -96,9 +97,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
     return (
       <div className="bg-surface-tooltip border border-a10 rounded-xl p-3 shadow-lg">
         <p className="text-xs text-secondary-t mb-1">{point.date}</p>
-        <p className="text-sm font-medium">
-          {tooltipFormatter(point[dataKey] as number)}
-        </p>
+        <p className="text-sm font-medium">{tooltipFormatter(point[dataKey] as number)}</p>
       </div>
     );
   };
@@ -119,11 +118,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 <stop offset="100%" stopColor={color} stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="date"
               stroke={CHART_COLORS.text}

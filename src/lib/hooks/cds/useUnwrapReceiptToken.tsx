@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { useReceiptTokenManager } from "./useReceiptTokenManager";
 import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
 
@@ -46,8 +38,7 @@ export const useUnwrapReceiptToken = () => {
   const toastConfig: TransactionToastConfig = {
     pending: {
       title: "Unwrapping receipt tokens...",
-      description:
-        "Please wait while your tokens are being unwrapped.",
+      description: "Please wait while your tokens are being unwrapped.",
     },
     success: {
       title: "Tokens unwrapped successfully!",
@@ -55,8 +46,7 @@ export const useUnwrapReceiptToken = () => {
     },
     error: {
       title: "Unwrap failed",
-      description:
-        "There was an error unwrapping your tokens. Please try again.",
+      description: "There was an error unwrapping your tokens. Please try again.",
       userRejected: {
         title: "Unwrap cancelled",
         description: "You cancelled the transaction.",
@@ -147,7 +137,7 @@ export const useUnwrapReceiptToken = () => {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

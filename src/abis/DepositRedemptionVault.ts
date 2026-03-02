@@ -76,9 +76,7 @@ export default [
     type: "error",
   },
   {
-    inputs: [
-      { internalType: "address", name: "depositManager", type: "address" },
-    ],
+    inputs: [{ internalType: "address", name: "depositManager", type: "address" }],
     name: "RedemptionVault_InvalidDepositManager",
     type: "error",
   },
@@ -462,9 +460,7 @@ export default [
   {
     inputs: [],
     name: "DEPOSIT_MANAGER",
-    outputs: [
-      { internalType: "contract IDepositManager", name: "", type: "address" },
-    ],
+    outputs: [{ internalType: "contract IDepositManager", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -514,9 +510,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
@@ -535,9 +529,7 @@ export default [
   {
     inputs: [],
     name: "configureDependencies",
-    outputs: [
-      { internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" },
-    ],
+    outputs: [{ internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -575,9 +567,7 @@ export default [
   {
     inputs: [{ internalType: "uint16", name: "redemptionId_", type: "uint16" }],
     name: "finishRedemption",
-    outputs: [
-      { internalType: "uint256", name: "actualAmount", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "actualAmount", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },

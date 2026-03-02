@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useAccount, useReadContracts, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,14 +17,8 @@ import {
   useReceiptTokenBalances,
   formatTokenBalance,
 } from "@/lib/hooks/cds/useReceiptTokenBalances";
-import {
-  usePendingRedemptions,
-  formatPendingAmount,
-} from "@/lib/hooks/cds/usePendingRedemptions";
-import {
-  formatRedemptionStatus,
-  calculateRedemptionProgress,
-} from "@/lib/utils/timeUtils";
+import { usePendingRedemptions, formatPendingAmount } from "@/lib/hooks/cds/usePendingRedemptions";
+import { formatRedemptionStatus, calculateRedemptionProgress } from "@/lib/utils/timeUtils";
 import cdUSDSIcon from "@/assets/cdUSDS.png";
 import { RedeemModal } from "@/components/redeem-modal";
 import { CancelRedemptionModal } from "@/components/cancel-redemption-modal";
@@ -59,15 +54,25 @@ export const TokenBalances: React.FC = () => {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
-  const [selectedTokenBalance, setSelectedTokenBalance] = useState<TokenBalance | undefined>(undefined);
+  const [selectedTokenBalance, setSelectedTokenBalance] = useState<TokenBalance | undefined>(
+    undefined,
+  );
   const [isCancelRedemptionModalOpen, setIsCancelRedemptionModalOpen] = useState(false);
-  const [selectedPendingRedemption, setSelectedPendingRedemption] = useState<PendingRedemption | undefined>(undefined);
+  const [selectedPendingRedemption, setSelectedPendingRedemption] = useState<
+    PendingRedemption | undefined
+  >(undefined);
   const [isFinishRedemptionModalOpen, setIsFinishRedemptionModalOpen] = useState(false);
-  const [selectedRedeemableRedemption, setSelectedRedeemableRedemption] = useState<PendingRedemption | undefined>(undefined);
+  const [selectedRedeemableRedemption, setSelectedRedeemableRedemption] = useState<
+    PendingRedemption | undefined
+  >(undefined);
   const [isUnwrapModalOpen, setIsUnwrapModalOpen] = useState(false);
-  const [selectedWrappedBalance, setSelectedWrappedBalance] = useState<TokenBalance | undefined>(undefined);
+  const [selectedWrappedBalance, setSelectedWrappedBalance] = useState<TokenBalance | undefined>(
+    undefined,
+  );
   const [isWrapModalOpen, setIsWrapModalOpen] = useState(false);
-  const [selectedUnwrappedBalance, setSelectedUnwrappedBalance] = useState<TokenBalance | undefined>(undefined);
+  const [selectedUnwrappedBalance, setSelectedUnwrappedBalance] = useState<
+    TokenBalance | undefined
+  >(undefined);
 
   // Get token balances
   const {
@@ -81,10 +86,7 @@ export const TokenBalances: React.FC = () => {
   const { pendingRedemptions, isLoading: isLoadingRedemptions } = usePendingRedemptions();
 
   // Get vault address
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   // Fetch loan data for all pending redemptions
   const { data: loansData } = useReadContracts({
@@ -192,10 +194,10 @@ export const TokenBalances: React.FC = () => {
 
       <Card className="p-6 space-y-4">
         {isLoadingBalances || isLoadingRedemptions ? (
-          <div className="text-center py-8 text-secondary-t">
-            Loading balances...
-          </div>
-        ) : unwrappedBalances.length === 0 && wrappedBalances.length === 0 && pendingRedemptions.length === 0 ? (
+          <div className="text-center py-8 text-secondary-t">Loading balances...</div>
+        ) : unwrappedBalances.length === 0 &&
+          wrappedBalances.length === 0 &&
+          pendingRedemptions.length === 0 ? (
           <div className="text-center py-8 text-secondary-t">
             No token balances
             {totalPositionCount > 0 && (
@@ -218,8 +220,7 @@ export const TokenBalances: React.FC = () => {
                     <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                     <div>
                       <div className="font-medium">
-                        {formatTokenBalance(balance.totalBalance)}{" "}
-                        {balance.displayName}
+                        {formatTokenBalance(balance.totalBalance)} {balance.displayName}
                       </div>
                       <div className="text-sm text-secondary-t">
                         ${formatTokenBalance(balance.totalBalance)}
@@ -239,11 +240,7 @@ export const TokenBalances: React.FC = () => {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleRedeem(balance)}
-                    >
+                    <Button size="sm" className="flex-1" onClick={() => handleRedeem(balance)}>
                       Redeem
                     </Button>
                     <Button
@@ -268,8 +265,7 @@ export const TokenBalances: React.FC = () => {
                     <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                     <div>
                       <div className="font-medium">
-                        {formatTokenBalance(balance.wrappedBalance || 0n)}{" "}
-                        {balance.displayName}
+                        {formatTokenBalance(balance.wrappedBalance || 0n)} {balance.displayName}
                       </div>
                       <div className="text-sm text-secondary-t">
                         ${formatTokenBalance(balance.wrappedBalance || 0n)}
@@ -289,11 +285,7 @@ export const TokenBalances: React.FC = () => {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleUnwrap(balance)}
-                    >
+                    <Button size="sm" className="flex-1" onClick={() => handleUnwrap(balance)}>
                       Unwrap
                     </Button>
                   </div>
@@ -312,8 +304,7 @@ export const TokenBalances: React.FC = () => {
                       <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                       <div>
                         <div className="font-medium">
-                          {formatPendingAmount(redemption.amount)}{" "}
-                          {redemption.displayName}
+                          {formatPendingAmount(redemption.amount)} {redemption.displayName}
                         </div>
                         <div className="text-sm text-secondary-t">
                           ${formatPendingAmount(redemption.amount)}
@@ -323,14 +314,16 @@ export const TokenBalances: React.FC = () => {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-secondary-t">Status:</span>
-                        <div className={`mt-1 font-medium ${isRedeemable ? 'text-green' : 'text-yellow'}`}>
+                        <div
+                          className={`mt-1 font-medium ${isRedeemable ? "text-green" : "text-yellow"}`}
+                        >
                           {formatRedemptionStatus(redemption.redeemableAt)}
                         </div>
                         <div className="mt-2">
                           <Progress
                             value={calculateRedemptionProgress(
                               redemption.redeemableAt,
-                              redemption.periodMonths
+                              redemption.periodMonths,
                             )}
                             className="h-1 bg-orange-100"
                           />
@@ -356,13 +349,18 @@ export const TokenBalances: React.FC = () => {
                           Cancel
                         </Button>
                       )}
-                      {!isRedeemable && !hasActiveLoan(pendingRedemptions.indexOf(redemption)) && isBorrowEnabled(pendingRedemptions.indexOf(redemption)) && (
-                        <Link to={`/borrow?redemptionId=${redemption.redemptionId}`} className="flex-1">
-                          <Button size="sm" variant="secondary" className="w-full">
-                            Borrow
-                          </Button>
-                        </Link>
-                      )}
+                      {!isRedeemable &&
+                        !hasActiveLoan(pendingRedemptions.indexOf(redemption)) &&
+                        isBorrowEnabled(pendingRedemptions.indexOf(redemption)) && (
+                          <Link
+                            to={`/borrow?redemptionId=${redemption.redemptionId}`}
+                            className="flex-1"
+                          >
+                            <Button size="sm" variant="secondary" className="w-full">
+                              Borrow
+                            </Button>
+                          </Link>
+                        )}
                     </div>
                   </div>
                 );
@@ -374,39 +372,27 @@ export const TokenBalances: React.FC = () => {
         {/* Desktop table view */}
         {!isLoadingBalances &&
           !isLoadingRedemptions &&
-          (unwrappedBalances.length > 0 || wrappedBalances.length > 0 || pendingRedemptions.length > 0) && (
+          (unwrappedBalances.length > 0 ||
+            wrappedBalances.length > 0 ||
+            pendingRedemptions.length > 0) && (
             <Table className="hidden md:table">
               <TableHeader className="[&_tr]:border-b-0">
                 <TableRow className="border-b-0">
-                  <TableHead className="text-secondary-t font-normal">
-                    Balance
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal text-end">
-                    Actions
-                  </TableHead>
+                  <TableHead className="text-secondary-t font-normal">Balance</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Status</TableHead>
+                  <TableHead className="text-secondary-t font-normal text-end">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {/* Unwrapped token balances */}
                 {unwrappedBalances.map((balance) => (
-                  <TableRow
-                    key={`${balance.displayName}`}
-                    className="border-b-0"
-                  >
+                  <TableRow key={`${balance.displayName}`} className="border-b-0">
                     <TableCell className="py-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={cdUSDSIcon}
-                          alt="cdUSDS"
-                          className="w-8 h-8"
-                        />
+                        <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                         <div>
                           <div className="font-medium">
-                            {formatTokenBalance(balance.totalBalance)}{" "}
-                            {balance.displayName}
+                            {formatTokenBalance(balance.totalBalance)} {balance.displayName}
                           </div>
                           <div className="text-sm text-secondary-t">
                             ${formatTokenBalance(balance.totalBalance)}
@@ -434,21 +420,13 @@ export const TokenBalances: React.FC = () => {
 
                 {/* Wrapped token balances */}
                 {wrappedBalances.map((balance) => (
-                  <TableRow
-                    key={`wrapped-${balance.tokenId}`}
-                    className="border-b-0"
-                  >
+                  <TableRow key={`wrapped-${balance.tokenId}`} className="border-b-0">
                     <TableCell className="py-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={cdUSDSIcon}
-                          alt="cdUSDS"
-                          className="w-8 h-8"
-                        />
+                        <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                         <div>
                           <div className="font-medium">
-                            {formatTokenBalance(balance.wrappedBalance || 0n)}{" "}
-                            {balance.displayName}
+                            {formatTokenBalance(balance.wrappedBalance || 0n)} {balance.displayName}
                           </div>
                           <div className="text-sm text-secondary-t">
                             ${formatTokenBalance(balance.wrappedBalance || 0n)}
@@ -457,9 +435,7 @@ export const TokenBalances: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <Badge className="bg-blue/20 text-blue rounded-full px-3 py-1">
-                        Wrapped
-                      </Badge>
+                      <Badge className="bg-blue/20 text-blue rounded-full px-3 py-1">Wrapped</Badge>
                     </TableCell>
                     <TableCell className="py-4 text-right">
                       <Button size="sm" onClick={() => handleUnwrap(balance)}>
@@ -473,21 +449,13 @@ export const TokenBalances: React.FC = () => {
                 {pendingRedemptions.map((redemption) => {
                   const isRedeemable = isRedemptionRedeemable(redemption.redeemableAt);
                   return (
-                    <TableRow
-                      key={`pending-${redemption.redemptionId}`}
-                      className="border-b-0"
-                    >
+                    <TableRow key={`pending-${redemption.redemptionId}`} className="border-b-0">
                       <TableCell className="py-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={cdUSDSIcon}
-                            alt="cdUSDS"
-                            className="w-8 h-8"
-                          />
+                          <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8" />
                           <div>
                             <div className="font-medium">
-                              {formatPendingAmount(redemption.amount)}{" "}
-                              {redemption.displayName}
+                              {formatPendingAmount(redemption.amount)} {redemption.displayName}
                             </div>
                             <div className="text-sm text-secondary-t">
                               ${formatPendingAmount(redemption.amount)}
@@ -497,13 +465,15 @@ export const TokenBalances: React.FC = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="space-y-2">
-                          <Badge className={`${isRedeemable ? 'bg-green/20 text-green' : 'bg-yellow/20 text-yellow'} rounded-full px-3 py-1`}>
+                          <Badge
+                            className={`${isRedeemable ? "bg-green/20 text-green" : "bg-yellow/20 text-yellow"} rounded-full px-3 py-1`}
+                          >
                             {formatRedemptionStatus(redemption.redeemableAt)}
                           </Badge>
                           <Progress
                             value={calculateRedemptionProgress(
                               redemption.redeemableAt,
-                              redemption.periodMonths
+                              redemption.periodMonths,
                             )}
                             className="h-1 w-full bg-surface-a10"
                           />
@@ -512,27 +482,23 @@ export const TokenBalances: React.FC = () => {
                       <TableCell className="py-4 text-right">
                         <div className="flex gap-2 justify-end">
                           {isRedeemable ? (
-                            <Button
-                              size="sm"
-                              onClick={() => handleFinishRedemption(redemption)}
-                            >
+                            <Button size="sm" onClick={() => handleFinishRedemption(redemption)}>
                               Complete Redemption
                             </Button>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => handleCancelRedemption(redemption)}
-                            >
+                            <Button size="sm" onClick={() => handleCancelRedemption(redemption)}>
                               Cancel
                             </Button>
                           )}
-                          {!isRedeemable && !hasActiveLoan(pendingRedemptions.indexOf(redemption)) && isBorrowEnabled(pendingRedemptions.indexOf(redemption)) && (
-                            <Link to={`/borrow?redemptionId=${redemption.redemptionId}`}>
-                              <Button size="sm" variant="secondary">
-                                Borrow
-                              </Button>
-                            </Link>
-                          )}
+                          {!isRedeemable &&
+                            !hasActiveLoan(pendingRedemptions.indexOf(redemption)) &&
+                            isBorrowEnabled(pendingRedemptions.indexOf(redemption)) && (
+                              <Link to={`/borrow?redemptionId=${redemption.redemptionId}`}>
+                                <Button size="sm" variant="secondary">
+                                  Borrow
+                                </Button>
+                              </Link>
+                            )}
                         </div>
                       </TableCell>
                     </TableRow>

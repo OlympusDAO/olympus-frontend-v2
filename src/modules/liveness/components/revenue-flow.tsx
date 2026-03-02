@@ -38,12 +38,7 @@ function flowBandPath(
 }
 
 /** Center bezier for animateMotion */
-function flowCenterPath(
-  sx: number,
-  syMid: number,
-  tx: number,
-  tyMid: number,
-): string {
+function flowCenterPath(sx: number, syMid: number, tx: number, tyMid: number): string {
   const cx1 = sx + (tx - sx) * 0.45;
   const cx2 = sx + (tx - sx) * 0.55;
   return `M ${sx} ${syMid} C ${cx1} ${syMid}, ${cx2} ${tyMid}, ${tx} ${tyMid}`;
@@ -110,10 +105,7 @@ export function RevenueFlowDiagram({
     verticalConnector: null,
   });
 
-  const sortedSources = useMemo(
-    () => [...sources].sort((a, b) => b.value - a.value),
-    [sources],
-  );
+  const sortedSources = useMemo(() => [...sources].sort((a, b) => b.value - a.value), [sources]);
 
   const computePaths = useCallback(() => {
     const container = containerRef.current;
@@ -148,14 +140,7 @@ export function RevenueFlowDiagram({
       const tyMid = (tyTop + tyBot) / 2;
 
       return {
-        band: flowBandPath(
-          sx,
-          sMidY - halfBand,
-          sMidY + halfBand,
-          centerLeft,
-          tyTop,
-          tyBot,
-        ),
+        band: flowBandPath(sx, sMidY - halfBand, sMidY + halfBand, centerLeft, tyTop, tyBot),
         center: flowCenterPath(sx, sMidY, centerLeft, tyMid),
         color: sortedSources[i].color,
         gradId: `flow-${colorId(sortedSources[i].color)}`,
@@ -209,7 +194,11 @@ export function RevenueFlowDiagram({
       {/* Desktop: Sankey flow */}
       <div ref={containerRef} className="relative hidden md:block">
         {/* SVG flow layer */}
-        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
+        <svg
+          role="img"
+          aria-label="flow-layer"
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
           <defs>
             {sortedSources.map((s) => {
               const id = `flow-${colorId(s.color)}`;
@@ -228,33 +217,26 @@ export function RevenueFlowDiagram({
 
           {/* Source → Center bands */}
           {flowPaths.inflows.map((p, i) => (
-            <g key={i}>
+            <g key={p.gradId}>
+              {/* biome-ignore lint/a11y/useSemanticElements: SVG path cannot be replaced with <button> */}
               <path
+                role="button"
+                tabIndex={0}
                 d={p.band}
                 fill={`url(#${p.gradId})`}
                 className="pointer-events-auto"
                 style={{
-                  opacity:
-                    hoveredIndex === null || hoveredIndex === i ? 1 : 0.2,
+                  opacity: hoveredIndex === null || hoveredIndex === i ? 1 : 0.2,
                   transition: "opacity 150ms",
                 }}
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
               />
               <circle r="2.5" fill={p.color} opacity="0.6">
-                <animateMotion
-                  dur="2.5s"
-                  repeatCount="indefinite"
-                  path={p.center}
-                />
+                <animateMotion dur="2.5s" repeatCount="indefinite" path={p.center} />
               </circle>
               <circle r="1.5" fill={p.color} opacity="0.3">
-                <animateMotion
-                  dur="2.5s"
-                  repeatCount="indefinite"
-                  begin="1s"
-                  path={p.center}
-                />
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="1s" path={p.center} />
               </circle>
             </g>
           ))}
@@ -264,11 +246,7 @@ export function RevenueFlowDiagram({
             <g>
               <path d={flowPaths.outflow.band} fill="url(#flow-out)" />
               <circle r="3" fill="var(--green)" opacity="0.5">
-                <animateMotion
-                  dur="2s"
-                  repeatCount="indefinite"
-                  path={flowPaths.outflow.center}
-                />
+                <animateMotion dur="2s" repeatCount="indefinite" path={flowPaths.outflow.center} />
               </circle>
             </g>
           )}
@@ -302,6 +280,7 @@ export function RevenueFlowDiagram({
           {/* Left: Source nodes */}
           <div className="flex w-[28%] shrink-0 flex-col justify-center gap-1.5">
             {sortedSources.map((s, i) => (
+              // biome-ignore lint/a11y/noStaticElementInteractions: hover-only visualization indicator, not a clickable element
               <div
                 key={s.name}
                 ref={(el) => {
@@ -311,8 +290,7 @@ export function RevenueFlowDiagram({
                 style={{
                   borderColor: `color-mix(in oklch, ${s.color} 20%, transparent)`,
                   backgroundColor: `color-mix(in oklch, ${s.color} 5%, transparent)`,
-                  opacity:
-                    hoveredIndex === null || hoveredIndex === i ? 1 : 0.4,
+                  opacity: hoveredIndex === null || hoveredIndex === i ? 1 : 0.4,
                   transition: "opacity 150ms",
                 }}
                 onMouseEnter={() => setHoveredIndex(i)}
@@ -323,9 +301,7 @@ export function RevenueFlowDiagram({
                 </p>
                 <p className="tabular-nums text-sm font-semibold">
                   {formatUsd(s.value, true)}
-                  <span className="ml-1 text-xs font-normal text-tertiary-t">
-                    /wk
-                  </span>
+                  <span className="ml-1 text-xs font-normal text-tertiary-t">/wk</span>
                 </p>
                 <p className="tabular-nums text-[10px] text-tertiary-t">
                   {s.percentage.toFixed(0)}% of revenue
@@ -388,13 +364,10 @@ export function RevenueFlowDiagram({
               <p className="tabular-nums text-xl font-bold tracking-tight text-green">
                 {backingValue}
               </p>
-              <p className="mt-0.5 text-xs text-secondary-t">
-                {deflationRate}% annual deflation
-              </p>
+              <p className="mt-0.5 text-xs text-secondary-t">{deflationRate}% annual deflation</p>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Mobile: Vertical flow */}
@@ -404,10 +377,7 @@ export function RevenueFlowDiagram({
           <p className="mb-2 text-center text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Revenue Sources
           </p>
-          <div
-            className="flex overflow-hidden rounded-lg"
-            style={{ height: 28 }}
-          >
+          <div className="flex overflow-hidden rounded-lg" style={{ height: 28 }}>
             {sortedSources.map((s) => (
               <div
                 key={s.name}
@@ -422,18 +392,10 @@ export function RevenueFlowDiagram({
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
             {sortedSources.map((s) => (
-              <div
-                key={s.name}
-                className="flex items-center gap-1 text-[10px] text-secondary-t"
-              >
-                <div
-                  className="size-2 rounded-full"
-                  style={{ backgroundColor: s.color }}
-                />
+              <div key={s.name} className="flex items-center gap-1 text-[10px] text-secondary-t">
+                <div className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
                 <span>{s.name}</span>
-                <span className="tabular-nums text-tertiary-t">
-                  {s.percentage.toFixed(0)}%
-                </span>
+                <span className="tabular-nums text-tertiary-t">{s.percentage.toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -441,7 +403,14 @@ export function RevenueFlowDiagram({
 
         {/* Arrow down */}
         <div className="flex justify-center">
-          <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+          <svg
+            role="img"
+            aria-label="Arrow down"
+            width="24"
+            height="32"
+            viewBox="0 0 24 32"
+            fill="none"
+          >
             <line
               x1="12"
               y1="0"
@@ -453,11 +422,7 @@ export function RevenueFlowDiagram({
             />
             <path d="M12 24 L8 18 L16 18 Z" fill="var(--border-a20)" />
             <circle r="2.5" fill="var(--green)" opacity="0.7">
-              <animateMotion
-                dur="1.5s"
-                repeatCount="indefinite"
-                path="M12,0 L12,24"
-              />
+              <animateMotion dur="1.5s" repeatCount="indefinite" path="M12,0 L12,24" />
             </circle>
           </svg>
         </div>
@@ -467,14 +432,19 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Weekly Revenue
           </p>
-          <p className="mt-1 tabular-nums text-2xl font-bold">
-            {formatUsd(totalRevenue, true)}
-          </p>
+          <p className="mt-1 tabular-nums text-2xl font-bold">{formatUsd(totalRevenue, true)}</p>
         </div>
 
         {/* Arrow down */}
         <div className="flex justify-center">
-          <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+          <svg
+            width="24"
+            height="32"
+            viewBox="0 0 24 32"
+            fill="none"
+            role="img"
+            aria-label="Arrow down"
+          >
             <line
               x1="12"
               y1="0"
@@ -486,11 +456,7 @@ export function RevenueFlowDiagram({
             />
             <path d="M12 24 L8 18 L16 18 Z" fill="var(--border-a20)" />
             <circle r="2.5" fill="var(--green)" opacity="0.7">
-              <animateMotion
-                dur="1.5s"
-                repeatCount="indefinite"
-                path="M12,0 L12,24"
-              />
+              <animateMotion dur="1.5s" repeatCount="indefinite" path="M12,0 L12,24" />
             </circle>
           </svg>
         </div>
@@ -500,14 +466,19 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Buyback & Burn
           </p>
-          <p className="mt-1 tabular-nums text-lg font-bold">
-            {weeklyBurnsFormatted} OHM
-          </p>
+          <p className="mt-1 tabular-nums text-lg font-bold">{weeklyBurnsFormatted} OHM</p>
         </div>
 
         {/* Arrow down */}
         <div className="flex justify-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <svg
+            width="24"
+            role="img"
+            aria-label="Arrow down"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
             <line
               x1="12"
               y1="0"
@@ -520,11 +491,7 @@ export function RevenueFlowDiagram({
             />
             <path d="M12 18 L8 12 L16 12 Z" fill="var(--green)" opacity={0.4} />
             <circle r="2" fill="var(--green)" opacity="0.5">
-              <animateMotion
-                dur="1s"
-                repeatCount="indefinite"
-                path="M12,0 L12,18"
-              />
+              <animateMotion dur="1s" repeatCount="indefinite" path="M12,0 L12,18" />
             </circle>
           </svg>
         </div>
@@ -534,12 +501,8 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Backing Per OHM
           </p>
-          <p className="mt-1 tabular-nums text-lg font-bold text-green">
-            {backingValue}
-          </p>
-          <p className="text-[10px] text-tertiary-t">
-            {deflationRate}% deflation/yr
-          </p>
+          <p className="mt-1 tabular-nums text-lg font-bold text-green">{backingValue}</p>
+          <p className="text-[10px] text-tertiary-t">{deflationRate}% deflation/yr</p>
         </div>
       </div>
     </>

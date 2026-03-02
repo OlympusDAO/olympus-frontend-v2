@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Card } from "@/components/ui/card";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
 import { RiInformationFill } from "@remixicon/react";

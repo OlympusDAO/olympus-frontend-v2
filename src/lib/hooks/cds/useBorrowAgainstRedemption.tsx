@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress } from "@/lib/tokens";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
@@ -48,8 +40,7 @@ export function useBorrowAgainstRedemption() {
     },
     error: {
       title: "Borrow failed",
-      description:
-        "There was an error submitting your borrow. Please try again.",
+      description: "There was an error submitting your borrow. Please try again.",
       userRejected: {
         title: "Borrow cancelled",
         description: "You cancelled the transaction.",
@@ -74,10 +65,7 @@ export function useBorrowAgainstRedemption() {
   // Invalidate queries when borrow succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const vaultAddress = getContractAddress(
-        ContractName.DEPOSIT_REDEMPTION_VAULT,
-        chainId
-      );
+      const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
       if (vaultAddress) {
         // Invalidate user redemptions
@@ -124,15 +112,8 @@ export function useBorrowAgainstRedemption() {
     }
   }, [isConfirmed, address, chainId, queryClient]);
 
-  const borrowAgainstRedemption = ({
-    redemptionId,
-  }: {
-    redemptionId: number;
-  }) => {
-    const vaultAddress = getContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+  const borrowAgainstRedemption = ({ redemptionId }: { redemptionId: number }) => {
+    const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
     if (!vaultAddress) {
       console.error("Vault address not found for chain", chainId);

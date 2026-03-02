@@ -6,17 +6,9 @@ import LimitOrdersABI from "@/abis/LimitOrders";
 export const useOrderRemaining = (orderId: bigint | undefined) => {
   const chainId = useChainId();
 
-  const limitOrdersAddress = getContractAddress(
-    ContractName.LIMIT_ORDERS,
-    chainId
-  );
+  const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useReadContract({
+  const { data, isLoading, error, refetch } = useReadContract({
     address: limitOrdersAddress,
     abi: LimitOrdersABI,
     functionName: "getRemaining",

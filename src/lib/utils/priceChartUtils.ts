@@ -27,7 +27,7 @@ export interface TickDataPoint {
 export function calculateDecayPrice(
   tickPrice: bigint,
   tickStep: bigint | number,
-  minPrice: bigint
+  minPrice: bigint,
 ): bigint {
   const decayed = (tickPrice * 10000n) / BigInt(tickStep);
   // Clamp to minimum price
@@ -57,7 +57,7 @@ export function processHistoricalData(
     minPriceDecimal: string;
     tickSize: string;
   }>,
-  tickStep: bigint | number
+  tickStep: bigint | number,
 ): TickDataPoint[] {
   const dataPoints: TickDataPoint[] = [];
 
@@ -183,7 +183,7 @@ const DEC_1_2025_UTC = Date.UTC(2025, 11, 1, 0, 0, 0);
 export function toChartData(historical: TickDataPoint[]): ChartDataPoint[] {
   // Find the first bid on or after Dec 1, 2025
   const firstBidAfterDec1 = historical.find(
-    (point) => point.bidPrice !== undefined && point.timestamp >= DEC_1_2025_UTC
+    (point) => point.bidPrice !== undefined && point.timestamp >= DEC_1_2025_UTC,
   );
 
   // If no bids found after Dec 1, return empty array

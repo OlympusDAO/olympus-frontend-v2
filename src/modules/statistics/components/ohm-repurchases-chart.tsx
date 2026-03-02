@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -14,7 +15,11 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
 import { RiInformationFill } from "@remixicon/react";
-import { useStatisticsData, useCurrentStatistics, TimeRange } from "@/lib/hooks/cds/useStatisticsData";
+import {
+  useStatisticsData,
+  useCurrentStatistics,
+  type TimeRange,
+} from "@/lib/hooks/cds/useStatisticsData";
 import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
 
 const CHART_COLORS = {
@@ -50,7 +55,7 @@ export const OhmRepurchasesChart: React.FC = () => {
     if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0) return 0;
     return statisticsData.claimedYields.reduce(
       (sum, claim) => sum + parseFloat(claim.amountDecimal),
-      0
+      0,
     );
   }, [statisticsData]);
 
@@ -59,7 +64,7 @@ export const OhmRepurchasesChart: React.FC = () => {
     if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0) return 0;
 
     const sortedYields = [...statisticsData.claimedYields].sort(
-      (a, b) => a.timestamp - b.timestamp
+      (a, b) => a.timestamp - b.timestamp,
     );
     const firstTimestamp = sortedYields[0].timestamp;
     const lastTimestamp = sortedYields[sortedYields.length - 1].timestamp;
@@ -72,7 +77,12 @@ export const OhmRepurchasesChart: React.FC = () => {
 
   // Process claimed yields into daily OHM repurchase amounts
   const chartData = useMemo((): DailyRepurchase[] => {
-    if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0 || ohmPriceNumber <= 0) return [];
+    if (
+      !statisticsData?.claimedYields ||
+      statisticsData.claimedYields.length === 0 ||
+      ohmPriceNumber <= 0
+    )
+      return [];
 
     // Group claimed yields by day
     const dailyMap = new Map<number, number>();
@@ -180,9 +190,15 @@ export const OhmRepurchasesChart: React.FC = () => {
         </div>
         <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
           <TabsList className="h-7">
-            <TabsTrigger value="7d" className="text-xs px-2 h-6">7D</TabsTrigger>
-            <TabsTrigger value="30d" className="text-xs px-2 h-6">1M</TabsTrigger>
-            <TabsTrigger value="1y" className="text-xs px-2 h-6">1Y</TabsTrigger>
+            <TabsTrigger value="7d" className="text-xs px-2 h-6">
+              7D
+            </TabsTrigger>
+            <TabsTrigger value="30d" className="text-xs px-2 h-6">
+              1M
+            </TabsTrigger>
+            <TabsTrigger value="1y" className="text-xs px-2 h-6">
+              1Y
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -200,11 +216,7 @@ export const OhmRepurchasesChart: React.FC = () => {
                 <stop offset="100%" stopColor={CHART_COLORS.barGradientStart} stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={CHART_COLORS.grid}
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
               stroke={CHART_COLORS.text}

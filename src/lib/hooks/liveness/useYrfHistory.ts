@@ -38,7 +38,7 @@ function getWeekMonday(timestamp: number): string {
 }
 
 function formatWeekLabel(monday: string): string {
-  const d = new Date(monday + "T00:00:00Z");
+  const d = new Date(`${monday}T00:00:00Z`);
   return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -74,8 +74,7 @@ export function useYrfHistory() {
 
       if (!yrfResponse.ok) throw new Error("Failed to fetch YRF data");
       const { data: yrfData, errors: yrfErrors } = await yrfResponse.json();
-      if (yrfErrors)
-        throw new Error(yrfErrors[0]?.message || "YRF query error");
+      if (yrfErrors) throw new Error(yrfErrors[0]?.message || "YRF query error");
 
       // Extract YRF market IDs for cross-referencing with bond subgraph
       const yrfMarketIds: string[] = (yrfData?.repoMarkets ?? []).map(
@@ -95,9 +94,7 @@ export function useYrfHistory() {
 
       if (yrfMarketIds.length > 0) {
         try {
-          const marketIdList = yrfMarketIds
-            .map((id) => `"${id}"`)
-            .join(",");
+          const marketIdList = yrfMarketIds.map((id) => `"${id}"`).join(",");
 
           const bondQuery = `
             {
@@ -124,13 +121,9 @@ export function useYrfHistory() {
           if (bondResponse.ok) {
             const { data: bondData } = await bondResponse.json();
             for (const purchase of bondData?.bondPurchases ?? []) {
-              const ohmAmount =
-                parseFloat(purchase.amountInQuoteToken) || 0;
-              const usdAmount =
-                parseFloat(purchase.payoutInPayoutToken) || 0;
-              const monday = getWeekMonday(
-                Math.round(Number(purchase.timestamp) / 1000),
-              );
+              const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
+              const usdAmount = parseFloat(purchase.payoutInPayoutToken) || 0;
+              const monday = getWeekMonday(Math.round(Number(purchase.timestamp) / 1000));
               ohmByWeek[monday] = (ohmByWeek[monday] ?? 0) + ohmAmount;
               usdByWeek[monday] = (usdByWeek[monday] ?? 0) + usdAmount;
               totalOhmBurned += ohmAmount;
@@ -164,10 +157,7 @@ export function useYrfHistory() {
 
       // Deduplicate by week: during version transitions (v1.0→v1.1→v1.2),
       // multiple events can fire in the same week. Keep only the latest per week.
-      const weekMap = new Map<
-        string,
-        { yield: number; version: string; timestamp: number }
-      >();
+      const weekMap = new Map<string, { yield: number; version: string; timestamp: number }>();
       for (const e of yieldEvents) {
         const monday = getWeekMonday(e.timestamp);
         weekMap.set(monday, {
@@ -177,9 +167,7 @@ export function useYrfHistory() {
         });
       }
 
-      const weeklyYields: YrfWeeklyYield[] = Array.from(
-        weekMap.entries(),
-      ).map(([monday, w]) => ({
+      const weeklyYields: YrfWeeklyYield[] = Array.from(weekMap.entries()).map(([monday, w]) => ({
         weekLabel: formatWeekLabel(monday),
         weekStart: monday,
         yieldDeployed: w.yield,
@@ -188,16 +176,11 @@ export function useYrfHistory() {
         contractVersion: w.version,
       }));
 
-      const totalYieldDeployed = weeklyYields.reduce(
-        (sum, w) => sum + w.yieldDeployed,
-        0,
-      );
+      const totalYieldDeployed = weeklyYields.reduce((sum, w) => sum + w.yieldDeployed, 0);
 
       // Current weekly yield is the latest deduped week's yield
       const currentWeeklyYield =
-        weeklyYields.length > 0
-          ? weeklyYields[weeklyYields.length - 1].yieldDeployed
-          : 0;
+        weeklyYields.length > 0 ? weeklyYields[weeklyYields.length - 1].yieldDeployed : 0;
 
       // Current week spend — look up bond purchases for the actual current calendar week
       const currentMonday = getWeekStartUTC().toISOString().split("T")[0];
@@ -206,17 +189,11 @@ export function useYrfHistory() {
       // Recent daily market bids (for activity feed)
       const recentBids: YrfMarketBid[] = (yrfData?.repoMarkets ?? [])
         .slice(0, 14)
-        .map(
-          (e: {
-            blockTimestamp: string;
-            bidAmountDecimal: string;
-            marketId: string;
-          }) => ({
-            timestamp: Number(e.blockTimestamp),
-            bidAmount: parseFloat(e.bidAmountDecimal) || 0,
-            marketId: e.marketId,
-          }),
-        );
+        .map((e: { blockTimestamp: string; bidAmountDecimal: string; marketId: string }) => ({
+          timestamp: Number(e.blockTimestamp),
+          bidAmount: parseFloat(e.bidAmountDecimal) || 0,
+          marketId: e.marketId,
+        }));
 
       return {
         weeklyYields,

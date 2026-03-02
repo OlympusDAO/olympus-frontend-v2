@@ -19,10 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  useDefaultedLoans,
-  type DefaultedLoan,
-} from "@/lib/hooks/cooler/useV1Data";
+import { useDefaultedLoans, type DefaultedLoan } from "@/lib/hooks/cooler/useV1Data";
 import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils";
 
 function formatCollateral(value: string): string {
@@ -67,27 +64,22 @@ const columns: ColumnDef<DefaultedLoan>[] = [
         <ExternalLink className="size-3" />
       </a>
     ),
-    sortingFn: (a, b) =>
-      a.original.cooler.localeCompare(b.original.cooler),
+    sortingFn: (a, b) => a.original.cooler.localeCompare(b.original.cooler),
   },
   {
     accessorKey: "currentExpiryTimestamp",
     header: "Expiry Date",
     cell: ({ row }) => {
-      const date = new Date(
-        Number(row.original.currentExpiryTimestamp) * 1000,
-      );
+      const date = new Date(Number(row.original.currentExpiryTimestamp) * 1000);
       return <span>{date.toLocaleDateString()}</span>;
     },
     sortingFn: (a, b) =>
-      Number(a.original.currentExpiryTimestamp) -
-      Number(b.original.currentExpiryTimestamp),
+      Number(a.original.currentExpiryTimestamp) - Number(b.original.currentExpiryTimestamp),
   },
   {
     id: "principal",
     header: "Principal",
-    accessorFn: (row) =>
-      Number(row.defaultedClaimEvents[0]?.defaultedPrincipal ?? 0),
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.defaultedPrincipal ?? 0),
     cell: ({ row }) => {
       const event = row.original.defaultedClaimEvents[0];
       return event ? formatUSDFromString(event.defaultedPrincipal) : "-";
@@ -96,32 +88,25 @@ const columns: ColumnDef<DefaultedLoan>[] = [
   {
     id: "collateral",
     header: "Collateral",
-    accessorFn: (row) =>
-      Number(row.defaultedClaimEvents[0]?.collateralQuantityClaimed ?? 0),
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralQuantityClaimed ?? 0),
     cell: ({ row }) => {
       const event = row.original.defaultedClaimEvents[0];
-      return event
-        ? formatCollateral(event.collateralQuantityClaimed)
-        : "-";
+      return event ? formatCollateral(event.collateralQuantityClaimed) : "-";
     },
   },
   {
     id: "collateralValue",
     header: "Collateral Value",
-    accessorFn: (row) =>
-      Number(row.defaultedClaimEvents[0]?.collateralValueClaimed ?? 0),
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralValueClaimed ?? 0),
     cell: ({ row }) => {
       const event = row.original.defaultedClaimEvents[0];
-      return event
-        ? formatUSDFromString(event.collateralValueClaimed)
-        : "-";
+      return event ? formatUSDFromString(event.collateralValueClaimed) : "-";
     },
   },
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    sortingFn: (a, b) =>
-      Number(a.original.loanId) - Number(b.original.loanId),
+    sortingFn: (a, b) => Number(a.original.loanId) - Number(b.original.loanId),
   },
 ];
 
@@ -135,8 +120,7 @@ function LoadingSkeleton() {
 }
 
 export function V1DefaultedLoansTable() {
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useDefaultedLoans();
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useDefaultedLoans();
 
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -144,10 +128,7 @@ export function V1DefaultedLoansTable() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const loans = useMemo(
-    () => data?.pages.flatMap((page) => page.coolerLoans) ?? [],
-    [data],
-  );
+  const loans = useMemo(() => data?.pages.flatMap((page) => page.coolerLoans) ?? [], [data]);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "currentExpiryTimestamp", desc: true },
@@ -194,17 +175,15 @@ export function V1DefaultedLoansTable() {
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   <span className="inline-flex items-center gap-1">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                    {header.column.getCanSort() && (
-                      header.column.getIsSorted() === "asc"
-                        ? <ChevronUp className="size-4" />
-                        : header.column.getIsSorted() === "desc"
-                          ? <ChevronDown className="size-4" />
-                          : <ChevronUp className="size-4 text-disabled-t" />
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getCanSort() &&
+                      (header.column.getIsSorted() === "asc" ? (
+                        <ChevronUp className="size-4" />
+                      ) : header.column.getIsSorted() === "desc" ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronUp className="size-4 text-disabled-t" />
+                      ))}
                   </span>
                 </TableHead>
               ))}
@@ -250,8 +229,7 @@ export function V1DefaultedLoansTable() {
             Previous
           </Button>
           <span className="text-sm text-secondary-t">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
           </span>
           <Button
             variant="secondary"

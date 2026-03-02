@@ -3,12 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
 import { useOhmPriceHistory } from "@/lib/hooks/liveness/useOhmPriceHistory";
 import { formatUsd } from "@/lib/liveness/formatters";
-import {
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-  YAxis,
-} from "recharts";
+import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 
 export function OhmPriceCard() {
   const { data: treasury, isLoading: metricsLoading } = useTreasuryMetrics();
@@ -65,10 +60,7 @@ export function OhmPriceCard() {
       ) : dataPoints.length > 1 ? (
         <div className="mt-4">
           <ResponsiveContainer width="100%" height={80}>
-            <AreaChart
-              data={dataPoints}
-              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            >
+            <AreaChart data={dataPoints} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop

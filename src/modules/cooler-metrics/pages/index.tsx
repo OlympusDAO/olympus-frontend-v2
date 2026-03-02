@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { ProtocolOverview } from "../components/protocol-overview";
 import { VersionComparison } from "../components/version-comparison";
 import { ProtocolUtilizationChart } from "../components/protocol-utilization-chart";

@@ -1,21 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import DepositRedemptionVaultAbi from "@/abis/DepositRedemptionVault";
-import {
-  ContractName,
-  getContractAddress,
-  requireContractAddress,
-} from "@/lib/contracts";
+import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
 
 interface UsePositionRedemptionParams {
   positionId: bigint;
@@ -58,8 +46,7 @@ export function usePositionRedemption() {
     },
     error: {
       title: "Position redemption failed",
-      description:
-        "There was an error starting your position redemption. Please try again.",
+      description: "There was an error starting your position redemption. Please try again.",
       userRejected: {
         title: "Redemption cancelled",
         description: "You cancelled the transaction.",
@@ -84,10 +71,7 @@ export function usePositionRedemption() {
   // Invalidate queries when redemption succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const contractAddress = getContractAddress(
-        ContractName.DEPOSIT_REDEMPTION_VAULT,
-        chainId
-      );
+      const contractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
       if (contractAddress) {
         // Invalidate getUserRedemptionCount query - this will trigger usePendingRedemptions to refetch
@@ -144,10 +128,7 @@ export function usePositionRedemption() {
   }: UsePositionRedemptionParams) => {
     if (!chainId) throw new Error("No chain connected");
 
-    const contractAddress = requireContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+    const contractAddress = requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
     // Reset both Wagmi state and toast state for new transaction
     resetWrite();
@@ -166,7 +147,7 @@ export function usePositionRedemption() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

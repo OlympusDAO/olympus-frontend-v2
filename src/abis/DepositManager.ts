@@ -597,9 +597,7 @@ export default [
       { internalType: "address", name: "operator_", type: "address" },
     ],
     name: "addAssetPeriod",
-    outputs: [
-      { internalType: "uint256", name: "receiptTokenId", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "receiptTokenId", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -637,9 +635,7 @@ export default [
       },
     ],
     name: "borrowingRepay",
-    outputs: [
-      { internalType: "uint256", name: "actualAmount", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "actualAmount", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -657,16 +653,12 @@ export default [
       },
     ],
     name: "borrowingWithdraw",
-    outputs: [
-      { internalType: "uint256", name: "actualAmount", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "actualAmount", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
@@ -679,18 +671,14 @@ export default [
       { internalType: "uint256", name: "amount_", type: "uint256" },
     ],
     name: "claimYield",
-    outputs: [
-      { internalType: "uint256", name: "actualAmount", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "actualAmount", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [],
     name: "configureDependencies",
-    outputs: [
-      { internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" },
-    ],
+    outputs: [{ internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -754,9 +742,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract IERC20", name: "asset_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract IERC20", name: "asset_", type: "address" }],
     name: "getAssetConfiguration",
     outputs: [
       {
@@ -858,9 +844,7 @@ export default [
   {
     inputs: [],
     name: "getConfiguredAssets",
-    outputs: [
-      { internalType: "contract IERC20[]", name: "assets", type: "address[]" },
-    ],
+    outputs: [{ internalType: "contract IERC20[]", name: "assets", type: "address[]" }],
     stateMutability: "view",
     type: "function",
   },
@@ -1069,9 +1053,7 @@ export default [
       },
     ],
     name: "withdraw",
-    outputs: [
-      { internalType: "uint256", name: "actualAmount", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "actualAmount", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },

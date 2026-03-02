@@ -71,7 +71,13 @@ const LoanTokenName = ({
 };
 
 // Component to display circular progress for expiration
-const ExpirationProgress = ({ dueDate, depositPeriodMonths }: { dueDate: number; depositPeriodMonths: number }) => {
+const ExpirationProgress = ({
+  dueDate,
+  depositPeriodMonths,
+}: {
+  dueDate: number;
+  depositPeriodMonths: number;
+}) => {
   const now = Math.floor(Date.now() / 1000);
   const dueDateTimestamp = dueDate;
 
@@ -104,7 +110,7 @@ const ExpirationProgress = ({ dueDate, depositPeriodMonths }: { dueDate: number;
   return (
     <div className="flex items-center gap-3">
       <div className="relative w-10 h-10">
-        <svg className="w-10 h-10 transform -rotate-90">
+        <svg role="img" aria-label="Progress circle" className="w-10 h-10 transform -rotate-90">
           <circle
             cx="20"
             cy="20"
@@ -128,13 +134,11 @@ const ExpirationProgress = ({ dueDate, depositPeriodMonths }: { dueDate: number;
         </svg>
       </div>
       <div>
-        <div className={`font-medium ${getColor()}`}>
-          {daysRemaining} days
-        </div>
+        <div className={`font-medium ${getColor()}`}>{daysRemaining} days</div>
         <div className="text-xs text-secondary-t">
-          {new Date(dueDateTimestamp * 1000).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
+          {new Date(dueDateTimestamp * 1000).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
           })}
         </div>
       </div>
@@ -151,13 +155,9 @@ export const ActiveLoans = () => {
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
 
   // Fetch user redemptions
-  const { redemptions, isLoading: isLoadingRedemptions } =
-    useUserRedemptions(userAddress);
+  const { redemptions, isLoading: isLoadingRedemptions } = useUserRedemptions(userAddress);
 
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   // Create contract calls for all redemption loans and interest rates
   const loanContracts = useMemo(() => {
@@ -196,10 +196,7 @@ export const ActiveLoans = () => {
       const loanResult = loanData[loanIndex];
       const interestRateResult = loanData[interestRateIndex];
 
-      if (
-        loanResult?.status === "success" &&
-        interestRateResult?.status === "success"
-      ) {
+      if (loanResult?.status === "success" && interestRateResult?.status === "success") {
         // Type narrowing: we know loanResult is a Loan object (even index)
         // and interestRateResult is a bigint (odd index) based on our contract array structure
         const loan = loanResult.result as Loan;
@@ -255,13 +252,9 @@ export const ActiveLoans = () => {
       <h2 className="text-xl font-semibold mb-3">Active Loans</h2>
       <Card className="p-6 space-y-4">
         {isLoading ? (
-          <div className="text-center py-8 text-secondary-t">
-            Loading loans...
-          </div>
+          <div className="text-center py-8 text-secondary-t">Loading loans...</div>
         ) : loansWithData.length === 0 ? (
-          <div className="text-center py-8 text-secondary-t">
-            No active loans
-          </div>
+          <div className="text-center py-8 text-secondary-t">No active loans</div>
         ) : (
           <>
             {/* Mobile cards view */}
@@ -285,9 +278,7 @@ export const ActiveLoans = () => {
                           <img src={USDSIcon} alt="USDS" className="w-6 h-6" />
                           <div>
                             <div className="font-medium">{loan.debt} USDS</div>
-                            <div className="text-xs text-secondary-t">
-                              ${loan.debtUSD}
-                            </div>
+                            <div className="text-xs text-secondary-t">${loan.debtUSD}</div>
                           </div>
                         </div>
                       </Tooltip>
@@ -308,9 +299,7 @@ export const ActiveLoans = () => {
                             amount={loan.collateral}
                           />
                         </div>
-                        <div className="text-xs text-secondary-t">
-                          ${loan.collateralUSD}
-                        </div>
+                        <div className="text-xs text-secondary-t">${loan.collateralUSD}</div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -321,7 +310,10 @@ export const ActiveLoans = () => {
                   <div className="flex items-center justify-between pt-2 border-t border-a5-b">
                     <div>
                       <div className="text-sm text-secondary-t mb-1">Expires</div>
-                      <ExpirationProgress dueDate={loan.dueDate} depositPeriodMonths={loan.depositPeriod} />
+                      <ExpirationProgress
+                        dueDate={loan.dueDate}
+                        depositPeriodMonths={loan.depositPeriod}
+                      />
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-secondary-t">Borrow APY</div>
@@ -338,11 +330,7 @@ export const ActiveLoans = () => {
                     >
                       Extend
                     </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleRepay(loan)}
-                    >
+                    <Button size="sm" className="flex-1" onClick={() => handleRepay(loan)}>
                       Repay
                     </Button>
                   </div>
@@ -354,21 +342,11 @@ export const ActiveLoans = () => {
             <Table className="hidden md:table">
               <TableHeader className="[&_tr]:border-b-0">
                 <TableRow className="border-b-0">
-                  <TableHead className="text-secondary-t font-normal">
-                    Debt
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Collateral
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Expires
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal">
-                    Borrow APY
-                  </TableHead>
-                  <TableHead className="text-secondary-t font-normal text-end">
-                    Actions
-                  </TableHead>
+                  <TableHead className="text-secondary-t font-normal">Debt</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Collateral</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Expires</TableHead>
+                  <TableHead className="text-secondary-t font-normal">Borrow APY</TableHead>
+                  <TableHead className="text-secondary-t font-normal text-end">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -384,11 +362,7 @@ export const ActiveLoans = () => {
                         }
                       >
                         <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 min-w-0 max-w-[200px] cursor-help">
-                          <img
-                            src={USDSIcon}
-                            alt="USDS"
-                            className="w-8 h-8 shrink-0"
-                          />
+                          <img src={USDSIcon} alt="USDS" className="w-8 h-8 shrink-0" />
                           <div className="min-w-0">
                             <div className="font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                               {loan.debt} USDS
@@ -402,11 +376,7 @@ export const ActiveLoans = () => {
                     </TableCell>
                     <TableCell className="py-4">
                       <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 min-w-0 max-w-[200px]">
-                        <img
-                          src={cdUSDSIcon}
-                          alt="cdUSDS"
-                          className="w-8 h-8 shrink-0"
-                        />
+                        <img src={cdUSDSIcon} alt="cdUSDS" className="w-8 h-8 shrink-0" />
                         <div className="min-w-0">
                           <div className="font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                             <LoanTokenName
@@ -422,24 +392,20 @@ export const ActiveLoans = () => {
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <ExpirationProgress dueDate={loan.dueDate} depositPeriodMonths={loan.depositPeriod} />
+                      <ExpirationProgress
+                        dueDate={loan.dueDate}
+                        depositPeriodMonths={loan.depositPeriod}
+                      />
                     </TableCell>
                     <TableCell className="py-4">
                       <span className="font-medium">{loan.borrowAPY}%</span>
                     </TableCell>
                     <TableCell className="py-4 text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleExtend(loan)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => handleExtend(loan)}>
                           Extend
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleRepay(loan)}
-                        >
+                        <Button size="sm" onClick={() => handleRepay(loan)}>
                           Repay
                         </Button>
                       </div>

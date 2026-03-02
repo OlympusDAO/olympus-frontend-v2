@@ -50,9 +50,7 @@ export function Interstitial({ items }: InterstitialProps) {
           </div>
           <div>
             <p className="text-sm font-semibold tracking-tight">{item.headline}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-secondary-t">
-              {item.description}
-            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-secondary-t">{item.description}</p>
           </div>
         </div>
       ))}

@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckIcon } from "lucide-react";
 import { useFinishRedemption } from "@/lib/hooks/cds/useFinishRedemption";
@@ -28,22 +23,17 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
   onClose,
   pendingRedemption,
 }) => {
-  const {
-    finishRedemption,
-    isPending: isCompleting,
-    isSuccess,
-    hash,
-  } = useFinishRedemption();
+  const { finishRedemption, isPending: isCompleting, isSuccess, hash } = useFinishRedemption();
 
   // Get the period text for display
   const periodText =
     pendingRedemption?.periodMonths === 1
       ? "30-day"
       : pendingRedemption?.periodMonths === 3
-      ? "90-day"
-      : pendingRedemption?.periodMonths === 6
-      ? "180-day"
-      : `${(pendingRedemption?.periodMonths || 0) * 30}-day`;
+        ? "90-day"
+        : pendingRedemption?.periodMonths === 6
+          ? "180-day"
+          : `${(pendingRedemption?.periodMonths || 0) * 30}-day`;
 
   const handleFinish = async () => {
     if (!pendingRedemption) return;
@@ -61,13 +51,10 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
   }
 
   const formatAmount = (amount: bigint): string => {
-    return parseFloat((Number(amount) / 1e18).toFixed(2)).toLocaleString(
-      undefined,
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
+    return parseFloat((Number(amount) / 1e18).toFixed(2)).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   return (
@@ -88,14 +75,11 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
                 <div className="bg-surface-bg-l1 p-4 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">
-                      {pendingRedemption &&
-                        formatAmount(pendingRedemption.amount)}{" "}
+                      {pendingRedemption && formatAmount(pendingRedemption.amount)}{" "}
                       {pendingRedemption?.displayName}
                     </span>
                   </div>
-                  <div className="text-sm text-secondary-t mt-1">
-                    {periodText} redemption
-                  </div>
+                  <div className="text-sm text-secondary-t mt-1">{periodText} redemption</div>
                 </div>
                 <p className="text-sm text-secondary-t">
                   This will transfer the underlying assets to your wallet.
@@ -111,11 +95,7 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleFinish}
-                  disabled={isCompleting}
-                >
+                <Button className="flex-1" onClick={handleFinish} disabled={isCompleting}>
                   Complete Redemption
                 </Button>
               </div>

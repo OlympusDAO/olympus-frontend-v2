@@ -40,11 +40,7 @@ export const OpenLimitOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<LimitOrder | null>(null);
 
   // Get user's limit orders
-  const {
-    orders,
-    isLoading: isLoadingOrders,
-    error: ordersError,
-  } = useUserLimitOrders();
+  const { orders, isLoading: isLoadingOrders, error: ordersError } = useUserLimitOrders();
 
   // Helper function to format amounts
   const formatAmount = (amount: bigint) => {
@@ -62,11 +58,7 @@ export const OpenLimitOrders = () => {
     const fillPercentage = getFillPercentage(depositSpent, depositBudget);
 
     if (fillPercentage === 0) {
-      return (
-        <Badge className="bg-blue/20 text-blue rounded-full px-3 py-1 w-fit">
-          Active
-        </Badge>
-      );
+      return <Badge className="bg-blue/20 text-blue rounded-full px-3 py-1 w-fit">Active</Badge>;
     } else if (fillPercentage < 100) {
       return (
         <Badge className="bg-yellow/20 text-yellow rounded-full px-3 py-1 w-fit">
@@ -74,11 +66,7 @@ export const OpenLimitOrders = () => {
         </Badge>
       );
     } else {
-      return (
-        <Badge className="bg-gray/20 text-gray rounded-full px-3 py-1 w-fit">
-          Filled
-        </Badge>
-      );
+      return <Badge className="bg-gray/20 text-gray rounded-full px-3 py-1 w-fit">Filled</Badge>;
     }
   };
 
@@ -93,9 +81,7 @@ export const OpenLimitOrders = () => {
       <>
         <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
         <Card className="p-6">
-          <div className="text-center py-8 text-secondary-t">
-            Loading orders...
-          </div>
+          <div className="text-center py-8 text-secondary-t">Loading orders...</div>
         </Card>
       </>
     );
@@ -119,9 +105,7 @@ export const OpenLimitOrders = () => {
       <>
         <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
         <Card className="p-6">
-          <div className="text-center py-8 text-secondary-t">
-            No open limit orders
-          </div>
+          <div className="text-center py-8 text-secondary-t">No open limit orders</div>
         </Card>
       </>
     );
@@ -135,18 +119,10 @@ export const OpenLimitOrders = () => {
         <Table className="hidden md:table">
           <TableHeader className="[&_tr]:border-b-0">
             <TableRow className="border-b-0">
-              <TableHead className="text-secondary-t font-normal">
-                Order Details
-              </TableHead>
-              <TableHead className="text-secondary-t font-normal">
-                Budget & Filled
-              </TableHead>
-              <TableHead className="text-secondary-t font-normal">
-                Status
-              </TableHead>
-              <TableHead className="text-secondary-t font-normal text-end">
-                Action
-              </TableHead>
+              <TableHead className="text-secondary-t font-normal">Order Details</TableHead>
+              <TableHead className="text-secondary-t font-normal">Budget & Filled</TableHead>
+              <TableHead className="text-secondary-t font-normal">Status</TableHead>
+              <TableHead className="text-secondary-t font-normal text-end">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -156,7 +132,7 @@ export const OpenLimitOrders = () => {
               const remaining = order.data.depositBudget - order.data.depositSpent;
               const fillPercentage = getFillPercentage(
                 order.data.depositSpent,
-                order.data.depositBudget
+                order.data.depositBudget,
               );
 
               return (
@@ -164,14 +140,11 @@ export const OpenLimitOrders = () => {
                   {/* Order Details */}
                   <TableCell className="py-4">
                     <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 w-fit">
-                      <img
-                        src={cdUSDSIcon}
-                        alt="Receipt Token"
-                        className="w-8 h-8 shrink-0"
-                      />
+                      <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8 shrink-0" />
                       <div className="flex flex-col">
                         <div className="font-medium whitespace-nowrap">
-                          {formatAmount(order.data.depositBudget)} cdUSDS-{formatTermSuffix(order.data.depositPeriod)}
+                          {formatAmount(order.data.depositBudget)} cdUSDS-
+                          {formatTermSuffix(order.data.depositPeriod)}
                         </div>
                         <div className="text-sm text-secondary-t whitespace-nowrap">
                           {formatMaxPrice(order.data.maxPrice)} USDS/OHM
@@ -197,9 +170,7 @@ export const OpenLimitOrders = () => {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-secondary-t">Remaining:</span>
-                        <span className="font-medium">
-                          {formatAmount(remaining)} USDS
-                        </span>
+                        <span className="font-medium">{formatAmount(remaining)} USDS</span>
                       </div>
                       <Progress value={fillPercentage} className="h-2" />
                     </div>
@@ -243,7 +214,7 @@ export const OpenLimitOrders = () => {
             const remaining = order.data.depositBudget - order.data.depositSpent;
             const fillPercentage = getFillPercentage(
               order.data.depositSpent,
-              order.data.depositBudget
+              order.data.depositBudget,
             );
 
             return (
@@ -254,7 +225,8 @@ export const OpenLimitOrders = () => {
                     <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8" />
                     <div>
                       <div className="font-medium">
-                        {formatAmount(order.data.depositBudget)} cdUSDS-{formatTermSuffix(order.data.depositPeriod)}
+                        {formatAmount(order.data.depositBudget)} cdUSDS-
+                        {formatTermSuffix(order.data.depositPeriod)}
                       </div>
                       <div className="text-sm text-secondary-t">
                         {formatMaxPrice(order.data.maxPrice)} USDS/OHM
