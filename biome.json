@@ -29,7 +29,7 @@
         "useExhaustiveDependencies": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noArrayIndexKey": "warn"
       }
     }
