@@ -370,7 +370,7 @@ export const CDPage = () => {
                     <span className="text-sm font-medium">Deposit</span>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="sm" className="h-6 w-6 p-0" />}
+                        render={<Button variant="tertiary" size="sm" className="h-6 w-6 p-0" />}
                       >
                         <Settings className="h-4 w-4" />
                       </DropdownMenuTrigger>

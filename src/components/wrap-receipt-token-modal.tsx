@@ -364,7 +364,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                 className="pr-20 text-lg"
               />
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={handleMaxClick}
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2 text-xs"

@@ -111,6 +111,17 @@
       var(--slate) /
       0.1
     );
+  --shadow-button-primary: 0 0 0 0.5px var(--text-tertiary) inset, 0 1px 1px 1px var(--e-btn-primary-is-top) inset, 0 -1px 1px 1px var(--e-btn-primary-is-bottom) inset, 0 0 4px 0 --alpha(
+      var(--slate) /
+      0.1
+  ), 0 4px 8px 0 --alpha(
+      var(--slate) /
+      0.1
+  );
+  --shadow-button-secondary: 0 0 0 0.5px var(--border-a10) inset, 0 2px 1px 0 var(--e-btn-secondary-is-top) inset, 0 -2px 1px 0 var(--e-btn-secondary-is-bottom) inset, 0 2px 6px 0 --alpha(
+      var(--slate) /
+      0.1
+  );
 
   --animate-spinner: spinner 1200ms linear infinite;
   --animate-heartbeat-ring: heartbeat-ring 2.5s ease-out infinite;
