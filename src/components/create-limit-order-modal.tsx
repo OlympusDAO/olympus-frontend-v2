@@ -7,7 +7,7 @@ import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useCreateLimitOrder } from "@/lib/hooks/cds/useCreateLimitOrder";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { parseMaxPrice } from "@/lib/utils/priceCalculations";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
@@ -35,7 +35,7 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   const chainId = useChainId();
 
   // Get contract and token addresses for current network
-  const tokenAddress = getTokenAddress("USDS", chainId);
+  const tokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
   // Get auction parameters for minimum bid

@@ -4,7 +4,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId 
 import type { ContractFunctionArgs } from "viem";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import LimitOrdersABI from "@/abis/LimitOrders";
 
 type CreateOrderArgs = ContractFunctionArgs<typeof LimitOrdersABI, "nonpayable", "createOrder">;
@@ -99,7 +99,7 @@ export function useCreateLimitOrder() {
         });
 
         // Invalidate USDS token balance
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [

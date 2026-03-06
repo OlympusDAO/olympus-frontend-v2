@@ -10,9 +10,11 @@ export type TokenInfo = {
   icon: IconName;
 };
 
-type TokensList = "USDS";
+export enum TokenName {
+  USDS = "USDS",
+}
 
-export const TOKENS: Record<TokensList, TokenInfo> = {
+export const TOKENS: Record<TokenName, TokenInfo> = {
   USDS: {
     addresses: {
       [mainnet.id]: "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
@@ -24,11 +26,11 @@ export const TOKENS: Record<TokensList, TokenInfo> = {
   },
 };
 
-export function getTokenAddress(token: TokensList, chainId: ChainId): Address | undefined {
+export function getTokenAddress(token: TokenName, chainId: ChainId): Address | undefined {
   return TOKENS[token].addresses[chainId];
 }
 
-export function requireTokenAddress(token: TokensList, chainId: ChainId): Address {
+export function requireTokenAddress(token: TokenName, chainId: ChainId): Address {
   const address = getTokenAddress(token, chainId);
   if (!address) {
     throw new Error(`Token ${token} not found on chain ${chainId}`);

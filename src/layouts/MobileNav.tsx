@@ -125,7 +125,7 @@ export function MobileNav() {
 
   return (
     <>
-      <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
+      <Button variant="tertiary" size="sm" onClick={() => setOpen(true)}>
         <Menu className="size-5" />
       </Button>
 

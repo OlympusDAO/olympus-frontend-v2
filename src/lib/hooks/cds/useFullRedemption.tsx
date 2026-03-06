@@ -4,7 +4,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId 
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import DepositRedemptionVaultAbi from "@/abis/DepositRedemptionVault";
 import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 
 interface UseFullRedemptionParams {
   depositPeriod: number;
@@ -131,7 +131,7 @@ export function useFullRedemption() {
     if (!chainId) throw new Error("No chain connected");
 
     const contractAddress = requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
-    const tokenAddress = getTokenAddress("USDS", chainId);
+    const tokenAddress = getTokenAddress(TokenName.USDS, chainId);
     if (!tokenAddress) throw new Error("Token address not found");
 
     // Reset both Wagmi state and toast state for new transaction

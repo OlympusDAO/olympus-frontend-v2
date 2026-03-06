@@ -10,14 +10,7 @@
 @layer base {
   /* Remove default focus states */
   *:focus,
-  *:focus-visible {
-    /* biome-ignore lint: needed to override library styles */
-    outline: none !important;
-    /* biome-ignore lint: needed to override library styles */
-    box-shadow: none !important;
-    /* biome-ignore lint: needed to override library styles */
-    border-color: inherit !important;
-  }
+  *:focus-visible {}
 
   body {
     @apply font-medium text-primary-t;

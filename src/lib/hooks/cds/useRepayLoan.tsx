@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 
 export function useRepayLoan() {
@@ -92,7 +92,7 @@ export function useRepayLoan() {
         });
 
         // Invalidate USDS token balance (user spent USDS)
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [

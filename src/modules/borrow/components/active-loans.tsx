@@ -324,7 +324,7 @@ export const ActiveLoans = () => {
                   <div className="flex gap-2 pt-2">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="tertiary"
                       className="flex-1"
                       onClick={() => handleExtend(loan)}
                     >
@@ -402,7 +402,7 @@ export const ActiveLoans = () => {
                     </TableCell>
                     <TableCell className="py-4 text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button size="sm" variant="outline" onClick={() => handleExtend(loan)}>
+                        <Button size="sm" variant="tertiary" onClick={() => handleExtend(loan)}>
                           Extend
                         </Button>
                         <Button size="sm" onClick={() => handleRepay(loan)}>
