@@ -39,7 +39,7 @@ export function ConnectButton() {
                   <Button
                     onClick={openConnectModal}
                     type="button"
-                    size={isMobile ? "icon" : "default"}
+                    size={isMobile ? "sm" : "md"}
                   >
                     {isMobile ? <UserIcon /> : "Connect Wallet"}
                   </Button>
@@ -80,7 +80,7 @@ export function ConnectButton() {
                     variant="secondary"
                     onClick={openAccountModal}
                     type="button"
-                    size={isMobile ? "icon" : "default"}
+                    size={isMobile ? "sm" : "md"}
                     className="px-3"
                   >
                     {isMobile ? <UserIcon /> : shortenAddress(account.address)}

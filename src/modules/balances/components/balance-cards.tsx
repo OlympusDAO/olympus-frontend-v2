@@ -101,7 +101,9 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
                 {action.label}
               </Button>
             ) : (
-              <Badge variant="secondary">{action.label}</Badge>
+              <Badge variant="filled" color="gray" size="sm">
+                {action.label}
+              </Badge>
             )}
           </div>
         );

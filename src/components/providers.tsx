@@ -6,6 +6,7 @@ import { hashFn } from "@wagmi/core/query";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { config } from "@/lib/wagmi-config";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { DevMockProvider } from "@/lib/mock/provider";
 import { DevToolbar } from "@/components/dev-toolbar";
 
@@ -69,6 +70,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <DevProvider>{children}</DevProvider>
           </ThemedRainbowKit>
         </ThemeProvider>
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       </QueryClientProvider>
     </WagmiProvider>
   );

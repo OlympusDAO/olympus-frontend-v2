@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -99,53 +98,51 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
   if (rows.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-surface-a5">
-            <TableHead className="pl-5 text-tertiary-t">Asset</TableHead>
-            <TableHead className="text-tertiary-t">Chain</TableHead>
-            <TableHead className="text-right text-tertiary-t">Balance</TableHead>
-            <TableHead className="text-right text-tertiary-t">Price</TableHead>
-            <TableHead className="pr-5 text-right" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.key} className="border-surface-a5">
-              <TableCell className="pl-5">
-                <div className="flex items-center gap-2.5">
-                  <Icon name={row.token.icon} size={28} />
-                  <div>
-                    <div className="font-medium text-primary-t">{row.token.label}</div>
-                    {row.token.sublabel && (
-                      <div className="text-xs text-tertiary-t">{row.token.sublabel}</div>
-                    )}
-                  </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Asset</TableHead>
+          <TableHead>Chain</TableHead>
+          <TableHead className="text-right">Balance</TableHead>
+          <TableHead className="text-right">Price</TableHead>
+          <TableHead className="text-right" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.key}>
+            <TableCell>
+              <div className="flex items-center gap-2.5">
+                <Icon name={row.token.icon} size={28} />
+                <div>
+                  <div className="font-medium">{row.token.label}</div>
+                  {row.token.sublabel && (
+                    <div className="text-xs text-tertiary-t">{row.token.sublabel}</div>
+                  )}
                 </div>
-              </TableCell>
-              <TableCell>
-                <ChainIcon chainId={row.chain.chainId} />
-              </TableCell>
-              <TableCell className="text-right font-mono text-primary-t">
-                {formatBalance(row.chain.formattedBalance)}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="text-primary-t">{formatUsd(row.usdValue)}</div>
-              </TableCell>
-              <TableCell className="pr-5 text-right">
-                {row.action.to ? (
-                  <Button variant="secondary" size="sm" render={<Link to={row.action.to} />}>
-                    {row.action.label}
-                  </Button>
-                ) : (
-                  <Badge variant="secondary">{row.action.label}</Badge>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+              </div>
+            </TableCell>
+            <TableCell>
+              <ChainIcon chainId={row.chain.chainId} />
+            </TableCell>
+            <TableCell className="text-right font-mono">
+              {formatBalance(row.chain.formattedBalance)}
+            </TableCell>
+            <TableCell className="text-right">{formatUsd(row.usdValue)}</TableCell>
+            <TableCell className="text-right">
+              {row.action.to ? (
+                <Button variant="secondary" size="sm" render={<Link to={row.action.to} />}>
+                  {row.action.label}
+                </Button>
+              ) : (
+                <Badge variant="filled" color="gray" size="sm">
+                  {row.action.label}
+                </Badge>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

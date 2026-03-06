@@ -34,7 +34,7 @@ export function DevToolbar() {
           <div className="flex items-center justify-between border-b border-zinc-700 px-3 py-2">
             <div className="flex items-center gap-1.5">
               <FlaskConical className="size-3.5" />
-              <span className="font-semibold">Dev Tools</span>
+              <span className="font-semibold">OHM Dev Tools</span>
             </div>
             <button
               type="button"
