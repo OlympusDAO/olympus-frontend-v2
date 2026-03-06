@@ -8,7 +8,6 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/icon";
 import { ChainIcon } from "@/components/chain-icon";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance";
@@ -101,12 +100,12 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="bg-surface-a5">
           <TableHead>Asset</TableHead>
           <TableHead>Chain</TableHead>
-          <TableHead className="text-right">Balance</TableHead>
-          <TableHead className="text-right">Price</TableHead>
-          <TableHead className="text-right" />
+          <TableHead>Balance</TableHead>
+          <TableHead>Price</TableHead>
+          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -126,19 +125,22 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
             <TableCell>
               <ChainIcon chainId={row.chain.chainId} />
             </TableCell>
-            <TableCell className="text-right font-mono">
-              {formatBalance(row.chain.formattedBalance)}
+            <TableCell>
+              <div className="font-semibold">{formatBalance(row.chain.formattedBalance)}</div>
+              <div className="text-xs text-secondary-t">{formatUsd(row.usdValue)}</div>
             </TableCell>
-            <TableCell className="text-right">{formatUsd(row.usdValue)}</TableCell>
+            <TableCell>
+              <div className="font-semibold">{formatUsd(row.token.price)}</div>
+            </TableCell>
             <TableCell className="text-right">
               {row.action.to ? (
-                <Button variant="secondary" size="sm" render={<Link to={row.action.to} />}>
+                <Button render={<Link to={row.action.to} />}>
                   {row.action.label}
                 </Button>
               ) : (
-                <Badge variant="filled" color="gray" size="sm">
+                <Button disabled>
                   {row.action.label}
-                </Badge>
+                </Button>
               )}
             </TableCell>
           </TableRow>

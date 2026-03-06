@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown, ExternalLink } from "lucide-react";
 
@@ -9,14 +10,20 @@ function OhmInfoContent() {
         OHM is the native token of the Olympus protocol. OHM is used in liquid markets. OHM is
         fully-backed by the Olympus treasury.
       </p>
-      <a
-        href="https://swap.defillama.com/?chain=ethereum&to=0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-t hover:underline"
+      <Button
+        variant="secondary"
+        className="mt-3 w-full"
+        render={
+          // biome-ignore lint/a11y/useAnchorContent: content provided by Button children via render prop
+          <a
+            href="https://swap.defillama.com/?chain=ethereum&to=0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
+            target="_blank"
+            rel="noopener noreferrer"
+          />
+        }
       >
         Get OHM <ExternalLink className="size-3.5" />
-      </a>
+      </Button>
     </>
   );
 }
@@ -28,14 +35,16 @@ function GohmInfoContent() {
         gOHM is Olympus protocol's governance token, acquired by wrapping OHM for voting and
         collateral. It can be unwrapped to OHM.
       </p>
-      <a
-        href="https://docs.olympusdao.finance"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-t hover:underline"
+      <Button
+        variant="secondary"
+        className="mt-3 w-full"
+        render={
+          // biome-ignore lint/a11y/useAnchorContent: content provided by Button children via render prop
+          <a href="https://docs.olympusdao.finance" target="_blank" rel="noopener noreferrer" />
+        }
       >
         Learn More <ExternalLink className="size-3.5" />
-      </a>
+      </Button>
     </>
   );
 }

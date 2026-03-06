@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/icon";
 import { ChainIcon } from "@/components/chain-icon";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance";
@@ -99,13 +98,13 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
               </div>
             </div>
             {"to" in action && action.to ? (
-              <Button variant="secondary" size="sm" render={<Link to={action.to} />}>
+              <Button size="sm" render={<Link to={action.to} />}>
                 {action.label}
               </Button>
             ) : (
-              <Badge variant="filled" color="gray" size="sm">
+              <Button size="sm" disabled>
                 {action.label}
-              </Badge>
+              </Button>
             )}
           </div>
         );
