@@ -62,6 +62,8 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
   for (const token of tokens) {
     for (const chain of token.balances.balances) {
       if (chain.balance > 0n) {
+        const usdValue = parseFloat(chain.formattedBalance) * token.price;
+        if (usdValue < 0.01) continue;
         rows.push({
           key: `${token.symbol}-${chain.chainId}`,
           token,

@@ -70,7 +70,7 @@ function formatUsd(value: number): string {
 }
 
 export function BalanceTable({ tokens }: BalanceTableProps) {
-  // Flatten tokens × chains into rows, only where balance > 0
+  // Flatten tokens × chains into rows, filtering out dust (< $0.01)
   const rows: {
     key: string;
     token: TokenEntry;
@@ -82,8 +82,9 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
   for (const token of tokens) {
     for (const chain of token.balances.balances) {
       if (chain.balance > 0n) {
-        const action = getAction(token.symbol, chain.chainName);
         const usdValue = parseFloat(chain.formattedBalance) * token.price;
+        if (usdValue < 0.01) continue;
+        const action = getAction(token.symbol, chain.chainName);
         rows.push({
           key: `${token.symbol}-${chain.chainId}`,
           token,
