@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { WalletIcon } from "@/icons";
+import { Wallet } from "lucide-react";
 
 type WalletValueProps = {
   totalUsd: number;
@@ -9,8 +9,9 @@ type WalletValueProps = {
 export function WalletValue({ totalUsd, isLoading }: WalletValueProps) {
   return (
     <div className="flex items-center gap-2.5">
-      <WalletIcon className="size-5 text-tertiary-t" />
-      <span className="text-secondary-t text-sm">In Wallet</span>
+      <Wallet className="size-5" />
+      <span className="text-xl font-semibold">In Wallet</span>
+      <span className="text-tertiary-t">·</span>
       {isLoading ? (
         <Skeleton className="h-7 w-32" />
       ) : (
