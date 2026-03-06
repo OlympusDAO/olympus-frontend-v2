@@ -5,7 +5,7 @@ import type { Address } from "viem";
 import type { ContractFunctionArgs } from "viem";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import ConvertibleDepositAuctioneerABI from "@/abis/ConvertibleDepositAuctioneer";
 
 type BidArgs = ContractFunctionArgs<typeof ConvertibleDepositAuctioneerABI, "nonpayable", "bid">;
@@ -108,7 +108,7 @@ export function useBid() {
         });
 
         // Invalidate the USDS token balance (ERC-20 balanceOf)
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [

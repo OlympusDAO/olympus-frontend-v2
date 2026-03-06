@@ -24,6 +24,7 @@ import {
   formatOhm,
 } from "@/lib/utils/priceCalculations";
 import { formatTickPrice } from "@/lib/utils/formatters";
+import { TokenName } from "@/lib/tokens.ts";
 
 interface LimitOrderFormProps {
   onOrderTypeChange?: (orderType: "market" | "limit") => void;
@@ -71,7 +72,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
   }, [enabledPeriods, selectedTerm, onSelectedTermChange]);
 
   // Get USDS token balance
-  const usdsToken = useToken("USDS", userAddress);
+  const usdsToken = useToken(TokenName.USDS, userAddress);
 
   // Get asset configuration for minimum deposit validation
   const { configuration: assetConfig } = useAssetConfiguration("USDS");

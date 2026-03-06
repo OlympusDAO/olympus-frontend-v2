@@ -9,7 +9,7 @@ import { useBid } from "@/lib/hooks/cds/useBid";
 import { useDepositManager } from "@/lib/hooks/cds/useDepositManager";
 import { usePreviewBid } from "@/lib/hooks/cds/usePreviewBid";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import cdUSDSIcon from "@/assets/cdUSDS.png";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
@@ -40,7 +40,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const chainId = useChainId();
 
   // Get contract and token addresses for current network
-  const tokenAddress = getTokenAddress("USDS", chainId);
+  const tokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const auctioneerAddress = getContractAddress(
     ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
     chainId,

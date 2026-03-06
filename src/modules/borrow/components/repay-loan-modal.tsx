@@ -13,7 +13,7 @@ import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { ContractName, requireContractAddress } from "@/lib/contracts";
 import { useRedemptionLoan } from "@/lib/hooks/cds/useRedemptionLoan";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useRepayLoan } from "@/lib/hooks/cds/useRepayLoan";
@@ -49,7 +49,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
   );
 
   // Get USDS token address and balance
-  const usdsTokenAddress = getTokenAddress("USDS", chainId);
+  const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const { balance: usdsBalance } = useTokenBalance(usdsTokenAddress, userAddress);
 
   // Get the target contract address for approval (DepositRedemptionVault)

@@ -14,7 +14,7 @@ import { useBorrowAgainstRedemption } from "@/lib/hooks/cds/useBorrowAgainstRede
 import { useReadContracts } from "wagmi";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { formatEther } from "viem";
 import { formatTermSuffix } from "@/lib/utils";
 import { trackBorrowCreate } from "@/lib/analytics";
@@ -38,7 +38,7 @@ export const BorrowPage = () => {
   const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   // Get USDS asset address and facility address to check if borrowing is globally enabled
-  const usdsAddress = getTokenAddress("USDS", chainId);
+  const usdsAddress = getTokenAddress(TokenName.USDS, chainId);
   const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   // Check if borrowing is enabled globally for USDS/facility

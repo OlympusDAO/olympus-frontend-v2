@@ -5,8 +5,44 @@ import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useForm } from "react-hook-form";
+import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
+import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { useAccount } from "wagmi";
+import { TokenName } from "@/lib/tokens.ts";
+
+const invoices = [
+  {
+    invoice: "INV001",
+    paymentStatus: "Paid",
+    totalAmount: "$250.00",
+    paymentMethod: "Credit Card",
+  },
+  {
+    invoice: "INV002",
+    paymentStatus: "Pending",
+    totalAmount: "$150.00",
+    paymentMethod: "PayPal",
+  },
+];
 
 export function StubPage({ title }: { title: string }) {
+  const { address: userAddress } = useAccount();
+  const usdsToken = useToken(TokenName.USDS, userAddress);
+  const formTest = useForm<{ amount: string }>({
+    defaultValues: { amount: "" },
+  });
+
   return (
     <div className="space-y-6">
       <div className="bg-surface-bg-l2 rounded-2xl border border-a10-b p-8">
@@ -99,6 +135,67 @@ export function StubPage({ title }: { title: string }) {
               <Label htmlFor="r3">Compact</Label>
             </div>
           </RadioGroup>
+        </div>
+        <div className="mt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Invoice</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoices.map((invoice) => (
+                <TableRow key={invoice.invoice}>
+                  <TableCell className="font-medium">{invoice.invoice}</TableCell>
+                  <TableCell>{invoice.paymentStatus}</TableCell>
+                  <TableCell>{invoice.paymentMethod}</TableCell>
+                  <TableCell className="text-right">{invoice.totalAmount}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="mt-6">
+          <Tabs defaultValue="recent" className="w-[400px]">
+            <TabsList>
+              <TabsTrigger value="recent">Recent</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent">Recent content</TabsContent>
+            <TabsContent value="all">All content</TabsContent>
+          </Tabs>
+        </div>
+        <div className="mt-6">
+          <Tabs variant="underline" defaultValue="recent" className="w-[400px]">
+            <TabsList variant="underline">
+              <TabsTrigger variant="underline" value="recent">
+                Recent
+              </TabsTrigger>
+              <TabsTrigger variant="underline" value="all">
+                All
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent">Recent content</TabsContent>
+            <TabsContent value="all">All content</TabsContent>
+          </Tabs>
+        </div>
+        <div className="mt-6 max-w-[400px]">
+          <Form {...formTest}>
+            <form>
+              <FormField
+                control={formTest.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <TokenBigInput label="Amount" {...field} token={usdsToken} />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
         </div>
       </div>
     </div>

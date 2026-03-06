@@ -6,23 +6,21 @@ import { TOKENS, type TokenInfo, getTokenAddress } from "@/lib/tokens.ts";
 export type TokenWithBalance = TokenInfo & {
   balance: bigint | undefined;
   formattedBalance: string;
-  address: Address;
+  address?: Address;
+  price: number;
 };
 
-export function useToken(symbol: keyof typeof TOKENS, account?: Address): TokenWithBalance | null {
+export function useToken(symbol: keyof typeof TOKENS, account?: Address): TokenWithBalance {
   const chainId = useChainId();
   const info = TOKENS[symbol];
   const tokenAddress = getTokenAddress(symbol, chainId);
 
   const { balance } = useTokenBalance(tokenAddress, account);
 
-  if (!tokenAddress) {
-    return null;
-  }
-
   return {
     ...info,
     address: tokenAddress,
+    price: 0,
     balance,
     formattedBalance: balance !== undefined ? formatUnits(balance, info.decimals) : "0",
   };

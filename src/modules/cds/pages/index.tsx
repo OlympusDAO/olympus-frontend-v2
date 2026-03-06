@@ -41,7 +41,7 @@ import trendingDownIcon from "@/assets/trending-down.svg";
 
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { useDayState } from "@/lib/hooks/cds/useDayState";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { useCurrentTickSize } from "@/lib/hooks/cds/useCurrentTickSize";
@@ -65,7 +65,7 @@ export const CDPage = () => {
   const { isEnabled: isLimitOrdersEnabled } = useLimitOrdersEnabled();
 
   // Get USDS token balance
-  const usdsToken = useToken("USDS", userAddress);
+  const usdsToken = useToken(TokenName.USDS, userAddress);
 
   // Get asset configuration for minimum deposit validation
   const { configuration: assetConfig } = useAssetConfiguration("USDS");
@@ -123,7 +123,7 @@ export const CDPage = () => {
   }, [tickData?.capacity, prevCapacity]);
 
   // Get receipt token name for display
-  const usdsTokenAddress = getTokenAddress("USDS", chainId);
+  const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const { tokenId } = useReceiptTokenId(
     usdsTokenAddress as `0x${string}` | undefined,
     selectedTermMonths > 0 ? selectedTermMonths : undefined,

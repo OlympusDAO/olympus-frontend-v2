@@ -1,52 +1,188 @@
 import type * as React from "react";
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+const tabsVariants = cva("flex flex-col gap-2", {
+  variants: {
+    variant: {
+      segments: "",
+      underline: "",
+    },
+  },
+  defaultVariants: {
+    variant: "segments",
+  },
+});
+
+type TabsProps = React.ComponentProps<typeof TabsPrimitive.Root> &
+  VariantProps<typeof tabsVariants>;
+
+function Tabs({ className, variant, ...props }: TabsProps) {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn(tabsVariants({ variant, className }))}
       {...props}
     />
   );
 }
 
-function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
+const tabsListVariants = cva("inline-flex p-[4px] w-fit items-center justify-center", {
+  variants: {
+    variant: {
+      segments: "bg-surface-a3 rounded-full",
+      underline: "",
+    },
+    size: {
+      lg: "",
+      md: "",
+      sm: "",
+    },
+  },
+  compoundVariants: [
+    { variant: "segments", size: "lg", className: "h-[48px]" },
+    { variant: "segments", size: "md", className: "h-[40px]" },
+    { variant: "segments", size: "sm", className: "h-[32px]" },
+  ],
+  defaultVariants: {
+    variant: "segments",
+    size: "md",
+  },
+});
+
+type TabsListProps = React.ComponentProps<typeof TabsPrimitive.List> &
+  VariantProps<typeof tabsListVariants>;
+
+function TabsList({ className, variant, size, ...props }: TabsListProps) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn(
-        "bg-surface-a3 border border-surface-a3 text-primary-t inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px] focus:border-0",
-        className,
-      )}
+      className={cn(tabsListVariants({ variant, size, className }))}
       {...props}
     />
   );
 }
 
-function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Tab>) {
+const tabsTriggerVariants = cva(
+  "w-full cursor-pointer inline-flex flex-1 items-center justify-center whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:text-disabled-t disabled:[&_svg]:text-disabled-t [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        segments:
+          "bg-transparent rounded-full transition-colors text-secondary-t [&_svg]:text-secondary-t group-data-[active]/tabs-trigger:bg-surface-elastic-tab hover:group-data-[active]/tabs-trigger:bg-surface-a3 group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:shadow-drop-100 group-data-[active]/tabs-trigger:[&_svg]:text-primary-t",
+        underline:
+          "py-[18px] px-[20px] text-secondary-t text-sm hover:text-primary-t hover:bg-surface-a3 relative after:content-[''] after:absolute after:transition-colors after:left-0 after:right-0 after:bottom-0 after:w-full after:h-[3px] group-data-[active]/tabs-trigger:after:bg-primary-t",
+      },
+      size: {
+        lg: "",
+        md: "",
+        sm: "",
+      },
+    },
+    compoundVariants: [
+      {
+        variant: "segments",
+        size: "lg",
+        className: "h-[40px] [&_svg:not([class*='size-'])]:size-[24px] py-[8px] px-[14px]",
+      },
+      {
+        variant: "segments",
+        size: "md",
+        className: "h-[32px] [&_svg:not([class*='size-'])]:size-[20px] text-sm py-[6px] px-[12px]",
+      },
+      {
+        variant: "segments",
+        size: "sm",
+        className: "h-[24px] [&_svg:not([class*='size-'])]:size-[16px] text-xs py-[4px] px-[8px]",
+      },
+    ],
+    defaultVariants: {
+      variant: "segments",
+      size: "md",
+    },
+  },
+);
+
+type TabsTriggerProps = React.ComponentProps<typeof TabsPrimitive.Tab> &
+  VariantProps<typeof tabsTriggerVariants>;
+
+function TabsTrigger({
+  className,
+  variant = "segments",
+  size,
+  children,
+  ...props
+}: TabsTriggerProps) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
-      className={cn(
-        "data-[active]:bg-surface-elastic-tab data-[active]:text-primary-t focus-visible:outline-ring text-secondary-t inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus:border-0",
-        className,
-      )}
+      className={cn("group/tabs-trigger w-full", {
+        "data-active:before:shadow-drop-100 relative before:content-[''] data-active:before:absolute data-active:before:inset-0 data-active:before:-z-10 data-active:before:rounded-lg data-active:before:bg-transparent data-active:before:[clip-path:inherit]":
+          variant === "segments",
+      })}
       {...props}
-    />
+    >
+      <span className={cn(tabsTriggerVariants({ variant, size, className }))}>{children}</span>
+    </TabsPrimitive.Tab>
   );
 }
 
-function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Panel>) {
+const tabsContentVariants = cva("flex-1 outline-none", {
+  variants: {
+    variant: {
+      segments: "",
+      underline: "",
+    },
+  },
+  defaultVariants: {
+    variant: "segments",
+  },
+});
+
+type TabsContentProps = React.ComponentProps<typeof TabsPrimitive.Panel> &
+  VariantProps<typeof tabsContentVariants>;
+
+function TabsContent({ className, variant, ...props }: TabsContentProps) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn(tabsContentVariants({ variant, className }))}
       {...props}
     />
   );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+interface ISegmentedProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
+  options: { value: string; label: React.ReactNode }[];
+  classNameTrigger?: string;
+  size?: "lg" | "md" | "sm";
+}
+
+function Segmented({
+  className,
+  options,
+  classNameTrigger,
+  size = "md",
+  ...props
+}: ISegmentedProps) {
+  return (
+    <Tabs {...props}>
+      <TabsList size={size} className={className}>
+        {options.map((option) => (
+          <TabsTrigger
+            size={size}
+            className={classNameTrigger}
+            key={option.value}
+            value={option.value}
+          >
+            {option.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  );
+}
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, Segmented };
