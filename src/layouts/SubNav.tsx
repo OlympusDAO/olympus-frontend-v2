@@ -10,7 +10,7 @@ function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
         href={item.path}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors hover:bg-surface-a5 text-secondary-t hover:text-primary-t"
+        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-surface-a5 text-secondary-t hover:text-primary-t"
       >
         <span>{item.label}</span>
         <ExternalLink className="size-3.5 text-tertiary-t" />
@@ -25,7 +25,7 @@ function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
         "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
         isActive
           ? "bg-surface-a10 text-primary-t font-medium"
-          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
+          : "font-medium text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
       )}
     >
       {item.label}

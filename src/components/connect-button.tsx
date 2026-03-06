@@ -1,7 +1,7 @@
 import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
-import { UserIcon } from "lucide-react";
+import { WalletIcon } from "@/icons";
 
 function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -41,7 +41,8 @@ export function ConnectButton() {
                     type="button"
                     size={isMobile ? "sm" : "md"}
                   >
-                    {isMobile ? <UserIcon /> : "Connect Wallet"}
+                    <WalletIcon className="size-4" />
+                    {!isMobile && "Connect Wallet"}
                   </Button>
                 );
               }
@@ -83,7 +84,7 @@ export function ConnectButton() {
                     size={isMobile ? "sm" : "md"}
                     className="px-3"
                   >
-                    {isMobile ? <UserIcon /> : shortenAddress(account.address)}
+                    {isMobile ? <WalletIcon className="size-4" /> : shortenAddress(account.address)}
                   </Button>
                 </div>
               );
