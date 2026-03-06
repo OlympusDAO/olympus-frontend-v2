@@ -58,7 +58,7 @@ export function BalancesPage() {
     parseFloat(v1OhmBalances.formattedTotalBalance) * ohmPriceNum +
     parseFloat(v1SohmBalances.formattedTotalBalance) * ohmPriceNum;
 
-  const hasBalances = allBalances.some((b) => b.totalBalance > 0n);
+  const hasBalances = totalUsd >= 0.01;
 
   // Build token entries for the table
   const tokens: {
