@@ -34,7 +34,7 @@ export const NAV_SECTIONS: NavSection[] = [
     path: "/home",
     items: [
       { label: "My Balances", path: "/home/balances" },
-      { label: "Stake OHM", path: "/home/stake" },
+      { label: "Wrap OHM", path: "/home/wrap" },
       { label: "Bridge OHM", path: "/home/bridge" },
       { label: "Treasury Dashboard", path: "/home/treasury" },
       { label: "Protocol Feed", path: "/home/feed" },

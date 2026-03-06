@@ -1,6 +1,7 @@
 import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
+import { BalancesPage } from "@/modules/balances/pages";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
@@ -21,12 +22,18 @@ export const router = createHashRouter([
       { index: true, element: <Navigate to="/home/balances" replace /> },
 
       // Home section
-      { path: "home/balances", element: <StubPage title="My Balances" /> },
-      { path: "home/stake", element: <StubPage title="Stake OHM" /> },
+      { path: "home/balances", element: <BalancesPage /> },
+      { path: "home/wrap", element: <StubPage title="Wrap OHM" /> },
+      { path: "home/unwrap", element: <StubPage title="Unwrap gOHM" /> },
       { path: "home/bridge", element: <StubPage title="Bridge OHM" /> },
       { path: "home/treasury", element: <StubPage title="Treasury Dashboard" /> },
       { path: "home/feed", element: <StubPage title="Protocol Feed" /> },
       { path: "home/liveness", element: <LivenessPage /> },
+
+      // Legacy redirects
+      { path: "home/stake", element: <Navigate to="/home/wrap" replace /> },
+      { path: "stake", element: <Navigate to="/home/wrap" replace /> },
+      { path: "wrap", element: <Navigate to="/home/wrap" replace /> },
 
       // Cooler section
       { path: "cooler/borrow", element: <StubPage title="Borrow" /> },

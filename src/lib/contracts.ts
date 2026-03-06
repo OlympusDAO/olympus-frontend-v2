@@ -25,6 +25,9 @@ export enum ContractName {
   SOHM = "SOHM",
   GOHM = "GOHM",
   STAKING = "STAKING",
+  WSOHM = "WSOHM",
+  V1_OHM = "V1_OHM",
+  V1_SOHM = "V1_SOHM",
 
   // Cooler
   COOLER_CLEARING_HOUSE_V3 = "COOLER_CLEARING_HOUSE_V3",
@@ -73,6 +76,17 @@ export const CONTRACTS: ContractAddresses = {
   },
   [ContractName.STAKING]: {
     [mainnet.id]: "0xB63cac384247597756545b500253ff8E607a8020",
+  },
+  [ContractName.WSOHM]: {
+    [mainnet.id]: "0xCa76543Cf381ebBB277bE79574059e32108e3E65",
+    [arbitrum.id]: "0x739ca6D71365a08f584c8FC4e1029021FcefBD18",
+    [avalanche.id]: "0x8CD309e14575203535EF120b5b0Ab4DDeD0C2073",
+  },
+  [ContractName.V1_OHM]: {
+    [mainnet.id]: "0x383518188c0c6d7730D91b2c03a03C36BCD12f65",
+  },
+  [ContractName.V1_SOHM]: {
+    [mainnet.id]: "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F",
   },
 
   // ── Cooler ────────────────────────────────────────────

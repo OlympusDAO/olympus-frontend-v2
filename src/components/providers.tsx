@@ -6,6 +6,8 @@ import { hashFn } from "@wagmi/core/query";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { config } from "@/lib/wagmi-config";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
+import { DevMockProvider } from "@/lib/mock/provider";
+import { DevToolbar } from "@/components/dev-toolbar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,12 +48,26 @@ function ThemedRainbowKit({ children }: { children: React.ReactNode }) {
   return <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>;
 }
 
+function DevProvider({ children }: { children: React.ReactNode }) {
+  if (import.meta.env.DEV) {
+    return (
+      <DevMockProvider>
+        {children}
+        <DevToolbar />
+      </DevMockProvider>
+    );
+  }
+  return <>{children}</>;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="olympus-theme">
-          <ThemedRainbowKit>{children}</ThemedRainbowKit>
+          <ThemedRainbowKit>
+            <DevProvider>{children}</DevProvider>
+          </ThemedRainbowKit>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
