@@ -121,8 +121,22 @@
   );
   --shadow-surface-level-2: 0 4px 16px 0 --alpha(var(--slate) /0.05), 0 0 0 0.5px var(--e-surface-l2-drop-shadow), 1px 1px 2px 0 var(--e-surface-l2-liner-shadow) inset;
   --shadow-drop-100: 0 0 0 0 rgba(0, 0, 0, 0.02), 0 1px 1px 0 rgba(0, 0, 0, 0.01), 0 3px 3px 0 rgba(0, 0, 0, 0.01), 0 6px 6px 0 rgba(0, 0, 0, 0.01), 0 12px 12px 0 rgba(0, 0, 0, 0.01), 0 24px 24px 0 rgba(0, 0, 0, 0.02);
+  --shadow-tooltip:  0 1px 4px 0 --alpha(var(--slate) /0.1), 0 1px 4px 0 --alpha(var(--slate) /0.1);
 
 
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { grid-template-rows: 0fr; }
+    to { grid-template-rows: 1fr; }
+  }
+
+  @keyframes accordion-up {
+    from { grid-template-rows: 1fr; }
+    to { grid-template-rows: 0fr; }
+  }
 
   --animate-spinner: spinner 1200ms linear infinite;
   --animate-heartbeat-ring: heartbeat-ring 2.5s ease-out infinite;

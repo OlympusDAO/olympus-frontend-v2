@@ -20,6 +20,14 @@ import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 import { useAccount } from "wagmi";
 import { TokenName } from "@/lib/tokens.ts";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip } from "@/components/ui/tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const invoices = [
   {
@@ -182,7 +190,7 @@ export function StubPage({ title }: { title: string }) {
             <TabsContent value="all">All content</TabsContent>
           </Tabs>
         </div>
-        <div className="mt-6 max-w-[400px]">
+        <div className="mt-6 max-w-100">
           <Form {...formTest}>
             <form>
               <FormField
@@ -196,6 +204,40 @@ export function StubPage({ title }: { title: string }) {
               />
             </form>
           </Form>
+        </div>
+        <div className="flex items-center space-x-2 mt-5">
+          <Switch size="lg" id="airplane-mode" />
+          <Label htmlFor="airplane-mode">Airplane Mode</Label>
+        </div>
+        <div>
+          <Tooltip title="Tooltip">
+            <p>Tooltip</p>
+          </Tooltip>
+        </div>
+        <div>
+          <Accordion defaultValue={["shipping"]} className="max-w-lg">
+            <AccordionItem value="shipping">
+              <AccordionTrigger>What are your shipping options?</AccordionTrigger>
+              <AccordionContent>
+                We offer standard (5-7 days), express (2-3 days), and overnight shipping. Free
+                shipping on international orders.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="returns">
+              <AccordionTrigger>What is your return policy?</AccordionTrigger>
+              <AccordionContent>
+                Returns accepted within 30 days. Items must be unused and in original packaging.
+                Refunds processed within 5-7 business days.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="support">
+              <AccordionTrigger>How can I contact customer support?</AccordionTrigger>
+              <AccordionContent>
+                Reach us via email, live chat, or phone. We respond within 24 hours during business
+                days.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
     </div>
