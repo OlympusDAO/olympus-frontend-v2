@@ -13,7 +13,7 @@
   *:focus-visible {}
 
   body {
-    @apply font-medium text-primary-t;
+    @apply text-primary-t;
     font-family: "Neue Haas Display", sans-serif;
     font-synthesis: none;
     text-rendering: optimizeLegibility;

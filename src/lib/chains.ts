@@ -47,14 +47,14 @@ export const activeChains = isTestnetMode ? TESTNET_CHAINS : PRODUCTION_CHAINS;
  */
 export const transports: Record<number, Transport> = {
   [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
-  [arbitrum.id]: http("https://arbitrum.drpc.org"),
-  [polygon.id]: http("https://polygon.drpc.org"),
-  [optimism.id]: http("https://optimism.drpc.org"),
-  [avalanche.id]: http("https://avalanche.drpc.org"),
+  [arbitrum.id]: http("https://arbitrum-rpc.publicnode.com"),
+  [polygon.id]: http("https://polygon-bor-rpc.publicnode.com"),
+  [optimism.id]: http("https://optimism-rpc.publicnode.com"),
+  [avalanche.id]: http("https://avalanche-c-chain-rpc.publicnode.com"),
   [boba.id]: http("https://mainnet.boba.network"),
   [fantom.id]: http("https://fantom.drpc.org"),
-  [base.id]: http("https://base.drpc.org"),
-  [berachain.id]: http("https://rpc.berachain.com"),
+  [base.id]: http("https://base-rpc.publicnode.com"),
+  [berachain.id]: http("https://berachain-rpc.publicnode.com"),
   [sepolia.id]: http("https://ethereum-sepolia.publicnode.com"),
 };
 
