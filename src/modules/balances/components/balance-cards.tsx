@@ -22,14 +22,14 @@ function getAction(symbol: string, chainName: string) {
   switch (symbol) {
     case "OHM":
       return chainName === "Ethereum"
-        ? { label: "Wrap", to: "/home/wrap" }
-        : { label: "Bridge", to: "/home/bridge" };
+        ? { label: "Wrap", to: "/ohm/wrap" }
+        : { label: "Bridge", to: "/ohm/bridge" };
     case "sOHM":
-      return { label: "Wrap", to: "/home/wrap" };
+      return { label: "Wrap", to: "/ohm/wrap" };
     case "gOHM":
       return chainName === "Ethereum"
-        ? { label: "Unwrap", to: "/home/unwrap" }
-        : { label: "Bridge", to: "/home/bridge" };
+        ? { label: "Unwrap", to: "/ohm/unwrap" }
+        : { label: "Bridge", to: "/ohm/bridge" };
     default:
       return { label: "Migrate", disabled: true as const };
   }

@@ -18,22 +18,27 @@ export const router = createHashRouter([
     path: "/",
     Component: AppLayout,
     children: [
-      // Redirect root to home/balances
-      { index: true, element: <Navigate to="/home/balances" replace /> },
+      // Redirect root to OHM balances
+      { index: true, element: <Navigate to="/ohm/balances" replace /> },
 
       // Home section
-      { path: "home/balances", element: <BalancesPage /> },
-      { path: "home/wrap", element: <StubPage title="Wrap OHM" /> },
-      { path: "home/unwrap", element: <StubPage title="Unwrap gOHM" /> },
-      { path: "home/bridge", element: <StubPage title="Bridge OHM" /> },
       { path: "home/treasury", element: <StubPage title="Treasury Dashboard" /> },
       { path: "home/feed", element: <StubPage title="Protocol Feed" /> },
       { path: "home/liveness", element: <LivenessPage /> },
 
+      // OHM section
+      { path: "ohm/balances", element: <BalancesPage /> },
+      { path: "ohm/wrap", element: <StubPage title="Wrap OHM" /> },
+      { path: "ohm/unwrap", element: <StubPage title="Unwrap gOHM" /> },
+      { path: "ohm/bridge", element: <StubPage title="Bridge OHM" /> },
+
       // Legacy redirects
-      { path: "home/stake", element: <Navigate to="/home/wrap" replace /> },
-      { path: "stake", element: <Navigate to="/home/wrap" replace /> },
-      { path: "wrap", element: <Navigate to="/home/wrap" replace /> },
+      { path: "home/balances", element: <Navigate to="/ohm/balances" replace /> },
+      { path: "home/wrap", element: <Navigate to="/ohm/wrap" replace /> },
+      { path: "home/bridge", element: <Navigate to="/ohm/bridge" replace /> },
+      { path: "home/stake", element: <Navigate to="/ohm/wrap" replace /> },
+      { path: "stake", element: <Navigate to="/ohm/wrap" replace /> },
+      { path: "wrap", element: <Navigate to="/ohm/wrap" replace /> },
 
       // Cooler section
       { path: "cooler/borrow", element: <StubPage title="Borrow" /> },
@@ -64,7 +69,7 @@ export const router = createHashRouter([
       { path: "rewards", element: <StubPage title="Rewards" /> },
 
       // Catch-all
-      { path: "*", element: <Navigate to="/home/balances" replace /> },
+      { path: "*", element: <Navigate to="/ohm/balances" replace /> },
     ],
   },
 ]);

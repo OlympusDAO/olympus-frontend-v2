@@ -1,5 +1,6 @@
 import { Home, Gift, FileText, MoreHorizontal, Building2 } from "lucide-react";
 import { RiSettings3Line, RiLoopLeftLine } from "@remixicon/react";
+import { OhmNavIcon } from "@/icons";
 import type { ComponentType } from "react";
 
 export type NavItem = {
@@ -33,12 +34,21 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: Home,
     path: "/home",
     items: [
-      { label: "My Balances", path: "/home/balances" },
-      { label: "Wrap OHM", path: "/home/wrap" },
-      { label: "Bridge OHM", path: "/home/bridge" },
       { label: "Treasury Dashboard", path: "/home/treasury" },
       { label: "Protocol Feed", path: "/home/feed" },
       { label: "Liveness", path: "/home/liveness" },
+    ],
+  },
+  {
+    id: "ohm",
+    label: "OHM",
+    sidebarTitle: "OHM",
+    icon: OhmNavIcon,
+    path: "/ohm",
+    items: [
+      { label: "My Balances", path: "/ohm/balances" },
+      { label: "Wrap", path: "/ohm/wrap" },
+      { label: "Bridge", path: "/ohm/bridge" },
     ],
   },
   {
