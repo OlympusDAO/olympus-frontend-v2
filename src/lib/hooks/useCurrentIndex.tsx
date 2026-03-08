@@ -1,11 +1,11 @@
-import { useReadContract } from "wagmi";
+import { useReadContract, useChainId } from "wagmi";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import OlympusStakingAbi from "@/abis/OlympusStaking";
 import { formatUnits } from "viem";
-import { mainnet } from "@/lib/chains";
 
 export function useCurrentIndex() {
-  const stakingAddress = getContractAddress(ContractName.STAKING, mainnet.id);
+  const chainId = useChainId();
+  const stakingAddress = getContractAddress(ContractName.STAKING, chainId);
 
   const {
     data: index,

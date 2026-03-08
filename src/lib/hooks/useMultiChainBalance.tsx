@@ -5,6 +5,7 @@ import type { TokenInfo } from "@/lib/tokens";
 import { useMockData } from "@/lib/mock/provider";
 import {
   transports,
+  isTestnetMode,
   mainnet,
   arbitrum,
   polygon,
@@ -14,9 +15,10 @@ import {
   fantom,
   base,
   berachain,
+  sepolia,
 } from "@/lib/chains";
 
-const CHAIN_MAP: Record<number, Chain> = {
+const PRODUCTION_CHAIN_MAP: Record<number, Chain> = {
   [mainnet.id]: mainnet,
   [arbitrum.id]: arbitrum,
   [polygon.id]: polygon,
@@ -27,6 +29,12 @@ const CHAIN_MAP: Record<number, Chain> = {
   [base.id]: base,
   [berachain.id]: berachain,
 };
+
+const TESTNET_CHAIN_MAP: Record<number, Chain> = {
+  [sepolia.id]: sepolia,
+};
+
+const CHAIN_MAP = isTestnetMode ? TESTNET_CHAIN_MAP : PRODUCTION_CHAIN_MAP;
 
 export type ChainBalance = {
   chainId: number;

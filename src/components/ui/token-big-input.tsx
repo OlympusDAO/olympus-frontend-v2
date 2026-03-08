@@ -170,7 +170,11 @@ function TokenBigInput({
               <NumberFlow
                 className={cn("font-medium text-primary-t", isDisabled && "text-disabled-t")}
                 value={dn.toNumber([balance, decimals])}
-                format={{ style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 2 }}
+                format={{
+                  style: "decimal",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: Math.max(2, Math.min(6, decimals)),
+                }}
               />
             ) : (
               <p className="text-xs font-medium">N/A</p>

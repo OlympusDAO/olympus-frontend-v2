@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useMockControls } from "@/lib/mock/provider";
 import { SCENARIOS } from "@/lib/mock/scenarios";
-import { ChevronUp, ChevronDown, FlaskConical } from "lucide-react";
+import { ChevronUp, ChevronDown, FlaskConical, Coins } from "lucide-react";
+import { MintTestnetOhmModal } from "@/components/mint-testnet-ohm-modal";
+import { MintTestnetUsdsModal } from "@/components/mint-testnet-usds-modal";
+import { TokenName } from "@/lib/tokens";
+import { isTestnetMode } from "@/lib/chains";
 
 export function DevToolbar() {
   const controls = useMockControls();
@@ -25,6 +29,11 @@ export function DevToolbar() {
           {enabled && (
             <span className="ml-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] text-white">
               Mock
+            </span>
+          )}
+          {isTestnetMode && (
+            <span className="ml-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">
+              Testnet
             </span>
           )}
           <ChevronUp className="size-3" />
@@ -79,6 +88,67 @@ export function DevToolbar() {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Testnet info */}
+            <div className="flex items-center justify-between">
+              <span>Network</span>
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] text-white ${
+                  isTestnetMode ? "bg-amber-600" : "bg-zinc-600"
+                }`}
+              >
+                {isTestnetMode ? "Sepolia" : "Mainnet"}
+              </span>
+            </div>
+            {!isTestnetMode && (
+              <p className="text-[10px] text-zinc-500">
+                Switch to Sepolia in your wallet to use faucets
+              </p>
+            )}
+
+            {/* Mint buttons (visible when on testnet) */}
+            {isTestnetMode && (
+              <div className="space-y-1.5">
+                <span className="text-zinc-400">Faucet</span>
+                <div className="flex gap-1.5">
+                  <MintTestnetOhmModal
+                    token={TokenName.OHM}
+                    trigger={
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-1 rounded bg-zinc-800 border border-zinc-600 px-2 py-1.5 text-zinc-200 hover:bg-zinc-700"
+                      >
+                        <Coins className="size-3" />
+                        OHM
+                      </button>
+                    }
+                  />
+                  <MintTestnetOhmModal
+                    token={TokenName.GOHM}
+                    trigger={
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-1 rounded bg-zinc-800 border border-zinc-600 px-2 py-1.5 text-zinc-200 hover:bg-zinc-700"
+                      >
+                        <Coins className="size-3" />
+                        gOHM
+                      </button>
+                    }
+                  />
+                  <MintTestnetUsdsModal
+                    trigger={
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-1 rounded bg-zinc-800 border border-zinc-600 px-2 py-1.5 text-zinc-200 hover:bg-zinc-700"
+                      >
+                        <Coins className="size-3" />
+                        USDS
+                      </button>
+                    }
+                  />
+                </div>
               </div>
             )}
           </div>
