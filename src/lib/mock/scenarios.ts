@@ -6,6 +6,7 @@ import {
   LEGACY_BALANCES,
   MULTI_CHAIN_BALANCES,
 } from "./fixtures/balances";
+import { BRIDGE_ACTIVE, BRIDGE_INACTIVE } from "./fixtures/bridge";
 
 export const SCENARIOS: Record<string, MockScenario> = {
   whale: {
@@ -14,6 +15,7 @@ export const SCENARIOS: Record<string, MockScenario> = {
     isConnected: true,
     prices: DEFAULT_PRICES,
     balances: WHALE_BALANCES,
+    bridge: BRIDGE_ACTIVE,
   },
   empty: {
     name: "empty",
@@ -21,6 +23,7 @@ export const SCENARIOS: Record<string, MockScenario> = {
     isConnected: true,
     prices: DEFAULT_PRICES,
     balances: EMPTY_BALANCES,
+    bridge: { ...BRIDGE_ACTIVE, history: [] },
   },
   legacy: {
     name: "legacy",
@@ -35,6 +38,23 @@ export const SCENARIOS: Record<string, MockScenario> = {
     isConnected: true,
     prices: DEFAULT_PRICES,
     balances: MULTI_CHAIN_BALANCES,
+    bridge: BRIDGE_ACTIVE,
+  },
+  bridge: {
+    name: "bridge",
+    description: "Bridge testing with OHM balances and transaction history",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: WHALE_BALANCES,
+    bridge: BRIDGE_ACTIVE,
+  },
+  "bridge-inactive": {
+    name: "bridge-inactive",
+    description: "Bridge disabled state",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: WHALE_BALANCES,
+    bridge: BRIDGE_INACTIVE,
   },
   disconnected: {
     name: "disconnected",

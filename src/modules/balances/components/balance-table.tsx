@@ -101,7 +101,7 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-surface-a5">
+        <TableRow>
           <TableHead>Asset</TableHead>
           <TableHead>Chain</TableHead>
           <TableHead>Balance</TableHead>

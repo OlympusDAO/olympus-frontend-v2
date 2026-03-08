@@ -43,6 +43,10 @@ export enum ContractName {
   DEPOSIT_REDEMPTION_VAULT = "DEPOSIT_REDEMPTION_VAULT",
   LIMIT_ORDERS = "LIMIT_ORDERS",
   PRICE = "PRICE",
+
+  // Bridge
+  CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
+  CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
 }
 
 type ContractAddresses = {
@@ -137,6 +141,20 @@ export const CONTRACTS: ContractAddresses = {
   [ContractName.PRICE]: {
     [mainnet.id]: "0xd6C4D723fdadCf0D171eF9A2a3Bfa870675b282f",
     [sepolia.id]: "0x3bD25E292dC36b674BBF1EEecaAB4565bf2eF241",
+  },
+
+  // ── Bridge ──────────────────────────────────────────
+  [ContractName.CROSS_CHAIN_BRIDGE]: {
+    [mainnet.id]: "0x45e563c39cddba8699a90078f42353a57509543a",
+    [arbitrum.id]: "0x20B3834091f038Ce04D8686FAC99CA44A0FB285c",
+    [base.id]: "0x6CA1a916e883c7ce2BFBcF59dc70F2c1EF9dac6e",
+    [berachain.id]: "0xBA42BE149e5260EbA4B82418A6306f55D532eA47",
+  },
+  [ContractName.CROSS_CHAIN_MINTER]: {
+    [mainnet.id]: "0xa90bFe53217da78D900749eb6Ef513ee5b6a491e",
+    [arbitrum.id]: "0x8f6406eDbFA393e327822D4A08BcF15503570D87",
+    [base.id]: "0x623164A9Ee2556D524b08f34F1d2389d7B4e1A1C",
+    [berachain.id]: "0xbC9eE0D911739cBc72cd094ADA26F56E0C49EeAE",
   },
 };
 
