@@ -2,9 +2,9 @@ import { useReadContract, useChainId } from "wagmi";
 import { ContractName, requireContractAddress } from "@/lib/contracts";
 import { useDepositManager } from "./useDepositManager";
 import DepositManagerAbi from "@/abis/DepositManager";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, type TokenName } from "@/lib/tokens";
 
-export function useAssetConfiguration(tokenSymbol: "USDS") {
+export function useAssetConfiguration(tokenSymbol: TokenName.USDS) {
   const chainId = useChainId();
 
   // Get the facility address to get the deposit manager

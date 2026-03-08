@@ -185,7 +185,7 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
         <div className="px-6 pb-6">
           <div className="bg-blue/10 rounded-3xl p-4 border border-blue/5">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
+              <div className="shrink-0 mt-0.5">
                 <InfoIcon className="h-4 w-4 text-blue-500" />
               </div>
               <div className="space-y-2">

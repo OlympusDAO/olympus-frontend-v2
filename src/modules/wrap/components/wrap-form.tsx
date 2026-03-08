@@ -110,9 +110,9 @@ export function WrapForm({
                   label={mode === "wrap" ? "Wrap" : "Unwrap"}
                   token={inputToken}
                   value={field.value}
-                  onChange={(val: string) => {
+                  onChange={(val) => {
                     field.onChange(val);
-                    onInputAmountChange(val);
+                    onInputAmountChange(val as string);
                   }}
                 />
               </FormItem>

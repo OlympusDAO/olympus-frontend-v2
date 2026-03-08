@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { requireTokenAddress } from "@/lib/tokens";
+import { requireTokenAddress, TokenName } from "@/lib/tokens";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import MockERC20Abi from "@/abis/MockERC20";
 
@@ -79,7 +79,7 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
   const handleMint = () => {
     if (!address || !amount) return;
 
-    const usdsAddress = requireTokenAddress("USDS", chainId);
+    const usdsAddress = requireTokenAddress(TokenName.USDS, chainId);
     const amountBigInt = parseUnits(amount, 18);
 
     // Reset states for new transaction

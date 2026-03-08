@@ -366,7 +366,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
               {EXTENSION_PERIODS.map((months) => (
                 <Button
                   key={months}
-                  variant={!isCustomMode && selectedMonths === months ? "default" : "outline"}
+                  variant={!isCustomMode && selectedMonths === months ? "default" : "tertiary"}
                   onClick={() => {
                     setIsCustomMode(false);
                     setSelectedMonths(months);
@@ -377,7 +377,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
                 </Button>
               ))}
               <Button
-                variant={isCustomMode ? "default" : "outline"}
+                variant={isCustomMode ? "default" : "tertiary"}
                 onClick={() => setIsCustomMode(true)}
                 className="h-12"
               >

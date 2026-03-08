@@ -12,7 +12,7 @@ export function WrapInfoCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="flex flex-row items-center p-4 gap-3 h-[100px]">
+      <Card className="flex flex-row items-center p-4 gap-3 h-25">
         <Icon name="OHMColorTokenIcon" size={40} />
         <div className="flex-1 min-w-0">
           <span className="text-md text-secondary-t">OHM Price</span>
@@ -22,7 +22,7 @@ export function WrapInfoCards() {
         </div>
       </Card>
 
-      <Card className="flex flex-row items-center p-4 gap-3 h-[100px]">
+      <Card className="flex flex-row items-center p-4 gap-3 h-25">
         <Icon name="GOHMColorTokenIcon" size={40} />
         <div className="flex-1 min-w-0">
           <span className="text-md text-secondary-t">gOHM Price</span>
@@ -32,7 +32,7 @@ export function WrapInfoCards() {
         </div>
       </Card>
 
-      <Card className="flex flex-row items-center p-4 gap-3 h-[100px]">
+      <Card className="flex flex-row items-center p-4 gap-3 h-25">
         <div className="w-10 h-10 rounded-full bg-surface-a3 flex items-center justify-center">
           <ArrowLeftRight className="w-5 h-5 text-secondary-t" />
         </div>
