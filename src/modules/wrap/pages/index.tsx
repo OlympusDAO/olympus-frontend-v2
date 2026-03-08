@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { WrapInfoCards } from "../components/wrap-info-cards";
 import { WrapForm } from "../components/wrap-form";
 import { BalancePanel } from "../components/balance-panel";
@@ -8,7 +9,9 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function WrapPage() {
-  const [mode, setMode] = useState<"wrap" | "unwrap">("wrap");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode") === "unwrap" ? "unwrap" : "wrap";
+  const [mode, setMode] = useState<"wrap" | "unwrap">(initialMode);
   const [inputAmount, setInputAmount] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -18,6 +21,7 @@ export function WrapPage() {
   const handleModeChange = (newMode: "wrap" | "unwrap") => {
     setMode(newMode);
     setInputAmount("");
+    setSearchParams(newMode === "unwrap" ? { mode: "unwrap" } : {}, { replace: true });
   };
 
   const handleSubmit = () => {

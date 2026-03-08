@@ -32,16 +32,17 @@ type RowAction = {
 };
 
 function getAction(symbol: string, chainName: string): RowAction {
+  const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
   switch (symbol) {
     case "OHM":
-      return chainName === "Ethereum"
+      return isHomeChain
         ? { label: "Wrap", to: "/ohm/wrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "sOHM":
       return { label: "Wrap", to: "/ohm/wrap" };
     case "gOHM":
-      return chainName === "Ethereum"
-        ? { label: "Unwrap", to: "/ohm/unwrap" }
+      return isHomeChain
+        ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "wsOHM":
     case "OHM v1":
