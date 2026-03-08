@@ -32,16 +32,17 @@ type RowAction = {
 };
 
 function getAction(symbol: string, chainName: string): RowAction {
+  const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
   switch (symbol) {
     case "OHM":
-      return chainName === "Ethereum"
+      return isHomeChain
         ? { label: "Wrap", to: "/ohm/wrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "sOHM":
       return { label: "Wrap", to: "/ohm/wrap" };
     case "gOHM":
-      return chainName === "Ethereum"
-        ? { label: "Unwrap", to: "/ohm/unwrap" }
+      return isHomeChain
+        ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "wsOHM":
     case "OHM v1":
@@ -82,7 +83,7 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
     for (const chain of token.balances.balances) {
       if (chain.balance > 0n) {
         const usdValue = parseFloat(chain.formattedBalance) * token.price;
-        if (usdValue < 0.01) continue;
+        if (token.price > 0 && usdValue < 0.01) continue;
         const action = getAction(token.symbol, chain.chainName);
         rows.push({
           key: `${token.symbol}-${chain.chainId}`,
@@ -134,13 +135,9 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
             </TableCell>
             <TableCell className="text-right">
               {row.action.to ? (
-                <Button render={<Link to={row.action.to} />}>
-                  {row.action.label}
-                </Button>
+                <Button render={<Link to={row.action.to} />}>{row.action.label}</Button>
               ) : (
-                <Button disabled>
-                  {row.action.label}
-                </Button>
+                <Button disabled>{row.action.label}</Button>
               )}
             </TableCell>
           </TableRow>

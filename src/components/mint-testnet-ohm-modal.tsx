@@ -11,19 +11,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { requireTokenAddress, TokenName } from "@/lib/tokens";
+import { getTokenAddress, TokenName, TOKENS } from "@/lib/tokens";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import MockERC20Abi from "@/abis/MockERC20";
 
-interface MintTestnetUsdsModalProps {
+interface MintTestnetOhmModalProps {
   trigger: React.ReactElement;
+  token?: TokenName.OHM | TokenName.GOHM;
 }
 
-export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
+export function MintTestnetOhmModal({ trigger, token = TokenName.OHM }: MintTestnetOhmModalProps) {
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
+
+  const tokenInfo = TOKENS[token];
+  const tokenAddress = getTokenAddress(token, chainId);
 
   const {
     data: hash,
@@ -42,19 +46,18 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
     confirmations: 1,
   });
 
-  // Toast configuration for minting transactions
   const toastConfig: TransactionToastConfig = {
     pending: {
-      title: "Minting testnet USDS...",
+      title: `Minting testnet ${tokenInfo.symbol}...`,
       description: "Please wait while your transaction is confirmed.",
     },
     success: {
-      title: "USDS minted successfully!",
-      description: `${amount} testnet USDS has been minted to your wallet.`,
+      title: `${tokenInfo.symbol} minted successfully!`,
+      description: `${amount} testnet ${tokenInfo.symbol} has been minted to your wallet.`,
     },
     error: {
       title: "Minting failed",
-      description: "There was an error minting testnet USDS. Please try again.",
+      description: `There was an error minting testnet ${tokenInfo.symbol}. Please try again.`,
       userRejected: {
         title: "Transaction cancelled",
         description: "You cancelled the minting transaction.",
@@ -66,7 +69,6 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
     },
   };
 
-  // Handle toast notifications
   const { reset: resetToast } = useTransactionToast({
     hash,
     isWritePending,
@@ -77,18 +79,16 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
   });
 
   const handleMint = () => {
-    if (!address || !amount) return;
+    if (!address || !amount || !tokenAddress) return;
 
-    const usdsAddress = requireTokenAddress(TokenName.USDS, chainId);
-    const amountBigInt = parseUnits(amount, 18);
+    const amountBigInt = parseUnits(amount, tokenInfo.decimals);
 
-    // Reset states for new transaction
     resetWrite();
     resetToast();
 
     writeContract(
       {
-        address: usdsAddress,
+        address: tokenAddress,
         abi: MockERC20Abi,
         functionName: "mint",
         args: [address, amountBigInt],
@@ -109,7 +109,7 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
       <DialogTrigger render={trigger} />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Mint Testnet USDS</DialogTitle>
+          <DialogTitle>Mint Testnet {tokenInfo.symbol}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -119,17 +119,17 @@ export function MintTestnetUsdsModal({ trigger }: MintTestnetUsdsModalProps) {
             <Input
               id="amount"
               type="number"
-              placeholder="Enter amount to mint"
+              placeholder={`Enter amount to mint`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
           </div>
           <Button
             onClick={handleMint}
-            disabled={!address || !amount || isPending}
+            disabled={!address || !amount || isPending || !tokenAddress}
             className="w-full"
           >
-            {isPending ? "Minting..." : "Mint USDS"}
+            {isPending ? "Minting..." : `Mint ${tokenInfo.symbol}`}
           </Button>
         </div>
       </DialogContent>

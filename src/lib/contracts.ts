@@ -60,9 +60,11 @@ export const CONTRACTS: ContractAddresses = {
     [arbitrum.id]: "0xf0cb2dc0db5e6c66B9a70Ac27B06b878da017028",
     [base.id]: "0x060cb087a9730E13aa191f31A6d86bFF8DfcdCC0",
     [berachain.id]: "0x18878df23e2a36f81e820e4b47b4a40576d3159c",
+    [sepolia.id]: "0x784cA0C006b8651BAB183829A99fA46BeCe50dBc",
   },
   [ContractName.SOHM]: {
     [mainnet.id]: "0x04906695D6D12CF5459975d7C3C03356E4Ccd460",
+    [sepolia.id]: "0x7aEe38DbB5465a05EE809d00d1C34dB76F8c5B72",
   },
   [ContractName.GOHM]: {
     [mainnet.id]: "0x0ab87046fBb341D058F17CBC4c1133F25a20a52f",
@@ -72,10 +74,11 @@ export const CONTRACTS: ContractAddresses = {
     [fantom.id]: "0x91fa20244fb509e8289ca630e5db3e9166233fdc",
     [optimism.id]: "0x0b5740c6b4a97f90eF2F0220651Cca420B868FfB",
     [boba.id]: "0xd22C0a4Af486C7FA08e282E9eB5f30F9AaA62C95",
-    [sepolia.id]: "0xBA05d48Fb94dC76820EB7ea1B360fd6DfDEabdc5",
+    [sepolia.id]: "0x0f7F33f915B29476ca2b2606C8A3e06A5FC7e896",
   },
   [ContractName.STAKING]: {
     [mainnet.id]: "0xB63cac384247597756545b500253ff8E607a8020",
+    [sepolia.id]: "0xbC2778f2F24864D35D806AA968A1DB445988A5E9",
   },
   [ContractName.WSOHM]: {
     [mainnet.id]: "0xCa76543Cf381ebBB277bE79574059e32108e3E65",
@@ -95,7 +98,7 @@ export const CONTRACTS: ContractAddresses = {
   },
   [ContractName.COOLER_V2_MONOCOOLER]: {
     [mainnet.id]: "0xdb591Ea2e5Db886dA872654D58f6cc584b68e7cC",
-    [sepolia.id]: "0x19b787549A05f7a3f8f20ED55B827A6c49BaEE9c",
+    [sepolia.id]: "0x8bEB701EBaf8CD68B7E8f04BFA4fC7387cF711E0",
   },
   [ContractName.COOLER_V2_COMPOSITES]: {
     [mainnet.id]: "0x6593768feBF9C95aC857Fb7Ef244D5738D1C57Fd",

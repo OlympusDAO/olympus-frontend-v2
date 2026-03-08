@@ -336,7 +336,7 @@ export const ActivePositions = () => {
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="tertiary"
                         className="flex-1"
                         onClick={() => handleRedeem(position)}
                       >
@@ -464,7 +464,7 @@ export const ActivePositions = () => {
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="tertiary"
                             onClick={() => handleRedeem(position)}
                           >
                             Redeem
@@ -472,7 +472,7 @@ export const ActivePositions = () => {
                           {position.data.wrapped && (
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="tertiary"
                               onClick={() => handleTransfer(position)}
                             >
                               Transfer

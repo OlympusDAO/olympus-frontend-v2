@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { mainnet, sepolia, isTestnetMode, transports } from "@/lib/chains";
+import { activeChains, transports } from "@/lib/chains";
 import type { Config } from "wagmi";
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
@@ -14,7 +14,7 @@ if (!projectId) {
 export const config: Config = getDefaultConfig({
   appName: "Olympus",
   projectId: projectId || "PLACEHOLDER",
-  chains: isTestnetMode ? [sepolia] : [mainnet],
+  chains: activeChains,
   transports,
   ssr: false,
 });

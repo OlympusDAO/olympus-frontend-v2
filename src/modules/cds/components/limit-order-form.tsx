@@ -75,7 +75,7 @@ export const LimitOrderForm: React.FC<LimitOrderFormProps> = ({
   const usdsToken = useToken(TokenName.USDS, userAddress);
 
   // Get asset configuration for minimum deposit validation
-  const { configuration: assetConfig } = useAssetConfiguration("USDS");
+  const { configuration: assetConfig } = useAssetConfiguration(TokenName.USDS);
 
   // Get auction parameters for minimum bid
   const { minimumBid } = useAuctionParameters();

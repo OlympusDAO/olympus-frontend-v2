@@ -68,7 +68,7 @@ export const CDPage = () => {
   const usdsToken = useToken(TokenName.USDS, userAddress);
 
   // Get asset configuration for minimum deposit validation
-  const { configuration: assetConfig } = useAssetConfiguration("USDS");
+  const { configuration: assetConfig } = useAssetConfiguration(TokenName.USDS);
 
   // Helper function to convert display name to months
   const getMonthsFromTerm = (term: string): number => {

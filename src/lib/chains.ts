@@ -13,19 +13,10 @@ import { berachain } from "viem/chains";
 import { http, type Transport } from "viem";
 
 /**
- * All production chains supported by Olympus.
+ * Chains available in the wallet network selector.
+ * Multi-chain balance lookups and bridging handle other chains independently.
  */
-export const PRODUCTION_CHAINS = [
-  mainnet,
-  arbitrum,
-  polygon,
-  optimism,
-  avalanche,
-  boba,
-  fantom,
-  base,
-  berachain,
-] as const;
+export const PRODUCTION_CHAINS = [mainnet] as const;
 
 /**
  * Testnet chains (sepolia only).

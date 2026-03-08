@@ -19,16 +19,17 @@ type BalanceCardsProps = {
 };
 
 function getAction(symbol: string, chainName: string) {
+  const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
   switch (symbol) {
     case "OHM":
-      return chainName === "Ethereum"
+      return isHomeChain
         ? { label: "Wrap", to: "/ohm/wrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "sOHM":
       return { label: "Wrap", to: "/ohm/wrap" };
     case "gOHM":
-      return chainName === "Ethereum"
-        ? { label: "Unwrap", to: "/ohm/unwrap" }
+      return isHomeChain
+        ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     default:
       return { label: "Migrate", disabled: true as const };
@@ -62,7 +63,7 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
     for (const chain of token.balances.balances) {
       if (chain.balance > 0n) {
         const usdValue = parseFloat(chain.formattedBalance) * token.price;
-        if (usdValue < 0.01) continue;
+        if (token.price > 0 && usdValue < 0.01) continue;
         rows.push({
           key: `${token.symbol}-${chain.chainId}`,
           token,

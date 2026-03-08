@@ -88,7 +88,7 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
 
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  variant="tertiary"
                   className="flex-1"
                   onClick={onClose}
                   disabled={isCompleting}

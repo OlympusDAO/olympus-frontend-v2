@@ -47,6 +47,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
       [arbitrum.id]: "0xf0cb2dc0db5e6c66B9a70Ac27B06b878da017028",
       [base.id]: "0x060cb087a9730E13aa191f31A6d86bFF8DfcdCC0",
       [berachain.id]: "0x18878df23e2a36f81e820e4b47b4a40576d3159c",
+      [sepolia.id]: "0x784cA0C006b8651BAB183829A99fA46BeCe50dBc",
     },
     symbol: "OHM",
     decimals: 9,
@@ -55,6 +56,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
   SOHM: {
     addresses: {
       [mainnet.id]: "0x04906695D6D12CF5459975d7C3C03356E4Ccd460",
+      [sepolia.id]: "0x7aEe38DbB5465a05EE809d00d1C34dB76F8c5B72",
     },
     symbol: "sOHM",
     decimals: 9,
@@ -69,7 +71,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
       [fantom.id]: "0x91fa20244fb509e8289ca630e5db3e9166233fdc",
       [optimism.id]: "0x0b5740c6b4a97f90eF2F0220651Cca420B868FfB",
       [boba.id]: "0xd22C0a4Af486C7FA08e282E9eB5f30F9AaA62C95",
-      [sepolia.id]: "0xBA05d48Fb94dC76820EB7ea1B360fd6DfDEabdc5",
+      [sepolia.id]: "0x0f7F33f915B29476ca2b2606C8A3e06A5FC7e896",
     },
     symbol: "gOHM",
     decimals: 18,

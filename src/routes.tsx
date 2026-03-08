@@ -12,6 +12,7 @@ import { AccountsView } from "@/modules/cooler-activity/components/accounts-view
 import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { LivenessPage } from "@/modules/liveness/pages";
+import { WrapPage } from "@/modules/wrap/pages";
 
 export const router = createHashRouter([
   {
@@ -28,8 +29,7 @@ export const router = createHashRouter([
 
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },
-      { path: "ohm/wrap", element: <StubPage title="Wrap OHM" /> },
-      { path: "ohm/unwrap", element: <StubPage title="Unwrap gOHM" /> },
+      { path: "ohm/wrap", element: <WrapPage /> },
       { path: "ohm/bridge", element: <StubPage title="Bridge OHM" /> },
 
       // Legacy redirects

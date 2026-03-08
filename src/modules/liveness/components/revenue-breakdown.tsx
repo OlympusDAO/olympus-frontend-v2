@@ -78,7 +78,7 @@ export function RevenueBreakdown() {
     return (
       <Card className="p-6">
         <Skeleton className="mb-4 h-4 w-48" />
-        <Skeleton className="h-[260px] w-full rounded-xl" />
+        <Skeleton className="h-65 w-full rounded-xl" />
       </Card>
     );
   }
@@ -149,7 +149,7 @@ export function RevenueBreakdown() {
             )}
           />
           <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={28}>
-            {chartData.map((entry, index) => (
+            {chartData.map((entry) => (
               <Cell
                 key={entry.name}
                 fill={`url(#${GRADIENT_COLORS[entry.name]?.id ?? "gradSusde"})`}
