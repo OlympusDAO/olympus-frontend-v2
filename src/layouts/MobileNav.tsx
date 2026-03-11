@@ -23,8 +23,6 @@ function MobileSectionItem({
   isActive: boolean;
   onSelect: (section: NavSection) => void;
 }) {
-  const Icon = section.icon;
-
   return (
     <button
       type="button"
@@ -34,12 +32,14 @@ function MobileSectionItem({
         isActive ? "bg-surface-a10" : "hover:bg-surface-a5",
       )}
     >
-      <Icon
+      <span
         className={cn(
-          "size-5 transition-colors",
+          "[&>svg]:size-5 [&>svg]:transition-colors",
           isActive ? "text-brand-sand-1000" : "text-secondary-t",
         )}
-      />
+      >
+        {section.icon}
+      </span>
       <span
         className={cn(
           "text-[10px] leading-tight transition-colors",

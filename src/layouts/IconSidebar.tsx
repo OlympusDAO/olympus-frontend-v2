@@ -11,7 +11,6 @@ import {
 } from "@/lib/navigation";
 
 function IconNavItem({ section, isActive }: { section: NavSection; isActive: boolean }) {
-  const Icon = section.icon;
   const to = getDefaultPathForSection(section);
 
   return (
@@ -30,12 +29,14 @@ function IconNavItem({ section, isActive }: { section: NavSection; isActive: boo
             : undefined
         }
       >
-        <Icon
+        <span
           className={cn(
-            "size-6 transition-colors",
+            "[&>svg]:size-6 [&>svg]:transition-colors",
             isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
-        />
+        >
+          {section.icon}
+        </span>
       </div>
       <span
         className={cn(

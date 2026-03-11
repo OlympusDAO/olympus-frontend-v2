@@ -13,6 +13,7 @@ import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-acti
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/wrap/pages";
+import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
 
 export const router = createHashRouter([
   {
@@ -65,8 +66,8 @@ export const router = createHashRouter([
       { path: "dao/vote", element: <StubPage title="Vote" /> },
       { path: "dao/delegate", element: <StubPage title="Delegate" /> },
 
-      // Rewards
-      { path: "rewards", element: <StubPage title="Rewards" /> },
+      // Engage
+      { path: "engage", element: <EngagePage /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/ohm/balances" replace /> },

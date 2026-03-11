@@ -3,7 +3,10 @@ export { default as logoIcon } from "./logo.svg?react";
 export { default as WalletIcon } from "./wallet.svg?react";
 export { default as CopperCoinIcon } from "./copper-coin.svg?react";
 export { default as OhmNavIcon } from "./ohm-nav.svg?react";
+export { default as iOhmSidebar } from "./iOHM-sidebar.svg?react";
 
 export { default as USDSColorTokenIcon } from "./tokens/usds-color.svg?react";
 export { default as OHMColorTokenIcon } from "./tokens/ohm-color.svg?react";
 export { default as GOHMColorTokenIcon } from "./tokens/gohm-color.svg?react";
+export { default as iOHMTokenIcon } from "./tokens/iOHM.svg?react";
+export { default as drachmaTokenIcon } from "./tokens/drachma.svg?react";
