@@ -9,6 +9,7 @@ const tabsVariants = cva("flex flex-col gap-2", {
     variant: {
       segments: "",
       underline: "",
+      primary: "",
     },
   },
   defaultVariants: {
@@ -34,6 +35,7 @@ const tabsListVariants = cva("inline-flex p-[4px] w-fit items-center justify-cen
     variant: {
       segments: "bg-surface-a3 rounded-full",
       underline: "",
+      primary: "gap-x-4 p-0",
     },
     size: {
       lg: "",
@@ -74,6 +76,8 @@ const tabsTriggerVariants = cva(
           "bg-transparent rounded-full transition-colors text-secondary-t [&_svg]:text-secondary-t group-data-[active]/tabs-trigger:bg-surface-elastic-tab hover:group-data-[active]/tabs-trigger:bg-surface-a3 group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:shadow-drop-100 group-data-[active]/tabs-trigger:[&_svg]:text-primary-t",
         underline:
           "py-[18px] px-[20px] text-secondary-t text-sm hover:text-primary-t hover:bg-surface-a3 relative after:content-[''] after:absolute after:transition-colors after:left-0 after:right-0 after:bottom-0 after:w-full after:h-[3px] group-data-[active]/tabs-trigger:after:bg-primary-t",
+        primary:
+          "text-tertiary-t text-[20px]/[24px] font-semibold hover:text-secondary-t group-data-[active]/tabs-trigger:text-primary-t transition-colors px-0",
       },
       size: {
         lg: "",
@@ -134,6 +138,7 @@ const tabsContentVariants = cva("flex-1 outline-none", {
     variant: {
       segments: "",
       underline: "",
+      primary: "",
     },
   },
   defaultVariants: {

@@ -21,7 +21,7 @@ export const EngageStats = () => {
           <div>
             <p className="text-[18px]/[24px] font-semibold mb-2">How to Get Started</p>
             <div className="max-w-73.5 pb-6">
-              <div className="flex items-center gap-x-2 mb-1">
+              <div className="flex items-start gap-x-2 mb-1">
                 <div className=" rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
                   <p className="text-[9px]/[16px] font-bold">1</p>
                 </div>
@@ -29,7 +29,7 @@ export const EngageStats = () => {
                   Deposit in Convertible Deposits to accumulate Drachmas daily.
                 </p>
               </div>
-              <div className="flex items-center gap-x-2 mb-1">
+              <div className="flex items-start gap-x-2 mb-1">
                 <div className="px-1.25 rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
                   <p className="text-[9px]/[16px] font-bold">2</p>
                 </div>
@@ -37,7 +37,7 @@ export const EngageStats = () => {
                   At epoch end, your Drachma share determines your iOHM allocation.
                 </p>
               </div>
-              <div className="flex items-center gap-x-2 mb-1">
+              <div className="flex items-start gap-x-2 mb-1">
                 <div className="px-1.25 rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
                   <p className="text-[9px]/[16px] font-bold">3</p>
                 </div>

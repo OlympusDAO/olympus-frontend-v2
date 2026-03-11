@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
-import { OHMColorTokenIcon } from "@/icons";
+
 export const UserStats = () => {
   return (
     <Card className="p-6 h-full">
