@@ -9,7 +9,7 @@ import { Icon } from "@/components/icon.tsx";
 export const EngageStats = () => {
   return (
     <Card className="p-6 h-full flex flex-col">
-      <div className="flex items-start justify-between relative">
+      <div className="flex flex-col min-[1020px]:flex-col min-[1200px]:flex-wrap items-start relative">
         <div>
           <div className="flex items-center mb-4 gap-x-3">
             <p className="text-[20px]/[24px] font-semibold">Epoch 4</p>
@@ -20,7 +20,7 @@ export const EngageStats = () => {
           </div>
           <div>
             <p className="text-[18px]/[24px] font-semibold mb-2">How to Get Started</p>
-            <div className="max-w-73.5 pb-6">
+            <div className="sm:max-w-73.5 pb-6">
               <div className="flex items-start gap-x-2 mb-1">
                 <div className=" rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
                   <p className="text-[9px]/[16px] font-bold">1</p>
@@ -49,7 +49,7 @@ export const EngageStats = () => {
           </div>
         </div>
         <ColorModeImage
-          className="absolute -top-10 -right-10 w-105"
+          className="relative min-[640px]:absolute min-[640px]:-top-10 min-[640px]:-right-10 min-[1020px]:relative min-[1020px]:top-0 min-[1020px]:right-0 min-[1200px]:absolute min-[1200px]:-top-10 min-[1200px]:-right-25 w-105"
           srcLight={engageLightImg}
           srcDark={engageDarkImg}
           alt="engage"
@@ -57,7 +57,7 @@ export const EngageStats = () => {
       </div>
       <div className="mt-auto">
         <div className="my-4 w-full h-px bg-[linear-gradient(90deg,transparent_0%,var(--surface-a10)_10%,var(--surface-a10)_90%,transparent_100%)]" />
-        <div className="flex items-center justify-between relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between relative z-10 gap-4 sm:gap-0">
           <div className="flex-1">
             <p className="text-secondary-t text-[15px]/[20px] mb-1 font-semibold">Drachmas</p>
             <div className="flex items-center gap-x-1.5 mb-2">
@@ -71,13 +71,17 @@ export const EngageStats = () => {
             <p className="text-secondary-t text-[15px]/[20px] font-normal">By all participants</p>
           </div>
           <div className="flex-1">
-            <TooltipInfo title="Drachma Accrual">Drachma Accrual</TooltipInfo>
+            <TooltipInfo title="Drachma Accrual" className="mb-1">
+              Drachma Accrual
+            </TooltipInfo>
 
             <p className="text-[18px]/[24px] font-semibold">Daily</p>
             <p className="text-secondary-t text-[15px]/[20px] font-normal">11:59 PM EST</p>
           </div>
           <div className="flex-1">
-            <TooltipInfo title="Distribution">Distribution</TooltipInfo>
+            <TooltipInfo title="Distribution" className="mb-1">
+              Distribution
+            </TooltipInfo>
             <p className="text-[18px]/[24px] font-semibold">Weekly</p>
             <p className="text-secondary-t text-[15px]/[20px] font-normal">Mon-Wed</p>
           </div>

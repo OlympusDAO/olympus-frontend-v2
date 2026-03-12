@@ -23,11 +23,11 @@ export const EngagePage: FC = () => {
 
   return (
     <section>
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 min-w-0 flex flex-col">
           <EngageStats />
         </div>
-        <div className="w-[320px] shrink-0 flex flex-col">
+        <div className="w-full lg:w-[320px] lg:shrink-0 flex flex-col">
           <UserStats />
         </div>
       </div>
