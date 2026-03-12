@@ -1,8 +1,16 @@
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { UserStatsNotConnected } from "@/modules/engage/components/user-stats-not-connected.tsx";
 
 export const UserStats = () => {
+  const { isConnected } = useAccount();
+
+  if (!isConnected) {
+    return <UserStatsNotConnected />;
+  }
+
   return (
     <Card className="p-6 h-full">
       <div>
