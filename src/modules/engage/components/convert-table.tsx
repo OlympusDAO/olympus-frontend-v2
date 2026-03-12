@@ -157,15 +157,23 @@ export function ConvertTable() {
         ))}
       </TableHeader>
       <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={columns.length} className="py-12 text-center text-secondary-t">
+              No iOHM available to convert yet.
+            </TableCell>
           </TableRow>
-        ))}
+        )}
       </TableBody>
     </Table>
   );

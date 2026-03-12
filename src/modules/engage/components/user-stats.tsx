@@ -1,15 +1,25 @@
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 import { Card } from "@/components/ui/card.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { UserStatsNotConnected } from "@/modules/engage/components/user-stats-not-connected.tsx";
+import { useGETUserUserUnits, type LibChainId } from "@/generated/olympusUnits";
 
 export const UserStats = () => {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const chainId = useChainId() as LibChainId;
+
+  const { data: unitsData } = useGETUserUserUnits(
+    address ?? "",
+    { chainId },
+    { query: { enabled: !!address } },
+  );
 
   if (!isConnected) {
     return <UserStatsNotConnected />;
   }
+
+  const totalUnits = parseFloat(unitsData?.units.totalUnits ?? "0");
 
   return (
     <Card className="p-6 h-full">
@@ -18,22 +28,11 @@ export const UserStats = () => {
         <p className="text-[18px]/[24px] font-semibold mb-2">Drachmas</p>
         <div className="flex flex-col gap-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-[15px]/[20px] text-secondary-t">This Epoch</p>
-            <div className="flex items-center gap-x-1">
-              <Icon name="drachmaTokenIcon" className="size-4" />
-              <NumberFlow
-                value={24_241_245}
-                format={{ style: "decimal", notation: "standard" }}
-                className="text-[15px]/[20px] font-semibold"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
             <p className="text-[15px]/[20px] text-secondary-t">Total</p>
             <div className="flex items-center gap-x-1">
               <Icon name="drachmaTokenIcon" className="size-4" />
               <NumberFlow
-                value={1_238_022}
+                value={totalUnits}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />
@@ -48,7 +47,7 @@ export const UserStats = () => {
             <div className="flex items-center gap-x-1">
               <Icon name="iOHMTokenIcon" className="size-4" />
               <NumberFlow
-                value={24_241_245}
+                value={0}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />
@@ -59,7 +58,7 @@ export const UserStats = () => {
             <div className="flex items-center gap-x-1">
               <Icon name="iOHMTokenIcon" className="size-4" />
               <NumberFlow
-                value={1_238_022}
+                value={0}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />
@@ -74,7 +73,7 @@ export const UserStats = () => {
             <div className="flex items-center gap-x-1">
               <Icon name="OHMColorTokenIcon" className="size-4" />
               <NumberFlow
-                value={24_241_245}
+                value={0}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />
@@ -85,7 +84,7 @@ export const UserStats = () => {
             <div className="flex items-center gap-x-1">
               <Icon name="OHMColorTokenIcon" className="size-4" />
               <NumberFlow
-                value={1_238_022}
+                value={0}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />

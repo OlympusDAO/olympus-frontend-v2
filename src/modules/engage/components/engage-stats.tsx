@@ -1,3 +1,4 @@
+import { useChainId } from "wagmi";
 import { Card } from "@/components/ui/card.tsx";
 import { TooltipInfo } from "@/components/ui/tooltip.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
@@ -5,17 +6,36 @@ import engageDarkImg from "@/assets/engage-dark.png";
 import engageLightImg from "@/assets/engage-light.png";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 import { Icon } from "@/components/icon.tsx";
+import { useGETEpochsCurrentEpoch, useGETSeasonsCurrent } from "@/generated/olympusUnits";
+import type { LibChainId } from "@/generated/olympusUnits";
+import { useEpochCountdown } from "@/lib/hooks/useEpochCountdown";
 
 export const EngageStats = () => {
+  const chainId = useChainId() as LibChainId;
+
+  const { data: epochData } = useGETEpochsCurrentEpoch({ chainId });
+  const { data: seasonData } = useGETSeasonsCurrent({ chainId });
+
+  const { days, hours, minutes } = useEpochCountdown(epochData?.endTimestamp);
+
+  const totalUnits = parseFloat(seasonData?.season?.currentWeekTotalUnits ?? "0");
+  const epochNumber = epochData?.epochNumber;
+
+  const countdownStr = epochData
+    ? `${days}d : ${String(hours).padStart(2, "0")}h : ${String(minutes).padStart(2, "0")}m`
+    : "—";
+
   return (
     <Card className="p-6 h-full flex flex-col">
       <div className="flex flex-col min-[1020px]:flex-col min-[1200px]:flex-wrap items-start relative">
         <div>
           <div className="flex items-center mb-4 gap-x-3">
-            <p className="text-[20px]/[24px] font-semibold">Epoch 4</p>
+            <p className="text-[20px]/[24px] font-semibold">
+              {epochNumber !== undefined ? `Epoch ${epochNumber}` : "Epoch —"}
+            </p>
             <div className="border rounded-full border-a5-b px-2 py-0.5 bg-surface-a5 flex items-center gap-x-1">
               <p className="text-secondary-t text-[15px]/[20px] font-normal">Next in</p>
-              <p className=" text-[15px]/[20px]">2d : 14h : 24m</p>
+              <p className=" text-[15px]/[20px]">{countdownStr}</p>
             </div>
           </div>
           <div>
@@ -63,7 +83,7 @@ export const EngageStats = () => {
             <div className="flex items-center gap-x-1.5 mb-2">
               <Icon name="drachmaTokenIcon" className="size-6" />
               <NumberFlow
-                value={24_241_245}
+                value={totalUnits}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[18px]/[24px] font-semibold"
               />
@@ -74,7 +94,6 @@ export const EngageStats = () => {
             <TooltipInfo title="Drachma Accrual" className="mb-1">
               Drachma Accrual
             </TooltipInfo>
-
             <p className="text-[18px]/[24px] font-semibold">Daily</p>
             <p className="text-secondary-t text-[15px]/[20px] font-normal">11:59 PM EST</p>
           </div>

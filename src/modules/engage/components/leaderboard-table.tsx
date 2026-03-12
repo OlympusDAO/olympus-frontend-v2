@@ -6,7 +6,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpIcon, ArrowDownIcon, ExternalLinkIcon } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 import type { Address } from "viem";
 import { shortenAddress } from "@/lib/helpers.ts";
 import { Icon } from "@/components/icon.tsx";
@@ -20,58 +20,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
+import {
+  useGETSeasonsLeaderboard,
+  type LibChainId,
+  type SeasonsPositionDirection,
+} from "@/generated/olympusUnits";
 
 interface LeaderboardRow {
   rank: number;
   address: string;
   totalDrachmas: number;
-  change1d: number | null;
+  positionChange: number;
+  positionDirection: SeasonsPositionDirection;
 }
-
-const mockData: LeaderboardRow[] = [
-  {
-    rank: 256,
-    address: "0xD0cB941dDA71ccd5f4C48462ba0975083585Fecf",
-    totalDrachmas: 245,
-    change1d: 9,
-  },
-  {
-    rank: 1,
-    address: "0xA3fB45345b8CAf794CaB9e2aF7d5C4bB012F8eD1",
-    totalDrachmas: 14567,
-    change1d: 2,
-  },
-  {
-    rank: 2,
-    address: "0x7cDa19B3F4e6081C2290f3e8bA6d9E1234567890",
-    totalDrachmas: 12478,
-    change1d: -4,
-  },
-  {
-    rank: 3,
-    address: "0xF1e2D3c4B5a6978899aAbBcCdDeEfF0011223344",
-    totalDrachmas: 8455,
-    change1d: 5,
-  },
-  {
-    rank: 4,
-    address: "0x2b3C4d5E6f7A8B9C0d1E2F3a4B5c6D7e8F9a0B1",
-    totalDrachmas: 2424,
-    change1d: 1,
-  },
-  {
-    rank: 5,
-    address: "0x9E8d7C6b5A4f3E2d1C0b9A8f7E6d5C4b3A2f1E0",
-    totalDrachmas: 2425,
-    change1d: null,
-  },
-  {
-    rank: 6,
-    address: "0x1a2B3c4D5e6F7a8B9c0D1e2F3A4b5C6d7E8f9A0",
-    totalDrachmas: 2426,
-    change1d: 1,
-  },
-];
 
 const MEDAL_ICONS = {
   1: "medalLine1Icon",
@@ -83,6 +44,21 @@ const columnHelper = createColumnHelper<LeaderboardRow>();
 
 export function LeaderboardTable() {
   const { address: userAddress } = useAccount();
+  const chainId = useChainId() as LibChainId;
+
+  const { data: leaderboardData } = useGETSeasonsLeaderboard({ chainId, limit: 100 });
+
+  const tableData = useMemo<LeaderboardRow[]>(
+    () =>
+      (leaderboardData?.entries ?? []).map((entry) => ({
+        rank: entry.rank,
+        address: entry.address,
+        totalDrachmas: parseFloat(entry.totalUnits),
+        positionChange: entry.positionChange,
+        positionDirection: entry.positionDirection,
+      })),
+    [leaderboardData],
+  );
 
   const columns = useMemo(
     () => [
@@ -145,21 +121,19 @@ export function LeaderboardTable() {
           </div>
         ),
       }),
-      columnHelper.accessor("change1d", {
+      columnHelper.accessor("positionChange", {
         header: "1D Change",
         cell: (info) => {
-          const value = info.getValue();
-          if (value === null) return <span className="text-secondary-t">—</span>;
-          const isPositive = value >= 0;
+          const direction = info.row.original.positionDirection;
+          if (direction === "none" || direction === "new") {
+            return <span className="text-secondary-t">—</span>;
+          }
+          const isUp = direction === "up";
           return (
-            <div className={`flex items-center gap-x-1 ${isPositive ? "text-green" : "text-red"}`}>
-              {isPositive ? (
-                <ArrowUpIcon className="size-3.5" />
-              ) : (
-                <ArrowDownIcon className="size-3.5" />
-              )}
+            <div className={`flex items-center gap-x-1 ${isUp ? "text-green" : "text-red"}`}>
+              {isUp ? <ArrowUpIcon className="size-3.5" /> : <ArrowDownIcon className="size-3.5" />}
               <NumberFlow
-                value={Math.abs(value)}
+                value={info.getValue()}
                 format={{ style: "decimal", notation: "standard" }}
                 className="text-[15px]/[20px] font-semibold"
               />
@@ -172,7 +146,7 @@ export function LeaderboardTable() {
   );
 
   const table = useReactTable({
-    data: mockData,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: { userAddress },

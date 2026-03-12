@@ -14,7 +14,6 @@ export default defineConfig({
     output: {
       target: "src/generated/olympusUnits.ts",
       client: "react-query",
-      httpClient: "fetch",
       clean: true,
       override: {
         mutator: {
@@ -27,10 +26,13 @@ export default defineConfig({
           useMutation: true,
           useInfinite: false,
         },
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
       },
     },
-    hooks: {
-      afterAllFilesWrite: "biome check --write",
-    },
+    // hooks: {
+    //   afterAllFilesWrite: "biome check --write",
+    // },
   },
 });
