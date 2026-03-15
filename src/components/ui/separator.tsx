@@ -13,7 +13,7 @@ function Separator({
       data-slot="separator"
       orientation={orientation}
       className={cn(
-        "bg-border-a5 shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
+        "bg-[linear-gradient(90deg,transparent_0%,var(--surface-a10)_10%,var(--surface-a10)_90%,transparent_100%)] shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
         className,
       )}
       {...props}

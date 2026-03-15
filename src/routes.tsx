@@ -14,6 +14,7 @@ import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-d
 import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/wrap/pages";
 import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
+import { RewardsManagerPage } from "@/modules/engage/pages/rewards-manager-page.tsx";
 
 export const router = createHashRouter([
   {
@@ -68,6 +69,7 @@ export const router = createHashRouter([
 
       // Engage
       { path: "engage", element: <EngagePage /> },
+      { path: "engage/rewards-manager", element: <RewardsManagerPage /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/ohm/balances" replace /> },

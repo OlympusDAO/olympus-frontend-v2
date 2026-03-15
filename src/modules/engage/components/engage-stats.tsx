@@ -9,6 +9,7 @@ import { Icon } from "@/components/icon.tsx";
 import { useGETEpochsCurrentEpoch, useGETSeasonsCurrent } from "@/generated/olympusUnits";
 import type { LibChainId } from "@/generated/olympusUnits";
 import { useEpochCountdown } from "@/lib/hooks/useEpochCountdown";
+import { Separator } from "@/components/ui/separator.tsx";
 
 export const EngageStats = () => {
   const chainId = useChainId() as LibChainId;
@@ -76,7 +77,7 @@ export const EngageStats = () => {
         />
       </div>
       <div className="mt-auto">
-        <div className="my-4 w-full h-px bg-[linear-gradient(90deg,transparent_0%,var(--surface-a10)_10%,var(--surface-a10)_90%,transparent_100%)]" />
+        <Separator className="my-4" />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between relative z-10 gap-4 sm:gap-0">
           <div className="flex-1">
             <p className="text-secondary-t text-[15px]/[20px] mb-1 font-semibold">Drachmas</p>

@@ -96,7 +96,10 @@ export const NAV_SECTIONS: NavSection[] = [
     sidebarTitle: "Engage",
     icon: <Icon name="iOhmSidebar" />,
     path: "/engage",
-    items: [{ label: "Dashboard", path: "/engage" }],
+    items: [
+      { label: "Dashboard", path: "/engage" },
+      { label: "Rewards Manager", path: "/engage/rewards-manager" },
+    ],
   },
 ];
 
