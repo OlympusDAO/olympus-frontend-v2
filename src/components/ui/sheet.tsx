@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { DrawerPreview as Drawer } from "@base-ui/react/drawer";
+import { Drawer } from "@base-ui/react/drawer";
 import { XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";

@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { EpochStatus, MockEpoch } from "./rewards-manager-mock";
 import { Button } from "@/components/ui/button.tsx";
+import type { EpochsEpoch } from "@/generated/olympusUnits";
+import { deriveEpochStatus, type EpochStatus } from "../lib/derive-epoch-status";
 
 const DOT_COLOR: Record<EpochStatus, string> = {
   distributed: "bg-green",
@@ -12,8 +13,8 @@ const DOT_COLOR: Record<EpochStatus, string> = {
 };
 
 interface EpochTabsProps {
-  epochs: MockEpoch[];
-  selected: number;
+  epochs: EpochsEpoch[];
+  selected: number | null;
   onSelect: (id: number) => void;
 }
 
@@ -36,6 +37,7 @@ export function EpochTabs({ epochs, selected, onSelect }: EpochTabsProps) {
       >
         {epochs.map((epoch) => {
           const isActive = epoch.id === selected;
+          const status = deriveEpochStatus(epoch);
           return (
             <button
               type="button"
@@ -48,8 +50,10 @@ export function EpochTabs({ epochs, selected, onSelect }: EpochTabsProps) {
                   : "text-secondary-t hover:text-primary-t hover:bg-surface-a5",
               )}
             >
-              <span className={cn("size-2 rounded-full shrink-0", DOT_COLOR[epoch.status])} />
-              <span className="text-[15px]/[20px] whitespace-nowrap">Epoch {epoch.number}</span>
+              <span className={cn("size-2 rounded-full shrink-0", DOT_COLOR[status])} />
+              <span className="text-[15px]/[20px] whitespace-nowrap">
+                Epoch {epoch.epochNumber}
+              </span>
             </button>
           );
         })}

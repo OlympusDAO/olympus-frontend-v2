@@ -1,28 +1,67 @@
-import { useState } from "react";
-import { MOCK_EPOCHS } from "../components/rewards-manager-mock";
+import { useState, useEffect } from "react";
+import { useChainId } from "wagmi";
 import { EpochAlert } from "../components/epoch-alert";
 import { EpochTabs } from "../components/epoch-tabs";
 import { EpochInfoCard } from "../components/epoch-info-card";
 import { EpochUsersTable } from "../components/epoch-users-table";
-
-const notSubmittedEpoch = MOCK_EPOCHS.find((e) => e.status === "not_submitted");
+import { RewardsManagerAuthGate } from "../components/rewards-manager-auth-gate";
+import { deriveEpochStatus } from "../lib/derive-epoch-status";
+import {
+  useGETEpochsEpochsList,
+  useGETEpochsEpochRewards,
+  useGETEpochsEpochRewardUsers,
+  type LibChainId,
+} from "@/generated/olympusUnits";
 
 export function RewardsManagerPage() {
-  const [selectedId, setSelectedId] = useState(MOCK_EPOCHS[MOCK_EPOCHS.length - 1]!.id);
-  const epoch = MOCK_EPOCHS.find((e) => e.id === selectedId)!;
+  return (
+    <RewardsManagerAuthGate>
+      <RewardsManagerContent />
+    </RewardsManagerAuthGate>
+  );
+}
+
+function RewardsManagerContent() {
+  const chainId = useChainId() as LibChainId;
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const { data: epochsData } = useGETEpochsEpochsList({ chainId, sortOrder: "desc", limit: 50 });
+  const epochs = epochsData?.epochs ?? [];
+
+  useEffect(() => {
+    if (epochs.length > 0 && selectedId === null) {
+      setSelectedId(epochs[0]!.id);
+    }
+  }, [epochs, selectedId]);
+
+  const { data: rewardsData } = useGETEpochsEpochRewards(selectedId ?? 0, {
+    query: { enabled: !!selectedId },
+  });
+  const reward = rewardsData?.rewards[0] ?? null;
+
+  const { data: usersData } = useGETEpochsEpochRewardUsers(
+    selectedId ?? 0,
+    reward?.rewardAssetId ?? 0,
+    { limit: 100 },
+    { query: { enabled: !!selectedId && !!reward } },
+  );
+  const users = usersData?.users ?? [];
+
+  const selectedEpoch = epochs.find((e) => e.id === selectedId);
+  const notSubmittedEpoch = epochs.find((e) => deriveEpochStatus(e) === "not_submitted");
 
   return (
     <section className="flex flex-col gap-4">
       {notSubmittedEpoch && <EpochAlert epoch={notSubmittedEpoch} onSwitchEpoch={setSelectedId} />}
 
-      <EpochTabs epochs={MOCK_EPOCHS} selected={selectedId} onSelect={setSelectedId} />
+      <EpochTabs epochs={epochs} selected={selectedId} onSelect={setSelectedId} />
 
       <div className="flex gap-4 items-start">
         <div className="w-87.5 shrink-0">
-          <EpochInfoCard epoch={epoch} />
+          <EpochInfoCard epoch={selectedEpoch} reward={reward} />
         </div>
         <div className="flex-1 min-w-0">
-          <EpochUsersTable users={epoch.users} />
+          <EpochUsersTable users={users} rewardAssetDecimals={usersData?.rewardAssetDecimals} />
         </div>
       </div>
     </section>

@@ -68,8 +68,13 @@ export const router = createHashRouter([
       { path: "dao/delegate", element: <StubPage title="Delegate" /> },
 
       // Engage
-      { path: "engage", element: <EngagePage /> },
-      { path: "engage/rewards-manager", element: <RewardsManagerPage /> },
+      {
+        path: "engage",
+        children: [
+          { index: true, element: <EngagePage /> },
+          { path: "rewards-manager", element: <RewardsManagerPage /> },
+        ],
+      },
 
       // Catch-all
       { path: "*", element: <Navigate to="/ohm/balances" replace /> },

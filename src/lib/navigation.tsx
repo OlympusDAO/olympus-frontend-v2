@@ -8,6 +8,7 @@ export type NavItem = {
   label: string;
   path: string;
   external?: boolean;
+  exact?: boolean;
 };
 
 export type NavSection = {
@@ -97,7 +98,7 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: <Icon name="iOhmSidebar" />,
     path: "/engage",
     items: [
-      { label: "Dashboard", path: "/engage" },
+      { label: "Dashboard", path: "/engage", exact: true },
       { label: "Rewards Manager", path: "/engage/rewards-manager" },
     ],
   },

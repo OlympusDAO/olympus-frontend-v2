@@ -55,7 +55,10 @@ export function SubNav() {
               item={item}
               isActive={
                 !item.external &&
-                (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
+                (item.exact
+                  ? location.pathname === item.path
+                  : location.pathname === item.path ||
+                    location.pathname.startsWith(`${item.path}/`))
               }
             />
           ))}

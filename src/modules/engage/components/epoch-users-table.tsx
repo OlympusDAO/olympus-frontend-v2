@@ -18,91 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { MockUser } from "./rewards-manager-mock";
+import type { EpochsEpochRewardUser } from "@/generated/olympusUnits";
 
-const MOCK_USERS: MockUser[] = [
-  {
-    address: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-    drachmas: 12450,
-    incentives: 312.5,
-    share: "18.92%",
-    merkleLeaf: "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
-  },
-  {
-    address: "0x2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c",
-    drachmas: 9820,
-    incentives: 245.5,
-    share: "14.93%",
-    merkleLeaf: "0xb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
-  },
-  {
-    address: "0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d",
-    drachmas: 8100,
-    incentives: 202.5,
-    share: "12.31%",
-    merkleLeaf: "0xc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
-  },
-  {
-    address: "0x4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e",
-    drachmas: 6540,
-    incentives: 163.5,
-    share: "9.94%",
-    merkleLeaf: "0xd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
-  },
-  {
-    address: "0x5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f",
-    drachmas: 5200,
-    incentives: 130.0,
-    share: "7.90%",
-    merkleLeaf: "0xe5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
-  },
-  {
-    address: "0x6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a",
-    drachmas: 4380,
-    incentives: 109.5,
-    share: "6.66%",
-    merkleLeaf: "0xf6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
-  },
-  {
-    address: "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b",
-    drachmas: 3610,
-    incentives: 90.25,
-    share: "5.49%",
-    merkleLeaf: "0xa7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
-  },
-  {
-    address: "0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c",
-    drachmas: 2940,
-    incentives: 73.5,
-    share: "4.47%",
-    merkleLeaf: "0xb8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
-  },
-  {
-    address: "0x9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d",
-    drachmas: 2270,
-    incentives: 56.75,
-    share: "3.45%",
-    merkleLeaf: "0xc9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
-  },
-  {
-    address: "0x0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e",
-    drachmas: 1850,
-    incentives: 46.25,
-    share: "2.81%",
-    merkleLeaf: "0xd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1",
-  },
-];
-
-const columnHelper = createColumnHelper<MockUser>();
+const columnHelper = createColumnHelper<EpochsEpochRewardUser>();
 
 interface EpochUsersTableProps {
-  users?: MockUser[];
+  users: EpochsEpochRewardUser[];
+  rewardAssetDecimals?: number;
 }
 
-export function EpochUsersTable({ users = MOCK_USERS }: EpochUsersTableProps) {
+export function EpochUsersTable({ users, rewardAssetDecimals = 9 }: EpochUsersTableProps) {
   const columns = useMemo(
     () => [
-      columnHelper.accessor("address", {
+      columnHelper.accessor("userAddress", {
         header: "User",
         cell: (info) => {
           const address = info.getValue();
@@ -119,54 +47,57 @@ export function EpochUsersTable({ users = MOCK_USERS }: EpochUsersTableProps) {
           );
         },
       }),
-      columnHelper.accessor("drachmas", {
+      columnHelper.accessor("units", {
         header: "Drachmas",
         cell: (info) => (
           <div className="flex items-center gap-1.5">
             <Icon name="drachmaTokenIcon" className="size-5" />
             <NumberFlow
-              value={info.getValue()}
+              value={parseFloat(info.getValue())}
               format={{ style: "decimal", notation: "standard" }}
               className="text-[15px]/[20px] font-semibold text-primary-t"
             />
           </div>
         ),
       }),
-      columnHelper.accessor("incentives", {
+      columnHelper.accessor("rewardAmount", {
         header: "Incentives",
         cell: (info) => (
           <div className="flex items-center gap-1.5">
             <Icon name="iOHMTokenIcon" className="size-5" />
             <NumberFlow
-              value={info.getValue()}
+              value={parseFloat(info.getValue()) / 10 ** rewardAssetDecimals}
               format={{ style: "decimal", notation: "compact", maximumFractionDigits: 2 }}
               className="text-[15px]/[20px] font-semibold text-primary-t"
             />
           </div>
         ),
       }),
-      columnHelper.accessor("share", {
+      columnHelper.accessor("rewardShare", {
         header: "Share",
         cell: (info) => (
-          <span className="text-[15px]/[20px] font-semibold text-primary-t">{info.getValue()}</span>
+          <span className="text-[15px]/[20px] font-semibold text-primary-t">
+            {(parseFloat(info.getValue()) * 100).toFixed(2)}%
+          </span>
         ),
       }),
       columnHelper.accessor("merkleLeaf", {
         header: "Merkle Leaf",
         cell: (info) => {
-          const hash = info.getValue();
-          const truncated = `${hash.slice(0, 10)}…${hash.slice(-8)}`;
+          const leaf = info.getValue();
+          if (!leaf || typeof leaf !== "string") {
+            return <span className="text-secondary-t text-[13px]/[18px]">—</span>;
+          }
+          const truncated = `${leaf.slice(0, 10)}…${leaf.slice(-8)}`;
           return <span className="font-mono text-[13px]/[18px] text-secondary-t">{truncated}</span>;
         },
       }),
     ],
-    [],
+    [rewardAssetDecimals],
   );
 
-  const data = users && users.length > 0 ? users : MOCK_USERS;
-
   const table = useReactTable({
-    data,
+    data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
