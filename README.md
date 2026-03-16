@@ -22,6 +22,7 @@ Requires Node.js 20+ and pnpm.
 | `VITE_WALLETCONNECT_PROJECT_ID` | Yes | [WalletConnect Cloud](https://cloud.walletconnect.com) project ID |
 | `VITE_THEGRAPH_API_KEY` | Yes | [The Graph](https://thegraph.com/studio) Gateway API key for subgraph queries |
 | `VITE_OLYMPUS_UNITS_API_ENDPOINT` | Yes | Olympus Units API base URL (runtime requests) |
+| `VITE_OLYMPUS_SAFE_API_KEY` | Yes | Safe Transaction Service API key for submitting multisig transactions |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
@@ -61,14 +62,14 @@ src/
 ├── components/
 │   ├── ui/               #   Reusable primitives (Button, Sheet, DropdownMenu)
 │   ├── theme-provider.tsx#   Dark/light/system theme context
-│   ├── olympus-logo.tsx  #   SVG omega logo
-│   └── more-menu.tsx     #   "..." dropdown (theme toggle, links, socials)
+│   └── olympus-logo.tsx  #   SVG omega logo
 ├── layouts/
 │   ├── AppLayout.tsx     #   Root layout shell (3-column desktop, responsive)
 │   ├── IconSidebar.tsx   #   Floating pill sidebar (section icons)
-│   ├── SubNav.tsx        #   Contextual sub-navigation panel
+│   ├── SubNav.tsx        #   Contextual sub-navigation panel (multisig-gated items)
 │   ├── Header.tsx        #   Top bar (page title, wallet button)
-│   └── MobileNav.tsx     #   Hamburger drawer (combined nav)
+│   ├── MobileNav.tsx     #   Hamburger drawer (combined nav)
+│   └── footer.tsx        #   Sticky footer (Next Beat, token prices, gas, theme toggle)
 ├── modules/
 │   ├── cds/              #   Convertible Deposits pages + components
 │   ├── borrow/           #   Borrow pages + components
