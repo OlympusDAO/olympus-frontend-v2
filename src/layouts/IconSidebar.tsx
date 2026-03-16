@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   BOTTOM_NAV,
@@ -96,7 +95,6 @@ export function IconSidebar() {
               <docsItem.icon className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
             </a>
           )}
-          <MoreMenu />
         </div>
       </div>
     </aside>

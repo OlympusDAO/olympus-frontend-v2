@@ -9,6 +9,7 @@ export type NavItem = {
   path: string;
   external?: boolean;
   exact?: boolean;
+  requiresMultisig?: boolean;
 };
 
 export type NavSection = {
@@ -99,7 +100,7 @@ export const NAV_SECTIONS: NavSection[] = [
     path: "/engage",
     items: [
       { label: "Dashboard", path: "/engage", exact: true },
-      { label: "Rewards Manager", path: "/engage/rewards-manager" },
+      { label: "Rewards Manager", path: "/engage/rewards-manager", requiresMultisig: true },
     ],
   },
 ];

@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   getActiveSectionFromPath,
@@ -165,7 +164,6 @@ export function MobileNav() {
                 >
                   <FileText className="size-5 text-secondary-t" />
                 </a>
-                <MoreMenu />
               </div>
             </div>
 

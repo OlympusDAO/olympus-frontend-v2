@@ -92,17 +92,13 @@ export const EngageStats = () => {
             <p className="text-secondary-t text-[15px]/[20px] font-normal">By all participants</p>
           </div>
           <div className="flex-1">
-            <TooltipInfo title="Drachma Accrual" className="mb-1">
-              Drachma Accrual
-            </TooltipInfo>
-            <p className="text-[18px]/[24px] font-semibold">Daily</p>
+            <TooltipInfo title="Drachma Accrual">Drachma Accrual</TooltipInfo>
+            <p className="text-[18px]/[24px] font-semibold mt-1">Daily</p>
             <p className="text-secondary-t text-[15px]/[20px] font-normal">11:59 PM EST</p>
           </div>
           <div className="flex-1">
-            <TooltipInfo title="Distribution" className="mb-1">
-              Distribution
-            </TooltipInfo>
-            <p className="text-[18px]/[24px] font-semibold">Weekly</p>
+            <TooltipInfo title="Distribution">Distribution</TooltipInfo>
+            <p className="text-[18px]/[24px] font-semibold mt-1">Weekly</p>
             <p className="text-secondary-t text-[15px]/[20px] font-normal">Mon-Wed</p>
           </div>
         </div>

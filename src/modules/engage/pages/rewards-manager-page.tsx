@@ -25,12 +25,16 @@ function RewardsManagerContent() {
   const chainId = useChainId() as LibChainId;
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { data: epochsData } = useGETEpochsEpochsList({ chainId, sortOrder: "desc", limit: 50 });
+  const { data: epochsData, isLoading: isEpochsLoading } = useGETEpochsEpochsList({
+    chainId,
+    sortOrder: "desc",
+    limit: 50,
+  });
   const epochs = epochsData?.epochs ?? [];
 
   useEffect(() => {
     if (epochs.length > 0 && selectedId === null) {
-      setSelectedId(epochs[0]!.id);
+      setSelectedId(epochs[0]?.id ?? null);
     }
   }, [epochs, selectedId]);
 
@@ -49,6 +53,10 @@ function RewardsManagerContent() {
 
   const selectedEpoch = epochs.find((e) => e.id === selectedId);
   const notSubmittedEpoch = epochs.find((e) => deriveEpochStatus(e) === "not_submitted");
+
+  if (!isEpochsLoading && epochs.length === 0) {
+    return <p className="py-12 text-center text-secondary-t">No epochs found.</p>;
+  }
 
   return (
     <section className="flex flex-col gap-4">

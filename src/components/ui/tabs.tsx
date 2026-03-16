@@ -123,8 +123,7 @@ function TabsTrigger({
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn("group/tabs-trigger w-full", {
-        "data-active:before:shadow-drop-100 relative before:content-[''] data-active:before:absolute data-active:before:inset-0 data-active:before:-z-10 data-active:before:rounded-lg data-active:before:bg-transparent data-active:before:[clip-path:inherit]":
-          variant === "segments",
+        " relative before:hidden h-full": variant === "segments",
       })}
       {...props}
     >
