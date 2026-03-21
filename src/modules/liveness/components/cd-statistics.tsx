@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { useCdStatistics } from "@/lib/hooks/liveness/useCdStatistics";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
-import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 import { RiExternalLinkLine } from "@remixicon/react";
 

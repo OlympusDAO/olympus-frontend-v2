@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import { useReserveYields } from "./useReserveYields";
-import { useCoolerMetrics } from "./useCoolerMetrics";
-import { useReserveBalances } from "./useReserveBalances";
-import { useCdStatistics } from "./useCdStatistics";
-import { COOLER_APR } from "@/lib/constants";
+import { useReserveYields } from "../../../lib/hooks/liveness/useReserveYields.ts";
+import { useCoolerMetrics } from "../../../lib/hooks/liveness/useCoolerMetrics.ts";
+import { useReserveBalances } from "../../../lib/hooks/liveness/useReserveBalances.ts";
+import { useCdStatistics } from "../../../lib/hooks/liveness/useCdStatistics.ts";
+import { COOLER_APR } from "@/lib/constants.ts";
 
 export interface RevenueSource {
   name: string;

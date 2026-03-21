@@ -13,6 +13,7 @@ import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-acti
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/wrap/pages";
+import { OverviewPage } from "@/modules/pulse/pages/overview-page";
 
 export const router = createHashRouter([
   {
@@ -23,9 +24,10 @@ export const router = createHashRouter([
       { index: true, element: <Navigate to="/ohm/balances" replace /> },
 
       // Home section
-      { path: "home/treasury", element: <StubPage title="Treasury Dashboard" /> },
-      { path: "home/feed", element: <StubPage title="Protocol Feed" /> },
-      { path: "home/liveness", element: <LivenessPage /> },
+      { path: "home/overview", element: <OverviewPage /> },
+      { path: "home/treasury", element: <StubPage title="Protocol Feed" /> },
+      { path: "home/protocol", element: <LivenessPage /> },
+      { path: "home/feed", element: <LivenessPage /> },
 
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },

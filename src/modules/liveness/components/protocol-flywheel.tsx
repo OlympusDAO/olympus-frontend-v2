@@ -2,9 +2,9 @@ import { Card } from "@/components/ui/card";
 import { DataSource } from "./data-source";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RevenueFlowDiagram } from "./revenue-flow";
-import { useWeeklyRevenue } from "@/lib/hooks/liveness/useWeeklyRevenue";
+import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue.ts";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
-import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 
 export function ProtocolFlywheel() {

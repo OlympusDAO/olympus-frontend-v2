@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
-import { useOhmPriceHistory } from "@/lib/hooks/liveness/useOhmPriceHistory";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
+import { useOhmPriceHistory } from "@/modules/pulse/hooks/useOhmPriceHistory.ts";
 import { formatUsd } from "@/lib/liveness/formatters";
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 

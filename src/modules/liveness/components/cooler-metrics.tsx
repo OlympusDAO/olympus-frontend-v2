@@ -3,7 +3,7 @@ import { DataSource } from "./data-source";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { useCoolerMetrics } from "@/lib/hooks/liveness/useCoolerMetrics";
-import { useWeeklyRevenue } from "@/lib/hooks/liveness/useWeeklyRevenue";
+import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue.ts";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 import { RiExternalLinkLine } from "@remixicon/react";
 

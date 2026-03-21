@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRevenueCounter } from "@/lib/hooks/liveness/useRevenueCounter";
+import { useRevenueCounter } from "@/modules/pulse/hooks/useRevenueCounter.ts";
 import { formatUsd } from "@/lib/liveness/formatters";
 
 export function RevenueCounter() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useWeeklyRevenue } from "./useWeeklyRevenue";
-import { getWeekStartUTC } from "@/lib/liveness/epoch";
+import { useWeeklyRevenue } from "./useWeeklyRevenue.ts";
+import { getWeekStartUTC } from "@/lib/liveness/epoch.ts";
 
 type TimeWindow = "daily" | "weekly" | "annualized";
 

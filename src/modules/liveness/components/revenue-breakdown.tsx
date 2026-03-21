@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { DataSource } from "./data-source";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useWeeklyRevenue } from "@/lib/hooks/liveness/useWeeklyRevenue";
-import type { LpBreakdownItem } from "@/lib/hooks/liveness/useWeeklyRevenue";
+import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue.ts";
+import type { LpBreakdownItem } from "@/modules/pulse/hooks/useWeeklyRevenue.ts";
 import { formatUsd } from "@/lib/liveness/formatters";
 import {
   BarChart,

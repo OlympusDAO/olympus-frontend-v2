@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { useBackingHistory } from "@/lib/hooks/liveness/useBackingHistory";
 import { formatUsd } from "@/lib/liveness/formatters";
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";

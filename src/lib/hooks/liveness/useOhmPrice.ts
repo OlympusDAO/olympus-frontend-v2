@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useTreasuryMetrics } from "@/lib/hooks/useTreasuryMetrics";
-import { useOhmPriceHistory } from "./useOhmPriceHistory";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
+import { useOhmPriceHistory } from "../../../modules/pulse/hooks/useOhmPriceHistory.ts";
 
 interface OhmPriceData {
   price: number;

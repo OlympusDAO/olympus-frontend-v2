@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import { TREASURY_API_URL } from "@/lib/constants.ts";
 
 export interface OhmPriceHistory {
   dataPoints: Array<{ date: string; price: number }>;
