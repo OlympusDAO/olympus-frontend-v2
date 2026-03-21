@@ -6,6 +6,7 @@ import { OverviewYrf } from "../components/overview-yrf";
 import { OverviewEmissionManager } from "../components/overview-emission-manager";
 import { OverviewCoolerLoans } from "../components/overview-cooler-loans";
 import { OverviewConvertibleDeposits } from "../components/overview-convertible-deposits";
+import { OverviewLastActions } from "../components/overview-last-actions";
 
 export function OverviewPage() {
   return (
@@ -31,6 +32,9 @@ export function OverviewPage() {
         <OverviewCoolerLoans />
         <OverviewConvertibleDeposits />
       </div>
+
+      {/* Row 4: Last Protocol Actions */}
+      <OverviewLastActions />
     </div>
   );
 }
