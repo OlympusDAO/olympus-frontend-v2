@@ -14,6 +14,7 @@ import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-d
 import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/wrap/pages";
 import { OverviewPage } from "@/modules/pulse/pages/overview-page";
+import { ProtocolPage } from "@/modules/pulse/pages/protocol-page.tsx";
 
 export const router = createHashRouter([
   {
@@ -25,8 +26,8 @@ export const router = createHashRouter([
 
       // Home section
       { path: "home/overview", element: <OverviewPage /> },
-      { path: "home/treasury", element: <StubPage title="Protocol Feed" /> },
-      { path: "home/protocol", element: <LivenessPage /> },
+      { path: "home/treasury", element: <StubPage title="Protocol Treasury" /> },
+      { path: "home/protocol", element: <ProtocolPage /> },
       { path: "home/feed", element: <LivenessPage /> },
 
       // OHM section

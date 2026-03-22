@@ -2,8 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/tabs.tsx";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { useRevenueCounter } from "@/modules/pulse/hooks/useRevenueCounter.ts";
-import marbleBgLight from "@/assets/bgProtocolRevenueLight.png";
-import marbleBgDark from "@/assets/bgProtocolRevenueDark.png";
+import marbleBgLight from "@/assets/bgProtocolLight.png";
+import marbleBgDark from "@/assets/bgProtocolDark.png";
 import { useTheme } from "@/components/theme-provider.tsx";
 import { PulseDot } from "@/components/pulse-dot.tsx";
 
