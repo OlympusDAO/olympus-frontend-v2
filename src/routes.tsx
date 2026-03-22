@@ -15,6 +15,7 @@ import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/wrap/pages";
 import { OverviewPage } from "@/modules/pulse/pages/overview-page";
 import { ProtocolPage } from "@/modules/pulse/pages/protocol-page.tsx";
+import { FeedPage } from "@/modules/pulse/pages/feed-page.tsx";
 
 export const router = createHashRouter([
   {
@@ -26,9 +27,9 @@ export const router = createHashRouter([
 
       // Home section
       { path: "home/overview", element: <OverviewPage /> },
-      { path: "home/treasury", element: <StubPage title="Protocol Treasury" /> },
+      { path: "home/treasury", element: <LivenessPage /> },
       { path: "home/protocol", element: <ProtocolPage /> },
-      { path: "home/feed", element: <LivenessPage /> },
+      { path: "home/feed", element: <FeedPage /> },
 
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },

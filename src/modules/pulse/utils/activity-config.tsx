@@ -1,6 +1,16 @@
-import { RiArrowDownSLine, RiAlertLine, RiPriceTag3Line } from "@remixicon/react";
-import type { ActivityType } from "@/lib/hooks/liveness/useActivityFeed";
+import {
+  RiArrowDownSLine,
+  RiAlertLine,
+  RiPriceTag3Line,
+  RiArrowRightUpLine,
+} from "@remixicon/react";
+import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
+import { formatDistanceToNow } from "date-fns";
+import type { ActivityItem, ActivityType } from "@/lib/hooks/liveness/useActivityFeed";
 import { Icon } from "@/components/icon.tsx";
+import { Badge } from "@/components/ui/badge";
+import { ExplorerLink } from "@/components/explorer-link";
+import { formatAddress } from "@/lib/liveness/formatters";
 
 export type Protocol = "YRF" | "CD" | "Cooler";
 
@@ -93,3 +103,82 @@ export const PROTOCOL_BADGE: Record<Protocol, "blue" | "orange" | "red"> = {
   CD: "orange",
   Cooler: "red",
 };
+
+// ── Shared table columns ───────────────────────────────────────────────────────
+
+const MAINNET_CHAIN_ID = 1;
+const columnHelper = createColumnHelper<ActivityItem>();
+
+export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
+  columnHelper.display({
+    id: "protocol",
+    cell: ({ row }) => {
+      const config = TYPE_CONFIG[row.original.type];
+      return (
+        <Badge variant="filled" size="md" color={PROTOCOL_BADGE[config.protocol]}>
+          {config.protocol}
+        </Badge>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: "action",
+    cell: ({ row }) => {
+      const config = TYPE_CONFIG[row.original.type];
+      return (
+        <div className="flex items-center gap-x-2.5">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-a5 border border-a3-b text-secondary-t">
+            {config.icon}
+          </div>
+          <span className="text-[15px]/[20px] font-semibold">{config.actionLabel}</span>
+        </div>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: "description",
+    cell: ({ row }) => {
+      const item = row.original;
+      const config = TYPE_CONFIG[item.type];
+      return (
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px]/[20px] font-semibold">
+            {item.address ? <span>{formatAddress(item.address)}</span> : <span>Protocol</span>}{" "}
+            <span className="text-secondary-t">{config.verb}</span> <span>{item.primaryValue}</span>
+          </p>
+          <p className="text-xs text-tertiary-t">{item.secondaryValue}</p>
+        </div>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: "time",
+    cell: ({ row }) => {
+      const item = row.original;
+      const txLink = item.txHash
+        ? `/tx/${item.txHash}`
+        : item.address
+          ? `/address/${item.address}`
+          : null;
+
+      const timeText = (
+        <span className="whitespace-nowrap text-sm tabular-nums text-tertiary-t">
+          {formatDistanceToNow(item.timestamp * 1000, { addSuffix: true })}
+        </span>
+      );
+
+      if (!txLink) return timeText;
+
+      return (
+        <ExplorerLink
+          chainId={MAINNET_CHAIN_ID}
+          href={txLink}
+          className="flex items-center gap-x-1 text-[15px]/[20px] text-secondary-t"
+        >
+          {timeText}
+          <RiArrowRightUpLine size={16} />
+        </ExplorerLink>
+      );
+    },
+  }),
+];

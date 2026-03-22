@@ -1,108 +1,14 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper,
-} from "@tanstack/react-table";
-import { formatDistanceToNow } from "date-fns";
-import { RiArrowRightSLine, RiArrowRightUpLine } from "@remixicon/react";
+import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import { RiArrowRightSLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { useActivityFeed, type ActivityItem } from "@/lib/hooks/liveness/useActivityFeed";
-import { formatAddress } from "@/lib/liveness/formatters";
-import { TYPE_CONFIG, PROTOCOL_BADGE } from "@/modules/pulse/utils/activity-config";
-import { ExplorerLink } from "@/components/explorer-link";
-import { Badge } from "@/components/ui/badge.tsx";
-
-const MAINNET_CHAIN_ID = 1;
-
-// ── Column helper ─────────────────────────────────────────────────────────────
-
-const columnHelper = createColumnHelper<ActivityItem>();
-
-const columns = [
-  columnHelper.display({
-    id: "protocol",
-    cell: ({ row }) => {
-      const config = TYPE_CONFIG[row.original.type];
-      return (
-        <Badge variant="filled" size="md" color={PROTOCOL_BADGE[config.protocol]}>
-          {config.protocol}
-        </Badge>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: "action",
-    cell: ({ row }) => {
-      const config = TYPE_CONFIG[row.original.type];
-      return (
-        <div className="flex items-center gap-x-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-a5 border border-a3-b text-secondary-t">
-            {config.icon}
-          </div>
-          <span className="text-[15px]/[20px] font-semibold">{config.actionLabel}</span>
-        </div>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: "description",
-    cell: ({ row }) => {
-      const item = row.original;
-      const config = TYPE_CONFIG[item.type];
-      return (
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px]/[20px] font-semibold">
-            {item.address ? (
-              <span className="">{formatAddress(item.address)}</span>
-            ) : (
-              <span className="">Protocol</span>
-            )}{" "}
-            <span className="text-secondary-t">{config.verb}</span>{" "}
-            <span className="">{item.primaryValue}</span>
-          </p>
-          <p className="text-xs text-tertiary-t">{item.secondaryValue}</p>
-        </div>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: "time",
-    cell: ({ row }) => {
-      const item = row.original;
-      const txLink = item.txHash
-        ? `/tx/${item.txHash}`
-        : item.address
-          ? `/address/${item.address}`
-          : null;
-
-      const timeText = (
-        <span className="whitespace-nowrap text-sm tabular-nums text-tertiary-t">
-          {formatDistanceToNow(item.timestamp * 1000, { addSuffix: true })}
-        </span>
-      );
-
-      if (!txLink) return timeText;
-
-      return (
-        <ExplorerLink
-          chainId={MAINNET_CHAIN_ID}
-          href={txLink}
-          className="flex items-center gap-x-1 text-[15px]/[20px] text-secondary-t"
-        >
-          {timeText}
-          <RiArrowRightUpLine size={16} />
-        </ExplorerLink>
-      );
-    },
-  }),
-];
+import { useActivityFeed } from "@/lib/hooks/liveness/useActivityFeed";
+import { ACTIVITY_COLUMNS } from "@/modules/pulse/utils/activity-config";
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -113,7 +19,7 @@ export function OverviewLastActions() {
 
   const table = useReactTable({
     data: top5,
-    columns,
+    columns: ACTIVITY_COLUMNS,
     getCoreRowModel: getCoreRowModel(),
   });
 
