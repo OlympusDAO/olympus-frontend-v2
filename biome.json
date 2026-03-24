@@ -31,11 +31,11 @@
       "suspicious": {
         "noExplicitAny": "error",
         "noArrayIndexKey": "warn"
+      },
+      "a11y": {
+        "useAnchorContent": "off"
       }
     }
-  },
-  "a11y": {
-    "useAnchorContent": "off"
   },
   "javascript": {
     "formatter": {
