@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icon";
 
-export function DisconnectedState() {
+export function BalanceDisconnectedState() {
   return (
     <Card className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <Icon name="WalletIcon" size={40} className="text-tertiary-t mb-4" />

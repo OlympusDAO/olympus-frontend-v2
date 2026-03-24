@@ -1,13 +1,13 @@
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem } from "@/components/ui/form";
-import { TokenBigInput } from "@/components/ui/token-big-input";
+import { Button } from "@/components/ui/button.tsx";
+import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
+import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
 import { useAccount } from "wagmi";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
-import { TokenName } from "@/lib/tokens";
-import { useToken } from "@/lib/hooks/useToken";
+import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
+import { useGohmPrice } from "@/lib/hooks/useGohmPrice.tsx";
+import { TokenName } from "@/lib/tokens.ts";
+import { useToken } from "@/lib/hooks/useToken.tsx";
 import { parseUnits, parseEther } from "viem";
 
 interface WrapFormProps {

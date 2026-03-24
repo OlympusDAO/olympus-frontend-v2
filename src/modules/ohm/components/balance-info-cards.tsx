@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown, ExternalLink } from "lucide-react";
 
-function OhmInfoContent() {
+function BalanceOhmInfoContent() {
   return (
     <>
       <p className="text-secondary-t text-sm">
@@ -49,7 +49,7 @@ function GohmInfoContent() {
   );
 }
 
-export function InfoCards({ isMobile }: { isMobile: boolean }) {
+export function BalanceInfoCards({ isMobile }: { isMobile: boolean }) {
   if (isMobile) {
     return (
       <div className="space-y-3">
@@ -60,7 +60,7 @@ export function InfoCards({ isMobile }: { isMobile: boolean }) {
               <ChevronDown className="size-4 text-tertiary-t transition-transform [[data-panel-open]_&]:rotate-180" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-3">
-              <OhmInfoContent />
+              <BalanceOhmInfoContent />
             </CollapsibleContent>
           </Card>
         </Collapsible>
@@ -83,7 +83,7 @@ export function InfoCards({ isMobile }: { isMobile: boolean }) {
     <div className="grid grid-cols-2 gap-4">
       <Card className="p-5">
         <h3 className="mb-3 font-medium text-primary-t">What is OHM?</h3>
-        <OhmInfoContent />
+        <BalanceOhmInfoContent />
       </Card>
       <Card className="p-5">
         <h3 className="mb-3 font-medium text-primary-t">What is gOHM?</h3>

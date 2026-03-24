@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/icon";
 
-export function EmptyState({ isLoading }: { isLoading: boolean }) {
+export function BalanceEmptyState({ isLoading }: { isLoading: boolean }) {
   if (isLoading) return null;
 
   return (

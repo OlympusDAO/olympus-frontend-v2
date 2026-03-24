@@ -1,7 +1,7 @@
 import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
-import { BalancesPage } from "@/modules/balances/pages";
+import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
@@ -12,7 +12,8 @@ import { AccountsView } from "@/modules/cooler-activity/components/accounts-view
 import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { LivenessPage } from "@/modules/liveness/pages";
-import { WrapPage } from "@/modules/wrap/pages";
+import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
+import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
 import { OverviewPage } from "@/modules/pulse/pages/overview-page";
 import { ProtocolPage } from "@/modules/pulse/pages/protocol-page.tsx";
 import { FeedPage } from "@/modules/pulse/pages/feed-page.tsx";
@@ -34,6 +35,7 @@ export const router = createHashRouter([
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },
       { path: "ohm/wrap", element: <WrapPage /> },
+      { path: "ohm/utility", element: <UtilityPage /> },
       { path: "ohm/bridge", element: <StubPage title="Bridge OHM" /> },
 
       // Legacy redirects

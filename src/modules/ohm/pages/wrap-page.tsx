@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { WrapInfoCards } from "../components/wrap-info-cards";
 import { WrapForm } from "../components/wrap-form";
-import { BalancePanel } from "../components/balance-panel";
+import { WrapBalancePanel } from "../components/wrap-balance-panel.tsx";
 import { WrapOhmModal } from "@/components/wrap-ohm-modal";
 import { useGohmConversion } from "@/lib/hooks/useGohmConversion";
 import { Card } from "@/components/ui/card";
@@ -66,7 +66,7 @@ export function WrapPage() {
             outputAmount={outputAmount}
             onSubmit={handleSubmit}
           />
-          <BalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
+          <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
         </div>
       </Card>
 
