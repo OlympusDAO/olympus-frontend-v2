@@ -6,7 +6,7 @@ type WalletValueProps = {
   isLoading: boolean;
 };
 
-export function WalletValue({ totalUsd, isLoading }: WalletValueProps) {
+export function BalanceWalletValue({ totalUsd, isLoading }: WalletValueProps) {
   return (
     <div className="flex items-center gap-2.5">
       <Wallet className="size-5" />

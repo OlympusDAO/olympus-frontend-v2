@@ -1,8 +1,8 @@
-import { Card } from "@/components/ui/card";
-import { Icon } from "@/components/icon";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
-import { useGohmConversionRate } from "@/lib/hooks/useGohmConversion";
+import { Card } from "@/components/ui/card.tsx";
+import { Icon } from "@/components/icon.tsx";
+import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
+import { useGohmPrice } from "@/lib/hooks/useGohmPrice.tsx";
+import { useGohmConversionRate } from "@/lib/hooks/useGohmConversion.tsx";
 import { ArrowLeftRight } from "lucide-react";
 
 export function WrapInfoCards() {

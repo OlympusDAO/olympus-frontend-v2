@@ -12,7 +12,7 @@ interface BalancePanelProps {
   outputAmount: string;
 }
 
-export function BalancePanel({ mode, inputAmount, outputAmount }: BalancePanelProps) {
+export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePanelProps) {
   const { address } = useAccount();
   const chainId = useChainId();
 

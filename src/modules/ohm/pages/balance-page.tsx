@@ -5,12 +5,12 @@ import { useMultiChainBalance } from "@/lib/hooks/useMultiChainBalance";
 import { TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
-import { InfoCards } from "../components/info-cards";
-import { WalletValue } from "../components/wallet-value";
+import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
+import { BalanceWalletValue } from "../components/balance-wallet-value.tsx";
 import { BalanceTable } from "../components/balance-table";
 import { BalanceCards } from "../components/balance-cards";
-import { EmptyState } from "../components/empty-state";
-import { DisconnectedState } from "../components/disconnected-state";
+import { BalanceEmptyState } from "../components/balance-empty-state.tsx";
+import { BalanceDisconnectedState } from "../components/balance-disconnected-state.tsx";
 import { formatUnits } from "viem";
 import type { IconName } from "@/components/icon";
 
@@ -120,13 +120,13 @@ export function BalancesPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <InfoCards isMobile={isMobile} />
+      <BalanceInfoCards isMobile={isMobile} />
 
       {!effectivelyConnected ? (
-        <DisconnectedState />
+        <BalanceDisconnectedState />
       ) : (
         <>
-          <WalletValue totalUsd={totalUsd} isLoading={isLoading} />
+          <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
           {hasBalances ? (
             isMobile ? (
               <BalanceCards tokens={tokens} />
@@ -134,7 +134,7 @@ export function BalancesPage() {
               <BalanceTable tokens={tokens} />
             )
           ) : (
-            <EmptyState isLoading={isLoading} />
+            <BalanceEmptyState isLoading={isLoading} />
           )}
         </>
       )}
