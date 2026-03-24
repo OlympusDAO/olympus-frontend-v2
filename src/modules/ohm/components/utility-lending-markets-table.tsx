@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender, type ColumnDef } from "@tanstack/react-table";
-import { Icon, type IconName } from "@/components/icon";
+import type { IconName } from "@/components/icon";
 import { ChainIcon } from "@/components/chain-icon";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/tabs";
 import { useOhmLendingMarkets } from "@/modules/ohm/hooks/useOhmLendingMarkets.ts";
+import { TokenIcon } from "@/modules/ohm/components/utility-token-icon.tsx";
+import type { LendingMarket } from "@/modules/ohm/utils/defi-llama.ts";
 import {
   Table,
   TableHeader,
@@ -18,36 +20,9 @@ import { RiArrowRightUpLine } from "@remixicon/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip.tsx";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type LendingMarket = {
-  id: string;
-  lend: { symbol: string; iconName: IconName | null };
-  borrow: { symbol: string; iconName: IconName | null };
-  chainId: number;
-  tvl: number;
-  supplyApy: number;
-  borrowApy: number;
-  available: number;
-  project: string;
-  depositUrl: string;
-  token: "ohm" | "gohm";
-};
-
 type MarketFilter = "all" | "ohm" | "gohm";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function TokenIcon({ symbol, iconName }: { symbol: string; iconName: IconName | null }) {
-  if (iconName) {
-    return <Icon name={iconName} size={28} />;
-  }
-  return (
-    <div className="w-7 h-7 rounded-full bg-surface-a10 flex items-center justify-center text-[10px] font-bold shrink-0">
-      {symbol.slice(0, 2)}
-    </div>
-  );
-}
 
 function TokenCell({ token }: { token: { symbol: string; iconName: IconName | null } }) {
   return (

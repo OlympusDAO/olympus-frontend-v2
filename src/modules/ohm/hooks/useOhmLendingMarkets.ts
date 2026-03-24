@@ -1,25 +1,16 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DEFILLAMA_YIELDS_URL } from "@/lib/constants.ts";
-import { mapProjectToName } from "@/modules/ohm/utils/defi-llama.ts";
-import { mainnet, arbitrum, polygon, optimism, avalanche, fantom, base } from "@/lib/chains.ts";
-import type { IconName } from "@/components/icon.tsx";
-import type { LendingMarket } from "@/modules/ohm/components/utility-lending-markets-table.tsx";
+import {
+  mapProjectToName,
+  TOKEN_ICON_MAP,
+  CHAIN_NAME_TO_ID,
+  type DefiLlamaPool,
+  type LendingMarket,
+} from "@/modules/ohm/utils/defi-llama.ts";
+import { useDefiLlamaPools } from "@/modules/ohm/hooks/useDefiLlamaPools.ts";
 
-// ─── DefiLlama API types ──────────────────────────────────────────────────────
-
-interface DefiLlamaPool {
-  pool: string;
-  chain: string;
-  project: string;
-  symbol: string;
-  tvlUsd: number;
-  apy: number | null;
-  stablecoin: boolean;
-}
-
-interface PoolsResponse {
-  data: DefiLlamaPool[];
-}
+// ─── DefiLlama lendBorrow types ───────────────────────────────────────────────
 
 interface LendBorrowPool {
   pool: string;
@@ -28,25 +19,6 @@ interface LendBorrowPool {
   totalBorrowUsd: number;
   mintedCoin: string | null;
 }
-
-// ─── Lookup tables ────────────────────────────────────────────────────────────
-
-const TOKEN_ICON_MAP: Partial<Record<string, IconName>> = {
-  OHM: "OHMColorTokenIcon",
-  GOHM: "GOHMColorTokenIcon",
-  USDS: "USDSColorTokenIcon",
-};
-
-const CHAIN_NAME_TO_ID: Record<string, number> = {
-  Ethereum: mainnet.id,
-  Arbitrum: arbitrum.id,
-  Polygon: polygon.id,
-  Optimism: optimism.id,
-  Avalanche: avalanche.id,
-  Fantom: fantom.id,
-  Base: base.id,
-  BSC: 56,
-};
 
 // ─── Mapping helper ───────────────────────────────────────────────────────────
 
@@ -69,44 +41,38 @@ function mapLendingMarket(pool: DefiLlamaPool, lend: LendBorrowPool): LendingMar
   };
 }
 
-// ─── Fetch function ───────────────────────────────────────────────────────────
+// ─── lendBorrow fetch ─────────────────────────────────────────────────────────
 
-async function fetchOhmLendingMarkets(): Promise<LendingMarket[]> {
-  const [poolsRes, lendRes] = await Promise.all([
-    fetch(`${DEFILLAMA_YIELDS_URL}/pools`),
-    fetch(`${DEFILLAMA_YIELDS_URL}/lendBorrow`),
-  ]);
-
-  if (!poolsRes.ok) throw new Error(`DefiLlama /pools failed: ${poolsRes.status}`);
-  if (!lendRes.ok) throw new Error(`DefiLlama /lendBorrow failed: ${lendRes.status}`);
-
-  const [poolsJson, lendJson]: [PoolsResponse, LendBorrowPool[]] = await Promise.all([
-    poolsRes.json(),
-    lendRes.json(),
-  ]);
-
-  const lendMap = new Map(lendJson.map((lb) => [lb.pool, lb]));
-
-  return poolsJson.data
-    .filter((pool) => {
-      const parts = pool.symbol.toUpperCase().split("-");
-      return parts.includes("OHM") || parts.includes("GOHM");
-    })
-    .filter((pool) => lendMap.has(pool.pool))
-    .map((pool) => {
-      const lend = lendMap.get(pool.pool);
-      if (!lend) return null;
-      return mapLendingMarket(pool, lend);
-    })
-    .filter((m): m is LendingMarket => m !== null);
+async function fetchLendBorrowData(): Promise<Map<string, LendBorrowPool>> {
+  const res = await fetch(`${DEFILLAMA_YIELDS_URL}/lendBorrow`);
+  if (!res.ok) throw new Error(`DefiLlama /lendBorrow failed: ${res.status}`);
+  const data: LendBorrowPool[] = await res.json();
+  return new Map(data.map((lb) => [lb.pool, lb]));
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useOhmLendingMarkets() {
-  return useQuery<LendingMarket[]>({
-    queryKey: ["ohmLendingMarkets"],
-    queryFn: fetchOhmLendingMarkets,
+  const { data: pools } = useDefiLlamaPools();
+  const { data: lendMap, isLoading: isLendLoading } = useQuery({
+    queryKey: ["defiLlamaLendBorrow"],
+    queryFn: fetchLendBorrowData,
     staleTime: 5 * 60_000,
   });
+
+  const data = useMemo(() => {
+    if (!pools || !lendMap) return [];
+    return pools
+      .filter((pool) => lendMap.has(pool.pool))
+      .map((pool) => {
+        const lend = lendMap.get(pool.pool);
+        if (!lend) return null;
+        return mapLendingMarket(pool, lend);
+      })
+      .filter((m): m is LendingMarket => m !== null);
+  }, [pools, lendMap]);
+
+  const isLoading = !pools || isLendLoading;
+
+  return { data, isLoading };
 }

@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender, type ColumnDef } from "@tanstack/react-table";
-import { Icon, type IconName } from "@/components/icon";
 import { ChainIcon } from "@/components/chain-icon";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import { TooltipInfo } from "@/components/ui/tooltip";
 import { Segmented } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOhmLiquidityPools } from "@/modules/ohm/hooks/useOhmLiquidityPools.ts";
+import { TokenIcon } from "@/modules/ohm/components/utility-token-icon.tsx";
+import type { LiquidityPool } from "@/modules/ohm/utils/defi-llama.ts";
 import {
   Table,
   TableHeader,
@@ -18,44 +19,9 @@ import {
 } from "@/components/ui/table";
 import { RiArrowRightUpLine } from "@remixicon/react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type LiquidityPool = {
-  id: string;
-  tokenA: { symbol: string; iconName: IconName | null };
-  tokenB: { symbol: string; iconName: IconName | null };
-  chainId: number;
-  tvl: number;
-  apy: number;
-  project: string;
-  depositUrl: string;
-  category: "stable" | "volatile" | "gohm";
-};
-
 type PoolFilter = "all" | "stable" | "volatile" | "gohm";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function TokenIcon({
-  symbol,
-  iconName,
-  className,
-}: {
-  symbol: string;
-  iconName: IconName | null;
-  className?: string;
-}) {
-  if (iconName) {
-    return <Icon name={iconName} size={28} className={className} />;
-  }
-  return (
-    <div
-      className={`w-7 h-7 rounded-full bg-surface-a10 flex items-center justify-center text-[10px] font-bold shrink-0 ${className ?? ""}`}
-    >
-      {symbol.slice(0, 2)}
-    </div>
-  );
-}
 
 function TokenPairIcon({
   tokenA,
