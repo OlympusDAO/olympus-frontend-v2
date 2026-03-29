@@ -49,6 +49,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "My Balances", path: "/ohm/balances" },
       { label: "Wrap", path: "/ohm/wrap" },
       { label: "Bridge", path: "/ohm/bridge" },
+      { label: "Utility", path: "/ohm/utility" },
     ],
   },
   {

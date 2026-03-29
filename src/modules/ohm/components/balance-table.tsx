@@ -6,11 +6,11 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Icon, type IconName } from "@/components/icon";
-import { ChainIcon } from "@/components/chain-icon";
-import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance";
+} from "@/components/ui/table.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Icon, type IconName } from "@/components/icon.tsx";
+import { ChainIcon } from "@/components/chain-icon.tsx";
+import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
 
 type TokenEntry = {
   symbol: string;
