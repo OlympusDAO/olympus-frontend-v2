@@ -14,6 +14,7 @@ import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-d
 import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
 import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
+import { BridgePage } from "@/modules/bridge/pages";
 
 export const router = createHashRouter([
   {
@@ -32,7 +33,7 @@ export const router = createHashRouter([
       { path: "ohm/balances", element: <BalancesPage /> },
       { path: "ohm/wrap", element: <WrapPage /> },
       { path: "ohm/utility", element: <UtilityPage /> },
-      { path: "ohm/bridge", element: <StubPage title="Bridge OHM" /> },
+      { path: "ohm/bridge", element: <BridgePage /> },
 
       // Legacy redirects
       { path: "home/balances", element: <Navigate to="/ohm/balances" replace /> },

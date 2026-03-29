@@ -97,3 +97,16 @@ export function formatDistance(start: Date, end: Date, suffix = "ago") {
 }
 
 export const blockExplorerTxBaseUrl = `${config.getClient().chain.blockExplorers?.default.url}/tx/`;
+
+const BLOCK_EXPLORER_URLS: Record<number, string> = {
+  1: "https://etherscan.io",
+  42161: "https://arbiscan.io",
+  8453: "https://basescan.org",
+  80094: "https://berascan.com",
+};
+
+export function getBlockExplorerTxUrl(chainId: number, txHash: string): string {
+  const baseUrl = BLOCK_EXPLORER_URLS[chainId];
+  if (!baseUrl) return "#";
+  return `${baseUrl}/tx/${txHash}`;
+}

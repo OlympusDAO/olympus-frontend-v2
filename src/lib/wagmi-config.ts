@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { activeChains, transports } from "@/lib/chains";
+import { allChains, transports } from "@/lib/chains";
 import type { Config } from "wagmi";
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
@@ -14,7 +14,7 @@ if (!projectId) {
 export const config: Config = getDefaultConfig({
   appName: "Olympus",
   projectId: projectId || "PLACEHOLDER",
-  chains: activeChains,
+  chains: allChains,
   transports,
   ssr: false,
 });

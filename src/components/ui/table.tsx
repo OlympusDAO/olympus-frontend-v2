@@ -6,7 +6,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto border-a5-b bg-surface-a3 text-secondary-t shadow-surface-level-2 rounded-3xl"
+      className="relative w-full overflow-x-auto border-a5-b bg-surface-a5 text-secondary-t shadow-surface-level-2 rounded-3xl "
     >
       <table data-slot="table" className={cn("w-full caption-bottom  ", className)} {...props} />
     </div>
@@ -17,7 +17,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b px-3 border-a5-b", className)}
+      className={cn("[&_tr]:border-b px-3 border-a5-b bg-surface-a3", className)}
       {...props}
     />
   );
