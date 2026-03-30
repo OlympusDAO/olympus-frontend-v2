@@ -17,6 +17,11 @@ import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
 import { BridgePage } from "@/modules/bridge/pages";
 import { CoolerBorrowPage } from "@/modules/cooler/pages";
 import { CoolerV1Page } from "@/modules/cooler/pages/v1";
+import { ProposalsPage } from "@/modules/governance/pages/proposals-page";
+import { ProposalPage } from "@/modules/governance/pages/proposal-page";
+import { DelegatesPage } from "@/modules/governance/pages/delegates-page";
+import { DelegateDetailPage } from "@/modules/governance/pages/delegate-detail-page";
+import { ContractParametersPage } from "@/modules/governance/pages/contract-parameters-page";
 
 export const router = createHashRouter([
   {
@@ -68,11 +73,20 @@ export const router = createHashRouter([
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
       // DAO section
-      { path: "dao/vote", element: <StubPage title="Vote" /> },
-      { path: "dao/delegate", element: <StubPage title="Delegate" /> },
+      { path: "dao/vote", element: <ProposalsPage /> },
+      { path: "dao/vote/:id", element: <ProposalPage /> },
+      { path: "dao/delegate", element: <DelegatesPage /> },
+      { path: "dao/delegate/:id", element: <DelegateDetailPage /> },
+      { path: "dao/contract-parameters", element: <ContractParametersPage /> },
 
       // Rewards
       { path: "rewards", element: <StubPage title="Rewards" /> },
+
+      // Legacy governance redirects
+      { path: "governance", element: <Navigate to="/dao/vote" replace /> },
+      { path: "governance/proposals/:id", element: <Navigate to="/dao/vote/:id" replace /> },
+      { path: "governance/delegate", element: <Navigate to="/dao/delegate" replace /> },
+      { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/ohm/balances" replace /> },

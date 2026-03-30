@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,9 @@ export function MigrateModal({
   const [selectedVersion, setSelectedVersion] = useState<MigrateVersion>("both");
   const [showOwnerTransfer, setShowOwnerTransfer] = useState(false);
   const [newOwner, setNewOwner] = useState("");
-  const [preview, setPreview] = useState<{ collateralAmount: bigint; borrowAmount: bigint } | null>(null);
+  const [preview, setPreview] = useState<{ collateralAmount: bigint; borrowAmount: bigint } | null>(
+    null,
+  );
 
   const gohmAddress = getContractAddress(ContractName.GOHM, chainId);
   const migratorAddress = getContractAddress(ContractName.COOLER_V2_MIGRATOR, chainId);
@@ -147,7 +149,7 @@ export function MigrateModal({
         <div className="flex flex-col gap-4">
           {hasV1 && hasV2 && (
             <div>
-              <label className="mb-1 block text-xs text-secondary-t">
+              <label className="mb-1 block text-xs text-secondary-t" htmlFor="version">
                 Select Version to Migrate
               </label>
               <div className="flex gap-2">
@@ -220,7 +222,7 @@ export function MigrateModal({
             </button>
             {showOwnerTransfer && (
               <div className="mt-2">
-                <label className="mb-1 block text-xs text-secondary-t">
+                <label className="mb-1 block text-xs text-secondary-t" htmlFor="newOwner">
                   New Owner Address
                 </label>
                 <Input
@@ -230,9 +232,7 @@ export function MigrateModal({
                   onChange={(e) => setNewOwner(e.target.value)}
                 />
                 {newOwner && !isAddress(newOwner) && (
-                  <p className="mt-1 text-xs text-red-500">
-                    Invalid Ethereum address.
-                  </p>
+                  <p className="mt-1 text-xs text-red-500">Invalid Ethereum address.</p>
                 )}
                 <p className="mt-1 text-xs text-tertiary-t">
                   Transfer ownership of the migrated position to a different address.
@@ -247,7 +247,10 @@ export function MigrateModal({
                 {isGohmApprovePending ? "Approving..." : "Approve gOHM"}
               </Button>
             ) : (
-              <Button onClick={handleMigrate} disabled={isMigratePending || coolers.length === 0 || !preview || !isNewOwnerValid}>
+              <Button
+                onClick={handleMigrate}
+                disabled={isMigratePending || coolers.length === 0 || !preview || !isNewOwnerValid}
+              >
                 {isMigratePending ? "Migrating..." : "Migrate"}
               </Button>
             )}
