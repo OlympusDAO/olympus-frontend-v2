@@ -34,6 +34,7 @@ export function useTransactionToast({
   writeError,
   confirmError,
   config,
+  onConfirmed,
 }: {
   hash?: `0x${string}`;
   isWritePending: boolean;
@@ -41,6 +42,7 @@ export function useTransactionToast({
   writeError: Error | null;
   confirmError: Error | null;
   config: TransactionToastConfig;
+  onConfirmed?: () => void;
 }) {
   const toastIdRef = useRef<string | number | null>(null);
   const processedHashRef = useRef<string | null>(null);
@@ -75,6 +77,7 @@ export function useTransactionToast({
       });
       toastIdRef.current = null;
       processedHashRef.current = hash || null;
+      onConfirmed?.();
     }
 
     // Show error toast on failure (only if we haven't processed this hash)
@@ -108,7 +111,7 @@ export function useTransactionToast({
       toastIdRef.current = null;
       processedHashRef.current = hash || null;
     }
-  }, [hash, isWritePending, isConfirmed, writeError, confirmError, config]);
+  }, [hash, isWritePending, isConfirmed, writeError, confirmError, config, onConfirmed]);
 
   const reset = () => {
     if (toastIdRef.current) {

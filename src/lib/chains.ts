@@ -19,6 +19,12 @@ import { http, type Transport } from "viem";
 export const PRODUCTION_CHAINS = [mainnet] as const;
 
 /**
+ * Additional chains needed for bridge chain switching.
+ * Not shown in the default wallet network selector UI.
+ */
+export const BRIDGE_EXTRA_CHAINS = [arbitrum, base, berachain] as const;
+
+/**
  * Testnet chains (sepolia only).
  */
 export const TESTNET_CHAINS = [sepolia, mainnet] as const;
@@ -32,6 +38,13 @@ export const isTestnetMode = Boolean(import.meta.env.VITE_TESTNET_MODE);
  * Active chains based on testnet mode.
  */
 export const activeChains = isTestnetMode ? TESTNET_CHAINS : PRODUCTION_CHAINS;
+
+/**
+ * All chains for the wagmi config (includes bridge chains for useSwitchChain).
+ */
+export const allChains = isTestnetMode
+  ? TESTNET_CHAINS
+  : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**
  * Custom RPC transports per chain.

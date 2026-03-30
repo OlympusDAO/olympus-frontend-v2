@@ -50,6 +50,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "My Balances", path: "/ohm/balances" },
       { label: "Wrap", path: "/ohm/wrap" },
       { label: "Bridge", path: "/ohm/bridge" },
+      { label: "Utility", path: "/ohm/utility" },
     ],
   },
   {
@@ -62,6 +63,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Borrow", path: "/cooler/borrow" },
       { label: "Activity", path: "/cooler/activity" },
       { label: "Metrics", path: "/cooler/metrics" },
+      { label: "Cooler V1", path: "/cooler/v1" },
     ],
   },
   {
@@ -86,6 +88,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Vote", path: "/dao/vote" },
       { label: "Delegate", path: "/dao/delegate" },
+      { label: "Contract Parameters", path: "/dao/contract-parameters" },
       { label: "Forum", path: "https://forum.olympusdao.finance", external: true },
       { label: "Snapshots", path: "https://snapshot.org/#/olympusdao.eth", external: true },
     ],
