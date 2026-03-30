@@ -52,9 +52,8 @@ function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
 export function SubNav() {
   const location = useLocation();
   const activeSection = getActiveSectionFromPath(location.pathname);
-  const { isAuthenticated } = useAuth();
-
   const hasMultisigItems = activeSection?.items.some((i) => i.requiresMultisig) ?? false;
+  const { isAuthenticated } = useAuth({ enabled: hasMultisigItems });
   const isMultisigOwner = useMultisigOwnership(isAuthenticated && hasMultisigItems);
 
   if (!activeSection) return null;

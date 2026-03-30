@@ -1,17 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { useGETAuthVerify, usePOSTAuthGetNonce, usePOSTAuthLogin } from "@/generated/olympusUnits";
-import { getAuthToken, setAuthToken, clearAuthToken } from "@/api/customHttpClient";
+import {
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  setCurrentAddress,
+} from "@/api/customHttpClient";
 
-export function useAuth() {
+export function useAuth(options?: { enabled?: boolean }) {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [error, setError] = useState<Error | null>(null);
+  const prevAddressRef = useRef<string | undefined>(undefined);
 
-  const token = getAuthToken();
+  // Keep the HTTP client in sync with the current address and clear stale tokens on wallet switch.
+  useEffect(() => {
+    setCurrentAddress(address ?? null);
+
+    const prev = prevAddressRef.current;
+    prevAddressRef.current = address;
+
+    if (prev && prev !== address) {
+      clearAuthToken(prev);
+    }
+  }, [address]);
+
+  const token = address ? getAuthToken(address) : null;
 
   const { data: verifyData, isLoading: isVerifyLoading } = useGETAuthVerify({
-    query: { enabled: !!token && !!address, retry: false },
+    query: { enabled: (options?.enabled ?? true) && !!token && !!address, retry: false },
   });
 
   const isAuthenticated = !!(
@@ -35,14 +53,14 @@ export function useAuth() {
         data: { address, message: nonceData.message, signature },
       });
 
-      setAuthToken(loginData.token);
+      setAuthToken(address, loginData.token);
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
     }
   }
 
   function signOut() {
-    clearAuthToken();
+    if (address) clearAuthToken(address);
     window.location.reload();
   }
 

@@ -28,27 +28,6 @@ interface ConvertRow {
   status: ConvertStatus;
 }
 
-const mockData: ConvertRow[] = [
-  {
-    availableToConvert: 35,
-    conversionPrice: 18.99,
-    priceIsGood: false,
-    discount: null,
-    conversionPeriod: "May 1, 2026 - Jun 1, 2026",
-    netValue: -600,
-    status: "convert",
-  },
-  {
-    availableToConvert: 12,
-    conversionPrice: 16.99,
-    priceIsGood: true,
-    discount: 13,
-    conversionPeriod: "May 1, 2026 - Jun 1, 2026",
-    netValue: 600,
-    status: "converted",
-  },
-];
-
 const columnHelper = createColumnHelper<ConvertRow>();
 
 const columns = [
@@ -136,7 +115,8 @@ const columns = [
 
 export function ConvertTable() {
   const table = useReactTable({
-    data: mockData,
+    // TODO: replace with real API data once the convertible positions endpoint is available
+    data: [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
