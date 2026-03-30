@@ -62,6 +62,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Borrow", path: "/cooler/borrow" },
       { label: "Activity", path: "/cooler/activity" },
       { label: "Metrics", path: "/cooler/metrics" },
+      { label: "Cooler V1", path: "/cooler/v1" },
     ],
   },
   {

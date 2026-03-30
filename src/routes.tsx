@@ -15,6 +15,8 @@ import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
 import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
 import { BridgePage } from "@/modules/bridge/pages";
+import { CoolerBorrowPage } from "@/modules/cooler/pages";
+import { CoolerV1Page } from "@/modules/cooler/pages/v1";
 
 export const router = createHashRouter([
   {
@@ -44,7 +46,8 @@ export const router = createHashRouter([
       { path: "wrap", element: <Navigate to="/ohm/wrap" replace /> },
 
       // Cooler section
-      { path: "cooler/borrow", element: <StubPage title="Borrow" /> },
+      { path: "cooler/borrow", element: <CoolerBorrowPage /> },
+      { path: "cooler/v1", element: <CoolerV1Page /> },
       {
         path: "cooler/activity",
         element: <CoolerActivityLayout />,
