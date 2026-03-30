@@ -10,7 +10,8 @@
 @layer base {
   /* Remove default focus states */
   *:focus,
-  *:focus-visible {}
+  *:focus-visible {
+  }
 
   body {
     @apply text-primary-t;

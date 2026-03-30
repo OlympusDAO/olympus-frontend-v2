@@ -1,7 +1,7 @@
 import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
-import { BalancesPage } from "@/modules/balances/pages";
+import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
@@ -12,7 +12,16 @@ import { AccountsView } from "@/modules/cooler-activity/components/accounts-view
 import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { LivenessPage } from "@/modules/liveness/pages";
-import { WrapPage } from "@/modules/wrap/pages";
+import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
+import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
+import { BridgePage } from "@/modules/bridge/pages";
+import { CoolerBorrowPage } from "@/modules/cooler/pages";
+import { CoolerV1Page } from "@/modules/cooler/pages/v1";
+import { ProposalsPage } from "@/modules/governance/pages/proposals-page";
+import { ProposalPage } from "@/modules/governance/pages/proposal-page";
+import { DelegatesPage } from "@/modules/governance/pages/delegates-page";
+import { DelegateDetailPage } from "@/modules/governance/pages/delegate-detail-page";
+import { ContractParametersPage } from "@/modules/governance/pages/contract-parameters-page";
 import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
 import { RewardsManagerPage } from "@/modules/engage/pages/rewards-manager-page.tsx";
 
@@ -32,7 +41,8 @@ export const router = createHashRouter([
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },
       { path: "ohm/wrap", element: <WrapPage /> },
-      { path: "ohm/bridge", element: <StubPage title="Bridge OHM" /> },
+      { path: "ohm/utility", element: <UtilityPage /> },
+      { path: "ohm/bridge", element: <BridgePage /> },
 
       // Legacy redirects
       { path: "home/balances", element: <Navigate to="/ohm/balances" replace /> },
@@ -43,7 +53,8 @@ export const router = createHashRouter([
       { path: "wrap", element: <Navigate to="/ohm/wrap" replace /> },
 
       // Cooler section
-      { path: "cooler/borrow", element: <StubPage title="Borrow" /> },
+      { path: "cooler/borrow", element: <CoolerBorrowPage /> },
+      { path: "cooler/v1", element: <CoolerV1Page /> },
       {
         path: "cooler/activity",
         element: <CoolerActivityLayout />,
@@ -64,8 +75,11 @@ export const router = createHashRouter([
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
       // DAO section
-      { path: "dao/vote", element: <StubPage title="Vote" /> },
-      { path: "dao/delegate", element: <StubPage title="Delegate" /> },
+      { path: "dao/vote", element: <ProposalsPage /> },
+      { path: "dao/vote/:id", element: <ProposalPage /> },
+      { path: "dao/delegate", element: <DelegatesPage /> },
+      { path: "dao/delegate/:id", element: <DelegateDetailPage /> },
+      { path: "dao/contract-parameters", element: <ContractParametersPage /> },
 
       // Engage
       {
@@ -75,6 +89,12 @@ export const router = createHashRouter([
           { path: "rewards-manager", element: <RewardsManagerPage /> },
         ],
       },
+
+      // Legacy governance redirects
+      { path: "governance", element: <Navigate to="/dao/vote" replace /> },
+      { path: "governance/proposals/:id", element: <Navigate to="/dao/vote/:id" replace /> },
+      { path: "governance/delegate", element: <Navigate to="/dao/delegate" replace /> },
+      { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/ohm/balances" replace /> },

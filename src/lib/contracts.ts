@@ -34,6 +34,10 @@ export enum ContractName {
   COOLER_V2_MONOCOOLER = "COOLER_V2_MONOCOOLER",
   COOLER_V2_COMPOSITES = "COOLER_V2_COMPOSITES",
   COOLER_V2_MIGRATOR = "COOLER_V2_MIGRATOR",
+  COOLER_CLEARING_HOUSE_V1 = "COOLER_CLEARING_HOUSE_V1",
+  COOLER_CLEARING_HOUSE_V2 = "COOLER_CLEARING_HOUSE_V2",
+  COOLER_FACTORY_V1 = "COOLER_FACTORY_V1",
+  COOLER_FACTORY_V2 = "COOLER_FACTORY_V2",
 
   // Convertible Deposits
   CONVERTIBLE_DEPOSIT_FACILITY = "CONVERTIBLE_DEPOSIT_FACILITY",
@@ -43,6 +47,13 @@ export enum ContractName {
   DEPOSIT_REDEMPTION_VAULT = "DEPOSIT_REDEMPTION_VAULT",
   LIMIT_ORDERS = "LIMIT_ORDERS",
   PRICE = "PRICE",
+
+  // Governance
+  GOVERNOR_BRAVO = "GOVERNOR_BRAVO",
+
+  // Bridge
+  CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
+  CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
 }
 
 type ContractAddresses = {
@@ -108,6 +119,18 @@ export const CONTRACTS: ContractAddresses = {
     [mainnet.id]: "0xE045BD0A0d85E980AA152064C06EAe6B6aE358D2",
     [sepolia.id]: "0x70233D8F47042d3A5813026e2157B5181C608cD0",
   },
+  [ContractName.COOLER_CLEARING_HOUSE_V1]: {
+    [mainnet.id]: "0xD6A6E8d9e82534bD65821142fcCd91ec9cF31880",
+  },
+  [ContractName.COOLER_CLEARING_HOUSE_V2]: {
+    [mainnet.id]: "0xE6343ad0675C9b8D3f32679ae6aDbA0766A2ab4c",
+  },
+  [ContractName.COOLER_FACTORY_V1]: {
+    [mainnet.id]: "0x30Ce56e80aA96EbbA1E1a74bC5c0FEB5B0dB4589",
+  },
+  [ContractName.COOLER_FACTORY_V2]: {
+    [mainnet.id]: "0x2916427F46d33fE2bF68Ee7D3C168CF57f109541",
+  },
 
   // ── Convertible Deposits ──────────────────────────────
   [ContractName.CONVERTIBLE_DEPOSIT_FACILITY]: {
@@ -137,6 +160,25 @@ export const CONTRACTS: ContractAddresses = {
   [ContractName.PRICE]: {
     [mainnet.id]: "0xd6C4D723fdadCf0D171eF9A2a3Bfa870675b282f",
     [sepolia.id]: "0x3bD25E292dC36b674BBF1EEecaAB4565bf2eF241",
+  },
+
+  // ── Governance ───────────────────────────────────────
+  [ContractName.GOVERNOR_BRAVO]: {
+    [mainnet.id]: "0x0941233c964e7d7Efeb05D253176E5E634cEFfcD",
+  },
+
+  // ── Bridge ──────────────────────────────────────────
+  [ContractName.CROSS_CHAIN_BRIDGE]: {
+    [mainnet.id]: "0x45e563c39cddba8699a90078f42353a57509543a",
+    [arbitrum.id]: "0x20B3834091f038Ce04D8686FAC99CA44A0FB285c",
+    [base.id]: "0x6CA1a916e883c7ce2BFBcF59dc70F2c1EF9dac6e",
+    [berachain.id]: "0xBA42BE149e5260EbA4B82418A6306f55D532eA47",
+  },
+  [ContractName.CROSS_CHAIN_MINTER]: {
+    [mainnet.id]: "0xa90bFe53217da78D900749eb6Ef513ee5b6a491e",
+    [arbitrum.id]: "0x8f6406eDbFA393e327822D4A08BcF15503570D87",
+    [base.id]: "0x623164A9Ee2556D524b08f34F1d2389d7B4e1A1C",
+    [berachain.id]: "0xbC9eE0D911739cBc72cd094ADA26F56E0C49EeAE",
   },
 };
 
