@@ -1,3 +1,5 @@
+import { formatUnits } from "viem";
+import { useGasPrice } from "wagmi";
 import { Separator } from "@/components/ui/separator.tsx";
 import { CircleProgress } from "@/components/ui/progress.tsx";
 import { Segmented } from "@/components/ui/tabs.tsx";
@@ -14,6 +16,9 @@ import {
 } from "@remixicon/react";
 import { Icon } from "@/components/icon.tsx";
 import { type Theme, useTheme } from "@/components/theme-provider.tsx";
+import { useEpochTimer } from "@/lib/hooks/liveness/useEpochTimer";
+import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
+import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
 import type * as React from "react";
 
 const THEME_OPTIONS: { value: Theme; label: React.ReactNode }[] = [
@@ -29,8 +34,21 @@ const SOCIAL_LINKS = [
   { href: "https://github.com/OlympusDAO", icon: RiGithubFill, label: "GitHub" },
 ];
 
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
 export function Footer() {
   const { theme, setTheme } = useTheme();
+  const { hours, minutes, seconds, progress } = useEpochTimer();
+  const { formattedPrice: ohmFormattedPrice } = useOhmPrice();
+  const { price: gohmPrice } = useGohmPrice();
+  const { data: gasPriceWei } = useGasPrice({ query: { refetchInterval: 15_000 } });
+
+  const ohmPrice = parseFloat(ohmFormattedPrice ?? "0");
+  const gasPriceGwei = gasPriceWei ? Math.round(Number(formatUnits(gasPriceWei, 9))) : 0;
+  const beatLabel = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
   return (
     <footer className="bg-surface-bg-l1 sticky bottom-0 right-0 left-0 z-50">
       <Separator className="mb-1 w-full" />
@@ -40,10 +58,10 @@ export function Footer() {
         {/* Row 1: Next Beat + socials */}
         <div className="flex items-center justify-center gap-x-3">
           <div className="flex items-center gap-x-2">
-            <CircleProgress size={20} type="success" value={20} />
+            <CircleProgress size={20} type="success" value={progress} />
             <div className="flex items-center gap-x-1 text-[12px]/[15px]">
               <p className="text-secondary-t">Next Beat</p>
-              <p>02:10:12</p>
+              <p>{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-7 w-px" />
@@ -61,16 +79,16 @@ export function Footer() {
         <div className="flex items-center gap-x-2 justify-between">
           <div className="flex items-center gap-x-1">
             <Icon name="OHMColorTokenIcon" className="size-4" />
-            <NumberFlow value={17.28} className="text-[12px]/[16px]" />
+            <NumberFlow value={ohmPrice} className="text-[12px]/[16px]" />
           </div>
           <div className="flex items-center gap-x-1">
             <Icon name="GOHMColorTokenIcon" className="size-4" />
-            <NumberFlow value={17.28} className="text-[12px]/[16px]" />
+            <NumberFlow value={gohmPrice} className="text-[12px]/[16px]" />
           </div>
           <div className="flex items-center gap-x-1">
             <RiGasStationLine className="size-4 text-secondary-t" />
             <NumberFlow
-              value={17.28}
+              value={gasPriceGwei}
               className="text-[12px]/[16px]"
               format={{ style: "decimal" }}
               suffix="GWEI"
@@ -84,10 +102,10 @@ export function Footer() {
       <div className="hidden min-[650px]:flex px-6 pb-2 items-center justify-between w-full">
         <div className="flex items-center">
           <div className="flex items-center gap-x-2">
-            <CircleProgress size={20} type="success" value={20} />
+            <CircleProgress size={20} type="success" value={progress} />
             <div className="flex items-center gap-x-1 text-[12px]/[15px]">
               <p className="text-secondary-t">Next Beat</p>
-              <p>02:10:12</p>
+              <p>{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-7 mx-4 w-px" />
@@ -102,18 +120,18 @@ export function Footer() {
         <div className="flex items-center">
           <div className="flex items-center gap-x-1">
             <Icon name="OHMColorTokenIcon" className="size-4" />
-            <NumberFlow value={17.28} className="text-[12px]/[16px]" />
+            <NumberFlow value={ohmPrice} className="text-[12px]/[16px]" />
           </div>
           <Separator orientation="vertical" className="h-7 mx-4 w-px" />
           <div className="flex items-center gap-x-1">
             <Icon name="GOHMColorTokenIcon" className="size-4" />
-            <NumberFlow value={17.28} className="text-[12px]/[16px]" />
+            <NumberFlow value={gohmPrice} className="text-[12px]/[16px]" />
           </div>
           <Separator orientation="vertical" className="h-7 mx-4 w-px" />
           <div className="flex items-center gap-x-1">
             <RiGasStationLine className="size-4 text-secondary-t" />
             <NumberFlow
-              value={17.28}
+              value={gasPriceGwei}
               className="text-[12px]/[16px]"
               format={{ style: "decimal" }}
               suffix="GWEI"
