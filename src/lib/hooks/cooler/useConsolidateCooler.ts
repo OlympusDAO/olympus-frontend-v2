@@ -37,6 +37,7 @@ export function useConsolidateCooler() {
   const migratorAddress = getContractAddress(ContractName.COOLER_V2_MIGRATOR, chainId);
 
   // Read nonce for EIP-712 signatures
+  const nonceQueryKey = ["readContract", { functionName: "authorizationNonces", address: monoCoolerAddress, args: address ? [address] : undefined }] as const;
   const { data: authNonce } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
@@ -54,7 +55,8 @@ export function useConsolidateCooler() {
   const invalidateQueries = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["getCoolerLoans"] });
     queryClient.invalidateQueries({ queryKey: ["monoCoolerPosition"] });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: nonceQueryKey });
+  }, [queryClient, nonceQueryKey]);
 
   useTransactionToast({
     hash,
@@ -67,7 +69,7 @@ export function useConsolidateCooler() {
   });
 
   // Preview consolidation to show user what will happen
-  const previewConsolidate = async (coolers: Address[]) => {
+  const previewConsolidate = useCallback(async (coolers: Address[]) => {
     if (!publicClient || !migratorAddress) throw new Error("Missing contract addresses");
 
     const result = await publicClient.readContract({
@@ -79,7 +81,7 @@ export function useConsolidateCooler() {
 
     const [collateralAmount, borrowAmount] = result as readonly [bigint, bigint];
     return { collateralAmount, borrowAmount };
-  };
+  }, [publicClient, migratorAddress]);
 
   // Main consolidation function
   const consolidate = async ({

@@ -1,14 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatUnits, type Address, zeroAddress } from "viem";
+import { isAddress, type Address, zeroAddress } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import { useConsolidateCooler } from "@/lib/hooks/cooler/useConsolidateCooler";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { getContractAddress, ContractName } from "@/lib/contracts";
+import { formatAmount } from "../utils/format";
 
 interface MigrateModalProps {
   isOpen: boolean;
@@ -19,14 +20,6 @@ interface MigrateModalProps {
   v1Loans: CoolerLoan[];
   v2Loans: CoolerLoan[];
   v3Loans: CoolerLoan[];
-}
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
 }
 
 type MigrateVersion = "v1" | "v2" | "both";
@@ -114,14 +107,24 @@ export function MigrateModal({
     });
   };
 
+  const isNewOwnerValid = !showOwnerTransfer || !newOwner || isAddress(newOwner);
+
   const handleMigrate = () => {
     if (!address || coolers.length === 0) return;
-    const owner = showOwnerTransfer && newOwner ? (newOwner as Address) : address;
-    consolidate({
-      coolers,
-      newOwner: owner,
-      isAuthorized: isMigratorAuthorized,
-    });
+    if (showOwnerTransfer && newOwner) {
+      if (!isAddress(newOwner)) return;
+      consolidate({
+        coolers,
+        newOwner: newOwner as Address,
+        isAuthorized: isMigratorAuthorized,
+      });
+    } else {
+      consolidate({
+        coolers,
+        newOwner: address,
+        isAuthorized: isMigratorAuthorized,
+      });
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -226,6 +229,11 @@ export function MigrateModal({
                   value={newOwner}
                   onChange={(e) => setNewOwner(e.target.value)}
                 />
+                {newOwner && !isAddress(newOwner) && (
+                  <p className="mt-1 text-xs text-red-500">
+                    Invalid Ethereum address.
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-tertiary-t">
                   Transfer ownership of the migrated position to a different address.
                 </p>
@@ -239,7 +247,7 @@ export function MigrateModal({
                 {isGohmApprovePending ? "Approving..." : "Approve gOHM"}
               </Button>
             ) : (
-              <Button onClick={handleMigrate} disabled={isMigratePending || coolers.length === 0 || !preview}>
+              <Button onClick={handleMigrate} disabled={isMigratePending || coolers.length === 0 || !preview || !isNewOwnerValid}>
                 {isMigratePending ? "Migrating..." : "Migrate"}
               </Button>
             )}

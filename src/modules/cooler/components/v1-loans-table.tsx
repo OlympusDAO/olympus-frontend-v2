@@ -2,29 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatUnits } from "viem";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
+import { formatAmount, formatDate } from "../utils/format";
 
 interface V1LoansTableProps {
   loans: CoolerLoan[];
   onRepay: (loan: CoolerLoan) => void;
   onExtend: (loan: CoolerLoan) => void;
   isLoading: boolean;
-}
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
-
-function formatDate(expiry: bigint): string {
-  const date = new Date(Number(expiry) * 1000);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function formatInterestRate(loan: CoolerLoan): string {

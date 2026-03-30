@@ -10,7 +10,7 @@ import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useMonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
-import { useMonoCoolerDebt } from "@/lib/hooks/cooler/useMonoCoolerDebt";
+import { useMonoCoolerDebt, calculateRepayAmount } from "@/lib/hooks/cooler/useMonoCoolerDebt";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerAuthorization } from "@/lib/hooks/cooler/useMonoCoolerAuthorization";
 import { useIsSmartContractWallet } from "@/lib/hooks/cooler/useIsSmartContractWallet";
@@ -41,7 +41,7 @@ export function RepayForm({ loan }: RepayFormProps) {
   const chainId = useChainId();
   const usdsToken = useToken(TokenName.USDS, address);
 
-  useMonoCoolerPosition();
+  const { position } = useMonoCoolerPosition();
   const { isSmartContractWallet } = useIsSmartContractWallet();
   const { isAuthorized, setAuthorization, isSettingAuthorization } = useMonoCoolerAuthorization();
 
@@ -96,8 +96,9 @@ export function RepayForm({ loan }: RepayFormProps) {
   const needsApproval = useMemo(() => {
     if (repayAmount === ZERO) return false;
     if (allowance === undefined) return true;
-    return allowance < repayAmount;
-  }, [allowance, repayAmount]);
+    const requiredAmount = calculateRepayAmount(repayAmount, position?.interestRateBps ?? 0, isFullRepay);
+    return allowance < requiredAmount;
+  }, [allowance, repayAmount, position?.interestRateBps, isFullRepay]);
 
   const hasSufficientAllowance = !needsApproval;
 

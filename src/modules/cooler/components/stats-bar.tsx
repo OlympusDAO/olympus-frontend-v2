@@ -1,14 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { formatUnits } from "viem";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
+import { formatAmount } from "../utils/format";
 
 export function StatsBar() {
   const { position, isLoading } = useMonoCoolerPosition();

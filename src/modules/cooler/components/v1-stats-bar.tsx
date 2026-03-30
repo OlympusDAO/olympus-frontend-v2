@@ -1,15 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { formatUnits } from "viem";
 import type { ClearingHouseData } from "@/lib/hooks/cooler/useGetClearingHouse";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
+import { formatAmount } from "../utils/format";
 
 interface V1StatsBarProps {
   clearingHouseData: ClearingHouseData | null | undefined;

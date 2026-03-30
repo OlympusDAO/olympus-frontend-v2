@@ -71,6 +71,7 @@ export function useMonoCoolerDebt() {
   const compositesAddress = getContractAddress(ContractName.COOLER_V2_COMPOSITES, chainId);
 
   // Read nonce for EIP-712 signatures
+  const nonceQueryKey = ["readContract", { functionName: "authorizationNonces", address: monoCoolerAddress, args: address ? [address] : undefined }] as const;
   const { data: authNonce } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
@@ -81,7 +82,8 @@ export function useMonoCoolerDebt() {
 
   const invalidateQueries = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: positionQueryKey });
-  }, [queryClient, positionQueryKey]);
+    queryClient.invalidateQueries({ queryKey: nonceQueryKey });
+  }, [queryClient, positionQueryKey, nonceQueryKey]);
 
   // --- Borrow ---
   const borrowWrite = useWriteContract();

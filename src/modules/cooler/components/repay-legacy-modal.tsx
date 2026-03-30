@@ -9,6 +9,7 @@ import type { ClearingHouseData } from "@/lib/hooks/cooler/useGetClearingHouse";
 import { useRepayLegacyLoan } from "@/lib/hooks/cooler/useRepayLegacyLoan";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
+import { formatAmount, formatDate } from "../utils/format";
 
 interface RepayLegacyModalProps {
   isOpen: boolean;
@@ -17,23 +18,6 @@ interface RepayLegacyModalProps {
   coolerAddress: string;
   debtAddress: string;
   clearingHouseData: ClearingHouseData | null;
-}
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
-
-function formatDate(expiry: bigint): string {
-  const date = new Date(Number(expiry) * 1000);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export function RepayLegacyModal({

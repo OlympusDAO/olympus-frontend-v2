@@ -62,19 +62,31 @@ export function useGetCoolerLoans({
           functionName: "symbol",
         }) as string;
 
-        // Iterate through loans until revert
+        // Batch fetch loans using multicall, probing in batches of 10
         const loans: CoolerLoan[] = [];
-        let loanId = 0;
-        while (true) {
-          try {
-            const loanData = await publicClient.readContract({
-              address: cooler,
-              abi: CoolerABI,
-              functionName: "getLoan",
-              args: [BigInt(loanId)],
-            });
+        const BATCH_SIZE = 10;
+        const MAX_LOANS = 100;
+        let offset = 0;
+        let done = false;
 
-            const result = loanData as unknown as {
+        while (!done && offset < MAX_LOANS) {
+          const calls = Array.from({ length: BATCH_SIZE }, (_, i) => ({
+            address: cooler,
+            abi: CoolerABI,
+            functionName: "getLoan" as const,
+            args: [BigInt(offset + i)] as const,
+          }));
+
+          const results = await publicClient.multicall({ contracts: calls, allowFailure: true });
+
+          for (let i = 0; i < results.length; i++) {
+            const res = results[i];
+            if (res.status === "failure") {
+              done = true;
+              break;
+            }
+
+            const result = res.result as unknown as {
               request: {
                 amount: bigint;
                 interest: bigint;
@@ -93,7 +105,7 @@ export function useGetCoolerLoans({
             };
 
             loans.push({
-              loanId,
+              loanId: offset + i,
               request: result.request,
               principal: result.principal,
               interestDue: result.interestDue,
@@ -104,10 +116,9 @@ export function useGetCoolerLoans({
               callback: result.callback,
               debtAssetName,
             });
-            loanId++;
-          } catch {
-            break;
           }
+
+          offset += BATCH_SIZE;
         }
 
         // Filter out closed loans (zero collateral or zero principal)

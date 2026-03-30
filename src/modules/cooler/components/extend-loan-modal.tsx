@@ -10,6 +10,7 @@ import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import type { ClearingHouseVersion } from "@/lib/hooks/cooler/useGetClearingHouse";
+import { formatAmount, formatDate } from "../utils/format";
 
 interface ExtendLoanModalProps {
   isOpen: boolean;
@@ -21,24 +22,7 @@ interface ExtendLoanModalProps {
   debtAssetName: string;
   interestRate: string;
   duration: string;
-  loanToCollateral: string;
-}
-
-function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
-
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  clearingHouseVersion: ClearingHouseVersion;
 }
 
 export function ExtendLoanModal({
@@ -51,6 +35,7 @@ export function ExtendLoanModal({
   debtAssetName,
   interestRate,
   duration,
+  clearingHouseVersion,
 }: ExtendLoanModalProps) {
   const { address } = useAccount();
   const [terms, setTerms] = useState("1");
@@ -94,9 +79,6 @@ export function ExtendLoanModal({
     return allowance < interestDueOnExtension;
   }, [allowance, interestDueOnExtension]);
 
-  // Determine the version based on the clearing house address pattern
-  // V1/V2 clearing houses use the legacy ABI
-  const clearingHouseVersion: ClearingHouseVersion = "clearingHouseV1";
 
   const handleApprove = () => {
     approve({

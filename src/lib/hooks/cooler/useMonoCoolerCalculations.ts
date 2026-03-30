@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
+import { WAD, wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
 
-const WAD = 10n ** 18n;
 const ZERO = 0n;
 const MIN_DEBT = parseUnits("1000", 18);
 
@@ -13,22 +13,6 @@ interface UseMonoCoolerCalculationsProps {
     collateral: bigint;
   };
   isRepayMode: boolean;
-}
-
-/** Multiply two WAD-denominated values: (a * b) / 1e18 */
-function wmul(a: bigint, b: bigint): bigint {
-  return (a * b) / WAD;
-}
-
-/** Divide two WAD-denominated values: (a * 1e18) / b */
-function wdiv(a: bigint, b: bigint): bigint {
-  if (b === ZERO) return ZERO;
-  return (a * WAD) / b;
-}
-
-/** Convert a percentage (0-100) to a WAD fraction */
-function pctToWad(pct: number): bigint {
-  return parseUnits((pct / 100).toFixed(18), 18);
 }
 
 export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCalculationsProps) {
@@ -45,26 +29,30 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
 
   const [collateralAmount, setCollateralAmount] = useState(ZERO);
 
-  const [borrowAmount, setBorrowAmount] = useState<bigint>(() => {
-    if (!loan || !position?.maxOriginationLtv || hourlyInterestRate === 0) return ZERO;
+  const [borrowAmount, setBorrowAmount] = useState<bigint>(ZERO);
+  const [ltvPercentage, setLtvPercentage] = useState(100);
+
+  // Recalculate initial borrowAmount when position data first becomes available
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    if (!loan || !position?.maxOriginationLtv || hourlyInterestRate === 0) return;
+
+    hasInitialized.current = true;
 
     if (isRepayMode) {
-      return loan.debt;
+      setBorrowAmount(loan.debt);
+      return;
     }
 
-    if (loan) {
-      const maxBorrow = wmul(loan.collateral, position.maxOriginationLtv);
-      const additionalBorrowing = maxBorrow - loan.debt;
+    const maxBorrow = wmul(loan.collateral, position.maxOriginationLtv);
+    const additionalBorrowing = maxBorrow - loan.debt;
 
-      const oneHourInterestWad = parseUnits(hourlyInterestRate.toFixed(18), 18);
-      const oneHourInterest = wmul(loan.debt, oneHourInterestWad);
+    const oneHourInterestWad = parseUnits(hourlyInterestRate.toFixed(18), 18);
+    const oneHourInterest = wmul(loan.debt, oneHourInterestWad);
 
-      return additionalBorrowing > oneHourInterest ? additionalBorrowing : ZERO;
-    }
-    return ZERO;
-  });
-
-  const [ltvPercentage, setLtvPercentage] = useState(100);
+    setBorrowAmount(additionalBorrowing > oneHourInterest ? additionalBorrowing : ZERO);
+  }, [loan, position?.maxOriginationLtv, hourlyInterestRate, isRepayMode]);
 
   // Current debt
   const currentDebt = useMemo(() => {

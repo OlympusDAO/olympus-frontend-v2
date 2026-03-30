@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useAccount, usePublicClient } from "wagmi";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * Detects if the connected wallet is a smart contract wallet (multisig, Safe, etc.)
@@ -10,31 +10,16 @@ import { useAccount, usePublicClient } from "wagmi";
 export function useIsSmartContractWallet() {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
-  const [isSmartContractWallet, setIsSmartContractWallet] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const check = async () => {
-      if (!address || !isConnected || !publicClient) {
-        setIsSmartContractWallet(false);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const code = await publicClient.getCode({ address });
-        const isContract = code !== undefined && code !== "0x" && code.length > 2;
-        setIsSmartContractWallet(isContract);
-      } catch {
-        setIsSmartContractWallet(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    check();
-  }, [address, isConnected, publicClient]);
+  const { data: isSmartContractWallet = false, isLoading } = useQuery({
+    queryKey: ["isSmartContractWallet", address],
+    queryFn: async () => {
+      if (!address || !publicClient) return false;
+      const code = await publicClient.getCode({ address });
+      return code !== undefined && code !== "0x" && code.length > 2;
+    },
+    enabled: !!address && isConnected && !!publicClient,
+  });
 
   return { isSmartContractWallet, isLoading };
 }

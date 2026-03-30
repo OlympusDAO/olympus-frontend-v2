@@ -6,7 +6,7 @@ import { V1LoansTable } from "../components/v1-loans-table";
 import { RepayLegacyModal } from "../components/repay-legacy-modal";
 import { ExtendLoanModal } from "../components/extend-loan-modal";
 import { MigrateModal } from "../components/migrate-modal";
-import { useGetClearingHouse } from "@/lib/hooks/cooler/useGetClearingHouse";
+import { useGetClearingHouse, type ClearingHouseVersion } from "@/lib/hooks/cooler/useGetClearingHouse";
 import { useGetCoolerForWallet } from "@/lib/hooks/cooler/useGetCoolerForWallet";
 import { useGetCoolerLoans } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
@@ -82,11 +82,11 @@ export function CoolerV1Page() {
   const [extendLoan, setExtendLoan] = useState<CoolerLoan | null>(null);
   const [isMigrateOpen, setIsMigrateOpen] = useState(false);
 
-  // Determine cooler address and clearing house for a given loan
-  const getCoolerForLoan = (loan: CoolerLoan): { coolerAddress: string; clearingHouseData: typeof v1ClearingHouse } => {
-    if (v1Loans.includes(loan)) return { coolerAddress: v1CoolerAddress ?? "", clearingHouseData: v1ClearingHouse };
-    if (v2Loans.includes(loan)) return { coolerAddress: v2CoolerAddress ?? "", clearingHouseData: v2ClearingHouse };
-    return { coolerAddress: v3CoolerAddress ?? "", clearingHouseData: v3ClearingHouse };
+  // Determine cooler address, clearing house, and version for a given loan
+  const getCoolerForLoan = (loan: CoolerLoan): { coolerAddress: string; clearingHouseData: typeof v1ClearingHouse; version: ClearingHouseVersion } => {
+    if (v1Loans.includes(loan)) return { coolerAddress: v1CoolerAddress ?? "", clearingHouseData: v1ClearingHouse, version: "clearingHouseV1" };
+    if (v2Loans.includes(loan)) return { coolerAddress: v2CoolerAddress ?? "", clearingHouseData: v2ClearingHouse, version: "clearingHouseV2" };
+    return { coolerAddress: v3CoolerAddress ?? "", clearingHouseData: v3ClearingHouse, version: "clearingHouseV3" };
   };
 
   const repayContext = repayLoan ? getCoolerForLoan(repayLoan) : null;
@@ -136,7 +136,7 @@ export function CoolerV1Page() {
         debtAssetName={extendContext?.clearingHouseData?.debtAssetName ?? "DAI"}
         interestRate={extendContext?.clearingHouseData?.interestRate ?? "0"}
         duration={extendContext?.clearingHouseData?.duration ?? "0"}
-        loanToCollateral={extendContext?.clearingHouseData?.loanToCollateral ?? "0"}
+        clearingHouseVersion={extendContext?.version ?? "clearingHouseV1"}
       />
 
       <MigrateModal

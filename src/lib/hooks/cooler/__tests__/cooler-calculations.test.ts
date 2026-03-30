@@ -1,28 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { parseUnits } from "viem";
+import { wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
 
-// Import the pure math functions directly - they're module-scoped in the hook file
-// but we can test the exported hook's math by replicating the key formulas
-
-const WAD = 10n ** 18n;
 const ZERO = 0n;
 const MIN_DEBT = parseUnits("1000", 18);
-
-/** Multiply two WAD-denominated values: (a * b) / 1e18 */
-function wmul(a: bigint, b: bigint): bigint {
-  return (a * b) / WAD;
-}
-
-/** Divide two WAD-denominated values: (a * 1e18) / b */
-function wdiv(a: bigint, b: bigint): bigint {
-  if (b === ZERO) return ZERO;
-  return (a * WAD) / b;
-}
-
-/** Convert a percentage (0-100) to a WAD fraction */
-function pctToWad(pct: number): bigint {
-  return parseUnits((pct / 100).toFixed(18), 18);
-}
 
 describe("WAD math utilities", () => {
   it("wmul: multiplies two WAD values correctly", () => {
