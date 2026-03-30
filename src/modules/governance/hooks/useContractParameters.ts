@@ -23,6 +23,20 @@ const PRECISION_FACTOR = 100_000_000n;
 /** Approximate blocks per day on Ethereum mainnet (~12s block time). */
 const BLOCKS_PER_DAY = 7200n;
 
+function formatBlockDuration(blocks: bigint, blocksPerDay: bigint): string {
+  const days = Number(blocks) / Number(blocksPerDay);
+  if (days === 1) return "1 Day";
+  if (Number.isInteger(days)) return `${days} Days`;
+  return `${days.toFixed(1)} Days`;
+}
+
+function formatSecondsDuration(seconds: bigint): string {
+  const days = Number(seconds) / 86400;
+  if (days === 1) return "1 Day";
+  if (Number.isInteger(days)) return `${days} Days`;
+  return `${days.toFixed(1)} Days`;
+}
+
 export type GovernanceParameters = {
   /** Absolute number of gOHM tokens needed to submit a proposal. */
   proposalThreshold: string;
@@ -135,10 +149,10 @@ export function useContractParameters() {
         proposalApprovalThreshold: Number(formatUnits(approvalPct, 8)) * 100,
         proposalQuorum: formatEther((supply * quorum) / PRECISION_FACTOR),
         proposalQuorumPercent: Number(formatUnits(quorum, 8)) * 100,
-        votingDelay: `${(votingDelay as bigint) / BLOCKS_PER_DAY} Days`,
-        votingPeriod: `${(votingPeriod as bigint) / BLOCKS_PER_DAY} Days`,
-        executionDelay: `${(timelockDelay as bigint) / 86400n} Day`,
-        activationGracePeriod: `${(activationGracePeriod as bigint) / BLOCKS_PER_DAY} Day`,
+        votingDelay: formatBlockDuration(votingDelay as bigint, BLOCKS_PER_DAY),
+        votingPeriod: formatBlockDuration(votingPeriod as bigint, BLOCKS_PER_DAY),
+        executionDelay: formatSecondsDuration(timelockDelay as bigint),
+        activationGracePeriod: formatBlockDuration(activationGracePeriod as bigint, BLOCKS_PER_DAY),
         timelockContract: timelockAddress as string,
         governanceContract: governorAddress,
         gohmContract: gohmAddress,

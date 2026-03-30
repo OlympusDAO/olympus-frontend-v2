@@ -77,7 +77,7 @@ export function useVote() {
     comment,
   }: {
     proposalId: number;
-    vote: number;
+    vote: 0 | 1 | 2;
     comment?: string;
   }) => {
     if (!governorAddress) return;
@@ -92,6 +92,7 @@ export function useVote() {
         abi: olympusGovernorBravoAbi,
         functionName: "castVoteWithReason",
         args: [BigInt(proposalId), vote, comment],
+        chainId: mainnet.id,
       });
     } else {
       writeContract({
@@ -99,6 +100,7 @@ export function useVote() {
         abi: olympusGovernorBravoAbi,
         functionName: "castVote",
         args: [BigInt(proposalId), vote],
+        chainId: mainnet.id,
       });
     }
   };

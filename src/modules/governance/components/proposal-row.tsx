@@ -4,23 +4,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProposalStatusBadge } from "@/modules/governance/components/proposal-status-badge";
 import { ApprovalQuorumBar } from "@/modules/governance/components/approval-quorum-bar";
 import { useProposalDetails } from "@/modules/governance/hooks/useProposalDetails";
-import { useContractParameters } from "@/modules/governance/hooks/useContractParameters";
+import type { GovernanceParameters } from "@/modules/governance/hooks/useContractParameters";
 
 /**
  * A table row representing a single governance proposal.
- * Fetches on-chain proposal details and contract parameters internally.
+ * Fetches on-chain proposal details internally; receives shared contract parameters as a prop.
  */
 export function ProposalRow({
   proposalId,
   title,
   createdAt,
+  params,
 }: {
   proposalId: number;
   title: string;
   createdAt: Date;
+  params: GovernanceParameters | null | undefined;
 }) {
   const { data: details, isLoading: detailsLoading } = useProposalDetails({ proposalId });
-  const { data: params } = useContractParameters();
 
   const totalVotes = details ? details.forCount + details.againstCount + details.abstainCount : 0;
 

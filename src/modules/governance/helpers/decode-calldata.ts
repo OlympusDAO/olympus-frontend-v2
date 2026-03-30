@@ -69,10 +69,14 @@ export async function decodeCalldata(
   const selector = calldata.slice(0, 10);
 
   try {
-    // Look up function signature from OpenChain
+    // Look up function signature from OpenChain (5s timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(
       `https://api.openchain.xyz/signature-database/v1/lookup?function=${selector}`,
+      { signal: controller.signal },
     );
+    clearTimeout(timeoutId);
     if (!response.ok) throw new Error("OpenChain lookup failed");
 
     const data = await response.json();
@@ -80,10 +84,14 @@ export async function decodeCalldata(
       data?.result?.function?.[selector]?.map((f: { name: string }) => f.name) ?? [];
 
     if (results.length === 0) {
-      // Fallback to 4byte.directory
+      // Fallback to 4byte.directory (5s timeout)
+      const fallbackController = new AbortController();
+      const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 5000);
       const fallbackResponse = await fetch(
         `https://www.4byte.directory/api/v1/signatures/?hex_signature=${selector}`,
+        { signal: fallbackController.signal },
       );
+      clearTimeout(fallbackTimeoutId);
       if (fallbackResponse.ok) {
         const fallbackData = await fallbackResponse.json();
         const fallbackResults: string[] =

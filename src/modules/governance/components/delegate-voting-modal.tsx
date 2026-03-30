@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { isAddress, type Address } from "viem";
 import {
@@ -11,10 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDelegateVoting } from "@/modules/governance/hooks/useDelegateVoting";
-
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+import { shortenAddress } from "@/lib/helpers";
 
 /**
  * Dialog for delegating gOHM voting power to another address.
@@ -36,6 +33,12 @@ export function DelegateVotingModal({
   const [delegateAddress, setDelegateAddress] = useState("");
   const isValidAddress = isAddress(delegateAddress);
 
+  const handleClose = useCallback(() => {
+    setDelegateAddress("");
+    reset();
+    onClose();
+  }, [reset, onClose]);
+
   useEffect(() => {
     if (isSuccess) {
       const timer = setTimeout(() => {
@@ -43,13 +46,7 @@ export function DelegateVotingModal({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isSuccess]);
-
-  function handleClose() {
-    setDelegateAddress("");
-    reset();
-    onClose();
-  }
+  }, [isSuccess, handleClose]);
 
   function handleDelegate() {
     if (!isValidAddress) return;

@@ -12,7 +12,7 @@ type ProposalsResponse = {
 
 const PROPOSALS_QUERY = gql`
   query {
-    proposalCreateds(orderBy: proposalId, orderDirection: desc) {
+    proposalCreateds(first: 1000, orderBy: proposalId, orderDirection: desc) {
       proposalId
       proposer
       targets

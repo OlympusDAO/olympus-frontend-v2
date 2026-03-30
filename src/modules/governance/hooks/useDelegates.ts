@@ -21,6 +21,7 @@ export type Voter = {
 const DELEGATES_QUERY = gql`
   query {
     voters(
+      first: 1000
       orderBy: latestVotingPowerSnapshot__votingPower
       orderDirection: desc
       where: { latestVotingPowerSnapshot_not: null, latestVotingPowerSnapshot_: { votingPower_gt: 0.0001 } }

@@ -54,7 +54,7 @@ export function VoteModal({
     if (!selectedVote) return;
     castVote({
       proposalId,
-      vote: Number(selectedVote),
+      vote: Number(selectedVote) as 0 | 1 | 2,
       comment: comment.trim() || undefined,
     });
   }

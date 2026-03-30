@@ -3,10 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVotingWeight } from "@/modules/governance/hooks/useVotingWeight";
 import { useCheckDelegation } from "@/modules/governance/hooks/useCheckDelegation";
-
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+import { shortenAddress } from "@/lib/helpers";
 
 /**
  * Two stat cards showing the connected wallet's voting power and delegation status.

@@ -7,6 +7,7 @@ import { useProposals } from "@/modules/governance/hooks/useProposals";
 import { VotingPowerCards } from "@/modules/governance/components/voting-power-cards";
 import { ProposalRow } from "@/modules/governance/components/proposal-row";
 import type { NormalizedProposal } from "@/modules/governance/helpers/normalize-proposal";
+import { useContractParameters } from "@/modules/governance/hooks/useContractParameters";
 import { olympusGovernorBravoAbi } from "@/abis/OlympusGovernorBravo";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
@@ -24,6 +25,7 @@ import { MessageSquare } from "lucide-react";
 export function ProposalsPage() {
   const { address } = useAccount();
   const { data: proposals, isLoading } = useProposals();
+  const { data: contractParams } = useContractParameters();
   const publicClient = usePublicClient({ chainId: mainnet.id });
   const governorAddress = getContractAddress(ContractName.GOVERNOR_BRAVO, mainnet.id);
 
@@ -91,14 +93,16 @@ export function ProposalsPage() {
                 <p className="text-sm text-secondary-t">No Open Proposals</p>
               </Card>
             ) : (
-              <ProposalTable proposals={openProposals} />
+              <ProposalTable proposals={openProposals} params={contractParams} />
             )}
           </div>
 
           {/* Past Proposals */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Past Proposals</h2>
-            {pastProposals.length > 0 && <ProposalTable proposals={pastProposals} />}
+            {pastProposals.length > 0 && (
+              <ProposalTable proposals={pastProposals} params={contractParams} />
+            )}
           </div>
         </>
       )}
@@ -106,7 +110,13 @@ export function ProposalsPage() {
   );
 }
 
-function ProposalTable({ proposals }: { proposals: NormalizedProposal[] }) {
+function ProposalTable({
+  proposals,
+  params,
+}: {
+  proposals: NormalizedProposal[];
+  params: ReturnType<typeof useContractParameters>["data"];
+}) {
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -126,6 +136,7 @@ function ProposalTable({ proposals }: { proposals: NormalizedProposal[] }) {
                 proposalId={proposal.details.id}
                 title={proposal.title}
                 createdAt={proposal.createdAtBlock}
+                params={params}
               />
             ))}
           </tbody>

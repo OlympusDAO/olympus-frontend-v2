@@ -81,6 +81,7 @@ export function useExecuteProposal() {
       abi: olympusGovernorBravoAbi,
       functionName: "execute",
       args: [BigInt(proposalId)],
+      chainId: mainnet.id,
     });
   };
 

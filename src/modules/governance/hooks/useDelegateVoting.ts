@@ -34,7 +34,8 @@ export function useDelegateVoting() {
 
   useEffect(() => {
     if (isConfirmed) {
-      queryClient.invalidateQueries({ queryKey: ["governance", "checkDelegation"] });
+      // Invalidate wagmi's readContract cache for delegation and voting weight
+      queryClient.invalidateQueries({ queryKey: [{ entity: "readContract" }] });
       queryClient.invalidateQueries({ queryKey: ["governance", "votingWeight"] });
     }
   }, [isConfirmed, queryClient]);
@@ -78,6 +79,7 @@ export function useDelegateVoting() {
       abi: gOHMAbi,
       functionName: "delegate",
       args: [delegationAddress],
+      chainId: mainnet.id,
     });
   };
 

@@ -81,6 +81,7 @@ export function useQueueProposal() {
       abi: olympusGovernorBravoAbi,
       functionName: "queue",
       args: [BigInt(proposalId)],
+      chainId: mainnet.id,
     });
   };
 

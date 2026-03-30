@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useProposalVotes, type VoteCast } from "@/modules/governance/hooks/useProposalVotes";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { shortenAddress } from "@/lib/helpers";
 
 const voteBadgeVariants = cva(
   "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
@@ -35,10 +36,6 @@ function getSupportLabel(support: number): string {
   if (support === 1) return "For";
   if (support === 0) return "Against";
   return "Abstain";
-}
-
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 function VoteTable({ votes, isLoading }: { votes: VoteCast[] | undefined; isLoading: boolean }) {

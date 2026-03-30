@@ -1,10 +1,7 @@
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Voter } from "@/modules/governance/hooks/useDelegates";
-
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+import { shortenAddress } from "@/lib/helpers";
 
 /**
  * Table row for a single delegate in the delegates list.
