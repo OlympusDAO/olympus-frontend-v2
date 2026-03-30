@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { NumberFlow } from "@/components/ui/number-flow";
+import { useFormContext } from "react-hook-form";
 import { FormControl, FormMessage } from "@/components/ui/form";
 import { Tooltip } from "@/components/ui/tooltip";
 import {
@@ -20,7 +21,7 @@ import {
 import { handleInputNumberChange } from "@/lib/helpers";
 import type { TokenWithBalance } from "@/lib/hooks/useToken";
 
-type TokenBigInputProps = React.ComponentProps<"input"> & {
+type TokenBigInputProps = Omit<React.ComponentProps<"input">, "onChange"> & {
   label?: React.ReactNode;
   required?: boolean;
   tooltip?: string;
@@ -47,6 +48,8 @@ function TokenBigInput({
   ...rest
 }: TokenBigInputProps) {
   const { address } = useAccount();
+  const formContext = useFormContext();
+  const hasFormContext = formContext !== null;
   const isDisabled = rest.disabled;
   const { balance = 0n, decimals, icon, symbol } = token;
 
@@ -74,8 +77,7 @@ function TokenBigInput({
   const fontSize = calculateFontSize(displayValue);
   const lineHeight = Math.ceil(fontSize * 1.25);
 
-  return (
-    <FormControl>
+  const content = (
       <div
         data-slot="token-big-input"
         className="group/biginput flex flex-col gap-3 rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b transition-colors hover:bg-surface-a10"
@@ -191,10 +193,15 @@ function TokenBigInput({
           </Button>
         </div>
 
-        <FormMessage />
+        {hasFormContext && <FormMessage />}
       </div>
-    </FormControl>
   );
+
+  if (hasFormContext) {
+    return <FormControl>{content}</FormControl>;
+  }
+
+  return content;
 }
 
 export { TokenBigInput };
