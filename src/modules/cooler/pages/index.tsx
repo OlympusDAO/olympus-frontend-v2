@@ -6,8 +6,6 @@ import { RepayForm } from "../components/repay-form";
 import { PositionInfo } from "../components/position-info";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
-import { Button } from "@/components/ui/button";
-
 type Tab = "borrow" | "repay";
 
 export function CoolerBorrowPage() {

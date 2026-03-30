@@ -48,6 +48,9 @@ export enum ContractName {
   LIMIT_ORDERS = "LIMIT_ORDERS",
   PRICE = "PRICE",
 
+  // Governance
+  GOVERNOR_BRAVO = "GOVERNOR_BRAVO",
+
   // Bridge
   CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
   CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
@@ -157,6 +160,11 @@ export const CONTRACTS: ContractAddresses = {
   [ContractName.PRICE]: {
     [mainnet.id]: "0xd6C4D723fdadCf0D171eF9A2a3Bfa870675b282f",
     [sepolia.id]: "0x3bD25E292dC36b674BBF1EEecaAB4565bf2eF241",
+  },
+
+  // ── Governance ───────────────────────────────────────
+  [ContractName.GOVERNOR_BRAVO]: {
+    [mainnet.id]: "0x0941233c964e7d7Efeb05D253176E5E634cEFfcD",
   },
 
   // ── Bridge ──────────────────────────────────────────

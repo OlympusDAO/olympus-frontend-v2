@@ -87,6 +87,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Vote", path: "/dao/vote" },
       { label: "Delegate", path: "/dao/delegate" },
+      { label: "Contract Parameters", path: "/dao/contract-parameters" },
       { label: "Forum", path: "https://forum.olympusdao.finance", external: true },
       { label: "Snapshots", path: "https://snapshot.org/#/olympusdao.eth", external: true },
     ],
