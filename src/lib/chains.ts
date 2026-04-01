@@ -27,7 +27,7 @@ export const BRIDGE_EXTRA_CHAINS = [arbitrum, base, berachain] as const;
 /**
  * Testnet chains (sepolia only).
  */
-export const TESTNET_CHAINS = [sepolia] as const;
+export const TESTNET_CHAINS = [sepolia, mainnet] as const;
 
 /**
  * Whether testnet mode is enabled via environment variable.

@@ -1,0 +1,93 @@
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import { RiArrowRightSLine } from "@remixicon/react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useActivityFeed } from "@/lib/hooks/liveness/useActivityFeed";
+import { ACTIVITY_COLUMNS } from "@/modules/pulse/utils/activity-config";
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export function OverviewLastActions() {
+  const { data: allItems, isLoading } = useActivityFeed();
+
+  const top5 = useMemo(() => (allItems ?? []).slice(0, 5), [allItems]);
+
+  const table = useReactTable({
+    data: top5,
+    columns: ACTIVITY_COLUMNS,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-8 w-24 rounded-full" />
+        </div>
+        <Separator />
+        <table className="w-full">
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-6 w-14 rounded-md" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="size-8 rounded-full" />
+                </TableCell>
+                <TableCell className="w-full">
+                  <Skeleton className="h-4 w-48" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-14" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </table>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <p className="text-[15px]/[20px] font-semibold">Last Protocol Actions</p>
+        <Button variant="secondary" size="md" render={<Link to="/home/feed" />}>
+          View All
+          <RiArrowRightSLine />
+        </Button>
+      </div>
+      <Separator />
+
+      {/* Table */}
+      {table.getRowModel().rows.length === 0 ? (
+        <p className="py-8 text-center text-sm text-tertiary-t">No recent activity</p>
+      ) : (
+        <table className="w-full">
+          <TableBody>
+            {table.getRowModel().rows.map((row) => {
+              const cells = row.getVisibleCells().map((cell) => (
+                <TableCell
+                  key={cell.id}
+                  className={cell.column.id === "description" ? "w-full" : ""}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ));
+
+              return <TableRow key={row.id}>{cells}</TableRow>;
+            })}
+          </TableBody>
+        </table>
+      )}
+    </Card>
+  );
+}

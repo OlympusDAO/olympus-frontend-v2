@@ -7,11 +7,11 @@ export interface BackingHistory {
   change7d: number; // percentage
 }
 
-export function useBackingHistory() {
+export function useBackingHistory(days = 90) {
   return useQuery<BackingHistory>({
-    queryKey: ["backingHistory"],
+    queryKey: ["backingHistory", days],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
+      const startDate = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate,
         crossChainDataComplete: true,

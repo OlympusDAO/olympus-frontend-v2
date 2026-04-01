@@ -38,7 +38,7 @@ const COOLER_TYPE_MAP: Record<string, ActivityType> = {
   collateralWithdraw: "cooler-withdraw-collateral",
 };
 
-export function useActivityFeed() {
+export function useActivityFeed(options?: { refetchInterval?: number | false }) {
   return useQuery<ActivityItem[]>({
     queryKey: ["activityFeed"],
     queryFn: async () => {
@@ -390,6 +390,6 @@ export function useActivityFeed() {
       return items.slice(0, 100);
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: options?.refetchInterval ?? 60_000,
   });
 }
