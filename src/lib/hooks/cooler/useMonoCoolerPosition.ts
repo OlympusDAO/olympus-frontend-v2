@@ -106,7 +106,17 @@ export function useMonoCoolerPosition() {
     const isActive = data[6].result as boolean;
     const isEnabled = data[7].result as boolean;
 
-    const { collateral, currentDebt, maxOriginationDebtAmount, liquidationDebtAmount, healthFactor, currentLtv, totalDelegated, numDelegateAddresses, maxDelegateAddresses } = accountPosition;
+    const {
+      collateral,
+      currentDebt,
+      maxOriginationDebtAmount,
+      liquidationDebtAmount,
+      healthFactor,
+      currentLtv,
+      totalDelegated,
+      numDelegateAddresses,
+      maxDelegateAddresses,
+    } = accountPosition;
     const [maxOriginationLtv, liquidationLtv] = loanToValues;
 
     const interestRateBps = calculateInterestRateBps(interestRateWad);

@@ -79,7 +79,6 @@ export function ExtendLoanModal({
     return allowance < interestDueOnExtension;
   }, [allowance, interestDueOnExtension]);
 
-
   const handleApprove = () => {
     approve({
       tokenAddress: debtAddress as Address,
@@ -129,10 +128,11 @@ export function ExtendLoanModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-secondary-t">
+            <label htmlFor="extend-terms" className="mb-1 block text-xs text-secondary-t">
               Number of Terms
             </label>
             <Input
+              id="extend-terms"
               type="number"
               min="1"
               step="1"
@@ -150,24 +150,30 @@ export function ExtendLoanModal({
             <div className="flex justify-between">
               <span className="text-secondary-t">Wallet Balance</span>
               <span>
-                {debtBalance !== undefined
-                  ? `${formatAmount(debtBalance)} ${debtAssetName}`
-                  : "--"}
+                {debtBalance !== undefined ? `${formatAmount(debtBalance)} ${debtAssetName}` : "--"}
               </span>
             </div>
             <div className="border-a5-b flex justify-between border-t pt-2 font-semibold">
               <span className="text-secondary-t">Interest Due on Extension</span>
-              <span>{formatAmount(interestDueOnExtension)} {debtAssetName}</span>
+              <span>
+                {formatAmount(interestDueOnExtension)} {debtAssetName}
+              </span>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
             {needsApproval ? (
-              <Button onClick={handleApprove} disabled={isApprovePending || interestDueOnExtension === 0n}>
+              <Button
+                onClick={handleApprove}
+                disabled={isApprovePending || interestDueOnExtension === 0n}
+              >
                 {isApprovePending ? "Approving..." : `Approve ${debtAssetName}`}
               </Button>
             ) : (
-              <Button onClick={handleExtend} disabled={isExtendPending || interestDueOnExtension === 0n}>
+              <Button
+                onClick={handleExtend}
+                disabled={isExtendPending || interestDueOnExtension === 0n}
+              >
                 {isExtendPending ? "Extending..." : "Extend"}
               </Button>
             )}

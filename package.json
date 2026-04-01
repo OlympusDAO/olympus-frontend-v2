@@ -12,12 +12,13 @@
     "format": "biome format --write src/",
     "check": "biome check src/",
     "check:fix": "biome check --write src/",
+    "prepare": "husky",
+    "codegen": "orval",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "prepare": "husky"
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@base-ui/react": "^1.2.0",
+    "@base-ui/react": "^1.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@number-flow/react": "^0.5.14",
     "@radix-ui/react-slider": "^1.3.6",
@@ -59,9 +60,11 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react-swc": "^3.10.2",
+    "dotenv": "^17.3.1",
     "husky": "^9.1.7",
     "jsdom": "^29.0.1",
     "lint-staged": "^16.3.1",
+    "orval": "^8.5.3",
     "tw-animate-css": "^1.3.4",
     "typescript": "~5.8.3",
     "vite": "^7.0.0",

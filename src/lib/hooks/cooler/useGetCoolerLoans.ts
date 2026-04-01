@@ -1,6 +1,6 @@
 import { usePublicClient, useChainId } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { type Address } from "viem";
+import type { Address } from "viem";
 import CoolerABI from "@/abis/Cooler";
 import CoolerFactoryABI from "@/abis/CoolerFactory";
 import ERC20ABI from "@/abis/ERC20";
@@ -40,9 +40,17 @@ export function useGetCoolerLoans({
   const chainId = useChainId();
 
   const { data, isFetched, isLoading, isFetching } = useQuery({
-    queryKey: ["getCoolerLoans", chainId, factoryAddress, collateralAddress, debtAddress, walletAddress],
+    queryKey: [
+      "getCoolerLoans",
+      chainId,
+      factoryAddress,
+      collateralAddress,
+      debtAddress,
+      walletAddress,
+    ],
     queryFn: async () => {
-      if (!walletAddress || !factoryAddress || !collateralAddress || !debtAddress || !publicClient) return [];
+      if (!walletAddress || !factoryAddress || !collateralAddress || !debtAddress || !publicClient)
+        return [];
 
       try {
         // Get cooler address from factory
@@ -56,11 +64,11 @@ export function useGetCoolerLoans({
         const cooler = coolerAddress.result as Address;
 
         // Get debt asset name
-        const debtAssetName = await publicClient.readContract({
+        const debtAssetName = (await publicClient.readContract({
           address: debtAddress,
           abi: ERC20ABI,
           functionName: "symbol",
-        }) as string;
+        })) as string;
 
         // Batch fetch loans using multicall, probing in batches of 10
         const loans: CoolerLoan[] = [];
@@ -127,7 +135,8 @@ export function useGetCoolerLoans({
         return [];
       }
     },
-    enabled: !!walletAddress && !!factoryAddress && !!collateralAddress && !!debtAddress && !!publicClient,
+    enabled:
+      !!walletAddress && !!factoryAddress && !!collateralAddress && !!debtAddress && !!publicClient,
   });
 
   return { data, isFetched, isLoading, isFetching };

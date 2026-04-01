@@ -36,11 +36,7 @@ export function ConnectButton() {
             {(() => {
               if (!connected) {
                 return (
-                  <Button
-                    onClick={openConnectModal}
-                    type="button"
-                    size={isMobile ? "sm" : "md"}
-                  >
+                  <Button onClick={openConnectModal} type="button" size={isMobile ? "sm" : "md"}>
                     <Icon name="WalletIcon" size={16} />
                     {!isMobile && "Connect Wallet"}
                   </Button>
@@ -84,7 +80,11 @@ export function ConnectButton() {
                     size={isMobile ? "sm" : "md"}
                     className="px-3"
                   >
-                    {isMobile ? <Icon name="WalletIcon" size={16} /> : shortenAddress(account.address)}
+                    {isMobile ? (
+                      <Icon name="WalletIcon" size={16} />
+                    ) : (
+                      shortenAddress(account.address)
+                    )}
                   </Button>
                 </div>
               );

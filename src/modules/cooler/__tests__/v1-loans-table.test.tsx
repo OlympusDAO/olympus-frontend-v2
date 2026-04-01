@@ -30,27 +30,13 @@ function createMockLoan(overrides: Partial<CoolerLoan> = {}): CoolerLoan {
 
 describe("V1LoansTable", () => {
   it("shows loading state", () => {
-    render(
-      <V1LoansTable
-        loans={[]}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={true}
-      />,
-    );
+    render(<V1LoansTable loans={[]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={true} />);
 
     expect(screen.getByText("Loading loans...")).toBeDefined();
   });
 
   it("shows empty state when no loans", () => {
-    render(
-      <V1LoansTable
-        loans={[]}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={false} />);
 
     expect(screen.getByText("No loans found")).toBeDefined();
   });
@@ -58,14 +44,7 @@ describe("V1LoansTable", () => {
   it("renders loan rows with correct columns", () => {
     const loan = createMockLoan();
 
-    render(
-      <V1LoansTable
-        loans={[loan]}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[loan]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={false} />);
 
     // Column headers
     expect(screen.getByText("Collateral")).toBeDefined();
@@ -82,14 +61,7 @@ describe("V1LoansTable", () => {
   it("renders Repay and Extend buttons per row", () => {
     const loan = createMockLoan();
 
-    render(
-      <V1LoansTable
-        loans={[loan]}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[loan]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={false} />);
 
     expect(screen.getByText("Repay")).toBeDefined();
     expect(screen.getByText("Extend")).toBeDefined();
@@ -100,14 +72,7 @@ describe("V1LoansTable", () => {
     const onRepay = vi.fn();
     const loan = createMockLoan();
 
-    render(
-      <V1LoansTable
-        loans={[loan]}
-        onRepay={onRepay}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[loan]} onRepay={onRepay} onExtend={vi.fn()} isLoading={false} />);
 
     await user.click(screen.getByText("Repay"));
     expect(onRepay).toHaveBeenCalledWith(loan);
@@ -118,14 +83,7 @@ describe("V1LoansTable", () => {
     const onExtend = vi.fn();
     const loan = createMockLoan();
 
-    render(
-      <V1LoansTable
-        loans={[loan]}
-        onRepay={vi.fn()}
-        onExtend={onExtend}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[loan]} onRepay={vi.fn()} onExtend={onExtend} isLoading={false} />);
 
     await user.click(screen.getByText("Extend"));
     expect(onExtend).toHaveBeenCalledWith(loan);
@@ -138,14 +96,7 @@ describe("V1LoansTable", () => {
       createMockLoan({ loanId: 2, debtAssetName: "USDS" }),
     ];
 
-    render(
-      <V1LoansTable
-        loans={loans}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={loans} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={false} />);
 
     // Should have 3 Repay buttons and 3 Extend buttons
     expect(screen.getAllByText("Repay")).toHaveLength(3);
@@ -153,14 +104,7 @@ describe("V1LoansTable", () => {
   });
 
   it("displays 'My Loans' heading", () => {
-    render(
-      <V1LoansTable
-        loans={[]}
-        onRepay={vi.fn()}
-        onExtend={vi.fn()}
-        isLoading={false}
-      />,
-    );
+    render(<V1LoansTable loans={[]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={false} />);
 
     expect(screen.getByText("My Loans")).toBeDefined();
   });

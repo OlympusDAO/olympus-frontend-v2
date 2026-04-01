@@ -54,18 +54,12 @@ export function V1LoansTable({ loans, onRepay, onExtend, isLoading }: V1LoansTab
               const repaymentTotal = loan.principal + loan.interestDue;
               return (
                 <tr key={loan.loanId} className="border-a5-b border-b last:border-b-0">
-                  <td className="py-4 pr-4">
-                    {formatAmount(loan.collateral)} gOHM
-                  </td>
-                  <td className="py-4 pr-4">
-                    {formatInterestRate(loan)}
-                  </td>
+                  <td className="py-4 pr-4">{formatAmount(loan.collateral)} gOHM</td>
+                  <td className="py-4 pr-4">{formatInterestRate(loan)}</td>
                   <td className="py-4 pr-4">
                     {formatAmount(repaymentTotal)} {loan.debtAssetName}
                   </td>
-                  <td className="py-4 pr-4">
-                    {formatDate(loan.expiry)}
-                  </td>
+                  <td className="py-4 pr-4">{formatDate(loan.expiry)}</td>
                   <td className="py-4">
                     <div className="flex gap-2">
                       <Button size="sm" variant="secondary" onClick={() => onRepay(loan)}>

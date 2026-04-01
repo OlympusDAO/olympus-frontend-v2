@@ -96,7 +96,11 @@ export function RepayForm({ loan }: RepayFormProps) {
   const needsApproval = useMemo(() => {
     if (repayAmount === ZERO) return false;
     if (allowance === undefined) return true;
-    const requiredAmount = calculateRepayAmount(repayAmount, position?.interestRateBps ?? 0, isFullRepay);
+    const requiredAmount = calculateRepayAmount(
+      repayAmount,
+      position?.interestRateBps ?? 0,
+      isFullRepay,
+    );
     return allowance < requiredAmount;
   }, [allowance, repayAmount, position?.interestRateBps, isFullRepay]);
 
@@ -105,7 +109,11 @@ export function RepayForm({ loan }: RepayFormProps) {
   const needsScwAuthorization = isComposite && isSmartContractWallet && !isAuthorized;
 
   const isAnyPending =
-    isRepaying || isWithdrawingCollateral || isRepayingAndRemovingCollateral || isApproving || isSettingAuthorization;
+    isRepaying ||
+    isWithdrawingCollateral ||
+    isRepayingAndRemovingCollateral ||
+    isApproving ||
+    isSettingAuthorization;
 
   // Input values
   const repayInputValue = repayAmount > ZERO ? formatUnits(repayAmount, 18) : "";
@@ -140,7 +148,16 @@ export function RepayForm({ loan }: RepayFormProps) {
     if (isBelowMinDebt && projectedDebt > ZERO)
       return { label: "Minimum debt is 1,000 USDS", disabled: true };
     return { label: getActionLabel(), disabled: false };
-  }, [address, repayAmount, usdsToken.balance, isBelowMinDebt, projectedDebt, isComposite, isRepayOnly, isFullRepay]);
+  }, [
+    address,
+    repayAmount,
+    usdsToken.balance,
+    isBelowMinDebt,
+    projectedDebt,
+    isComposite,
+    isRepayOnly,
+    isFullRepay,
+  ]);
 
   function getActionLabel() {
     if (isComposite) return "Repay & Withdraw";
@@ -197,7 +214,8 @@ export function RepayForm({ loan }: RepayFormProps) {
       number: stepNum,
       title: txTitle,
       detail: `${Number(formatUnits(repayAmount, 18)).toFixed(2)} USDS`,
-      isActive: (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
+      isActive:
+        (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
       isCompleted: txSuccess,
       isLoading: txPending,
       hash: txSuccess ? txHash : undefined,
@@ -205,12 +223,22 @@ export function RepayForm({ loan }: RepayFormProps) {
 
     return steps;
   }, [
-    needsApproval, approvalSuccess, hasSufficientAllowance, isApproving, approvalHash,
-    needsScwAuthorization, isAuthorized, isSettingAuthorization,
-    isComposite, isFullRepay,
-    isRepayAndRemoveCollateralSuccess, isRepaySuccess,
-    repayAndRemoveCollateralHash, repayHash,
-    isRepayingAndRemovingCollateral, isRepaying,
+    needsApproval,
+    approvalSuccess,
+    hasSufficientAllowance,
+    isApproving,
+    approvalHash,
+    needsScwAuthorization,
+    isAuthorized,
+    isSettingAuthorization,
+    isComposite,
+    isFullRepay,
+    isRepayAndRemoveCollateralSuccess,
+    isRepaySuccess,
+    repayAndRemoveCollateralHash,
+    repayHash,
+    isRepayingAndRemovingCollateral,
+    isRepaying,
     repayAmount,
   ]);
 

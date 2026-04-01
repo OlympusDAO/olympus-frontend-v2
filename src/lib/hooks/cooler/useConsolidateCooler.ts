@@ -1,7 +1,15 @@
 import { useCallback } from "react";
-import { useAccount, useChainId, usePublicClient, useWriteContract, useWaitForTransactionReceipt, useSignTypedData, useReadContract } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  usePublicClient,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useSignTypedData,
+  useReadContract,
+} from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Address } from "viem";
+import type { Address } from "viem";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import CoolerV2MigratorABI from "@/abis/CoolerV2Migrator";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
@@ -16,7 +24,10 @@ import {
 
 const MIGRATE_TOAST: TransactionToastConfig = {
   pending: { title: "Migrating to Cooler V2...", description: "Please wait for confirmation." },
-  success: { title: "Migration successful!", description: "Your loans have been migrated to Cooler V2." },
+  success: {
+    title: "Migration successful!",
+    description: "Your loans have been migrated to Cooler V2.",
+  },
   error: {
     title: "Migration failed",
     description: "There was an error migrating your loans.",
@@ -37,7 +48,14 @@ export function useConsolidateCooler() {
   const migratorAddress = getContractAddress(ContractName.COOLER_V2_MIGRATOR, chainId);
 
   // Read nonce for EIP-712 signatures
-  const nonceQueryKey = ["readContract", { functionName: "authorizationNonces", address: monoCoolerAddress, args: address ? [address] : undefined }] as const;
+  const nonceQueryKey = [
+    "readContract",
+    {
+      functionName: "authorizationNonces",
+      address: monoCoolerAddress,
+      args: address ? [address] : undefined,
+    },
+  ] as const;
   const { data: authNonce } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
@@ -47,7 +65,11 @@ export function useConsolidateCooler() {
   });
 
   const { data: hash, writeContract, isPending, error: writeError, reset } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed, error: confirmError } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
     hash,
     confirmations: 1,
   });
@@ -69,19 +91,22 @@ export function useConsolidateCooler() {
   });
 
   // Preview consolidation to show user what will happen
-  const previewConsolidate = useCallback(async (coolers: Address[]) => {
-    if (!publicClient || !migratorAddress) throw new Error("Missing contract addresses");
+  const previewConsolidate = useCallback(
+    async (coolers: Address[]) => {
+      if (!publicClient || !migratorAddress) throw new Error("Missing contract addresses");
 
-    const result = await publicClient.readContract({
-      address: migratorAddress,
-      abi: CoolerV2MigratorABI,
-      functionName: "previewConsolidate",
-      args: [coolers],
-    });
+      const result = await publicClient.readContract({
+        address: migratorAddress,
+        abi: CoolerV2MigratorABI,
+        functionName: "previewConsolidate",
+        args: [coolers],
+      });
 
-    const [collateralAmount, borrowAmount] = result as readonly [bigint, bigint];
-    return { collateralAmount, borrowAmount };
-  }, [publicClient, migratorAddress]);
+      const [collateralAmount, borrowAmount] = result as readonly [bigint, bigint];
+      return { collateralAmount, borrowAmount };
+    },
+    [publicClient, migratorAddress],
+  );
 
   // Main consolidation function
   const consolidate = async ({

@@ -138,27 +138,24 @@ describe("Additional borrowing available", () => {
   it("calculates available borrowing correctly", () => {
     const maxPotentialBorrowAmount = parseUnits("7000", 18);
     const currentDebt = parseUnits("3000", 18);
-    const available = maxPotentialBorrowAmount > currentDebt
-      ? maxPotentialBorrowAmount - currentDebt
-      : ZERO;
+    const available =
+      maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
     expect(available).toBe(parseUnits("4000", 18));
   });
 
   it("returns zero when at max capacity", () => {
     const maxPotentialBorrowAmount = parseUnits("7000", 18);
     const currentDebt = parseUnits("7000", 18);
-    const available = maxPotentialBorrowAmount > currentDebt
-      ? maxPotentialBorrowAmount - currentDebt
-      : ZERO;
+    const available =
+      maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
     expect(available).toBe(ZERO);
   });
 
   it("returns zero when over-borrowed", () => {
     const maxPotentialBorrowAmount = parseUnits("7000", 18);
     const currentDebt = parseUnits("8000", 18);
-    const available = maxPotentialBorrowAmount > currentDebt
-      ? maxPotentialBorrowAmount - currentDebt
-      : ZERO;
+    const available =
+      maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
     expect(available).toBe(ZERO);
   });
 });

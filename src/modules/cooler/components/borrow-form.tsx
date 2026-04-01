@@ -100,7 +100,11 @@ export function BorrowForm({ loan }: BorrowFormProps) {
   const needsScwAuthorization = isComposite && isSmartContractWallet && !isAuthorized;
 
   const isAnyPending =
-    isBorrowing || isAddingCollateral || isAddingCollateralAndBorrowing || isApproving || isSettingAuthorization;
+    isBorrowing ||
+    isAddingCollateral ||
+    isAddingCollateralAndBorrowing ||
+    isApproving ||
+    isSettingAuthorization;
 
   // Collateral input string
   const collateralInputValue = collateralAmount > ZERO ? formatUnits(collateralAmount, 18) : "";
@@ -135,7 +139,11 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     if (!address) return { label: "Connect Wallet", disabled: true };
     if (collateralAmount === ZERO && borrowAmount === ZERO)
       return { label: "Enter Amount", disabled: true };
-    if (collateralAmount > ZERO && gohmToken.balance !== undefined && collateralAmount > gohmToken.balance)
+    if (
+      collateralAmount > ZERO &&
+      gohmToken.balance !== undefined &&
+      collateralAmount > gohmToken.balance
+    )
       return { label: "Insufficient gOHM Balance", disabled: true };
     if (isBelowMinDebt && projectedDebt > ZERO)
       return { label: "Minimum debt is 1,000 USDS", disabled: true };
@@ -227,10 +235,12 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     steps.push({
       number: stepNum,
       title: txTitle,
-      detail: collateralAmount > ZERO && borrowAmount > ZERO
-        ? `${Number(formatUnits(collateralAmount, 18)).toFixed(4)} gOHM → ${Number(formatUnits(borrowAmount, 18)).toFixed(2)} USDS`
-        : undefined,
-      isActive: (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
+      detail:
+        collateralAmount > ZERO && borrowAmount > ZERO
+          ? `${Number(formatUnits(collateralAmount, 18)).toFixed(4)} gOHM → ${Number(formatUnits(borrowAmount, 18)).toFixed(2)} USDS`
+          : undefined,
+      isActive:
+        (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
       isCompleted: txSuccess,
       isLoading: txPending,
       hash: txSuccess ? txHash : undefined,
@@ -238,13 +248,28 @@ export function BorrowForm({ loan }: BorrowFormProps) {
 
     return steps;
   }, [
-    needsApproval, approvalSuccess, hasSufficientAllowance, isApproving, approvalHash,
-    needsScwAuthorization, isAuthorized, isSettingAuthorization,
-    isComposite, isBorrowOnly, isCollateralOnly,
-    isAddCollateralAndBorrowSuccess, isBorrowSuccess, isAddCollateralSuccess,
-    addCollateralAndBorrowHash, borrowHash, addCollateralHash,
-    isAddingCollateralAndBorrowing, isBorrowing, isAddingCollateral,
-    collateralAmount, borrowAmount,
+    needsApproval,
+    approvalSuccess,
+    hasSufficientAllowance,
+    isApproving,
+    approvalHash,
+    needsScwAuthorization,
+    isAuthorized,
+    isSettingAuthorization,
+    isComposite,
+    isBorrowOnly,
+    isCollateralOnly,
+    isAddCollateralAndBorrowSuccess,
+    isBorrowSuccess,
+    isAddCollateralSuccess,
+    addCollateralAndBorrowHash,
+    borrowHash,
+    addCollateralHash,
+    isAddingCollateralAndBorrowing,
+    isBorrowing,
+    isAddingCollateral,
+    collateralAmount,
+    borrowAmount,
   ]);
 
   const modalCurrentStep = useMemo(() => {

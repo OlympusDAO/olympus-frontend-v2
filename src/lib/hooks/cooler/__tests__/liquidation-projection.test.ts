@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { calculateInterestRateBps, calculateProjectedLiquidationDate } from "../useMonoCoolerPosition";
+import {
+  calculateInterestRateBps,
+  calculateProjectedLiquidationDate,
+} from "../useMonoCoolerPosition";
 import { parseUnits } from "viem";
 
 describe("calculateInterestRateBps", () => {

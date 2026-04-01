@@ -1,4 +1,10 @@
-import { useAccount, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { getContractAddress, ContractName } from "@/lib/contracts";
@@ -11,7 +17,10 @@ const AUTH_TOAST: TransactionToastConfig = {
   error: {
     title: "Authorization failed",
     description: "There was an error authorizing the migrator.",
-    userRejected: { title: "Authorization cancelled", description: "You cancelled the transaction." },
+    userRejected: {
+      title: "Authorization cancelled",
+      description: "You cancelled the transaction.",
+    },
   },
 };
 
@@ -23,7 +32,11 @@ export function useMigratorAuthorization() {
   const monoCoolerAddress = getContractAddress(ContractName.COOLER_V2_MONOCOOLER, chainId);
   const migratorAddress = getContractAddress(ContractName.COOLER_V2_MIGRATOR, chainId);
 
-  const { data: authDeadline, isLoading: isCheckingAuthorization, queryKey } = useReadContract({
+  const {
+    data: authDeadline,
+    isLoading: isCheckingAuthorization,
+    queryKey,
+  } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
     functionName: "authorizations",
@@ -38,7 +51,11 @@ export function useMigratorAuthorization() {
     authDeadline !== undefined && (authDeadline as bigint) > BigInt(Math.floor(Date.now() / 1000));
 
   const { data: hash, writeContract, isPending, error: writeError, reset } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed, error: confirmError } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
     hash,
     confirmations: 1,
   });

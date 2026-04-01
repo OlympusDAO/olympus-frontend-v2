@@ -1,4 +1,10 @@
-import { useAccount, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getContractAddress, ContractName } from "@/lib/contracts";
@@ -14,7 +20,11 @@ export function useMonoCoolerAuthorization() {
   const compositesAddress = getContractAddress(ContractName.COOLER_V2_COMPOSITES, chainId);
 
   // Check if composites contract is authorized
-  const { data: authDeadline, isLoading: isCheckingAuthorization, queryKey } = useReadContract({
+  const {
+    data: authDeadline,
+    isLoading: isCheckingAuthorization,
+    queryKey,
+  } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
     functionName: "authorizations",

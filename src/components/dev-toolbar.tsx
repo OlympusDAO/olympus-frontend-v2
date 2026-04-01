@@ -17,7 +17,7 @@ export function DevToolbar() {
   const scenarioNames = Object.keys(SCENARIOS);
 
   return (
-    <div className="fixed bottom-3 right-3 z-[9999] font-mono text-xs">
+    <div className="fixed bottom-15 right-3 z-[9999] font-mono text-xs">
       {collapsed ? (
         <button
           type="button"

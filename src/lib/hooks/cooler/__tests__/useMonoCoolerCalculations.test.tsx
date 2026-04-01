@@ -8,7 +8,13 @@ import { useMonoCoolerCalculations } from "../useMonoCoolerCalculations";
 vi.mock("wagmi", () => ({
   useAccount: () => ({ address: "0x1234567890abcdef1234567890abcdef12345678" }),
   useChainId: () => 1,
-  useReadContracts: () => ({ data: undefined, isLoading: false, error: null, refetch: vi.fn(), queryKey: [] }),
+  useReadContracts: () => ({
+    data: undefined,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    queryKey: [],
+  }),
   useReadContract: () => ({ data: undefined }),
   usePublicClient: () => null,
 }));
@@ -208,9 +214,7 @@ describe("useMonoCoolerCalculations", () => {
       );
 
       // projectedDebt = currentDebt + borrowAmount
-      expect(result.current.projectedDebt).toBe(
-        existingLoan.debt + result.current.borrowAmount,
-      );
+      expect(result.current.projectedDebt).toBe(existingLoan.debt + result.current.borrowAmount);
     });
 
     it("projects collateral as existing + new in borrow mode", () => {

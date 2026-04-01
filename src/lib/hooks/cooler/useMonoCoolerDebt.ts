@@ -1,5 +1,12 @@
 import { useCallback } from "react";
-import { useAccount, useChainId, useWriteContract, useWaitForTransactionReceipt, useSignTypedData, useReadContract } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useSignTypedData,
+  useReadContract,
+} from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
@@ -17,16 +24,20 @@ export function calculateBorrowAmount(amount: bigint, interestRateBps: number): 
   if (amount === 0n) return 0n;
   const hourlyRate = interestRateBps / 10000 / 8760;
   const bufferWad = BigInt(Math.floor(hourlyRate * 1e18));
-  const buffer = (amount * bufferWad) / (10n ** 18n);
+  const buffer = (amount * bufferWad) / 10n ** 18n;
   return amount - buffer;
 }
 
 /** Add 1-hour interest buffer for full repay to ensure complete repayment */
-export function calculateRepayAmount(amount: bigint, interestRateBps: number, fullRepay: boolean): bigint {
+export function calculateRepayAmount(
+  amount: bigint,
+  interestRateBps: number,
+  fullRepay: boolean,
+): bigint {
   if (!fullRepay || amount === 0n) return amount;
   const hourlyRate = interestRateBps / 10000 / 8760;
   const bufferWad = BigInt(Math.floor(hourlyRate * 1e18));
-  const buffer = (amount * bufferWad) / (10n ** 18n);
+  const buffer = (amount * bufferWad) / 10n ** 18n;
   return amount + buffer;
 }
 
@@ -71,7 +82,14 @@ export function useMonoCoolerDebt() {
   const compositesAddress = getContractAddress(ContractName.COOLER_V2_COMPOSITES, chainId);
 
   // Read nonce for EIP-712 signatures
-  const nonceQueryKey = ["readContract", { functionName: "authorizationNonces", address: monoCoolerAddress, args: address ? [address] : undefined }] as const;
+  const nonceQueryKey = [
+    "readContract",
+    {
+      functionName: "authorizationNonces",
+      address: monoCoolerAddress,
+      args: address ? [address] : undefined,
+    },
+  ] as const;
   const { data: authNonce } = useReadContract({
     address: monoCoolerAddress,
     abi: CoolerV2MonoCoolerABI,
@@ -137,7 +155,10 @@ export function useMonoCoolerDebt() {
 
   // --- Add Collateral ---
   const addCollateralWrite = useWriteContract();
-  const addCollateralReceipt = useWaitForTransactionReceipt({ hash: addCollateralWrite.data, confirmations: 1 });
+  const addCollateralReceipt = useWaitForTransactionReceipt({
+    hash: addCollateralWrite.data,
+    confirmations: 1,
+  });
   useTransactionToast({
     hash: addCollateralWrite.data,
     isWritePending: addCollateralWrite.isPending,
@@ -161,7 +182,10 @@ export function useMonoCoolerDebt() {
 
   // --- Withdraw Collateral ---
   const withdrawCollateralWrite = useWriteContract();
-  const withdrawCollateralReceipt = useWaitForTransactionReceipt({ hash: withdrawCollateralWrite.data, confirmations: 1 });
+  const withdrawCollateralReceipt = useWaitForTransactionReceipt({
+    hash: withdrawCollateralWrite.data,
+    confirmations: 1,
+  });
   useTransactionToast({
     hash: withdrawCollateralWrite.data,
     isWritePending: withdrawCollateralWrite.isPending,
@@ -185,7 +209,10 @@ export function useMonoCoolerDebt() {
 
   // --- Composites: Add Collateral + Borrow ---
   const addCollateralAndBorrowWrite = useWriteContract();
-  const addCollateralAndBorrowReceipt = useWaitForTransactionReceipt({ hash: addCollateralAndBorrowWrite.data, confirmations: 1 });
+  const addCollateralAndBorrowReceipt = useWaitForTransactionReceipt({
+    hash: addCollateralAndBorrowWrite.data,
+    confirmations: 1,
+  });
   useTransactionToast({
     hash: addCollateralAndBorrowWrite.data,
     isWritePending: addCollateralAndBorrowWrite.isPending,
@@ -237,7 +264,10 @@ export function useMonoCoolerDebt() {
 
   // --- Composites: Repay + Remove Collateral ---
   const repayAndRemoveCollateralWrite = useWriteContract();
-  const repayAndRemoveCollateralReceipt = useWaitForTransactionReceipt({ hash: repayAndRemoveCollateralWrite.data, confirmations: 1 });
+  const repayAndRemoveCollateralReceipt = useWaitForTransactionReceipt({
+    hash: repayAndRemoveCollateralWrite.data,
+    confirmations: 1,
+  });
   useTransactionToast({
     hash: repayAndRemoveCollateralWrite.data,
     isWritePending: repayAndRemoveCollateralWrite.isPending,
@@ -297,9 +327,12 @@ export function useMonoCoolerDebt() {
     isBorrowing: borrowWrite.isPending || borrowReceipt.isLoading,
     isRepaying: repayWrite.isPending || repayReceipt.isLoading,
     isAddingCollateral: addCollateralWrite.isPending || addCollateralReceipt.isLoading,
-    isWithdrawingCollateral: withdrawCollateralWrite.isPending || withdrawCollateralReceipt.isLoading,
-    isAddingCollateralAndBorrowing: addCollateralAndBorrowWrite.isPending || addCollateralAndBorrowReceipt.isLoading,
-    isRepayingAndRemovingCollateral: repayAndRemoveCollateralWrite.isPending || repayAndRemoveCollateralReceipt.isLoading,
+    isWithdrawingCollateral:
+      withdrawCollateralWrite.isPending || withdrawCollateralReceipt.isLoading,
+    isAddingCollateralAndBorrowing:
+      addCollateralAndBorrowWrite.isPending || addCollateralAndBorrowReceipt.isLoading,
+    isRepayingAndRemovingCollateral:
+      repayAndRemoveCollateralWrite.isPending || repayAndRemoveCollateralReceipt.isLoading,
     borrowHash: borrowWrite.data,
     repayHash: repayWrite.data,
     addCollateralHash: addCollateralWrite.data,

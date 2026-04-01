@@ -47,7 +47,10 @@ export function PositionInfo({
     liquidationThreshold > projectedDebt ? liquidationThreshold - projectedDebt : 0n;
 
   return (
-    <div data-slot="position-info" className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4">
+    <div
+      data-slot="position-info"
+      className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4"
+    >
       <h3 className="mb-4 text-sm font-semibold">
         {isRepayMode ? "Projected Position" : "Position Overview"}
       </h3>

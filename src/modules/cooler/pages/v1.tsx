@@ -6,7 +6,10 @@ import { V1LoansTable } from "../components/v1-loans-table";
 import { RepayLegacyModal } from "../components/repay-legacy-modal";
 import { ExtendLoanModal } from "../components/extend-loan-modal";
 import { MigrateModal } from "../components/migrate-modal";
-import { useGetClearingHouse, type ClearingHouseVersion } from "@/lib/hooks/cooler/useGetClearingHouse";
+import {
+  useGetClearingHouse,
+  type ClearingHouseVersion,
+} from "@/lib/hooks/cooler/useGetClearingHouse";
 import { useGetCoolerForWallet } from "@/lib/hooks/cooler/useGetCoolerForWallet";
 import { useGetCoolerLoans } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
@@ -75,7 +78,13 @@ export function CoolerV1Page() {
   });
 
   const allLoans = useMemo(() => [...v1Loans, ...v2Loans, ...v3Loans], [v1Loans, v2Loans, v3Loans]);
-  const isLoading = isV1CHLoading || isV2CHLoading || isV3CHLoading || isV1LoansLoading || isV2LoansLoading || isV3LoansLoading;
+  const isLoading =
+    isV1CHLoading ||
+    isV2CHLoading ||
+    isV3CHLoading ||
+    isV1LoansLoading ||
+    isV2LoansLoading ||
+    isV3LoansLoading;
 
   // Modal state
   const [repayLoan, setRepayLoan] = useState<CoolerLoan | null>(null);
@@ -83,10 +92,30 @@ export function CoolerV1Page() {
   const [isMigrateOpen, setIsMigrateOpen] = useState(false);
 
   // Determine cooler address, clearing house, and version for a given loan
-  const getCoolerForLoan = (loan: CoolerLoan): { coolerAddress: string; clearingHouseData: typeof v1ClearingHouse; version: ClearingHouseVersion } => {
-    if (v1Loans.includes(loan)) return { coolerAddress: v1CoolerAddress ?? "", clearingHouseData: v1ClearingHouse, version: "clearingHouseV1" };
-    if (v2Loans.includes(loan)) return { coolerAddress: v2CoolerAddress ?? "", clearingHouseData: v2ClearingHouse, version: "clearingHouseV2" };
-    return { coolerAddress: v3CoolerAddress ?? "", clearingHouseData: v3ClearingHouse, version: "clearingHouseV3" };
+  const getCoolerForLoan = (
+    loan: CoolerLoan,
+  ): {
+    coolerAddress: string;
+    clearingHouseData: typeof v1ClearingHouse;
+    version: ClearingHouseVersion;
+  } => {
+    if (v1Loans.includes(loan))
+      return {
+        coolerAddress: v1CoolerAddress ?? "",
+        clearingHouseData: v1ClearingHouse,
+        version: "clearingHouseV1",
+      };
+    if (v2Loans.includes(loan))
+      return {
+        coolerAddress: v2CoolerAddress ?? "",
+        clearingHouseData: v2ClearingHouse,
+        version: "clearingHouseV2",
+      };
+    return {
+      coolerAddress: v3CoolerAddress ?? "",
+      clearingHouseData: v3ClearingHouse,
+      version: "clearingHouseV3",
+    };
   };
 
   const repayContext = repayLoan ? getCoolerForLoan(repayLoan) : null;
@@ -96,17 +125,11 @@ export function CoolerV1Page() {
     <div data-slot="cooler-v1-page" className="space-y-6">
       <h2 className="text-xl font-semibold">Cooler Loans V1</h2>
 
-      <V1StatsBar
-        clearingHouseData={activeClearingHouse}
-        loans={allLoans}
-        isLoading={isLoading}
-      />
+      <V1StatsBar clearingHouseData={activeClearingHouse} loans={allLoans} isLoading={isLoading} />
 
       {allLoans.length > 0 && (
         <div className="flex">
-          <Button onClick={() => setIsMigrateOpen(true)}>
-            Migrate Loans to Cooler V2
-          </Button>
+          <Button onClick={() => setIsMigrateOpen(true)}>Migrate Loans to Cooler V2</Button>
         </div>
       )}
 

@@ -101,11 +101,12 @@ export function RepayLegacyModal({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="flex flex-col gap-4">
             <div>
-              <label className="mb-1 block text-xs text-secondary-t">
+              <label htmlFor="repay-amount" className="mb-1 block text-xs text-secondary-t">
                 Repay Amount ({debtAsset})
               </label>
               <div className="flex gap-2">
                 <Input
+                  id="repay-amount"
                   type="text"
                   inputMode="decimal"
                   placeholder="0.00"
@@ -120,7 +121,10 @@ export function RepayLegacyModal({
 
             <div className="flex flex-col gap-2">
               {needsApproval ? (
-                <Button onClick={handleApprove} disabled={isApprovePending || repayAmountBigInt === 0n}>
+                <Button
+                  onClick={handleApprove}
+                  disabled={isApprovePending || repayAmountBigInt === 0n}
+                >
                   {isApprovePending ? "Approving..." : `Approve ${debtAsset}`}
                 </Button>
               ) : (
@@ -148,19 +152,31 @@ export function RepayLegacyModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-secondary-t">Loan to Value per gOHM</span>
-                <span>{Number(loanToCollateral).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {debtAsset}</span>
+                <span>
+                  {Number(loanToCollateral).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  {debtAsset}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-secondary-t">Principal</span>
-                <span>{formatAmount(loan.principal)} {debtAsset}</span>
+                <span>
+                  {formatAmount(loan.principal)} {debtAsset}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-secondary-t">Interest Due</span>
-                <span>{formatAmount(loan.interestDue)} {debtAsset}</span>
+                <span>
+                  {formatAmount(loan.interestDue)} {debtAsset}
+                </span>
               </div>
               <div className="border-a5-b flex justify-between border-t pt-2 font-semibold">
                 <span className="text-secondary-t">Repayment</span>
-                <span>{formatAmount(repaymentTotal)} {debtAsset}</span>
+                <span>
+                  {formatAmount(repaymentTotal)} {debtAsset}
+                </span>
               </div>
             </div>
           </div>

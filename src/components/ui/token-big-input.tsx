@@ -78,123 +78,118 @@ function TokenBigInput({
   const lineHeight = Math.ceil(fontSize * 1.25);
 
   const content = (
-      <div
-        data-slot="token-big-input"
-        className="group/biginput flex flex-col gap-3 rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b transition-colors hover:bg-surface-a10"
-      >
-        {/* Header row */}
-        {(label || headerRight) && (
-          <div className="flex items-center justify-between">
-            {!!label && (
-              <div className="flex items-center gap-1.5">
-                {typeof label === "string" ? (
-                  <p
-                    className={cn(
-                      "text-[15px]/[20px] font-medium",
-                      isDisabled && "text-disabled-t",
-                    )}
-                  >
-                    {label}
-                  </p>
-                ) : (
-                  label
-                )}
-                {required && <p className="text-green text-sm font-medium">*</p>}
-                {!!tooltip && (
-                  <Tooltip title={tooltip}>
-                    <RiInformationFill
-                      size={16}
-                      className="text-tertiary-t hover:text-secondary-t cursor-pointer transition-colors"
-                    />
-                  </Tooltip>
-                )}
-              </div>
-            )}
-            {headerRight}
-          </div>
-        )}
-
-        {/* Input row */}
-        <div className="flex items-center gap-[8px]">
-          <input
-            placeholder="0.00"
-            className={cn(
-              "caret-primary-t text-[32px]/[40px] bg-transparent placeholder:text-disabled-t group-aria-invalid/biginput:text-red group-aria-invalid/biginput:text-shadow-none group-aria-invalid/biginput:bg-transparent w-full pr-1.5 font-semibold outline-none",
-              rest.value && "bg-transparent",
-              isDisabled && "caret-disabled-t cursor-not-allowed",
-            )}
-            style={{ fontSize: `${fontSize}px`, lineHeight: `${lineHeight}px` }}
-            maxLength={20}
-            {...rest}
-            {...(rest.value !== undefined ? { value: displayValue } : {})}
-            onChange={handleChange}
-          />
-
-          {tokenSelector ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="bg-surface-a5 hover:bg-surface-a10 inline-flex shrink-0 cursor-pointer items-center gap-[8px] rounded-full px-[12px] py-[8px] text-sm font-medium whitespace-nowrap transition-colors">
-                <Icon name={tokenSelector.selectedToken.icon} className="size-[20px] !rotate-0" />
-                <span>{tokenSelector.selectedToken.symbol}</span>
-                <ChevronDownIcon className="text-secondary-t size-[16px]" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {tokenSelector.tokens.map((t) => (
-                  <DropdownMenuItem key={t.address} onClick={() => tokenSelector.onTokenChange(t)}>
-                    <Icon name={t.icon} className="size-[20px] !rotate-0" />
-                    {t.symbol}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-[8px] rounded-full px-[12px] py-[8px]">
-              <Icon name={icon} className="size-[20px] !rotate-0" />
-              <p className="text-[15px]/[20px] font-semibold whitespace-nowrap">{symbol}</p>
+    <div
+      data-slot="token-big-input"
+      className="group/biginput flex flex-col gap-3 rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b transition-colors hover:bg-surface-a10"
+    >
+      {/* Header row */}
+      {(label || headerRight) && (
+        <div className="flex items-center justify-between">
+          {!!label && (
+            <div className="flex items-center gap-1.5">
+              {typeof label === "string" ? (
+                <p
+                  className={cn("text-[15px]/[20px] font-medium", isDisabled && "text-disabled-t")}
+                >
+                  {label}
+                </p>
+              ) : (
+                label
+              )}
+              {required && <p className="text-green text-sm font-medium">*</p>}
+              {!!tooltip && (
+                <Tooltip title={tooltip}>
+                  <RiInformationFill
+                    size={16}
+                    className="text-tertiary-t hover:text-secondary-t cursor-pointer transition-colors"
+                  />
+                </Tooltip>
+              )}
             </div>
           )}
+          {headerRight}
         </div>
+      )}
 
-        {/* Footer row */}
-        <div className="flex items-center gap-[8px]">
-          <NumberFlow
-            className={cn(
-              "text-secondary-t flex-1 text-xs font-normal",
-              isDisabled && "text-disabled-t",
-            )}
-            value={+(rest.value || 0) * (token.price || 0)}
-            format={{ notation: "standard", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
-          />
-          <div className="inline-flex items-center gap-[4px] text-xs font-normal">
-            <p className={cn("text-secondary-t", isDisabled && "text-disabled-t")}>
-              {balanceLabel}
-            </p>
-            {address ? (
-              <NumberFlow
-                className={cn("font-medium text-primary-t", isDisabled && "text-disabled-t")}
-                value={dn.toNumber([balance, decimals])}
-                format={{
-                  style: "decimal",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: Math.max(2, Math.min(6, decimals)),
-                }}
-              />
-            ) : (
-              <p className="text-xs font-medium">N/A</p>
-            )}
+      {/* Input row */}
+      <div className="flex items-center gap-[8px]">
+        <input
+          placeholder="0.00"
+          className={cn(
+            "caret-primary-t text-[32px]/[40px] bg-transparent placeholder:text-disabled-t group-aria-invalid/biginput:text-red group-aria-invalid/biginput:text-shadow-none group-aria-invalid/biginput:bg-transparent w-full pr-1.5 font-semibold outline-none",
+            rest.value && "bg-transparent",
+            isDisabled && "caret-disabled-t cursor-not-allowed",
+          )}
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${lineHeight}px` }}
+          maxLength={20}
+          {...rest}
+          {...(rest.value !== undefined ? { value: displayValue } : {})}
+          onChange={handleChange}
+        />
+
+        {tokenSelector ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="bg-surface-a5 hover:bg-surface-a10 inline-flex shrink-0 cursor-pointer items-center gap-[8px] rounded-full px-[12px] py-[8px] text-sm font-medium whitespace-nowrap transition-colors">
+              <Icon name={tokenSelector.selectedToken.icon} className="size-[20px] !rotate-0" />
+              <span>{tokenSelector.selectedToken.symbol}</span>
+              <ChevronDownIcon className="text-secondary-t size-[16px]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              {tokenSelector.tokens.map((t) => (
+                <DropdownMenuItem key={t.address} onClick={() => tokenSelector.onTokenChange(t)}>
+                  <Icon name={t.icon} className="size-[20px] !rotate-0" />
+                  {t.symbol}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-[8px] rounded-full px-[12px] py-[8px]">
+            <Icon name={icon} className="size-[20px] !rotate-0" />
+            <p className="text-[15px]/[20px] font-semibold whitespace-nowrap">{symbol}</p>
           </div>
-          <Button
-            disabled={isDisabled}
-            size="xs"
-            variant="secondary"
-            type="button"
-            onClick={handleMax}
-          >
-            Max
-          </Button>
-        </div>
-
-        {hasFormContext && <FormMessage />}
+        )}
       </div>
+
+      {/* Footer row */}
+      <div className="flex items-center gap-[8px]">
+        <NumberFlow
+          className={cn(
+            "text-secondary-t flex-1 text-xs font-normal",
+            isDisabled && "text-disabled-t",
+          )}
+          value={+(rest.value || 0) * (token.price || 0)}
+          format={{ notation: "standard", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+        />
+        <div className="inline-flex items-center gap-[4px] text-xs font-normal">
+          <p className={cn("text-secondary-t", isDisabled && "text-disabled-t")}>{balanceLabel}</p>
+          {address ? (
+            <NumberFlow
+              className={cn("font-medium text-primary-t", isDisabled && "text-disabled-t")}
+              value={dn.toNumber([balance, decimals])}
+              format={{
+                style: "decimal",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: Math.max(2, Math.min(6, decimals)),
+              }}
+            />
+          ) : (
+            <p className="text-xs font-medium">N/A</p>
+          )}
+        </div>
+        <Button
+          disabled={isDisabled}
+          size="xs"
+          variant="secondary"
+          type="button"
+          onClick={handleMax}
+        >
+          Max
+        </Button>
+      </div>
+
+      {hasFormContext && <FormMessage />}
+    </div>
   );
 
   if (hasFormContext) {

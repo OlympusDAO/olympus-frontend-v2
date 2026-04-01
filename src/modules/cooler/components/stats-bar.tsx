@@ -12,9 +12,7 @@ export function StatsBar() {
     },
     {
       label: "Borrow per gOHM",
-      value: position
-        ? `${formatAmount(position.maxOriginationLtv)} USDS`
-        : "--",
+      value: position ? `${formatAmount(position.maxOriginationLtv)} USDS` : "--",
     },
     {
       label: "Borrow Rate",
@@ -31,9 +29,7 @@ export function StatsBar() {
       {stats.map((stat) => (
         <Card key={stat.label} className="flex flex-col gap-1 p-4">
           <p className="text-md text-secondary-t">{stat.label}</p>
-          <p className="text-xl font-semibold">
-            {isLoading ? "..." : stat.value}
-          </p>
+          <p className="text-xl font-semibold">{isLoading ? "..." : stat.value}</p>
         </Card>
       ))}
     </div>

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 
 import { cn } from "@/lib/utils";
-import { RiInformationFill } from "@remixicon/react";
+import { RiInformationLine } from "@remixicon/react";
 import { useIsMobile } from "@/lib/hooks/use-mobile.ts";
 
 function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Props) {
@@ -117,7 +117,7 @@ function TooltipInfo({
 }: ITooltipProps) {
   return (
     <div className="flex items-center gap-x-1">
-      <p className={`${cn(className, "text-secondary-t")}`}>{children}</p>
+      <p className={`${cn(className, "text-secondary-t font-semibold")}`}>{children}</p>
       <Tooltip
         classNameContent={classNameContent}
         triggerProps={triggerProps}
@@ -125,7 +125,7 @@ function TooltipInfo({
         contentProps={contentProps}
         {...props}
       >
-        <RiInformationFill
+        <RiInformationLine
           size={16}
           className="cursor-pointer text-tertiary-t transition-colors hover:text-secondary-t"
         />

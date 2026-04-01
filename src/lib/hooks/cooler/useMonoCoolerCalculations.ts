@@ -163,7 +163,8 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
       const existingCollateral = loan.collateral;
       const totalCollateral = existingCollateral + collateralAmount;
 
-      const minLtvPct = Number(formatUnits(wdiv(currentDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
+      const minLtvPct =
+        Number(formatUnits(wdiv(currentDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
       const adjustedValue = Math.max(value, minLtvPct);
       setLtvPercentage(adjustedValue);
 
@@ -174,12 +175,15 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
 
       const pctWad = pctToWad(adjustedValue);
       const maxBorrowAmount = wmul(wmul(totalCollateral, maxLtv), pctWad);
-      const additionalBorrowing = maxBorrowAmount > currentDebt ? maxBorrowAmount - currentDebt : ZERO;
+      const additionalBorrowing =
+        maxBorrowAmount > currentDebt ? maxBorrowAmount - currentDebt : ZERO;
 
       if (value === 100) {
         const rateWad = parseUnits(hourlyInterestRate.toFixed(18), 18);
         const hourInterest = wmul(currentDebt, rateWad);
-        setBorrowAmount(additionalBorrowing > hourInterest ? additionalBorrowing - hourInterest : ZERO);
+        setBorrowAmount(
+          additionalBorrowing > hourInterest ? additionalBorrowing - hourInterest : ZERO,
+        );
       } else {
         setBorrowAmount(additionalBorrowing);
       }
@@ -221,11 +225,13 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
         const existingCollateral = loan.collateral;
         const totalCollateral = existingCollateral + collateralAmount;
         const totalDebt = currentDebt + value;
-        const newLtvPct = Number(formatUnits(wdiv(totalDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
+        const newLtvPct =
+          Number(formatUnits(wdiv(totalDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
         setLtvPercentage(Math.min(newLtvPct, 100));
       } else {
         if (collateralAmount > ZERO) {
-          const newLtvPct = Number(formatUnits(wdiv(value, wmul(collateralAmount, maxLtv)), 18)) * 100;
+          const newLtvPct =
+            Number(formatUnits(wdiv(value, wmul(collateralAmount, maxLtv)), 18)) * 100;
           setLtvPercentage(Math.min(newLtvPct, 100));
         }
       }

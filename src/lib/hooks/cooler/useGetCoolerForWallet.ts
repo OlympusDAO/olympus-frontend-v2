@@ -23,9 +23,18 @@ export function useGetCoolerForWallet({
   const chainId = useChainId();
 
   const { data, isFetched, isLoading } = useQuery({
-    queryKey: ["getCoolerForWallet", chainId, factoryAddress, collateralAddress, debtAddress, walletAddress, clearingHouseVersion],
+    queryKey: [
+      "getCoolerForWallet",
+      chainId,
+      factoryAddress,
+      collateralAddress,
+      debtAddress,
+      walletAddress,
+      clearingHouseVersion,
+    ],
     queryFn: async () => {
-      if (!walletAddress || !factoryAddress || !collateralAddress || !debtAddress || !publicClient) return "";
+      if (!walletAddress || !factoryAddress || !collateralAddress || !debtAddress || !publicClient)
+        return "";
 
       try {
         if (clearingHouseVersion === "clearingHouseV1") {
@@ -76,7 +85,8 @@ export function useGetCoolerForWallet({
         return "";
       }
     },
-    enabled: !!walletAddress && !!factoryAddress && !!collateralAddress && !!debtAddress && !!publicClient,
+    enabled:
+      !!walletAddress && !!factoryAddress && !!collateralAddress && !!debtAddress && !!publicClient,
   });
 
   return { data, isFetched, isLoading };

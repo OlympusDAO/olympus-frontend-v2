@@ -148,12 +148,7 @@ export function CoolerApprovalModal({
           </div>
 
           <div className="mt-6">
-            <Button
-              onClick={onAction}
-              disabled={isPending}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={onAction} disabled={isPending} className="w-full" size="lg">
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

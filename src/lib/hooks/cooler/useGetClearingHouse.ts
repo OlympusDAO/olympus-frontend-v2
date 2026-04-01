@@ -83,7 +83,12 @@ export function useGetClearingHouse({ clearingHouse }: { clearingHouse: Clearing
   const { data, isLoading, isFetched } = useQuery({
     queryKey: ["getClearingHouse", chainId, clearingHouse, basicData?.[0]?.result],
     queryFn: async () => {
-      if (!basicData || !basicData.every((d) => d.status === "success") || !publicClient || !clearingHouseAddress)
+      if (
+        !basicData ||
+        !basicData.every((d) => d.status === "success") ||
+        !publicClient ||
+        !clearingHouseAddress
+      )
         return null;
 
       const factory = basicData[0].result as Address;

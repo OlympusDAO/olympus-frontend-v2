@@ -22,6 +22,8 @@ import { ProposalPage } from "@/modules/governance/pages/proposal-page";
 import { DelegatesPage } from "@/modules/governance/pages/delegates-page";
 import { DelegateDetailPage } from "@/modules/governance/pages/delegate-detail-page";
 import { ContractParametersPage } from "@/modules/governance/pages/contract-parameters-page";
+import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
+import { RewardsManagerPage } from "@/modules/engage/pages/rewards-manager-page.tsx";
 
 export const router = createHashRouter([
   {
@@ -79,8 +81,14 @@ export const router = createHashRouter([
       { path: "dao/delegate/:id", element: <DelegateDetailPage /> },
       { path: "dao/contract-parameters", element: <ContractParametersPage /> },
 
-      // Rewards
-      { path: "rewards", element: <StubPage title="Rewards" /> },
+      // Engage
+      {
+        path: "engage",
+        children: [
+          { index: true, element: <EngagePage /> },
+          { path: "rewards-manager", element: <RewardsManagerPage /> },
+        ],
+      },
 
       // Legacy governance redirects
       { path: "governance", element: <Navigate to="/dao/vote" replace /> },

@@ -16,9 +16,7 @@ export function V1StatsBar({ clearingHouseData, loans, isLoading }: V1StatsBarPr
   const stats = [
     {
       label: "Capacity Remaining",
-      value: clearingHouseData
-        ? `${formatAmount(clearingHouseData.capacity)} ${debtAsset}`
-        : "--",
+      value: clearingHouseData ? `${formatAmount(clearingHouseData.capacity)} ${debtAsset}` : "--",
     },
     {
       label: "Borrow per gOHM",
@@ -28,15 +26,11 @@ export function V1StatsBar({ clearingHouseData, loans, isLoading }: V1StatsBarPr
     },
     {
       label: "Borrow Rate",
-      value: clearingHouseData
-        ? `${Number(clearingHouseData.interestRate).toFixed(2)}%`
-        : "--",
+      value: clearingHouseData ? `${Number(clearingHouseData.interestRate).toFixed(2)}%` : "--",
     },
     {
       label: "Amount Borrowed",
-      value: loans.length > 0
-        ? `${formatAmount(totalPrincipal)} ${debtAsset}`
-        : "--",
+      value: loans.length > 0 ? `${formatAmount(totalPrincipal)} ${debtAsset}` : "--",
     },
   ];
 
@@ -45,9 +39,7 @@ export function V1StatsBar({ clearingHouseData, loans, isLoading }: V1StatsBarPr
       {stats.map((stat) => (
         <Card key={stat.label} className="flex flex-col gap-1 p-4">
           <p className="text-md text-secondary-t">{stat.label}</p>
-          <p className="text-xl font-semibold">
-            {isLoading ? "..." : stat.value}
-          </p>
+          <p className="text-xl font-semibold">{isLoading ? "..." : stat.value}</p>
         </Card>
       ))}
     </div>

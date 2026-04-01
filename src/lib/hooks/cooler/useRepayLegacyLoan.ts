@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Address } from "viem";
+import type { Address } from "viem";
 import CoolerABI from "@/abis/Cooler";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 
@@ -19,7 +19,11 @@ export function useRepayLegacyLoan() {
   const queryClient = useQueryClient();
 
   const { data: hash, writeContract, isPending, error: writeError, reset } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed, error: confirmError } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
     hash,
     confirmations: 1,
   });
