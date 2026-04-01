@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { calcOhmPremiumPct } from "@/modules/pulse/utils/ohm-metrics";
 import { ProtocolDataSource } from "./protocol-data-source";
 import { CircleProgress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +34,7 @@ export function ProtocolEmissionManager() {
   const statusDot = state.isEnabled ? "green" : state.isActive ? "yellow" : "red";
 
   const ohmPrice = price?.price ?? 0;
-  const currentPremium = state.backing > 0 ? ((ohmPrice - state.backing) / state.backing) * 100 : 0;
+  const currentPremium = calcOhmPremiumPct(ohmPrice, state.backing);
 
   const thresholdPct = state.minimumPremium * 100;
   const premiumProgress = thresholdPct > 0 ? Math.max(0, (currentPremium / thresholdPct) * 100) : 0;

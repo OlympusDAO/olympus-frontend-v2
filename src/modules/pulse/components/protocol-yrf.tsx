@@ -155,15 +155,15 @@ export function ProtocolYrf() {
           </TooltipInfo>
           <div className="flex items-center gap-x-1">
             <CircleProgress value={Math.min(budgetDeployed, 100)} size={18} strokeWidth={2.5} />
-            <p className="tabular-nums text-[15px]/[20px] font-semibold">
+            <div className="tabular-nums text-[15px]/[20px] font-semibold">
               <div className="flex items-center gap-x-0.5">
                 <NumberFlow value={currentWeekUsdSpent} className="text-[15px]/[20px]" /> /
                 <NumberFlow value={currentWeeklyYield} className="text-[15px]/[20px]" />
-                <p className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
+                <span className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
                   (<NumberFlow format={{ style: "percent" }} value={budgetDeployed / 100} />)
-                </p>
+                </span>
               </div>
-            </p>
+            </div>
           </div>
         </div>
 
@@ -175,19 +175,18 @@ export function ProtocolYrf() {
           >
             Est. Weekly Burns
           </TooltipInfo>
-          <p className="tabular-nums text-[15px]/[20px] font-semibold">
+          <div className="tabular-nums text-[15px]/[20px] font-semibold">
             <div className="flex items-center gap-x-0.5">
               <NumberFlow
                 suffix="OHM"
                 value={Math.round(weeklyBurns)}
                 className="text-[15px]/[20px]"
               />
-              <p className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
-                (<NumberFlow format={{ style: "percent" }} value={(weeklyBurns * ohmPrice) / 100} />
-                )
-              </p>
+              <span className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
+                ({formatUsd(weeklyBurns * ohmPrice, true)})
+              </span>
             </div>
-          </p>
+          </div>
         </div>
 
         {/* Current Capacity */}

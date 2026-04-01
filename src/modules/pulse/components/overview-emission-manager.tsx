@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { calcOhmPremiumPct } from "@/modules/pulse/utils/ohm-metrics";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { useEmissionManager } from "@/modules/pulse/hooks/useEmissionManager";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
@@ -19,7 +20,7 @@ export function OverviewEmissionManager() {
 
   const backing = state?.backing ?? 0;
   const minimumPremium = state?.minimumPremium ?? 0;
-  const currentPremium = backing > 0 ? ((ohmPrice - backing) / backing) * 100 : 0;
+  const currentPremium = calcOhmPremiumPct(ohmPrice, backing);
   const thresholdPct = minimumPremium * 100;
   const premiumProgress = thresholdPct > 0 ? (currentPremium / thresholdPct) * 100 : 0;
   const emissionTriggerPrice = backing * (1 + minimumPremium);

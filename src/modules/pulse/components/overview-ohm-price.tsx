@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { useOhmPriceHistory } from "@/modules/pulse/hooks/useOhmPriceHistory.ts";
-import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
+import { SparklineChart } from "@/components/ui/sparkline-chart.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { PriceChange } from "@/components/price-change.tsx";
 
@@ -13,7 +13,6 @@ export function OverviewOhmPrice() {
   const change24h = history?.change24h ?? 0;
   const dataPoints = history?.dataPoints ?? [];
   const isPositive = change24h >= 0;
-  const gradientId = "ohmPriceSparkGrad";
 
   return (
     <Card className="flex items-center justify-between gap-4 p-5">
@@ -28,39 +27,7 @@ export function OverviewOhmPrice() {
         </div>
       </div>
 
-      {dataPoints.length > 1 && (
-        <div className="w-55 shrink-0">
-          <ResponsiveContainer width="100%" height={56}>
-            <AreaChart data={dataPoints} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor={isPositive ? "var(--green)" : "var(--red)"}
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor={isPositive ? "var(--green)" : "var(--red)"}
-                    stopOpacity={0.02}
-                  />
-                </linearGradient>
-              </defs>
-              <YAxis domain={["dataMin", "dataMax"]} hide />
-              <Area
-                type="monotone"
-                dataKey="price"
-                stroke={isPositive ? "var(--green)" : "var(--red)"}
-                strokeWidth={1.5}
-                fill={`url(#${gradientId})`}
-                dot={false}
-                activeDot={false}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <SparklineChart data={dataPoints} dataKey="price" isPositive={isPositive} />
     </Card>
   );
 }

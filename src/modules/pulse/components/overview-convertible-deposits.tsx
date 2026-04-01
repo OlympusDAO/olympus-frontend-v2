@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { calcOhmPremiumPct } from "@/modules/pulse/utils/ohm-metrics";
 import { RiArrowRightSLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export function OverviewConvertibleDeposits() {
 
   const ohmPrice = price?.price ?? 0;
   const backing = treasury?.treasuryLiquidBackingPerOhmBacked ?? 0;
-  const premiumPct = backing > 0 ? ((ohmPrice - backing) / backing) * 100 : 0;
+  const premiumPct = calcOhmPremiumPct(ohmPrice, backing);
 
   const statusLabel = isMarketActive ? "Active" : "Paused";
   const statusColor = isMarketActive ? "green" : "yellow";
