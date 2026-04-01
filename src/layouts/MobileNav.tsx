@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   getActiveSectionFromPath,
@@ -23,8 +22,6 @@ function MobileSectionItem({
   isActive: boolean;
   onSelect: (section: NavSection) => void;
 }) {
-  const Icon = section.icon;
-
   return (
     <button
       type="button"
@@ -34,12 +31,14 @@ function MobileSectionItem({
         isActive ? "bg-surface-a10" : "hover:bg-surface-a5",
       )}
     >
-      <Icon
+      <span
         className={cn(
-          "size-5 transition-colors",
+          "[&>svg]:size-5 [&>svg]:transition-colors",
           isActive ? "text-brand-sand-1000" : "text-secondary-t",
         )}
-      />
+      >
+        {section.icon}
+      </span>
       <span
         className={cn(
           "text-[10px] leading-tight transition-colors",
@@ -165,7 +164,6 @@ export function MobileNav() {
                 >
                   <FileText className="size-5 text-secondary-t" />
                 </a>
-                <MoreMenu />
               </div>
             </div>
 

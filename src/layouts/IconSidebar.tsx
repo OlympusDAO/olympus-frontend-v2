@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { MoreMenu } from "@/components/more-menu";
 import {
   NAV_SECTIONS,
   BOTTOM_NAV,
@@ -11,7 +10,6 @@ import {
 } from "@/lib/navigation";
 
 function IconNavItem({ section, isActive }: { section: NavSection; isActive: boolean }) {
-  const Icon = section.icon;
   const to = getDefaultPathForSection(section);
 
   return (
@@ -30,12 +28,14 @@ function IconNavItem({ section, isActive }: { section: NavSection; isActive: boo
             : undefined
         }
       >
-        <Icon
+        <span
           className={cn(
-            "size-6 transition-colors",
+            "[&>svg]:size-6 [&>svg]:transition-colors",
             isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
-        />
+        >
+          {section.icon}
+        </span>
       </div>
       <span
         className={cn(
@@ -95,7 +95,6 @@ export function IconSidebar() {
               <docsItem.icon className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
             </a>
           )}
-          <MoreMenu />
         </div>
       </div>
     </aside>

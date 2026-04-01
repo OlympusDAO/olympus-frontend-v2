@@ -1,19 +1,22 @@
-import { Gift, FileText, MoreHorizontal, Building2 } from "lucide-react";
+import { Home, Gift, FileText, MoreHorizontal, Building2 } from "lucide-react";
 import { RiSettings3Line, RiLoopLeftLine, RiPulseLine } from "@remixicon/react";
 import { OhmNavIcon } from "@/icons";
-import type { ComponentType } from "react";
+import { Icon } from "@/components/icon";
+import type { ComponentType, ReactNode } from "react";
 
 export type NavItem = {
   label: string;
   path: string;
   external?: boolean;
+  exact?: boolean;
+  requiresMultisig?: boolean;
 };
 
 export type NavSection = {
   id: string;
   label: string;
   sidebarTitle: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ReactNode;
   path: string;
   items: NavItem[];
 };
@@ -44,7 +47,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "ohm",
     label: "OHM",
     sidebarTitle: "OHM",
-    icon: OhmNavIcon,
+    icon: <OhmNavIcon />,
     path: "/ohm",
     items: [
       { label: "My Balances", path: "/ohm/balances" },
@@ -57,7 +60,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "cooler",
     label: "Cooler",
     sidebarTitle: "Cooler Loans",
-    icon: RiSettings3Line,
+    icon: <RiSettings3Line />,
     path: "/cooler",
     items: [
       { label: "Borrow", path: "/cooler/borrow" },
@@ -70,7 +73,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "cds",
     label: "CDs",
     sidebarTitle: "Convertible Deposits",
-    icon: RiLoopLeftLine,
+    icon: <RiLoopLeftLine />,
     path: "/cds",
     items: [
       { label: "Deposit", path: "/cds/deposit" },
@@ -83,7 +86,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "dao",
     label: "DAO",
     sidebarTitle: "Governance",
-    icon: Building2,
+    icon: <Building2 />,
     path: "/dao",
     items: [
       { label: "Vote", path: "/dao/vote" },
@@ -94,12 +97,15 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    id: "rewards",
-    label: "Rewards",
-    sidebarTitle: "Rewards",
-    icon: Gift,
-    path: "/rewards",
-    items: [],
+    id: "engage",
+    label: "Engage",
+    sidebarTitle: "Engage",
+    icon: <Icon name="iOhmSidebar" />,
+    path: "/engage",
+    items: [
+      { label: "Dashboard", path: "/engage", exact: true },
+      { label: "Rewards Manager", path: "/engage/rewards-manager", requiresMultisig: true },
+    ],
   },
 ];
 

@@ -1,7 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
+import { useAccount, useChainId } from "wagmi";
 import { cn } from "@/lib/utils";
 import { getActiveSectionFromPath, type NavItem } from "@/lib/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useGETAdminMultisigMembers, type LibChainId } from "@/generated/olympusUnits";
+
+function useMultisigOwnership(enabled: boolean) {
+  const { address } = useAccount();
+  const chainId = useChainId() as LibChainId;
+
+  const { data } = useGETAdminMultisigMembers(
+    { chainId },
+    { query: { enabled: enabled && !!address } },
+  );
+
+  if (!address || !data) return false;
+  return data.owners.some((o) => o.toLowerCase() === address.toLowerCase());
+}
 
 function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
   if (item.external) {
@@ -36,8 +52,15 @@ function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
 export function SubNav() {
   const location = useLocation();
   const activeSection = getActiveSectionFromPath(location.pathname);
+  const hasMultisigItems = activeSection?.items.some((i) => i.requiresMultisig) ?? false;
+  const { isAuthenticated } = useAuth({ enabled: hasMultisigItems });
+  const isMultisigOwner = useMultisigOwnership(isAuthenticated && hasMultisigItems);
 
   if (!activeSection) return null;
+
+  const visibleItems = activeSection.items.filter(
+    (item) => !item.requiresMultisig || isMultisigOwner,
+  );
 
   return (
     <aside className="w-[220px] h-screen flex flex-col border-r border-a10-b shrink-0 bg-surface-bg-l1">
@@ -47,15 +70,18 @@ export function SubNav() {
       </div>
 
       {/* Sub-nav items */}
-      {activeSection.items.length > 0 && (
+      {visibleItems.length > 0 && (
         <nav className="flex flex-col gap-0.5 px-3">
-          {activeSection.items.map((item) => (
+          {visibleItems.map((item) => (
             <SubNavItem
               key={item.path}
               item={item}
               isActive={
                 !item.external &&
-                (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
+                (item.exact
+                  ? location.pathname === item.path
+                  : location.pathname === item.path ||
+                    location.pathname.startsWith(`${item.path}/`))
               }
             />
           ))}
