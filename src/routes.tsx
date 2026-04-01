@@ -11,7 +11,6 @@ import { V2ActivityFeed } from "@/modules/cooler-activity/components/v2-activity
 import { AccountsView } from "@/modules/cooler-activity/components/accounts-view";
 import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
-import { LivenessPage } from "@/modules/liveness/pages";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
 import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
 import { BridgePage } from "@/modules/bridge/pages";
@@ -25,6 +24,7 @@ import { ContractParametersPage } from "@/modules/governance/pages/contract-para
 import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
 import { RewardsManagerPage } from "@/modules/engage/pages/rewards-manager-page.tsx";
 import { OverviewPage } from "@/modules/pulse/pages/overview-page";
+import { TreasuryPage } from "@/modules/pulse/pages/treasury-page";
 import { ProtocolPage } from "@/modules/pulse/pages/protocol-page.tsx";
 import { FeedPage } from "@/modules/pulse/pages/feed-page.tsx";
 
@@ -38,7 +38,7 @@ export const router = createHashRouter([
 
       // Home section
       { path: "home/overview", element: <OverviewPage /> },
-      { path: "home/treasury", element: <LivenessPage /> },
+      { path: "home/treasury", element: <TreasuryPage /> },
       { path: "home/protocol", element: <ProtocolPage /> },
       { path: "home/feed", element: <FeedPage /> },
 

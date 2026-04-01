@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator.tsx";
 import { TooltipInfo } from "@/components/ui/tooltip";
-import { useYrfHistory } from "@/lib/hooks/liveness/useYrfHistory";
+import { useYrfHistory } from "@/modules/pulse/hooks/useYrfHistory";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { formatNumber } from "@/lib/liveness/formatters";

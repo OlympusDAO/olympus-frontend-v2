@@ -76,3 +76,16 @@ export function useGohmConversionRate() {
 
   return { conversionRate, isLoading };
 }
+
+/** Read the total supply of gOHM from the contract (returns bigint in 18 decimals). */
+export function useGohmTotalSupply() {
+  const chainId = useChainId();
+  const gohmAddress = getTokenAddress(TokenName.GOHM, chainId);
+  const { data } = useReadContract({
+    address: gohmAddress,
+    abi: gOHMAbi,
+    functionName: "totalSupply",
+    query: { enabled: !!gohmAddress },
+  });
+  return { totalSupply: data as bigint | undefined };
+}

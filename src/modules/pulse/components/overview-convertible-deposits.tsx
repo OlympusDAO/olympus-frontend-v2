@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
-import { useCdStatistics } from "@/lib/hooks/liveness/useCdStatistics";
+import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { Separator } from "@/components/ui/separator.tsx";

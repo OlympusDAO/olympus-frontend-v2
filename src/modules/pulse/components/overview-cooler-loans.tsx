@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
-import { useCoolerMetrics } from "@/lib/hooks/liveness/useCoolerMetrics";
+import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { Separator } from "@/components/ui/separator.tsx";
 
 export function OverviewCoolerLoans() {

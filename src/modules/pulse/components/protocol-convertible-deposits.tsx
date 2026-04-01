@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { PulseDot } from "@/components/pulse-dot";
-import { useCdStatistics } from "@/lib/hooks/liveness/useCdStatistics";
+import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ProtocolDataSource } from "./protocol-data-source";

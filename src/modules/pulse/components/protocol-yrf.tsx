@@ -5,7 +5,7 @@ import { TooltipInfo } from "@/components/ui/tooltip";
 import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
-import { useYrfHistory } from "@/lib/hooks/liveness/useYrfHistory";
+import { useYrfHistory } from "@/modules/pulse/hooks/useYrfHistory";
 import { useEpochTimer } from "@/lib/hooks/liveness/useEpochTimer";
 import { formatUsd, formatNumber } from "@/lib/liveness/formatters";
 import {

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useReserveYields } from "../../../lib/hooks/liveness/useReserveYields.ts";
-import { useCoolerMetrics } from "../../../lib/hooks/liveness/useCoolerMetrics.ts";
-import { useReserveBalances } from "../../../lib/hooks/liveness/useReserveBalances.ts";
+import { useReserveYields } from "@/modules/pulse/hooks/useReserveYields";
+import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
+import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
 import { useCdStatistics } from "../../../lib/hooks/liveness/useCdStatistics.ts";
 import { COOLER_APR } from "@/lib/constants.ts";
 

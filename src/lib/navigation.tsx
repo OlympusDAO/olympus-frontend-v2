@@ -1,4 +1,4 @@
-import { Home, Gift, FileText, MoreHorizontal, Building2 } from "lucide-react";
+import { FileText, MoreHorizontal, Building2 } from "lucide-react";
 import { RiSettings3Line, RiLoopLeftLine, RiPulseLine } from "@remixicon/react";
 import { OhmNavIcon } from "@/icons";
 import { Icon } from "@/components/icon";
@@ -34,7 +34,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "home",
     label: "Pulse",
     sidebarTitle: "Pulse",
-    icon: RiPulseLine,
+    icon: <RiPulseLine />,
     path: "/home",
     items: [
       { label: "Overview", path: "/home/overview" },

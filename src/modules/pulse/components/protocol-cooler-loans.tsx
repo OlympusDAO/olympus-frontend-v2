@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
-import { useCoolerMetrics } from "@/lib/hooks/liveness/useCoolerMetrics";
+import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue";
 import { ProtocolDataSource } from "./protocol-data-source";
 

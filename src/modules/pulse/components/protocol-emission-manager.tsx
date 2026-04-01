@@ -4,7 +4,7 @@ import { CircleProgress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { TooltipInfo } from "@/components/ui/tooltip";
-import { useEmissionManager } from "@/lib/hooks/liveness/useEmissionManager";
+import { useEmissionManager } from "@/modules/pulse/hooks/useEmissionManager";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { formatUsd } from "@/lib/liveness/formatters";
 import { PulseDot } from "@/components/pulse-dot.tsx";
