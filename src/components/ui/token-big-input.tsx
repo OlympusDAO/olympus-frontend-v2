@@ -28,6 +28,7 @@ type TokenBigInputProps = Omit<React.ComponentProps<"input">, "onChange"> & {
   balanceLabel?: string;
   headerRight?: React.ReactNode;
   onChange?: (value: string, e?: React.ChangeEvent<HTMLInputElement>) => void;
+  onMax?: () => void;
   token: TokenWithBalance;
   tokenSelector?: {
     tokens: Array<TokenWithBalance>;
@@ -43,6 +44,7 @@ function TokenBigInput({
   balanceLabel = "Balance:",
   headerRight,
   onChange,
+  onMax,
   token,
   tokenSelector,
   ...rest
@@ -60,7 +62,9 @@ function TokenBigInput({
   };
 
   const handleMax = () => {
-    if (balance && onChange) {
+    if (onMax) {
+      onMax();
+    } else if (balance && onChange) {
       onChange(formatUnits(balance, decimals));
     }
   };

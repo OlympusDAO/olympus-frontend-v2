@@ -130,14 +130,15 @@ export function RepayForm({ loan }: RepayFormProps) {
     }
   };
 
-  // USDS token with max set to current debt
-  const usdsTokenWithDebt = useMemo(
-    () => ({
-      ...usdsToken,
-      balance: currentDebt,
-    }),
-    [usdsToken, currentDebt],
-  );
+  // Max repay is the lesser of wallet balance and current debt
+  const maxRepayAmount = useMemo(() => {
+    const walletBalance = usdsToken.balance ?? ZERO;
+    return walletBalance < currentDebt ? walletBalance : currentDebt;
+  }, [usdsToken.balance, currentDebt]);
+
+  const handleMaxRepay = () => {
+    handleDebtChange(maxRepayAmount);
+  };
 
   // Validation state for the main button
   const validationState = useMemo(() => {
@@ -280,10 +281,21 @@ export function RepayForm({ loan }: RepayFormProps) {
       <div data-slot="repay-form" className="flex flex-col gap-4">
         <TokenBigInput
           label="Repay"
-          balanceLabel="Debt:"
-          token={usdsTokenWithDebt}
+          headerRight={
+            <p className="text-xs text-secondary-t">
+              Debt:{" "}
+              <span className="font-medium text-primary-t">
+                {Number(formatUnits(currentDebt, 18)).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </p>
+          }
+          token={usdsToken}
           value={repayInputValue}
           onChange={handleRepayInputChange}
+          onMax={handleMaxRepay}
           disabled={isAnyPending}
         />
 

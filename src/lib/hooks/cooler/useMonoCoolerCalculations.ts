@@ -41,7 +41,6 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     hasInitialized.current = true;
 
     if (isRepayMode) {
-      setBorrowAmount(loan.debt);
       return;
     }
 
@@ -59,7 +58,7 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     return loan?.debt ?? ZERO;
   }, [loan]);
 
-  // Max potential borrow amount
+  // Max potential borrow amount (includes any new collateral being added)
   const maxPotentialBorrowAmount = useMemo(() => {
     if (!position?.maxOriginationLtv) return ZERO;
 
@@ -68,8 +67,9 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
       return wmul(collateralBalance, position.maxOriginationLtv);
     }
 
-    return wmul(loan.collateral, position.maxOriginationLtv);
-  }, [position?.maxOriginationLtv, loan, collateralBalance]);
+    const totalCollateral = loan.collateral + collateralAmount;
+    return wmul(totalCollateral, position.maxOriginationLtv);
+  }, [position?.maxOriginationLtv, loan, collateralBalance, collateralAmount]);
 
   // Liquidation threshold
   const liquidationThreshold = useMemo(() => {

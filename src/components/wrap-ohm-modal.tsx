@@ -87,6 +87,12 @@ export function WrapOhmModal({
     return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
   };
 
+  const capDecimals = (value: string, maxDecimals = 4) => {
+    const [integer, decimal] = value.split(".");
+    if (!decimal) return value;
+    return `${integer}.${decimal.slice(0, maxDecimals)}`;
+  };
+
   const handleApprove = () => {
     if (!tokenAddress || !stakingAddress) return;
     approve({
@@ -126,8 +132,8 @@ export function WrapOhmModal({
       title: executeLabel,
       detail: `-${inputAmount} ${inputSymbol}    +${outputAmount} ${outputSymbol}`,
       badges: [
-        { label: `-${inputAmount} ${inputSymbol}` },
-        { label: `+${outputAmount} ${outputSymbol}` },
+        { label: `-${capDecimals(inputAmount)} ${inputSymbol}` },
+        { label: `+${capDecimals(outputAmount)} ${outputSymbol}` },
       ],
       isActive: currentStep === 2,
       isCompleted: executeSuccess,
@@ -152,37 +158,35 @@ export function WrapOhmModal({
           <div className="bg-surface-a3 border border-a3-b rounded-3xl">
             {steps.map((step, index) => (
               <div key={step.number}>
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-green/20 flex items-center justify-center">
-                      <CheckIcon className="h-4 w-4 text-green" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">{step.title}</div>
-                      {step.badges && (
-                        <div className="flex gap-1 mt-1">
-                          {step.badges.map((badge) => (
-                            <span
-                              key={badge.label}
-                              className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b"
-                            >
-                              {badge.label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div className="flex items-center gap-3 p-4">
+                  <div className="w-6 h-6 rounded-full bg-green/20 flex items-center justify-center shrink-0">
+                    <CheckIcon className="h-4 w-4 text-green" />
                   </div>
-                  {step.hash && (
-                    <Link
-                      target="_blank"
-                      to={`${blockExplorerTxBaseUrl}${step.hash}`}
-                      className="flex items-center gap-1 text-sm text-blue hover:text-blue-800"
-                    >
-                      {formatTxHash(step.hash)}
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  )}
+                  <div>
+                    <div className="font-medium text-sm">{step.title}</div>
+                    {step.badges && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {step.badges.map((badge) => (
+                          <span
+                            key={badge.label}
+                            className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b"
+                          >
+                            {badge.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {step.hash && (
+                      <Link
+                        target="_blank"
+                        to={`${blockExplorerTxBaseUrl}${step.hash}`}
+                        className="flex items-center gap-1 text-xs text-blue hover:text-blue-800 mt-1"
+                      >
+                        {formatTxHash(step.hash)}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
               </div>
