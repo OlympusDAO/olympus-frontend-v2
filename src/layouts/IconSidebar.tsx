@@ -43,7 +43,7 @@ function IconNavItem({ section, isActive }: { section: NavSection; isActive: boo
       </div>
       <span
         className={cn(
-          "text-xs font-semibold leading-[12px] transition-colors",
+          "text-xs font-medium leading-[12px] transition-colors",
           isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
         )}
       >

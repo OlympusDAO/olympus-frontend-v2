@@ -1,10 +1,9 @@
-import { Link, useLocation } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { useAccount, useChainId } from "wagmi";
-import { cn } from "@/lib/utils";
-import { getActiveSectionFromPath, type NavItem } from "@/lib/navigation";
+import { getActiveSectionFromPath } from "@/lib/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useGETAdminMultisigMembers, type LibChainId } from "@/generated/olympusUnits";
+import { SubNavItem } from "@/layouts/sub-nav-item";
 
 function useMultisigOwnership(enabled: boolean) {
   const { address } = useAccount();
@@ -17,36 +16,6 @@ function useMultisigOwnership(enabled: boolean) {
 
   if (!address || !data) return false;
   return data.owners.some((o) => o.toLowerCase() === address.toLowerCase());
-}
-
-function SubNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
-  if (item.external) {
-    return (
-      <a
-        href={item.path}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-surface-a5 text-secondary-t hover:text-primary-t"
-      >
-        <span>{item.label}</span>
-        <ExternalLink className="size-3.5 text-tertiary-t" />
-      </a>
-    );
-  }
-
-  return (
-    <Link
-      to={item.path}
-      className={cn(
-        "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
-        isActive
-          ? "bg-surface-a10 text-primary-t font-medium"
-          : "font-medium text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
-      )}
-    >
-      {item.label}
-    </Link>
-  );
 }
 
 export function SubNav() {
@@ -63,15 +32,15 @@ export function SubNav() {
   );
 
   return (
-    <aside className="w-[220px] h-screen flex flex-col border-r border-a10-b shrink-0 bg-surface-bg-l1">
+    <aside className="w-[220px] h-screen flex flex-col shrink-0 bg-surface-bg-l1 relative after:absolute after:right-0 after:top-2 after:bottom-2 after:w-px after:bg-[linear-gradient(180deg,transparent_0%,var(--surface-a10)_10%,var(--surface-a10)_90%,transparent_100%)]">
       {/* Section title */}
-      <div className="px-5 pt-8 pb-4">
-        <h2 className="text-lg font-bold text-primary-t">{activeSection.sidebarTitle}</h2>
+      <div className="px-7 pt-5 pb-5 mt-1.5">
+        <h2 className="text-lg leading-6 font-bold text-primary-t">{activeSection.sidebarTitle}</h2>
       </div>
 
       {/* Sub-nav items */}
       {visibleItems.length > 0 && (
-        <nav className="flex flex-col gap-0.5 px-3">
+        <nav className="flex flex-col gap-1 px-3 mt-2">
           {visibleItems.map((item) => (
             <SubNavItem
               key={item.path}
