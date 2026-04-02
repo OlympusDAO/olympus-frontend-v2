@@ -1,8 +1,13 @@
-import { FileText, MoreHorizontal, Building2 } from "lucide-react";
-import { RiSettings3Line, RiLoopLeftLine, RiPulseLine } from "@remixicon/react";
-import { OhmNavIcon } from "@/icons";
-import { Icon } from "@/components/icon";
+import { RiBook2Line, RiShieldCrossLine } from "@remixicon/react";
+import { LottieIcon } from "@/components/lottie-icon";
 import type { ComponentType, ReactNode } from "react";
+
+import pulseAnimation from "@/assets/animations/pulse.json";
+import ohmAnimation from "@/assets/animations/ohm.json";
+import coolerAnimation from "@/assets/animations/cooler.json";
+import cdAnimation from "@/assets/animations/cd.json";
+import daoAnimation from "@/assets/animations/dao.json";
+import engageAnimation from "@/assets/animations/engage.json";
 
 export type NavItem = {
   label: string;
@@ -12,14 +17,28 @@ export type NavItem = {
   requiresMultisig?: boolean;
 };
 
+export type AnimatedIconProps = { isHovered: boolean; isActive: boolean };
+
 export type NavSection = {
   id: string;
   label: string;
   sidebarTitle: string;
-  icon: ReactNode;
+  icon: ReactNode | ComponentType<AnimatedIconProps>;
   path: string;
   items: NavItem[];
 };
+
+export function isAnimatedIcon(
+  icon: ReactNode | ComponentType<AnimatedIconProps>,
+): icon is ComponentType<AnimatedIconProps> {
+  return typeof icon === "function";
+}
+
+function lottieIcon(animationData: unknown): ComponentType<AnimatedIconProps> {
+  return ({ isHovered, isActive }) => (
+    <LottieIcon animationData={animationData} isHovered={isHovered} isActive={isActive} />
+  );
+}
 
 type BottomNavItem = {
   id: string;
@@ -34,7 +53,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "home",
     label: "Pulse",
     sidebarTitle: "Pulse",
-    icon: <RiPulseLine />,
+    icon: lottieIcon(pulseAnimation),
     path: "/home",
     items: [
       { label: "Overview", path: "/home/overview" },
@@ -47,7 +66,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "ohm",
     label: "OHM",
     sidebarTitle: "OHM",
-    icon: <OhmNavIcon />,
+    icon: lottieIcon(ohmAnimation),
     path: "/ohm",
     items: [
       { label: "My Balances", path: "/ohm/balances" },
@@ -60,7 +79,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "cooler",
     label: "Cooler",
     sidebarTitle: "Cooler Loans",
-    icon: <RiSettings3Line />,
+    icon: lottieIcon(coolerAnimation),
     path: "/cooler",
     items: [
       { label: "Borrow", path: "/cooler/borrow" },
@@ -73,7 +92,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "cds",
     label: "CDs",
     sidebarTitle: "Convertible Deposits",
-    icon: <RiLoopLeftLine />,
+    icon: lottieIcon(cdAnimation),
     path: "/cds",
     items: [
       { label: "Deposit", path: "/cds/deposit" },
@@ -86,7 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "dao",
     label: "DAO",
     sidebarTitle: "Governance",
-    icon: <Building2 />,
+    icon: lottieIcon(daoAnimation),
     path: "/dao",
     items: [
       { label: "Vote", path: "/dao/vote" },
@@ -100,7 +119,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "engage",
     label: "Engage",
     sidebarTitle: "Engage",
-    icon: <Icon name="iOhmSidebar" />,
+    icon: lottieIcon(engageAnimation),
     path: "/engage",
     items: [
       { label: "Dashboard", path: "/engage", exact: true },
@@ -113,13 +132,14 @@ export const BOTTOM_NAV: BottomNavItem[] = [
   {
     id: "docs",
     label: "Docs",
-    icon: FileText,
+    icon: RiBook2Line,
     href: "https://docs.olympusdao.finance",
   },
   {
-    id: "more",
-    label: "More",
-    icon: MoreHorizontal,
+    id: "bug-bounty",
+    label: "Bug Bounty",
+    icon: RiShieldCrossLine,
+    href: "https://immunefi.com/bug-bounty/olympus/",
   },
 ];
 
