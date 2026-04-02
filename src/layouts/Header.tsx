@@ -34,7 +34,7 @@ export function Header() {
   }
 
   return (
-    <header className="flex items-center justify-between px-8 py-6">
+    <header className="flex items-center justify-between px-8 py-6 w-full max-w-(--max-content-width) mx-auto">
       <h1 className="text-2xl font-bold text-primary-t">{title}</h1>
       <ConnectButton />
     </header>

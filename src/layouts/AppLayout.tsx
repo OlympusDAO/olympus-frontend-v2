@@ -19,7 +19,7 @@ export default function AppLayout() {
         </div>
         <main className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-surface-bg-l1 relative">
           <Header />
-          <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8">
+          <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8 w-full max-w-(--max-content-width) mx-auto">
             <Outlet />
           </div>
           <Footer />

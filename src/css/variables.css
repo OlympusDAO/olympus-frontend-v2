@@ -32,6 +32,8 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
+  --max-content-width: 1064px;
+
   /*custom base*/
   --brand-sand-1000: oklch(0.8676 0.1047 79.71);
   --brand-sand-900: oklch(0.8887 0.0468 82.02);
@@ -139,7 +141,7 @@
   --surface-bg-l2: --alpha(var(--white) / 0.05);
   --surface-bg-overlay: --alpha(var(--slate) / 0.9);
   --surface-toast: var(--greyscale-600);
-  --surface-tooltip: var(--greyscale-500);
+  --surface-tooltip: var(--greyscale-600);
   --surface-dropdown: var(--greyscale-600);
   --surface-modal: var(--greyscale-700);
   --surface-button-primary: var(--greyscale-200);
