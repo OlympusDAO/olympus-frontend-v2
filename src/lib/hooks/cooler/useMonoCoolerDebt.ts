@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   useAccount,
   useChainId,
@@ -9,6 +9,7 @@ import {
 } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { getContractAddress, ContractName } from "@/lib/contracts";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
 import CoolerV2CompositesABI from "@/abis/CoolerV2Composites";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
@@ -17,6 +18,8 @@ import {
   getAuthorizationSignature,
   EMPTY_AUTH,
   EMPTY_SIGNATURE,
+  type AuthorizationStruct,
+  type AuthorizationSignature,
 } from "./getAuthorizationSignature";
 
 /** Subtract 1-hour interest buffer for borrow to account for accrual */
@@ -98,10 +101,51 @@ export function useMonoCoolerDebt() {
     query: { enabled: !!address },
   });
 
+  const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
+  const gohmTokenAddress = getTokenAddress(TokenName.GOHM, chainId);
+
   const invalidateQueries = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: positionQueryKey });
     queryClient.invalidateQueries({ queryKey: nonceQueryKey });
-  }, [queryClient, positionQueryKey, nonceQueryKey]);
+    if (usdsTokenAddress) {
+      queryClient.invalidateQueries({
+        queryKey: ["readContract", { address: usdsTokenAddress, functionName: "balanceOf" }],
+      });
+    }
+    if (gohmTokenAddress) {
+      queryClient.invalidateQueries({
+        queryKey: ["readContract", { address: gohmTokenAddress, functionName: "balanceOf" }],
+      });
+    }
+  }, [queryClient, positionQueryKey, nonceQueryKey, usdsTokenAddress, gohmTokenAddress]);
+
+  // --- Composite Authorization Signature (EOA) ---
+  const [compositeAuth, setCompositeAuth] = useState<{
+    auth: AuthorizationStruct;
+    signature: AuthorizationSignature;
+  } | null>(null);
+  const [isSigning, setIsSigning] = useState(false);
+
+  const signAuthorization = useCallback(async () => {
+    if (!address || !compositesAddress || !monoCoolerAddress) return;
+    setIsSigning(true);
+    try {
+      const nonce = authNonce ?? 0n;
+      const result = await getAuthorizationSignature({
+        userAddress: address,
+        authorizedAddress: compositesAddress,
+        verifyingContract: monoCoolerAddress,
+        chainId,
+        nonce: nonce as bigint,
+        signTypedDataAsync,
+      });
+      setCompositeAuth(result);
+    } catch {
+      // User rejected or error
+    } finally {
+      setIsSigning(false);
+    }
+  }, [address, compositesAddress, monoCoolerAddress, authNonce, chainId, signTypedDataAsync]);
 
   // --- Borrow ---
   const borrowWrite = useWriteContract();
@@ -243,22 +287,13 @@ export function useMonoCoolerDebt() {
       return;
     }
 
-    // EOA: generate EIP-712 signature
-    const nonce = authNonce ?? 0n;
-    const { auth, signature } = await getAuthorizationSignature({
-      userAddress: address,
-      authorizedAddress: compositesAddress,
-      verifyingContract: monoCoolerAddress,
-      chainId,
-      nonce: nonce as bigint,
-      signTypedDataAsync,
-    });
-
+    // EOA: use pre-signed authorization
+    if (!compositeAuth) return;
     addCollateralAndBorrowWrite.writeContract({
       address: compositesAddress,
       abi: CoolerV2CompositesABI,
       functionName: "addCollateralAndBorrow",
-      args: [auth, signature, collateralAmt, finalBorrowAmt, []],
+      args: [compositeAuth.auth, compositeAuth.signature, collateralAmt, finalBorrowAmt, []],
     });
   };
 
@@ -299,21 +334,13 @@ export function useMonoCoolerDebt() {
       return;
     }
 
-    const nonce = authNonce ?? 0n;
-    const { auth, signature } = await getAuthorizationSignature({
-      userAddress: address,
-      authorizedAddress: compositesAddress,
-      verifyingContract: monoCoolerAddress,
-      chainId,
-      nonce: nonce as bigint,
-      signTypedDataAsync,
-    });
-
+    // EOA: use pre-signed authorization
+    if (!compositeAuth) return;
     repayAndRemoveCollateralWrite.writeContract({
       address: compositesAddress,
       abi: CoolerV2CompositesABI,
       functionName: "repayAndRemoveCollateral",
-      args: [auth, signature, finalRepayAmt, collateralAmt, []],
+      args: [compositeAuth.auth, compositeAuth.signature, finalRepayAmt, collateralAmt, []],
     });
   };
 
@@ -324,6 +351,9 @@ export function useMonoCoolerDebt() {
     withdrawCollateral,
     addCollateralAndBorrow,
     repayAndRemoveCollateral,
+    signAuthorization,
+    isSigning,
+    isSignSuccess: !!compositeAuth,
     isBorrowing: borrowWrite.isPending || borrowReceipt.isLoading,
     isRepaying: repayWrite.isPending || repayReceipt.isLoading,
     isAddingCollateral: addCollateralWrite.isPending || addCollateralReceipt.isLoading,
