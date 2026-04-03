@@ -39,21 +39,21 @@ export function ProtocolFlywheel() {
   }));
 
   return (
-    <div>
-      <p className="mb-4 text-xs font-medium uppercase tracking-widest">Protocol Flywheel</p>
-      <Card className="p-6">
-        <RevenueFlowDiagram
-          sources={flowSources}
-          totalRevenue={revenue.totalWeekly}
-          weeklyBurns={weeklyBurns}
-          weeklyBurnsFormatted={formatNumber(Math.round(weeklyBurns))}
-          backingValue={formatUsd(backing)}
-          deflationRate={supplyReduction.toFixed(2)}
-        />
-        <div className="mt-4">
-          <ProtocolDataSource sources={["Treasury API", "DefiLlama", "Cooler Subgraph"]} />
-        </div>
-      </Card>
-    </div>
+    <Card className="p-5">
+      <p className="mb-4 text-[15px]/[20px] font-semibold uppercase tracking-widest">
+        Protocol Flywheel
+      </p>
+      <RevenueFlowDiagram
+        sources={flowSources}
+        totalRevenue={revenue.totalWeekly}
+        weeklyBurns={weeklyBurns}
+        weeklyBurnsFormatted={formatNumber(Math.round(weeklyBurns))}
+        backingValue={formatUsd(backing)}
+        deflationRate={supplyReduction.toFixed(2)}
+      />
+      <div className="mt-4">
+        <ProtocolDataSource sources={["Treasury API", "DefiLlama", "Cooler Subgraph"]} />
+      </div>
+    </Card>
   );
 }

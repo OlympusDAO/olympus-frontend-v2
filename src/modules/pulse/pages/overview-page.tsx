@@ -12,7 +12,7 @@ export function OverviewPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-4">
       {/* Row 1: Protocol Revenue + OHM Price / Liquid Backing / OHM Premium */}
-      <div className="grid grid-cols-[5fr_4fr] gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         <OverviewProtocolRevenue />
         <div className="grid grid-rows-3 gap-4">
           <OverviewOhmPrice />
@@ -22,13 +22,13 @@ export function OverviewPage() {
       </div>
 
       {/* Row 2: YRF + Emission Manager */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         <OverviewYrf />
         <OverviewEmissionManager />
       </div>
 
       {/* Row 3: Cooler Loans + Convertible Deposits */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         <OverviewCoolerLoans />
         <OverviewConvertibleDeposits />
       </div>

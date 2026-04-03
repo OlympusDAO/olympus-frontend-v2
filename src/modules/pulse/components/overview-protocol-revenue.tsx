@@ -32,7 +32,7 @@ export function OverviewProtocolRevenue() {
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PulseDot variant="green" />
-          <p className="text-sm font-semibold">Protocol Revenue</p>
+          <p className="text-[15px]/[20px] font-semibold">Protocol Revenue</p>
         </div>
 
         {/* Period tabs */}

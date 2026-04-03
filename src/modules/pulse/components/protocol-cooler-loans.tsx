@@ -56,6 +56,18 @@ export function ProtocolCoolerLoans() {
       <TooltipInfo title="Cooler Loans">
         <p className="text-[15px]/[20px] font-semibold text-primary-t">Cooler Loans</p>
       </TooltipInfo>
+      <div className="flex items-center gap-4 mt-4">
+        <div className="size-18 flex items-center justify-center">icon</div>
+        <div>
+          <p className="text-[15px]/[20px] font-semibold mb-1">
+            Cooler Loans enforce the backing floor
+          </p>
+          <p className="text-secondary-t text-xs">
+            Fixed-rate loans at 0.5% APR let holders borrow against gOHM at backing value while
+            generating steady treasury income.
+          </p>
+        </div>
+      </div>
       <Separator className="my-4" />
       {/* Hero: Total Borrowed + Borrow button */}
       <div className="flex items-end justify-between gap-4">

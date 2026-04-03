@@ -29,7 +29,7 @@ export function OverviewOhmPremium() {
   const isPositive = change24h >= 0;
 
   return (
-    <Card className="flex items-center justify-between gap-4 p-5">
+    <Card className="flex items-center justify-between gap-4 p-5 max-xs:flex-col max-xs:items-start">
       <div className="min-w-0">
         <TooltipInfo title="OHM Premium = OHM Price − Liquid Backing Per OHM. Represents how much the market values OHM above its backing.">
           <p className="mb-1 text-[15px]/[20px] font-semibold text-primary-t"> OHM Premium</p>

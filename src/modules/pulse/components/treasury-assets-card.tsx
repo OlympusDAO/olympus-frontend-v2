@@ -111,8 +111,8 @@ export function TreasuryAssetsCard() {
 
       {/* Treasury Market Value row */}
       <div className="flex items-center justify-between">
-        <TooltipInfo title="Treasury Market Value">
-          <p className="text-primary-t text-sm">Treasury Market Value</p>
+        <TooltipInfo title="All protocol-owned assets at market value">
+          <p className="text-primary-t text-[15px]/[20px]">Treasury Market Value</p>
         </TooltipInfo>
 
         <NumberFlow value={treasuryMarketValue} className="text-base font-semibold" />

@@ -5,7 +5,7 @@ export function PriceChange({ percentage, timeframe }: { percentage: number; tim
   const isPositive = percentage >= 0;
 
   return (
-    <div className="flex items-center gap-x-1">
+    <div className="flex items-center gap-x-1 text-[15px]/[20px]">
       <div className="flex items-center gap-x-1 ">
         <div
           className={cn("rounded-full flex items-center justify-start size-4", {
@@ -28,7 +28,7 @@ export function PriceChange({ percentage, timeframe }: { percentage: number; tim
           value={Math.abs(percentage / 100)}
         />
       </div>
-      <p className="text-[15px]/[20px] text-tertiary-t">{timeframe}</p>
+      <p className=" text-tertiary-t">{timeframe}</p>
     </div>
   );
 }

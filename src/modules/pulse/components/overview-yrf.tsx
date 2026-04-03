@@ -38,8 +38,10 @@ export function OverviewYrf() {
           </p>
         </TooltipInfo>
         <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-secondary-t md:order-last">
+            {isActive ? "Active" : "Inactive"}
+          </span>
           <PulseDot variant={isActive ? "green" : "yellow"} />
-          <span className="text-xs text-secondary-t">{isActive ? "Active" : "Inactive"}</span>
         </div>
       </div>
       <Separator className="w-full my-4" />
@@ -47,11 +49,11 @@ export function OverviewYrf() {
       <div className="flex items-end justify-between gap-4">
         {/* Left: Lifetime OHM Repurchased */}
         <div>
-          <TooltipInfo
-            title="Total OHM repurchased via YRF bond markets since inception."
-            className=" text-xs text-secondary-t"
-          >
-            Lifetime OHM Repurchased
+          <TooltipInfo title="Total OHM repurchased via YRF bond markets since inception.">
+            <p className=" text-[15px]/[20px] text-secondary-t font-medium">
+              {" "}
+              Lifetime OHM Repurchased
+            </p>
           </TooltipInfo>
           <div className="flex items-center gap-x-2 mt-1">
             <Icon className="size-7" name="OHMColorTokenIcon" />
@@ -69,7 +71,7 @@ export function OverviewYrf() {
             <TooltipInfo
               title={`At the current YRF buyback rate, annualized supply change is ${formatNumber(Math.round(annualBurns))} OHM/yr.`}
             >
-              <p className="text-xs text-secondary-t">Annual Supply Impact</p>
+              <p className="text-xs text-secondary-t font-medium">Annual Supply Impact</p>
             </TooltipInfo>
           </div>
           <div className="flex items-center gap-x-1">
@@ -81,7 +83,10 @@ export function OverviewYrf() {
             <NumberFlow
               suffix="OHM/yr"
               value={annualBurns}
-              format={{ style: "decimal", notation: "standard" }}
+              format={{
+                style: "decimal",
+                notation: window.innerWidth <= 639 ? "compact" : "standard",
+              }}
               className="text-[15px]/[20px] text-secondary-t"
             />
           </div>

@@ -138,7 +138,7 @@ export function TreasuryBackingCard() {
     <Card className="flex flex-col gap-4 p-6">
       <h3 className="text-[18px]/[20px] font-semibold">How Backing per OHM Is Calculated</h3>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         {/* LEFT: Formula */}
         <div className="flex flex-col ">
           {/* Numerator */}
@@ -188,7 +188,7 @@ export function TreasuryBackingCard() {
         </div>
 
         {/* RIGHT: Chart */}
-        <div className="flex h-full flex-col gap-4 bg-surface-a3 rounded-xl py-3.5 px-3">
+        <div className="flex h-full max-md:h-80 flex-col gap-4 bg-surface-a3 rounded-xl py-3.5 px-3">
           {/* Legend + filter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-sm">

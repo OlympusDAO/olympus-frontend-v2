@@ -25,7 +25,7 @@ export function OverviewCoolerLoans() {
           suffix="APR"
           value={interestRate / 100}
           format={{ style: "percent", notation: "standard" }}
-          className="text-xs text-secondary-t"
+          className="text-xs text-secondary-t font-medium"
         />
       </div>
       <Separator className="w-full my-4" />
@@ -33,13 +33,13 @@ export function OverviewCoolerLoans() {
       {/* Body */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="mb-1 text-[15px]/[20px] text-secondary-t">Total Borrowed</p>
+          <p className="mb-1 text-[15px]/[20px] text-secondary-t font-medium">Total Borrowed</p>
           <NumberFlow value={totalBorrowed} className="text-[32px]/[40px] font-semibold" />
           <NumberFlow
             suffix="gOHM collateral locked"
             value={totalCollateral}
             format={{ style: "decimal", notation: "standard" }}
-            className="text-xs text-secondary-t"
+            className="text-xs text-secondary-t font-medium"
           />
         </div>
 
