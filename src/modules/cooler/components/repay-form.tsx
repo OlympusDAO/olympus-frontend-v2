@@ -18,7 +18,6 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
 
 const ZERO = 0n;
-const MAX_UINT256 = 2n ** 256n - 1n;
 
 interface RepayFormProps {
   loan?: {
@@ -258,10 +257,15 @@ export function RepayForm({ loan }: RepayFormProps) {
 
     if (activeStep.title === "Approve USDS") {
       if (!usdsToken.address || !spenderAddress) return;
+      const requiredAmount = calculateRepayAmount(
+        repayAmount,
+        position?.interestRateBps ?? 0,
+        isFullRepay,
+      );
       approve({
         tokenAddress: usdsToken.address,
         spender: spenderAddress,
-        amount: MAX_UINT256,
+        amount: requiredAmount,
         queryKey: allowanceQueryKey,
       });
     } else if (activeStep.title === "Authorize Composites") {

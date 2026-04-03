@@ -17,7 +17,6 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
 
 const ZERO = 0n;
-const MAX_UINT256 = 2n ** 256n - 1n;
 
 interface BorrowFormProps {
   loan?: {
@@ -293,7 +292,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
       approve({
         tokenAddress: gohmToken.address,
         spender: spenderAddress,
-        amount: MAX_UINT256,
+        amount: collateralAmount,
         queryKey: allowanceQueryKey,
       });
     } else if (activeStep.title === "Authorize Composites") {
