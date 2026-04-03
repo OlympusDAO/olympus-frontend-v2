@@ -18,12 +18,12 @@ const TIME_WINDOWS: { value: TimeWindow; label: string }[] = [
 export function OverviewProtocolRevenue() {
   const { displayValue, timeWindow, setTimeWindow, weeklyTotal } = useRevenueCounter();
   const perSecond = weeklyTotal / (7 * 24 * 60 * 60);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   return (
     <Card
       className="relative flex flex-col justify-between overflow-hidden p-4 min-h-70"
       style={{
-        backgroundImage: `url(${theme === "light" ? marbleBgLight : marbleBgDark})`,
+        backgroundImage: `url(${resolvedTheme === "light" ? marbleBgLight : marbleBgDark})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

@@ -48,7 +48,7 @@ const marbleBg = {
 
 export function ProtocolTreasuryRevenue() {
   const { displayValue, weeklyTotal, isLoading } = useRevenueCounter();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const breakpoint = useBreakpoint();
 
   if (isLoading) {
@@ -78,7 +78,7 @@ export function ProtocolTreasuryRevenue() {
     <Card
       className="p-8 flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-6 bg-surface-bg-l2"
       style={{
-        backgroundImage: `url(${marbleBg[theme === "light" ? "light" : "dark"][breakpoint]})`,
+        backgroundImage: `url(${marbleBg[resolvedTheme][breakpoint]})`,
         backgroundSize: "cover",
         backgroundPosition: "left",
       }}
