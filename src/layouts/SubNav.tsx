@@ -26,6 +26,7 @@ export function SubNav() {
   const isMultisigOwner = useMultisigOwnership(isAuthenticated && hasMultisigItems);
 
   if (!activeSection) return null;
+  if (activeSection.hideNavIfNotMultisig && !isMultisigOwner) return null;
 
   const visibleItems = activeSection.items.filter(
     (item) => !item.requiresMultisig || isMultisigOwner,

@@ -26,6 +26,7 @@ export type NavSection = {
   icon: ReactNode | ComponentType<AnimatedIconProps>;
   path: string;
   items: NavItem[];
+  hideNavIfNotMultisig?: boolean;
 };
 
 export function isAnimatedIcon(
@@ -121,6 +122,7 @@ export const NAV_SECTIONS: NavSection[] = [
     sidebarTitle: "Engage",
     icon: lottieIcon(engageAnimation),
     path: "/engage",
+    hideNavIfNotMultisig: true,
     items: [
       { label: "Dashboard", path: "/engage", exact: true },
       { label: "Rewards Manager", path: "/engage/rewards-manager", requiresMultisig: true },
