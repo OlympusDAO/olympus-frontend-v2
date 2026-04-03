@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
 import { ContractName, getContractAddress } from "@/lib/contracts";
+import { TokenName, getTokenAddress } from "@/lib/tokens";
 import OlympusStakingAbi from "@/abis/OlympusStaking";
 import { useTransactionToast, type TransactionToastConfig } from "./useTransactionToast";
 
@@ -12,6 +13,8 @@ export function useUnwrapGohm() {
   const chainId = useChainId();
 
   const stakingAddress = getContractAddress(ContractName.STAKING, chainId);
+  const ohmAddress = getTokenAddress(TokenName.OHM, chainId);
+  const gohmAddress = getTokenAddress(TokenName.GOHM, chainId);
 
   const {
     data: hash,
@@ -31,11 +34,33 @@ export function useUnwrapGohm() {
   });
 
   useEffect(() => {
-    if (isConfirmed && queryKeyRef.current) {
-      queryClient.invalidateQueries({ queryKey: queryKeyRef.current });
-      queryKeyRef.current = undefined;
+    if (isConfirmed) {
+      // Invalidate allowance query
+      if (queryKeyRef.current) {
+        queryClient.invalidateQueries({ queryKey: queryKeyRef.current });
+        queryKeyRef.current = undefined;
+      }
+      // Invalidate OHM and gOHM balance queries so UI reflects new balances
+      const affectedAddresses = [ohmAddress, gohmAddress].filter(Boolean);
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key.some(
+              (k) =>
+                typeof k === "object" &&
+                k !== null &&
+                "functionName" in k &&
+                k.functionName === "balanceOf" &&
+                "address" in k &&
+                affectedAddresses.includes(k.address as `0x${string}`),
+            )
+          );
+        },
+      });
     }
-  }, [isConfirmed, queryClient]);
+  }, [isConfirmed, queryClient, ohmAddress, gohmAddress]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {
