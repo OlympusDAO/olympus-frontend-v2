@@ -4,7 +4,15 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  type RowData,
 } from "@tanstack/react-table";
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TData extends RowData> {
+    userAddress?: `0x${string}` | undefined;
+  }
+}
 import { ArrowUpIcon, ArrowDownIcon, ExternalLinkIcon } from "lucide-react";
 import { useAccount, useChainId } from "wagmi";
 import type { Address } from "viem";

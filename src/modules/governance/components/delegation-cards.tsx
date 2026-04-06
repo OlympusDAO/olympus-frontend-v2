@@ -68,7 +68,9 @@ export function DelegationCards({
           ) : isDelegated ? (
             <span className="text-xs text-secondary-t">
               Delegated to:{" "}
-              <span className="font-mono text-primary-t">{shortenAddress(delegatee)}</span>
+              <span className="font-mono text-primary-t">
+                {shortenAddress(delegatee as `0x${string}`)}
+              </span>
             </span>
           ) : (
             <span className="text-xs text-tertiary-t">Not delegated</span>

@@ -32,7 +32,7 @@ export function DelegateRow({
           className="font-mono text-xs text-blue-400 hover:text-blue-300"
           onClick={(e) => e.stopPropagation()}
         >
-          {shortenAddress(delegate.address)}
+          {shortenAddress(delegate.address as `0x${string}`)}
         </a>
       </TableCell>
       <TableCell>

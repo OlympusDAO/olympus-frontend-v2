@@ -51,7 +51,9 @@ export function VotingPowerCards({ startBlock }: { startBlock?: number }) {
             <div className="flex flex-col gap-1">
               <span className="text-sm text-secondary-t">
                 Delegated to{" "}
-                <span className="text-primary-t font-mono">{shortenAddress(delegatee)}</span>
+                <span className="text-primary-t font-mono">
+                  {shortenAddress(delegatee as `0x${string}`)}
+                </span>
               </span>
             </div>
           ) : (

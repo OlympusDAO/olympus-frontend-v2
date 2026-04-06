@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatUnits, parseUnits, type Address } from "viem";
+import { parseUnits, type Address } from "viem";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";

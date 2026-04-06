@@ -9,6 +9,7 @@ import {
   NAV_SECTIONS,
   getActiveSectionFromPath,
   getDefaultPathForSection,
+  isAnimatedIcon,
   type NavSection,
 } from "@/lib/navigation";
 import { SubNavItem } from "@/layouts/sub-nav-item";
@@ -37,7 +38,11 @@ function MobileSectionItem({
           isActive ? "text-brand-sand-1000" : "text-secondary-t",
         )}
       >
-        {section.icon}
+        {isAnimatedIcon(section.icon) ? (
+          <section.icon isHovered={false} isActive={isActive} />
+        ) : (
+          section.icon
+        )}
       </span>
       <span
         className={cn(
