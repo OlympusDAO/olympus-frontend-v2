@@ -73,7 +73,7 @@ function VoteTable({ votes, isLoading }: { votes: VoteCast[] | undefined; isLoad
                 rel="noopener noreferrer"
                 className="font-mono text-xs text-blue-400 hover:text-blue-300"
               >
-                {shortenAddress(vote.voter.address)}
+                {shortenAddress(vote.voter.address as `0x${string}`)}
               </a>
             </TableCell>
             <TableCell>

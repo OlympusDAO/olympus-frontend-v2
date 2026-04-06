@@ -77,7 +77,7 @@ export function DelegateVotingModal({
             <div className="flex items-center justify-between rounded-lg bg-surface-a3 px-3 py-2.5">
               <span className="text-xs text-secondary-t">Currently Delegated To</span>
               <span className="text-xs font-mono text-primary-t">
-                {shortenAddress(currentDelegate)}
+                {shortenAddress(currentDelegate as `0x${string}`)}
               </span>
             </div>
           )}

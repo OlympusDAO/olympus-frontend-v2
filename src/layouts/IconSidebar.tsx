@@ -38,7 +38,11 @@ function IconNavItem({ section, isActive }: { section: NavSection; isActive: boo
             isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
         >
-          {isAnimatedIcon(section.icon) ? section.icon({ isHovered, isActive }) : section.icon}
+          {isAnimatedIcon(section.icon) ? (
+            <section.icon isHovered={isHovered} isActive={isActive} />
+          ) : (
+            section.icon
+          )}
         </span>
       </div>
       <span

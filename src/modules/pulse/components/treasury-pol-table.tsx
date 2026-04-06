@@ -23,7 +23,7 @@ import { useLpPoolsData, type LpPoolRow } from "@/modules/pulse/hooks/useLpPools
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
-    totalTvl: number;
+    totalTvl?: number;
   }
 }
 
