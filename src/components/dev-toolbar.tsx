@@ -5,11 +5,15 @@ import { ChevronUp, ChevronDown, FlaskConical, Coins } from "lucide-react";
 import { MintTestnetOhmModal } from "@/components/mint-testnet-ohm-modal";
 import { MintTestnetUsdsModal } from "@/components/mint-testnet-usds-modal";
 import { TokenName } from "@/lib/tokens";
-import { isTestnetMode } from "@/lib/chains";
+import { isTestnetMode, sepolia } from "@/lib/chains";
+import { useChainId } from "wagmi";
 
 export function DevToolbar() {
   const controls = useMockControls();
   const [collapsed, setCollapsed] = useState(true);
+
+  const chainId = useChainId();
+  const isOnSepolia = chainId === sepolia.id;
 
   if (!controls) return null;
 
@@ -31,7 +35,7 @@ export function DevToolbar() {
               Mock
             </span>
           )}
-          {isTestnetMode && (
+          {isOnSepolia && (
             <span className="ml-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">
               Testnet
             </span>
@@ -96,20 +100,20 @@ export function DevToolbar() {
               <span>Network</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] text-white ${
-                  isTestnetMode ? "bg-amber-600" : "bg-zinc-600"
+                  isOnSepolia ? "bg-amber-600" : "bg-zinc-600"
                 }`}
               >
-                {isTestnetMode ? "Sepolia" : "Mainnet"}
+                {isOnSepolia ? "Sepolia" : "Mainnet"}
               </span>
             </div>
-            {!isTestnetMode && (
+            {isTestnetMode && !isOnSepolia && (
               <p className="text-[10px] text-zinc-500">
                 Switch to Sepolia in your wallet to use faucets
               </p>
             )}
 
-            {/* Mint buttons (visible when on testnet) */}
-            {isTestnetMode && (
+            {/* Mint buttons (visible when connected to Sepolia) */}
+            {isOnSepolia && (
               <div className="space-y-1.5">
                 <span className="text-zinc-400">Faucet</span>
                 <div className="flex gap-1.5">

@@ -5,7 +5,7 @@ import type { TokenInfo } from "@/lib/tokens";
 import { useMockData } from "@/lib/mock/provider";
 import {
   transports,
-  isTestnetMode,
+  allChains,
   mainnet,
   arbitrum,
   polygon,
@@ -18,7 +18,9 @@ import {
   sepolia,
 } from "@/lib/chains";
 
-const PRODUCTION_CHAIN_MAP: Record<number, Chain> = {
+const ACTIVE_CHAIN_IDS = new Set(allChains.map((c) => c.id));
+
+const CHAIN_MAP: Record<number, Chain> = {
   [mainnet.id]: mainnet,
   [arbitrum.id]: arbitrum,
   [polygon.id]: polygon,
@@ -28,13 +30,8 @@ const PRODUCTION_CHAIN_MAP: Record<number, Chain> = {
   [fantom.id]: fantom,
   [base.id]: base,
   [berachain.id]: berachain,
-};
-
-const TESTNET_CHAIN_MAP: Record<number, Chain> = {
   [sepolia.id]: sepolia,
 };
-
-const CHAIN_MAP = isTestnetMode ? TESTNET_CHAIN_MAP : PRODUCTION_CHAIN_MAP;
 
 export type ChainBalance = {
   chainId: number;
@@ -62,7 +59,9 @@ const EMPTY_RESULT: MultiChainBalanceResult = {
 export function useMultiChainBalance(token: TokenInfo): MultiChainBalanceResult {
   const mock = useMockData();
   const { address: account } = useAccount();
-  const chainIds = Object.keys(token.addresses).map(Number);
+  const chainIds = Object.keys(token.addresses)
+    .map(Number)
+    .filter((id) => ACTIVE_CHAIN_IDS.has(id));
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["multiChainBalance", token.symbol, account],

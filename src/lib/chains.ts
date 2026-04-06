@@ -25,25 +25,23 @@ export const PRODUCTION_CHAINS = [mainnet] as const;
 export const BRIDGE_EXTRA_CHAINS = [arbitrum, base, berachain] as const;
 
 /**
- * Testnet chains (sepolia only).
- */
-export const TESTNET_CHAINS = [sepolia, mainnet] as const;
-
-/**
  * Whether testnet mode is enabled via environment variable.
  */
 export const isTestnetMode = Boolean(import.meta.env.VITE_TESTNET_MODE);
 
 /**
  * Active chains based on testnet mode.
+ * In testnet mode, Sepolia is added alongside production chains rather than replacing them.
  */
-export const activeChains = isTestnetMode ? TESTNET_CHAINS : PRODUCTION_CHAINS;
+export const activeChains = isTestnetMode
+  ? ([...PRODUCTION_CHAINS, sepolia] as const)
+  : PRODUCTION_CHAINS;
 
 /**
  * All chains for the wagmi config (includes bridge chains for useSwitchChain).
  */
 export const allChains = isTestnetMode
-  ? TESTNET_CHAINS
+  ? ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS, sepolia] as const)
   : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**
