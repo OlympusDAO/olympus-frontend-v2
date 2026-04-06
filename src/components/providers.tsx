@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { DevMockProvider } from "@/lib/mock/provider";
 import { DevToolbar } from "@/components/dev-toolbar";
+import { isTestnetMode } from "@/lib/chains";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,7 +51,7 @@ function ThemedRainbowKit({ children }: { children: React.ReactNode }) {
 }
 
 function DevProvider({ children }: { children: React.ReactNode }) {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV || isTestnetMode) {
     return (
       <DevMockProvider>
         {children}
