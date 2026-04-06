@@ -10,6 +10,7 @@ import {
   useGETEpochsEpochsList,
   useGETEpochsEpochRewards,
   useGETEpochsEpochRewardUsers,
+  type EpochsEpoch,
   type LibChainId,
 } from "@/generated/olympusUnits";
 
@@ -51,8 +52,10 @@ function RewardsManagerContent() {
   );
   const users = usersData?.users ?? [];
 
-  const selectedEpoch = epochs.find((e) => e.id === selectedId);
-  const notSubmittedEpoch = epochs.find((e) => deriveEpochStatus(e) === "not_submitted");
+  const selectedEpoch = epochs.find((e: EpochsEpoch) => e.id === selectedId);
+  const notSubmittedEpoch = epochs.find(
+    (e: EpochsEpoch) => deriveEpochStatus(e) === "not_submitted",
+  );
 
   if (!isEpochsLoading && epochs.length === 0) {
     return <p className="py-12 text-center text-secondary-t">No epochs found.</p>;

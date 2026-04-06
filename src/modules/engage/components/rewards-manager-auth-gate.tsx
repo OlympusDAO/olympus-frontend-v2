@@ -53,7 +53,8 @@ export function RewardsManagerAuthGate({ children }: RewardsManagerAuthGateProps
   }
 
   const owners = membersData?.owners ?? [];
-  const isOwner = !!address && owners.some((o) => o.toLowerCase() === address.toLowerCase());
+  const isOwner =
+    !!address && owners.some((o: string) => o.toLowerCase() === address.toLowerCase());
 
   if (!isOwner) {
     return (

@@ -31,6 +31,7 @@ import {
 import {
   useGETSeasonsLeaderboard,
   type LibChainId,
+  type SeasonsLeaderboardEntry,
   type SeasonsPositionDirection,
 } from "@/generated/olympusUnits";
 
@@ -58,7 +59,7 @@ export function LeaderboardTable() {
 
   const tableData = useMemo<LeaderboardRow[]>(
     () =>
-      (leaderboardData?.entries ?? []).map((entry) => ({
+      (leaderboardData?.entries ?? []).map((entry: SeasonsLeaderboardEntry) => ({
         rank: entry.rank,
         address: entry.address,
         totalDrachmas: parseFloat(entry.totalUnits),
