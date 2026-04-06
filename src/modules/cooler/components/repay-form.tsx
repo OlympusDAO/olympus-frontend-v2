@@ -18,7 +18,6 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
 
 const ZERO = 0n;
-const MAX_UINT256 = 2n ** 256n - 1n;
 
 interface RepayFormProps {
   loan?: {
@@ -69,6 +68,9 @@ export function RepayForm({ loan }: RepayFormProps) {
     repayAndRemoveCollateralHash,
     isRepaySuccess,
     isRepayAndRemoveCollateralSuccess,
+    signAuthorization,
+    isSigning,
+    isSignSuccess,
   } = useMonoCoolerDebt();
 
   // Determine operation type
@@ -107,12 +109,15 @@ export function RepayForm({ loan }: RepayFormProps) {
   const hasSufficientAllowance = !needsApproval;
 
   const needsScwAuthorization = isComposite && isSmartContractWallet && !isAuthorized;
+  // For composite EOA: needs EIP-712 signature
+  const needsEoaSignature = isComposite && !isSmartContractWallet;
 
   const isAnyPending =
     isRepaying ||
     isWithdrawingCollateral ||
     isRepayingAndRemovingCollateral ||
     isApproving ||
+    isSigning ||
     isSettingAuthorization;
 
   // Input values
@@ -184,16 +189,14 @@ export function RepayForm({ loan }: RepayFormProps) {
     const steps = [];
     let stepNum = 1;
 
-    if (needsApproval || approvalSuccess) {
-      steps.push({
-        number: stepNum++,
-        title: "Approve USDS",
-        isActive: needsApproval && !approvalSuccess,
-        isCompleted: hasSufficientAllowance || approvalSuccess,
-        isLoading: isApproving,
-        hash: approvalSuccess ? approvalHash : undefined,
-      });
-    }
+    steps.push({
+      number: stepNum++,
+      title: "Approve USDS",
+      isActive: needsApproval && !approvalSuccess,
+      isCompleted: hasSufficientAllowance || approvalSuccess,
+      isLoading: isApproving,
+      hash: approvalSuccess ? approvalHash : undefined,
+    });
 
     if (needsScwAuthorization) {
       steps.push({
@@ -202,6 +205,16 @@ export function RepayForm({ loan }: RepayFormProps) {
         isActive: (hasSufficientAllowance || approvalSuccess) && !isAuthorized,
         isCompleted: isAuthorized,
         isLoading: isSettingAuthorization,
+      });
+    }
+
+    if (needsEoaSignature) {
+      steps.push({
+        number: stepNum++,
+        title: "Sign Authorization",
+        isActive: (hasSufficientAllowance || approvalSuccess) && !isSignSuccess,
+        isCompleted: isSignSuccess,
+        isLoading: isSigning,
       });
     }
 
@@ -216,7 +229,9 @@ export function RepayForm({ loan }: RepayFormProps) {
       title: txTitle,
       detail: `${Number(formatUnits(repayAmount, 18)).toFixed(2)} USDS`,
       isActive:
-        (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
+        (hasSufficientAllowance || approvalSuccess) &&
+        (!needsScwAuthorization || isAuthorized) &&
+        (!needsEoaSignature || isSignSuccess),
       isCompleted: txSuccess,
       isLoading: txPending,
       hash: txSuccess ? txHash : undefined,
@@ -232,6 +247,9 @@ export function RepayForm({ loan }: RepayFormProps) {
     needsScwAuthorization,
     isAuthorized,
     isSettingAuthorization,
+    needsEoaSignature,
+    isSignSuccess,
+    isSigning,
     isComposite,
     isFullRepay,
     isRepayAndRemoveCollateralSuccess,
@@ -258,14 +276,21 @@ export function RepayForm({ loan }: RepayFormProps) {
 
     if (activeStep.title === "Approve USDS") {
       if (!usdsToken.address || !spenderAddress) return;
+      const requiredAmount = calculateRepayAmount(
+        repayAmount,
+        position?.interestRateBps ?? 0,
+        isFullRepay,
+      );
       approve({
         tokenAddress: usdsToken.address,
         spender: spenderAddress,
-        amount: MAX_UINT256,
+        amount: requiredAmount,
         queryKey: allowanceQueryKey,
       });
     } else if (activeStep.title === "Authorize Composites") {
       setAuthorization();
+    } else if (activeStep.title === "Sign Authorization") {
+      signAuthorization();
     } else {
       executeTransaction();
     }

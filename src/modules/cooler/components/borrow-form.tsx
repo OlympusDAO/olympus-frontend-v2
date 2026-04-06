@@ -17,7 +17,6 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
 
 const ZERO = 0n;
-const MAX_UINT256 = 2n ** 256n - 1n;
 
 interface BorrowFormProps {
   loan?: {
@@ -65,6 +64,9 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     isBorrowSuccess,
     isAddCollateralSuccess,
     isAddCollateralAndBorrowSuccess,
+    signAuthorization,
+    isSigning,
+    isSignSuccess,
   } = useMonoCoolerDebt();
 
   // Determine operation type
@@ -98,12 +100,15 @@ export function BorrowForm({ loan }: BorrowFormProps) {
 
   // For composite SCW: needs onchain authorization
   const needsScwAuthorization = isComposite && isSmartContractWallet && !isAuthorized;
+  // For composite EOA: needs EIP-712 signature
+  const needsEoaSignature = isComposite && !isSmartContractWallet;
 
   const isAnyPending =
     isBorrowing ||
     isAddingCollateral ||
     isAddingCollateralAndBorrowing ||
     isApproving ||
+    isSigning ||
     isSettingAuthorization;
 
   // Collateral input string
@@ -190,16 +195,14 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     const steps = [];
     let stepNum = 1;
 
-    if (needsApproval || approvalSuccess) {
-      steps.push({
-        number: stepNum++,
-        title: "Approve gOHM",
-        isActive: needsApproval && !approvalSuccess,
-        isCompleted: hasSufficientAllowance || approvalSuccess,
-        isLoading: isApproving,
-        hash: approvalSuccess ? approvalHash : undefined,
-      });
-    }
+    steps.push({
+      number: stepNum++,
+      title: "Approve gOHM",
+      isActive: needsApproval && !approvalSuccess,
+      isCompleted: hasSufficientAllowance || approvalSuccess,
+      isLoading: isApproving,
+      hash: approvalSuccess ? approvalHash : undefined,
+    });
 
     if (needsScwAuthorization) {
       steps.push({
@@ -208,6 +211,16 @@ export function BorrowForm({ loan }: BorrowFormProps) {
         isActive: (hasSufficientAllowance || approvalSuccess) && !isAuthorized,
         isCompleted: isAuthorized,
         isLoading: isSettingAuthorization,
+      });
+    }
+
+    if (needsEoaSignature) {
+      steps.push({
+        number: stepNum++,
+        title: "Sign Authorization",
+        isActive: (hasSufficientAllowance || approvalSuccess) && !isSignSuccess,
+        isCompleted: isSignSuccess,
+        isLoading: isSigning,
       });
     }
 
@@ -243,7 +256,9 @@ export function BorrowForm({ loan }: BorrowFormProps) {
           ? `${Number(formatUnits(collateralAmount, 18)).toFixed(4)} gOHM → ${Number(formatUnits(borrowAmount, 18)).toFixed(2)} USDS`
           : undefined,
       isActive:
-        (hasSufficientAllowance || approvalSuccess) && (!needsScwAuthorization || isAuthorized),
+        (hasSufficientAllowance || approvalSuccess) &&
+        (!needsScwAuthorization || isAuthorized) &&
+        (!needsEoaSignature || isSignSuccess),
       isCompleted: txSuccess,
       isLoading: txPending,
       hash: txSuccess ? txHash : undefined,
@@ -259,6 +274,9 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     needsScwAuthorization,
     isAuthorized,
     isSettingAuthorization,
+    needsEoaSignature,
+    isSignSuccess,
+    isSigning,
     isComposite,
     isBorrowOnly,
     isCollateralOnly,
@@ -293,11 +311,13 @@ export function BorrowForm({ loan }: BorrowFormProps) {
       approve({
         tokenAddress: gohmToken.address,
         spender: spenderAddress,
-        amount: MAX_UINT256,
+        amount: collateralAmount,
         queryKey: allowanceQueryKey,
       });
     } else if (activeStep.title === "Authorize Composites") {
       setAuthorization();
+    } else if (activeStep.title === "Sign Authorization") {
+      signAuthorization();
     } else {
       executeTransaction();
     }
