@@ -31,7 +31,7 @@ export function OverviewLastActions() {
           <Skeleton className="h-8 w-24 rounded-full" />
         </div>
         <Separator />
-        <table className="w-full">
+        <table className="block w-full overflow-x-auto">
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
@@ -71,7 +71,7 @@ export function OverviewLastActions() {
       {table.getRowModel().rows.length === 0 ? (
         <p className="py-8 text-center text-sm text-tertiary-t">No recent activity</p>
       ) : (
-        <table className="w-full">
+        <table className="block w-full overflow-x-auto">
           <TableBody>
             {table.getRowModel().rows.map((row) => {
               const cells = row.getVisibleCells().map((cell) => (

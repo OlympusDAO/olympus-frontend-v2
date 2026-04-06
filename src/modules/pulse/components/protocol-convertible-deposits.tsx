@@ -79,13 +79,24 @@ export function ProtocolConvertibleDeposits() {
           <p className="text-[15px]/[20px] font-semibold text-primary-t">Convertible Deposits</p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
-          <span className="text-[15px]/[20px] text-secondary-t">
+          <span className="text-xs text-secondary-t ">
             {cd.isMarketActive ? "Active" : "Paused"}
           </span>
           <PulseDot variant={cd.isMarketActive ? "green" : "yellow"} />
         </div>
       </div>
-
+      <div className="flex items-center gap-4 mt-4">
+        <div className="size-18 flex items-center justify-center">icon</div>
+        <div>
+          <p className="text-[15px]/[20px] font-semibold mb-1">
+            New capital enters through Convertible Deposits
+          </p>
+          <p className="text-secondary-t text-xs">
+            Users deposit stablecoins to lock in an OHM conversion price. If they convert, the
+            treasury grows. If not, deposits are returned — the protocol earns yield either way.
+          </p>
+        </div>
+      </div>
       <Separator className="my-4" />
 
       {/* Hero: TVL + Deposit button */}

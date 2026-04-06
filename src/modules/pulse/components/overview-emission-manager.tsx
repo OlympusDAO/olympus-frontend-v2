@@ -33,8 +33,8 @@ export function OverviewEmissionManager() {
           <p className=" text-[15px]/[20px] font-semibold text-primary-t"> Emission Manager </p>
         </TooltipInfo>
         <div className="flex items-center gap-2 mt-1">
-          <PulseDot variant={statusColor} />
           <span className="text-xs text-secondary-t">{statusLabel}</span>
+          <PulseDot variant={statusColor} />
         </div>
       </div>
       <Separator className="w-full my-4" />
@@ -45,10 +45,10 @@ export function OverviewEmissionManager() {
           <TooltipInfo
             title={`Emissions activate when OHM premium over EM backing ($${backing.toFixed(2)}) exceeds ${thresholdPct.toFixed(0)}%.`}
           >
-            Premium to Threshold
+            <p className="font-medium text-[15px]/[20px]">Premium to Threshold</p>
           </TooltipInfo>
           <div className="flex items-center gap-2 mt-0.5">
-            <CircleProgress size={28} value={premiumProgress} />
+            <CircleProgress strokeWidth={4} size={28} value={premiumProgress} />
             <NumberFlow
               value={currentPremium / 100}
               format={{ style: "percent", notation: "standard" }}
@@ -59,7 +59,7 @@ export function OverviewEmissionManager() {
 
         {/* Right: Trigger Price */}
         <div className="text-right">
-          <p className="mb-0.5 text-xs text-secondary-t">Trigger Price</p>
+          <p className="mb-0.5 text-xs text-secondary-t font-medium">Trigger Price</p>
           <NumberFlow
             suffix="/OHM"
             value={emissionTriggerPrice}

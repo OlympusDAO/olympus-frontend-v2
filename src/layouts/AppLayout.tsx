@@ -10,20 +10,26 @@ export default function AppLayout() {
   return (
     <Providers>
       <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
-        {/* Desktop sidebars — hidden on mobile */}
+        {/* Desktop icon sidebar — hidden on mobile */}
         <div className="hidden md:flex">
           <IconSidebar />
         </div>
-        <div className="hidden md:flex">
-          <SubNav />
-        </div>
-        <main className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-surface-bg-l1 relative">
-          <Header />
-          <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8">
-            <Outlet />
+
+        {/* SubNav + main + footer wrapper */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex flex-1 min-h-0">
+            <div className="hidden md:flex">
+              <SubNav />
+            </div>
+            <main className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-surface-bg-l1">
+              <Header />
+              <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8 w-full max-w-(--max-content-width) mx-auto">
+                <Outlet />
+              </div>
+            </main>
           </div>
           <Footer />
-        </main>
+        </div>
       </div>
       <ToasterProvider />
     </Providers>

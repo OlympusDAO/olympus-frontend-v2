@@ -5,7 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/tabs";
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useActivityFeed } from "@/lib/hooks/liveness/useActivityFeed";
 import {
   ACTIVITY_COLUMNS,
@@ -68,7 +75,7 @@ export function FeedPage() {
       {/* Table */}
       {isLoading ? (
         <Card className="overflow-hidden">
-          <table className="w-full">
+          <Table>
             <TableBody>
               {Array.from({ length: 10 }).map((_, i) => (
                 <TableRow key={i}>
@@ -87,11 +94,11 @@ export function FeedPage() {
                 </TableRow>
               ))}
             </TableBody>
-          </table>
+          </Table>
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Protocol</TableHead>
@@ -122,7 +129,7 @@ export function FeedPage() {
                 ))
               )}
             </TableBody>
-          </table>
+          </Table>
         </Card>
       )}
     </div>

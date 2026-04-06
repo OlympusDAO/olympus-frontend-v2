@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, ExternalLink, FileText } from "lucide-react";
+import { Menu, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -10,8 +10,8 @@ import {
   getActiveSectionFromPath,
   getDefaultPathForSection,
   type NavSection,
-  type NavItem,
 } from "@/lib/navigation";
+import { SubNavItem } from "@/layouts/sub-nav-item";
 
 function MobileSectionItem({
   section,
@@ -28,7 +28,7 @@ function MobileSectionItem({
       onClick={() => onSelect(section)}
       className={cn(
         "flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl transition-colors w-full cursor-pointer",
-        isActive ? "bg-surface-a10" : "hover:bg-surface-a5",
+        isActive ? "bg-surface-a10" : "hover:bg-surface-a3",
       )}
     >
       <span
@@ -48,46 +48,6 @@ function MobileSectionItem({
         {section.label}
       </span>
     </button>
-  );
-}
-
-function MobileSubNavItem({
-  item,
-  isActive,
-  onClose,
-}: {
-  item: NavItem;
-  isActive: boolean;
-  onClose: () => void;
-}) {
-  if (item.external) {
-    return (
-      <a
-        href={item.path}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClose}
-        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors hover:bg-surface-a5 text-secondary-t hover:text-primary-t"
-      >
-        <span>{item.label}</span>
-        <ExternalLink className="size-3.5 text-tertiary-t" />
-      </a>
-    );
-  }
-
-  return (
-    <Link
-      to={item.path}
-      onClick={onClose}
-      className={cn(
-        "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
-        isActive
-          ? "bg-surface-a10 text-primary-t font-medium"
-          : "text-secondary-t hover:bg-surface-a5 hover:text-primary-t",
-      )}
-    >
-      {item.label}
-    </Link>
   );
 }
 
@@ -160,7 +120,7 @@ export function MobileNav() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleClose}
-                  className="flex items-center justify-center p-2 rounded-xl hover:bg-surface-a5 w-full"
+                  className="flex items-center justify-center p-2 rounded-xl hover:bg-surface-a3 w-full"
                 >
                   <FileText className="size-5 text-secondary-t" />
                 </a>
@@ -177,27 +137,21 @@ export function MobileNav() {
               {/* Sub-nav links */}
               {displaySection.items.length > 0 ? (
                 <nav className="flex flex-col gap-0.5 px-2">
-                  {displaySection.items.map((item) => {
-                    // For sections with no sub-items that navigate directly, use Link
-                    if (!item.external && displaySection.items.length === 0) {
-                      return null;
-                    }
-                    return (
-                      <MobileSubNavItem
-                        key={item.path}
-                        item={item}
-                        isActive={!item.external && location.pathname === item.path}
-                        onClose={handleClose}
-                      />
-                    );
-                  })}
+                  {displaySection.items.map((item) => (
+                    <SubNavItem
+                      key={item.path}
+                      item={item}
+                      isActive={!item.external && location.pathname === item.path}
+                      onClick={handleClose}
+                    />
+                  ))}
                 </nav>
               ) : (
                 <div className="px-4">
                   <Link
                     to={getDefaultPathForSection(displaySection)}
                     onClick={handleClose}
-                    className="flex items-center px-3 py-2 rounded-lg text-sm bg-surface-a10 text-primary-t font-medium"
+                    className="flex items-center pl-4 pr-3 py-2.5 rounded-full text-base leading-5 bg-surface-a5 ring-[0.5px] ring-inset ring-surface-a10 text-primary-t font-medium"
                   >
                     {displaySection.sidebarTitle}
                   </Link>

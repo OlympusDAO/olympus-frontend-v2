@@ -94,10 +94,21 @@ export function ProtocolYrf() {
             Yield Repurchase Facility
           </p>
         </TooltipInfo>
-
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex items-center gap-2 ">
           <PulseDot variant="green" />
           <span className="text-xs text-secondary-t">Active</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 mt-4">
+        <div className="size-18 flex items-center justify-center">icon</div>
+        <div>
+          <p className="text-[15px]/[20px] font-semibold mb-1">
+            Treasury yield is converted into OHM demand
+          </p>
+          <p className="text-secondary-t text-xs">
+            The Yield Repurchase Facility uses protocol revenue to buy back and burn OHM each week.
+            Backing from burned OHM is reclaimed and recycled, amplifying buying power.
+          </p>
         </div>
       </div>
       <Separator className="my-4" />
@@ -131,7 +142,7 @@ export function ProtocolYrf() {
                   className="text-[15px]/[20px] font-semibold"
                 />
                 <NumberFlow
-                  format={{ style: "decimal", notation: "standard" }}
+                  format={{ style: "decimal", notation: "compact" }}
                   suffix="OHM/yr"
                   value={annualBurnsAtCurrentRate}
                   className="text-[15px]/[20px] text-secondary-t"

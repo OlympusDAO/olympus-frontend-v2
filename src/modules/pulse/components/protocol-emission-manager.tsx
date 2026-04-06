@@ -17,7 +17,7 @@ export function ProtocolEmissionManager() {
 
   if (isLoading || !em) {
     return (
-      <Card className="p-6">
+      <Card className="p-5">
         <Skeleton className="mb-4 h-4 w-48" />
         <div className="space-y-3">
           <Skeleton className="h-16" />
@@ -49,8 +49,20 @@ export function ProtocolEmissionManager() {
           <p className="text-[15px]/[20px] font-semibold text-primary-t"> Emission Manager</p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
-          <PulseDot variant={statusDot} />
           <span className="text-xs text-secondary-t">{statusLabel}</span>
+          <PulseDot variant={statusDot} />
+        </div>
+      </div>
+      <div className="flex items-center gap-4 mt-4">
+        <div className="size-18 flex items-center justify-center">icon</div>
+        <div>
+          <p className="text-[15px]/[20px] font-semibold mb-1">
+            Supply only expands when the market demands it
+          </p>
+          <p className="text-secondary-t text-xs">
+            The Emission Manager monitors OHM's premium to backing. Above threshold, it enables
+            controlled supply growth via CDs. Below it, YRF buybacks dominate and supply contracts.
+          </p>
         </div>
       </div>
       <Separator className="my-4" />
@@ -63,8 +75,8 @@ export function ProtocolEmissionManager() {
         >
           Premium to Threshold
         </TooltipInfo>
-        <div className="mt-2 flex items-center ">
-          <div className="flex items-center gap-x-2 min-w-55.5">
+        <div className="mt-2 flex items-center max-xs:flex-col max-xs:items-start">
+          <div className="flex items-center gap-x-2 min-w-55.5 max-xs:min-w-0">
             <CircleProgress
               value={Math.min(premiumProgress, 100)}
               size={28}
@@ -90,8 +102,8 @@ export function ProtocolEmissionManager() {
 
       <Separator className="my-4" />
 
-      <div className="flex items-center">
-        <div className="min-w-55.5">
+      <div className="flex items-center gap-4 max-xs:flex-col max-xs:items-start">
+        <div className="min-w-55.5 max-xs:min-w-0">
           <TooltipInfo
             title="The base rate of OHM supply expansion per beat when emissions are active."
             className="text-xs text-tertiary-t"

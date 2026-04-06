@@ -35,8 +35,8 @@ export function OverviewConvertibleDeposits() {
           <p className=" text-[15px]/[20px] font-semibold text-primary-t"> Convertible Deposits </p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
+          <span className="text-xs text-secondary-t font-medium">{statusLabel}</span>
           <PulseDot variant={statusColor} />
-          <span className="text-xs text-secondary-t">{statusLabel}</span>
         </div>
       </div>
 
@@ -44,21 +44,21 @@ export function OverviewConvertibleDeposits() {
       {/* Body */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="mb-1 text-[15px]/[20px] text-secondary-t">Total Value Locked</p>
+          <p className="mb-1 text-[15px]/[20px] text-secondary-t font-medium">Total Value Locked</p>
           <NumberFlow value={totalDepositsUsd} className="text-[32px]/[40px] font-semibold" />
           <div className="flex items-center gap-x-0.5">
             <NumberFlow
               suffix="recent bids ·"
               format={{ style: "decimal" }}
               value={activeBidsCount}
-              className="text-secondary-t text-xs"
+              className="text-secondary-t text-xs font-medium"
             />
             <NumberFlow
               suffix="premium"
               prefix="+"
               format={{ style: "percent", maximumFractionDigits: 0 }}
               value={premiumPct / 100}
-              className="text-secondary-t text-xs"
+              className="text-secondary-t text-xs font-medium"
             />
           </div>
         </div>

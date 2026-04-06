@@ -1,23 +1,6 @@
 import { cn } from "@/lib/utils";
+import { logoIcon as LogoSvg } from "@/icons";
 
 export function OlympusLogo({ className }: { className?: string }) {
-  return (
-    <svg
-      role="img"
-      aria-label="Olympus Logo"
-      width="28"
-      height="28"
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn("text-primary-t", className)}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M10.9458 28V27.9362V26.5938V22.6974C6.95744 21.4418 4.07288 17.7946 4.07288 13.491C4.07288 8.14856 8.5176 3.81808 14 3.81808C19.4824 3.81808 23.9271 8.14856 23.9271 13.491C23.9271 17.7946 21.0426 21.4418 17.0542 22.6974V26.5938V27.9362V28H28V24.0548H22.5949C25.8468 21.5908 27.9362 17.7604 27.9362 13.459C27.9362 6.0256 21.6966 0 14 0C6.30336 0 0.06384 6.0256 0.06384 13.459C0.06384 17.7604 2.1532 21.5908 5.40512 24.0548H0V28H10.9458Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
+  return <LogoSvg aria-label="Olympus Logo" className={cn("text-primary-t", className)} />;
 }

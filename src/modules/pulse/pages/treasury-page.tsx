@@ -16,7 +16,7 @@ export function TreasuryPage() {
           <p className="text-xs">Last updated 5 mins ago</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         <TreasuryAssetsCard />
         <TreasuryLiabilitiesCard />
       </div>

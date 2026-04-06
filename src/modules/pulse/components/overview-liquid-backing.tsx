@@ -19,7 +19,7 @@ export function OverviewLiquidBacking() {
   const isPositive = change24h >= 0;
 
   return (
-    <Card className="flex items-center justify-between gap-4 p-5">
+    <Card className="flex items-center justify-between gap-4 p-5 max-xs:flex-col max-xs:items-start">
       <div className="min-w-0">
         <p className="mb-1 text-[15px]/[20px] font-semibold">Liquid Backing Per OHM</p>
         <div className="flex gap-x-2">

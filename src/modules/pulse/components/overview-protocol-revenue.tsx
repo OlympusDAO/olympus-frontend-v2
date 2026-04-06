@@ -18,12 +18,12 @@ const TIME_WINDOWS: { value: TimeWindow; label: string }[] = [
 export function OverviewProtocolRevenue() {
   const { displayValue, timeWindow, setTimeWindow, weeklyTotal } = useRevenueCounter();
   const perSecond = weeklyTotal / (7 * 24 * 60 * 60);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   return (
     <Card
       className="relative flex flex-col justify-between overflow-hidden p-4 min-h-70"
       style={{
-        backgroundImage: `url(${theme === "light" ? marbleBgLight : marbleBgDark})`,
+        backgroundImage: `url(${resolvedTheme === "light" ? marbleBgLight : marbleBgDark})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -32,7 +32,7 @@ export function OverviewProtocolRevenue() {
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PulseDot variant="green" />
-          <p className="text-sm font-semibold">Protocol Revenue</p>
+          <p className="text-[15px]/[20px] font-semibold">Protocol Revenue</p>
         </div>
 
         {/* Period tabs */}

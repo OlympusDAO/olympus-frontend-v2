@@ -6,17 +6,10 @@ interface SparklineChartProps {
   data: object[];
   dataKey: string;
   isPositive: boolean;
-  height?: number;
   className?: string;
 }
 
-export function SparklineChart({
-  data,
-  dataKey,
-  isPositive,
-  height = 56,
-  className,
-}: SparklineChartProps) {
+export function SparklineChart({ data, dataKey, isPositive, className }: SparklineChartProps) {
   const id = useId();
   const gradientId = `spark-grad-${id}`;
 
@@ -25,8 +18,8 @@ export function SparklineChart({
   const color = isPositive ? "var(--green)" : "var(--red)";
 
   return (
-    <div className={cn("w-55 shrink-0", className)}>
-      <ResponsiveContainer width="100%" height={height}>
+    <div className={cn("w-55 h-14 max-xs:w-full max-xs:h-10 shrink-0", className)}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
