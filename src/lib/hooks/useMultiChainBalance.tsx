@@ -18,7 +18,7 @@ import {
   sepolia,
 } from "@/lib/chains";
 
-const ACTIVE_CHAIN_IDS = new Set(allChains.map((c) => c.id));
+const ACTIVE_CHAIN_IDS: Set<number> = new Set(allChains.map((c) => c.id));
 
 const CHAIN_MAP: Record<number, Chain> = {
   [mainnet.id]: mainnet,
