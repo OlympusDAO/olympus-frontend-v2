@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { BridgeForm } from "../components/bridge-form";
 import { BridgeHistory } from "../components/bridge-history";
 import { BridgeConfirmModal } from "../components/bridge-confirm-modal";
-import { ChainSelectorModal } from "../components/chain-selector-modal";
+import { BridgeChainSelectorModal } from "../components/bridge-chain-selector-modal.tsx";
 import { BridgeSettingsModal } from "../components/bridge-settings-modal";
 import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
 import { parseUnits } from "viem";
@@ -13,7 +13,7 @@ import {
   BRIDGEABLE_DESTINATIONS,
   DEFAULT_DESTINATION,
   isBridgeableChain,
-} from "../constants";
+} from "../utils/constants.ts";
 
 export function BridgePage() {
   const { address } = useAccount();
@@ -132,7 +132,7 @@ export function BridgePage() {
       </div>
 
       {/* Source Chain Selector */}
-      <ChainSelectorModal
+      <BridgeChainSelectorModal
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}
         title="Select Source Chain"
@@ -142,7 +142,7 @@ export function BridgePage() {
       />
 
       {/* Destination Chain Selector */}
-      <ChainSelectorModal
+      <BridgeChainSelectorModal
         isOpen={isDestModalOpen}
         onClose={() => setIsDestModalOpen(false)}
         title="Select Target Chain"

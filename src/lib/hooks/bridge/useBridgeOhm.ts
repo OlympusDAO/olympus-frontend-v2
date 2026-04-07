@@ -4,7 +4,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagm
 import type { Address } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import CrossChainBridgeAbi from "@/abis/CrossChainBridge";
-import { LAYER_ZERO_CHAIN_IDS } from "@/modules/bridge/constants";
+import { LAYER_ZERO_CHAIN_IDS } from "@/modules/ohm/utils/constants";
 import { useTransactionToast, type TransactionToastConfig } from "../useTransactionToast";
 
 export function useBridgeOhm() {

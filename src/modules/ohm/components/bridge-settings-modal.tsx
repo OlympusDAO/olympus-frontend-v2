@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { isAddress } from "viem";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 interface BridgeSettingsModalProps {
   isOpen: boolean;

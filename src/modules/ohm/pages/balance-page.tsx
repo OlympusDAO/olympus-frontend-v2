@@ -119,25 +119,27 @@ export function BalancesPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl ">
       <BalanceInfoCards isMobile={isMobile} />
 
-      {!effectivelyConnected ? (
-        <BalanceDisconnectedState />
-      ) : (
-        <>
-          <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
-          {hasBalances ? (
-            isMobile ? (
-              <BalanceCards tokens={tokens} />
+      <div className="mt-8">
+        {!effectivelyConnected ? (
+          <BalanceDisconnectedState />
+        ) : (
+          <>
+            <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
+            {hasBalances ? (
+              isMobile ? (
+                <BalanceCards tokens={tokens} />
+              ) : (
+                <BalanceTable tokens={tokens} />
+              )
             ) : (
-              <BalanceTable tokens={tokens} />
-            )
-          ) : (
-            <BalanceEmptyState isLoading={isLoading} />
-          )}
-        </>
-      )}
+              <BalanceEmptyState isLoading={isLoading} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

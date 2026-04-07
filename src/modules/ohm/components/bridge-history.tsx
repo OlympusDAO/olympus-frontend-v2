@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { ExternalLink, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 import { useAccount } from "wagmi";
-import { Icon } from "@/components/icon";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/icon.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Table,
   TableHeader,
@@ -10,12 +10,12 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/table";
-import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory";
-import { getBridgeChain } from "../constants";
-import { getBlockExplorerTxUrl, shortenAddress } from "@/lib/helpers";
+} from "@/components/ui/table.tsx";
+import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
+import { getBridgeChain } from "../utils/constants.ts";
+import { getBlockExplorerTxUrl, shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 
 const PAGE_SIZE = 20;
 

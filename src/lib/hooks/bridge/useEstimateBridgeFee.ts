@@ -2,7 +2,7 @@ import { useReadContract } from "wagmi";
 import type { Address } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import CrossChainBridgeAbi from "@/abis/CrossChainBridge";
-import { LAYER_ZERO_CHAIN_IDS } from "@/modules/bridge/constants";
+import { LAYER_ZERO_CHAIN_IDS } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
 
 export function useEstimateBridgeFee({

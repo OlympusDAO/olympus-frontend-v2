@@ -4,9 +4,9 @@ import { WrapInfoCards } from "../components/wrap-info-cards";
 import { WrapForm } from "../components/wrap-form";
 import { WrapBalancePanel } from "../components/wrap-balance-panel.tsx";
 import { WrapOhmModal } from "@/components/wrap-ohm-modal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useGohmConversion } from "@/lib/hooks/useGohmConversion";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 export function WrapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,44 +31,48 @@ export function WrapPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
+    <div className="mx-auto max-w-7xl">
       <WrapInfoCards />
 
-      <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => handleModeChange("wrap")}
-          className={cn(
-            "text-xl font-semibold transition-colors",
-            mode === "wrap" ? "text-primary-t" : "text-secondary-t hover:text-primary-t",
-          )}
-        >
-          Wrap
-        </button>
-        <button
-          type="button"
-          onClick={() => handleModeChange("unwrap")}
-          className={cn(
-            "text-xl font-semibold transition-colors",
-            mode === "unwrap" ? "text-primary-t" : "text-secondary-t hover:text-primary-t",
-          )}
-        >
-          Unwrap
-        </button>
-      </div>
+      <Tabs onValueChange={handleModeChange} defaultValue="wrap" variant="primary" className="mt-8">
+        <TabsList variant="primary">
+          <TabsTrigger value="wrap" variant="primary">
+            Wrap
+          </TabsTrigger>
+          <TabsTrigger value="unwrap" variant="primary">
+            Unwrap
+          </TabsTrigger>
+        </TabsList>
 
-      <Card className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <WrapForm
-            mode={mode}
-            inputAmount={inputAmount}
-            onInputAmountChange={setInputAmount}
-            outputAmount={outputAmount}
-            onSubmit={handleSubmit}
-          />
-          <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
-        </div>
-      </Card>
+        <TabsContent value="wrap" className="">
+          <Card className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <WrapForm
+                mode={mode}
+                inputAmount={inputAmount}
+                onInputAmountChange={setInputAmount}
+                outputAmount={outputAmount}
+                onSubmit={handleSubmit}
+              />
+              <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
+            </div>
+          </Card>
+        </TabsContent>
+        <TabsContent value="unwrap" className="">
+          <Card className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <WrapForm
+                mode={mode}
+                inputAmount={inputAmount}
+                onInputAmountChange={setInputAmount}
+                outputAmount={outputAmount}
+                onSubmit={handleSubmit}
+              />
+              <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {isModalOpen && (
         <WrapOhmModal

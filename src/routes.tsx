@@ -13,7 +13,7 @@ import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-acti
 import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
 import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
-import { BridgePage } from "@/modules/bridge/pages";
+import { BridgePage } from "@/modules/ohm/pages/bridge-page.tsx";
 import { CoolerBorrowPage } from "@/modules/cooler/pages";
 import { CoolerV1Page } from "@/modules/cooler/pages/v1";
 import { ProposalsPage } from "@/modules/governance/pages/proposals-page";

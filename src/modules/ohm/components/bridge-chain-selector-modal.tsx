@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Icon } from "@/components/icon";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Icon } from "@/components/icon.tsx";
 import { CheckIcon } from "lucide-react";
-import type { BridgeChain } from "../constants";
+import type { BridgeChain } from "../../bridge/constants.ts";
 
 interface ChainSelectorModalProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface ChainSelectorModalProps {
   onSelect: (chainId: number) => void;
 }
 
-export function ChainSelectorModal({
+export function BridgeChainSelectorModal({
   isOpen,
   onClose,
   title,

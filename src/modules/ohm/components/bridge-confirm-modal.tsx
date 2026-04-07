@@ -1,17 +1,17 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits } from "viem";
 import type { Address } from "viem";
 import { useAccount } from "wagmi";
-import { Icon } from "@/components/icon";
-import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
-import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm";
-import { ContractName, getContractAddress } from "@/lib/contracts";
-import { TokenName, getTokenAddress } from "@/lib/tokens";
-import { getBlockExplorerTxUrl } from "@/lib/helpers";
-import { getBridgeChain } from "../constants";
+import { Icon } from "@/components/icon.tsx";
+import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
+import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
+import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
+import { ContractName, getContractAddress } from "@/lib/contracts.ts";
+import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
+import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
+import { getBridgeChain } from "../utils/constants.ts";
 import { Link } from "react-router-dom";
 
 interface BridgeConfirmModalProps {

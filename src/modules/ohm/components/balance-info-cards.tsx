@@ -6,15 +6,14 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 function BalanceOhmInfoContent() {
   return (
     <>
-      <p className="text-secondary-t text-sm">
+      <p className="text-secondary-t text-[15px]/[20px] mb-6">
         OHM is the native token of the Olympus protocol. OHM is used in liquid markets. OHM is
         fully-backed by the Olympus treasury.
       </p>
       <Button
         variant="secondary"
-        className="mt-3 w-full"
+        className="mt-auto w-full"
         render={
-          // biome-ignore lint/a11y/useAnchorContent: content provided by Button children via render prop
           <a
             href="https://swap.defillama.com/?chain=ethereum&to=0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
             target="_blank"
@@ -31,15 +30,14 @@ function BalanceOhmInfoContent() {
 function GohmInfoContent() {
   return (
     <>
-      <p className="text-secondary-t text-sm">
+      <p className="text-secondary-t text-[15px]/[20px] mb-6">
         gOHM is Olympus protocol's governance token, acquired by wrapping OHM for voting and
         collateral. It can be unwrapped to OHM.
       </p>
       <Button
         variant="secondary"
-        className="mt-3 w-full"
+        className="mt-auto w-full"
         render={
-          // biome-ignore lint/a11y/useAnchorContent: content provided by Button children via render prop
           <a href="https://docs.olympusdao.finance" target="_blank" rel="noopener noreferrer" />
         }
       >
@@ -81,12 +79,12 @@ export function BalanceInfoCards({ isMobile }: { isMobile: boolean }) {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="p-5">
-        <h3 className="mb-3 font-medium text-primary-t">What is OHM?</h3>
+      <Card className="p-6 flex flex-col">
+        <h3 className="mb-2 font-semibold text-[15px]/[20px]">What is OHM?</h3>
         <BalanceOhmInfoContent />
       </Card>
-      <Card className="p-5">
-        <h3 className="mb-3 font-medium text-primary-t">What is gOHM?</h3>
+      <Card className="p-6 flex flex-col">
+        <h3 className="mb-2 font-semibold text-[15px]/[20px]">What is gOHM?</h3>
         <GohmInfoContent />
       </Card>
     </div>

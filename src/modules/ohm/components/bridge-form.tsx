@@ -2,17 +2,17 @@ import { useMemo } from "react";
 import { ChevronDownIcon, ArrowUpDown, Settings, AlertTriangle } from "lucide-react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
-import { Icon } from "@/components/icon";
-import { Button } from "@/components/ui/button";
-import { NumberFlow } from "@/components/ui/number-flow";
-import { useToken } from "@/lib/hooks/useToken";
-import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
-import { TokenName, getTokenAddress } from "@/lib/tokens";
-import { ContractName, getContractAddress } from "@/lib/contracts";
-import { handleInputNumberChange } from "@/lib/helpers";
-import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
-import { useBridgeActive } from "@/lib/hooks/bridge/useBridgeActive";
-import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../constants";
+import { Icon } from "@/components/icon.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
+import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
+import { ContractName, getContractAddress } from "@/lib/contracts.ts";
+import { handleInputNumberChange } from "@/lib/helpers.ts";
+import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee.ts";
+import { useBridgeActive } from "@/lib/hooks/bridge/useBridgeActive.ts";
+import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../utils/constants.ts";
 
 interface BridgeFormProps {
   sourceChainId: number;
