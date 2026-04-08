@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   useReactTable,
@@ -140,23 +141,25 @@ const columns = [
 ];
 
 export function BalanceTable({ tokens }: BalanceTableProps) {
-  const data: Row[] = [];
-
-  for (const token of tokens) {
-    for (const chain of token.balances.balances) {
-      if (chain.balance > 0n) {
-        const usdValue = parseFloat(chain.formattedBalance) * token.price;
-        if (token.price > 0 && usdValue < 0.01) continue;
-        data.push({
-          key: `${token.symbol}-${chain.chainId}`,
-          token,
-          chain,
-          action: getAction(token.symbol, chain.chainName),
-          usdValue,
-        });
+  const data = useMemo<Row[]>(() => {
+    const rows: Row[] = [];
+    for (const token of tokens) {
+      for (const chain of token.balances.balances) {
+        if (chain.balance > 0n) {
+          const usdValue = parseFloat(chain.formattedBalance) * token.price;
+          if (token.price > 0 && usdValue < 0.01) continue;
+          rows.push({
+            key: `${token.symbol}-${chain.chainId}`,
+            token,
+            chain,
+            action: getAction(token.symbol, chain.chainName),
+            usdValue,
+          });
+        }
       }
     }
-  }
+    return rows;
+  }, [tokens]);
 
   const table = useReactTable({
     data,

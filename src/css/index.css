@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 /* fonts */
-@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";
+/*@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";*/
 
 @import "./variables.css";
 @import "./theme.css";
@@ -15,7 +15,7 @@
 
   body {
     @apply text-primary-t;
-    font-family: "Neue Haas Display", sans-serif;
+    font-family: 'Inter Tight', sans-serif;
     font-synthesis: none;
     font-weight: 500;
     text-rendering: optimizeLegibility;
@@ -33,7 +33,7 @@
   /* Override RainbowKit font to match app */
   [data-rk] {
     /* biome-ignore lint: needed to override library styles */
-    font-family: "Neue Haas Display", sans-serif !important;
+    font-family: 'Inter Tight', sans-serif !important;
   }
 
   /* Hide elements depending on the current theme */
