@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits } from "viem";
 import type { Address } from "viem";
 import { useAccount } from "wagmi";
+import { trackBridgeOhm } from "@/lib/analytics.ts";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
@@ -67,6 +69,16 @@ export function BridgeConfirmModal({
     isSuccess: bridgeSuccess,
     hash: bridgeHash,
   } = useBridgeOhm();
+
+  useEffect(() => {
+    if (!bridgeSuccess) return;
+    trackBridgeOhm({
+      amount,
+      srcChain: sourceChain?.name ?? String(sourceChainId),
+      dstChain: destChain?.name ?? String(destinationChainId),
+      txHash: bridgeHash,
+    });
+  }, [bridgeSuccess]);
 
   const getCurrentStep = () => {
     if (bridgeSuccess) return 2;

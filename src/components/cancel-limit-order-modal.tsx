@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 import { useCancelLimitOrder } from "@/lib/hooks/cds/useCancelLimitOrder";
+import { trackCancelLimitOrder } from "@/lib/analytics";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { formatEther } from "viem";
 import { formatMaxPrice } from "@/lib/utils/priceCalculations";
@@ -35,6 +37,11 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
   const remainingDeposit = orderData.depositBudget - orderData.depositSpent;
   const remainingIncentive = orderData.incentiveBudget - orderData.incentiveSpent;
   const totalRemaining = remainingDeposit + remainingIncentive;
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    trackCancelLimitOrder({ orderId: orderId.toString(), txHash: hash });
+  }, [isSuccess]);
 
   const handleCancel = () => {
     cancelOrder({ orderId });

@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useEffect } from "react";
+import { trackWrapReceiptToken } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,6 +183,11 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
       hash: isWrapSuccess ? wrapHash : undefined,
     },
   ];
+
+  useEffect(() => {
+    if (!isWrapSuccess) return;
+    trackWrapReceiptToken({ amount: wrapAmount, txHash: wrapHash });
+  }, [isWrapSuccess]);
 
   // Reset state when modal opens/closes
   useEffect(() => {

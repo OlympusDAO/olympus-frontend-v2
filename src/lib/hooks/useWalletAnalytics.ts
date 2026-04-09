@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
-import { trackWalletConnect, trackWalletDisconnect } from "@/lib/analytics";
+import {
+  trackWalletConnect,
+  trackWalletDisconnect,
+  identifyWallet,
+  resetIdentity,
+} from "@/lib/analytics";
 
 export function useWalletAnalytics(): void {
   const { address, isConnected } = useAccount();
@@ -9,10 +14,12 @@ export function useWalletAnalytics(): void {
   useEffect(() => {
     if (isConnected && address && !prevConnectedRef.current) {
       trackWalletConnect(address);
+      identifyWallet(address);
     }
 
     if (!isConnected && prevConnectedRef.current) {
       trackWalletDisconnect();
+      resetIdentity();
     }
 
     prevConnectedRef.current = isConnected;

@@ -5,6 +5,7 @@ import { olympusGovernorBravoAbi } from "@/abis/OlympusGovernorBravo";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
+import { trackCastVote } from "@/lib/analytics";
 
 /**
  * Mutation hook for casting a vote on a governance proposal.
@@ -14,6 +15,7 @@ import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/us
 export function useVote() {
   const queryClient = useQueryClient();
   const proposalIdRef = useRef<number | undefined>(undefined);
+  const voteRef = useRef<0 | 1 | 2 | undefined>(undefined);
   const governorAddress = getContractAddress(ContractName.GOVERNOR_BRAVO, mainnet.id);
 
   const {
@@ -35,11 +37,18 @@ export function useVote() {
 
   useEffect(() => {
     if (isConfirmed && proposalIdRef.current != null) {
+      const supportMap = { 0: "against", 1: "for", 2: "abstain" } as const;
+      trackCastVote({
+        proposalId: String(proposalIdRef.current),
+        support: supportMap[voteRef.current ?? 1],
+        txHash: hash,
+      });
       queryClient.invalidateQueries({
         queryKey: ["governance", "proposalDetails", mainnet.id, proposalIdRef.current],
       });
       queryClient.invalidateQueries({ queryKey: ["governance", "proposalVotes"] });
       proposalIdRef.current = undefined;
+      voteRef.current = undefined;
     }
   }, [isConfirmed, queryClient]);
 
@@ -85,6 +94,7 @@ export function useVote() {
     resetWrite();
     resetToast();
     proposalIdRef.current = proposalId;
+    voteRef.current = vote;
 
     if (comment) {
       writeContract({

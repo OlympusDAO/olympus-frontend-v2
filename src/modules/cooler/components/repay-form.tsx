@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { trackCoolerRepay } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,14 @@ export function RepayForm({ loan }: RepayFormProps) {
   const isRepayWithWithdraw = repayAmount > ZERO && collateralToBeReleased > ZERO;
   const isRepayOnly = repayAmount > ZERO && collateralToBeReleased === ZERO;
   const isComposite = isRepayWithWithdraw;
+
+  const repayTxSuccess = isComposite ? isRepayAndRemoveCollateralSuccess : isRepaySuccess;
+  const repayTxHash = isComposite ? repayAndRemoveCollateralHash : repayHash;
+
+  useEffect(() => {
+    if (!repayTxSuccess) return;
+    trackCoolerRepay({ repayAmount: formatUnits(repayAmount, 18), txHash: repayTxHash });
+  }, [repayTxSuccess]);
 
   // Spender for USDS approval
   const spenderAddress = isComposite ? compositesAddress : monoCoolerAddress;

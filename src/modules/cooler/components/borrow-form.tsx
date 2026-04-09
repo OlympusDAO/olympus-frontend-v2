@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { trackCoolerBorrow } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,26 @@ export function BorrowForm({ loan }: BorrowFormProps) {
   const isComposite = collateralAmount > ZERO && borrowAmount > ZERO;
   const isBorrowOnly = collateralAmount === ZERO && borrowAmount > ZERO;
   const isCollateralOnly = collateralAmount > ZERO && borrowAmount === ZERO;
+
+  const borrowTxSuccess = isComposite
+    ? isAddCollateralAndBorrowSuccess
+    : isBorrowOnly
+      ? isBorrowSuccess
+      : isAddCollateralSuccess;
+  const borrowTxHash = isComposite
+    ? addCollateralAndBorrowHash
+    : isBorrowOnly
+      ? borrowHash
+      : addCollateralHash;
+
+  useEffect(() => {
+    if (!borrowTxSuccess) return;
+    trackCoolerBorrow({
+      borrowAmount: formatUnits(borrowAmount, 18),
+      collateralAmount: formatUnits(collateralAmount, 18),
+      txHash: borrowTxHash,
+    });
+  }, [borrowTxSuccess]);
 
   // The spender for approval depends on operation type
   const spenderAddress = isComposite ? compositesAddress : monoCoolerAddress;

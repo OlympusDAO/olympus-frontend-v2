@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
+import { trackExtendLoan } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,6 +152,7 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
   useEffect(() => {
     if (isExtendSuccess) {
       refetchAllowance();
+      trackExtendLoan({ newExpiry: `${effectiveMonths} months`, txHash: extendHash });
     }
   }, [isExtendSuccess, refetchAllowance]);
 

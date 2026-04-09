@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckIcon } from "lucide-react";
 import { useFinishRedemption } from "@/lib/hooks/cds/useFinishRedemption";
+import { trackFinishRedemption } from "@/lib/analytics";
 
 interface PendingRedemption {
   redemptionId: number;
@@ -44,6 +46,12 @@ export const FinishRedemptionModal: React.FC<FinishRedemptionModalProps> = ({
   };
 
   // Close modal when transaction is successful
+  useEffect(() => {
+    if (!isSuccess) return;
+    const amount = pendingRedemption ? String(Number(pendingRedemption.amount) / 1e18) : "0";
+    trackFinishRedemption({ amount, txHash: hash });
+  }, [isSuccess]);
+
   if (isSuccess) {
     setTimeout(() => {
       onClose();
