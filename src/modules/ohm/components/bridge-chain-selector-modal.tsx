@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Icon } from "@/components/icon.tsx";
-import { CheckIcon } from "lucide-react";
-import type { BridgeChain } from "../../bridge/constants.ts";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ChainIcon } from "@/components/chain-icon.tsx";
+import type { BridgeChain } from "../utils/constants.ts";
 
 interface ChainSelectorModalProps {
   isOpen: boolean;
@@ -38,23 +38,17 @@ export function BridgeChainSelectorModal({
                   onSelect(chain.chainId);
                   onClose();
                 }}
-                className={`flex items-center justify-between rounded-xl p-4 transition-colors cursor-pointer ${
-                  isSelected
-                    ? "bg-surface-a10 border border-a10-b"
-                    : "bg-surface-a3 border border-a3-b hover:bg-surface-a10"
+                className={`flex items-center justify-between rounded-2xl p-4 transition-colors cursor-pointer ${
+                  isSelected ? "bg-surface-a5 hover:bg-surface-a10" : "hover:bg-surface-a5"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon name={chain.icon} size={24} />
-                  <span className="text-[15px]/[20px] font-medium text-primary-t">
+                <div className="flex items-center gap-x-2">
+                  <ChainIcon chainId={chain.chainId} size={24} />
+                  <span className="text-[15px]/[20px] font-semibold text-primary-t">
                     {chain.name}
                   </span>
                 </div>
-                {isSelected && (
-                  <div className="w-5 h-5 rounded bg-blue flex items-center justify-center">
-                    <CheckIcon className="h-3.5 w-3.5 text-white" />
-                  </div>
-                )}
+                <Checkbox checked={isSelected} />
               </button>
             );
           })}

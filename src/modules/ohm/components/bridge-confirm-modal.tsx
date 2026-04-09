@@ -4,7 +4,7 @@ import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits } from "viem";
 import type { Address } from "viem";
 import { useAccount } from "wagmi";
-import { Icon } from "@/components/icon.tsx";
+import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
 import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
@@ -203,10 +203,10 @@ export function BridgeConfirmModal({
         <div className="px-6 pb-6">
           {/* Chain Summary */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            {sourceChain && <Icon name={sourceChain.icon} size={24} />}
+            {sourceChain && <ChainIcon chainId={sourceChain.chainId} size={24} />}
             <span className="text-sm text-secondary-t">{sourceChain?.name}</span>
             <span className="text-secondary-t">→</span>
-            {destChain && <Icon name={destChain.icon} size={24} />}
+            {destChain && <ChainIcon chainId={destChain.chainId} size={24} />}
             <span className="text-sm text-secondary-t">{destChain?.name}</span>
           </div>
 

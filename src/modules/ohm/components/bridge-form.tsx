@@ -1,8 +1,12 @@
-import { useMemo } from "react";
-import { ChevronDownIcon, ArrowUpDown, Settings, AlertTriangle } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { ChevronDownIcon, ArrowUpDown, Settings } from "lucide-react";
+import { RiInformationLine } from "@remixicon/react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { Icon } from "@/components/icon.tsx";
+import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { useToken } from "@/lib/hooks/useToken.tsx";
@@ -13,6 +17,7 @@ import { handleInputNumberChange } from "@/lib/helpers.ts";
 import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee.ts";
 import { useBridgeActive } from "@/lib/hooks/bridge/useBridgeActive.ts";
 import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../utils/constants.ts";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 
 interface BridgeFormProps {
   sourceChainId: number;
@@ -40,6 +45,14 @@ export function BridgeForm({
   onSubmit,
 }: BridgeFormProps) {
   const { address } = useAccount();
+
+  const form = useForm<{ amount: string }>({
+    defaultValues: { amount: "" },
+  });
+
+  useEffect(() => {
+    form.setValue("amount", amount);
+  }, [amount, form]);
 
   const sourceChain = getBridgeChain(sourceChainId);
   const destChain = getBridgeChain(destinationChainId);
@@ -133,82 +146,113 @@ export function BridgeForm({
   };
 
   const formattedFee = nativeFee ? formatUnits(nativeFee, 18) : undefined;
-  const displayFee = formattedFee
-    ? `${Number(formattedFee).toFixed(6)} ${sourceChain?.nativeCurrencySymbol ?? "ETH"}`
-    : "N/A";
+  // const displayFee = formattedFee
+  //   ? `${Number(formattedFee).toFixed(6)} ${sourceChain?.nativeCurrencySymbol ?? "ETH"}`
+  //   : "N/A";
 
   return (
-    <div className="space-y-4">
-      {/* From Section */}
-      <ChainInputSection
-        label="From"
-        chain={sourceChain}
-        onChainClick={onOpenSourceChainModal}
-        amount={amount}
-        onChange={handleChange}
-        isInput
-        ohmToken={ohmToken}
-        address={address}
-        onMax={handleMax}
-      />
+    <Form {...form}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit();
+        }}
+        className="space-y-4"
+      >
+        <div className="flex flex-col gap-y-4 relative">
+          {/* From Section */}
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <ChainInputSection
+                  label="From"
+                  chain={sourceChain}
+                  onChainClick={onOpenSourceChainModal}
+                  amount={field.value}
+                  onChange={(e) => {
+                    handleChange(e);
+                    field.onChange(e);
+                  }}
+                  isInput
+                  ohmToken={ohmToken}
+                  address={address}
+                  onMax={handleMax}
+                />
+              </FormItem>
+            )}
+          />
 
-      {/* Swap Button */}
-      <div className="flex justify-center -my-4 relative z-10">
-        <button
-          type="button"
-          onClick={onSwapChains}
-          disabled={!canSwap}
-          className="w-11 h-11 rounded-full bg-surface-a10 border border-a10-b flex items-center justify-center hover:bg-surface-a20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ArrowUpDown className="h-4 w-4 text-secondary-t" />
-        </button>
-      </div>
+          {/* Swap Button */}
+          <div className="flex justify-center z-10 absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-0">
+            <button
+              type="button"
+              onClick={onSwapChains}
+              disabled={!canSwap}
+              className="size-10 rounded-full bg-surface-tooltip border border-a5-b flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowUpDown className="size-3 text-secondary-t" />
+            </button>
+          </div>
 
-      {/* To Section */}
-      <ChainInputSection
-        label="To"
-        chain={destChain}
-        onChainClick={onOpenDestChainModal}
-        amount={amount}
-        isInput={false}
-      />
-
-      {/* Warning Banner */}
-      {address && amountBigInt > 0n && !hasSufficientAllowance && (
-        <div className="flex items-center gap-2 rounded-xl bg-surface-a3 border border-a3-b p-3">
-          <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0" />
-          <p className="text-sm text-secondary-t">Allowance is below requested amount.</p>
+          {/* To Section */}
+          <ChainInputSection
+            label="To"
+            chain={destChain}
+            onChainClick={onOpenDestChainModal}
+            amount={amount}
+            isInput={false}
+          />
         </div>
-      )}
 
-      {/* CTA Button */}
-      <Button type="button" className="w-full" disabled={buttonState.disabled} onClick={onSubmit}>
-        {buttonState.label}
-      </Button>
+        {/* Warning Banner */}
+        {address && amountBigInt > 0n && !hasSufficientAllowance && (
+          <Alert variant="compact" type="info" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              Allowance is below requested amount.
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {/* Info Text */}
-      <p className="text-xs text-tertiary-t text-center">
-        When bridging OHM, the OHM on the sending chain gets burned and new OHM gets minted on the
-        other side. Bridge in peace OHMie.
-      </p>
+        {/* CTA Button */}
+        <Button type="submit" className="w-full" disabled={buttonState.disabled}>
+          {buttonState.label}
+        </Button>
 
-      {/* Fees + Settings Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-secondary-t">Base Bridge Fees</span>
-          <button
-            type="button"
-            onClick={onOpenSettingsModal}
-            className="text-secondary-t hover:text-primary-t transition-colors"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </button>
+        {/* Info Text */}
+        <p className="text-xs text-tertiary-t text-center">
+          When bridging OHM, the OHM on the sending chain gets burned and new OHM gets minted on the
+          other side. Bridge in peace OHMie.
+        </p>
+
+        {/* Fees + Settings Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-secondary-t">Base Bridge Fees</span>
+            <button
+              type="button"
+              onClick={onOpenSettingsModal}
+              className="text-secondary-t hover:text-primary-t transition-colors"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {isFeeLoading ? (
+            <div className="flex items-center gap-x-1">
+              {sourceChain && <ChainIcon size={16} chainId={sourceChain.chainId} />}
+              <NumberFlow
+                value={formattedFee}
+                format={{ style: "decimal", maximumFractionDigits: 6 }}
+              />
+            </div>
+          ) : (
+            <span className="text-xs font-medium text-primary-t">N/A</span>
+          )}
         </div>
-        <span className="text-xs font-medium text-primary-t">
-          {isFeeLoading ? "..." : displayFee}
-        </span>
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 }
 
@@ -243,24 +287,20 @@ function ChainInputSection({
       <button
         type="button"
         onClick={onChainClick}
-        className="flex w-full items-center gap-3 bg-surface-a5 border border-surface-a3 rounded-t-2xl px-4 py-3 hover:bg-surface-a10 transition-colors cursor-pointer"
+        className="flex w-full items-center gap-2 bg-surface-a5 border border-a3-b rounded-t-2xl px-4 py-3 hover:bg-surface-a10 transition-colors cursor-pointer"
       >
-        {chain && (
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-a10">
-            <Icon name={chain.icon} size={28} />
-          </div>
-        )}
+        {chain && <ChainIcon chainId={chain.chainId} size={32} />}
         <div className="flex flex-col items-start">
-          <span className="text-base font-semibold text-primary-t">{label}</span>
-          <span className="text-sm text-secondary-t">{chain?.name}</span>
+          <span className="text-[15px]/[20px] font-semibold text-primary-t">{label}</span>
+          <span className="text-sm text-secondary-t font-normal">{chain?.name}</span>
         </div>
-        <div className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-a10">
-          <ChevronDownIcon className="h-5 w-5 text-secondary-t" />
+        <div className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-tooltip">
+          <ChevronDownIcon className="h-5 w-5 text-primary-t" />
         </div>
       </button>
 
       {/* Amount + Token Section */}
-      <div className="px-4 py-4 space-y-3 bg-surface-a3 border border-a3-b rounded-b-2xl">
+      <div className="p-4 space-y-3 bg-surface-a3 border border-a3-b rounded-b-2xl">
         <div className="flex items-center justify-between gap-3">
           {isInput ? (
             <input
@@ -277,8 +317,8 @@ function ChainInputSection({
               {displayAmount}
             </span>
           )}
-          <div className="bg-surface-a10 border border-a10-b inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2">
-            <Icon name="OHMColorTokenIcon" className="size-5 !rotate-0" />
+          <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2">
+            <Icon name="OHMColorTokenIcon" className="size-5" />
             <span className="text-[15px]/[20px] font-semibold whitespace-nowrap">OHM</span>
           </div>
         </div>
@@ -286,18 +326,8 @@ function ChainInputSection({
         {/* Footer: USD Value + Balance */}
         {isInput && (
           <div className="flex items-center gap-2">
-            <NumberFlow
-              className="text-secondary-t flex-1 text-sm font-normal"
-              value={usdValue}
-              format={{
-                notation: "standard",
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }}
-            />
-            <div className="inline-flex items-center gap-1 text-sm font-normal">
+            <NumberFlow className="text-secondary-t flex-1 text-xs font-normal" value={usdValue} />
+            <div className="inline-flex items-center gap-1 text-xs font-normal">
               <span className="text-secondary-t">Available:</span>
               {address && ohmToken?.balance != null ? (
                 <NumberFlow

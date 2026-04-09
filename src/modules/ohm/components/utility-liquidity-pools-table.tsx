@@ -139,6 +139,8 @@ export function UtilityLiquidityPoolsSection() {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  console.log("data", data);
+
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
