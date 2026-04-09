@@ -1,14 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
+import { useMonoCoolerCapacity } from "@/lib/hooks/cooler/useMonoCoolerCapacity";
 import { formatAmount } from "../utils/format";
 
 export function StatsBar() {
   const { position, isLoading } = useMonoCoolerPosition();
+  const { globalCapacity, isLoading: capacityLoading } = useMonoCoolerCapacity();
 
   const stats = [
     {
       label: "Capacity Remaining",
-      value: position ? `${formatAmount(position.maxOriginationDebtAmount)} USDS` : "--",
+      value: globalCapacity !== undefined ? `${formatAmount(globalCapacity)} USDS` : "--",
+      loading: capacityLoading,
     },
     {
       label: "Borrow per gOHM",
@@ -29,7 +32,9 @@ export function StatsBar() {
       {stats.map((stat) => (
         <Card key={stat.label} className="flex flex-col gap-1 p-4">
           <p className="text-md text-secondary-t">{stat.label}</p>
-          <p className="text-xl font-semibold">{isLoading ? "..." : stat.value}</p>
+          <p className="text-xl font-semibold">
+            {(stat.loading ?? isLoading) ? "..." : stat.value}
+          </p>
         </Card>
       ))}
     </div>
