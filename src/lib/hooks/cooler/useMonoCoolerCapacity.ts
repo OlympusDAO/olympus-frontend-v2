@@ -1,5 +1,5 @@
 import { useChainId, useReadContracts } from "wagmi";
-import { formatUnits, erc4626Abi, type Address } from "viem";
+import { formatUnits, erc4626Abi } from "viem";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 
 /**
