@@ -19,7 +19,7 @@ import { type Theme, useTheme } from "@/components/theme-provider.tsx";
 import OhmSvg from "@/assets/OHM.svg";
 import GohmSvg from "@/assets/gOHM.svg";
 import { useEpochTimer } from "@/lib/hooks/liveness/useEpochTimer";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
 import type * as React from "react";
 
@@ -70,11 +70,11 @@ function pad(n: number) {
 export function Footer() {
   const { theme, setTheme } = useTheme();
   const { hours, minutes, seconds, progress } = useEpochTimer();
-  const { formattedPrice: ohmFormattedPrice } = useOhmPrice();
+  const { data: metrics } = useTreasuryMetrics();
   const { price: gohmPrice } = useGohmPrice();
   const { data: gasPriceWei } = useGasPrice({ query: { refetchInterval: 15_000 } });
 
-  const ohmPrice = parseFloat(ohmFormattedPrice ?? "0");
+  const ohmPrice = metrics?.ohmPrice ?? 0;
   const gasPriceGwei = gasPriceWei ? Math.round(Number(formatUnits(gasPriceWei, 9))) : 0;
   const beatLabel = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 

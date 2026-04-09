@@ -38,7 +38,7 @@ function formatCompactUsd(v: number) {
 function formatCompactNum(v: number) {
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 2,
   }).format(v);
 }
 
@@ -238,7 +238,11 @@ export function TreasuryBackingCard() {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={formatCompactUsd}
-                    domain={["dataMin * 0.98", "dataMax * 1.02"]}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
                     width={56}
                   />
 
@@ -249,7 +253,11 @@ export function TreasuryBackingCard() {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={formatCompactNum}
-                    domain={["dataMin * 0.998", "dataMax * 1.002"]}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
                     width={64}
                   />
 

@@ -65,7 +65,7 @@ export const DailyCapacityCard = ({ dayState, target }: DailyCapacityCardProps) 
         </div>
 
         <div className="relative w-full h-3 bg-surface-a10 rounded-full overflow-hidden shadow-[0px_0px_0px_0.5px_rgba(20,23,34,0.20)_inset]">
-          {dayState && target && <CapacityProgressBar consumed={consumed} target={targetNum} />}
+          {!!dayState && !!target && <CapacityProgressBar consumed={consumed} target={targetNum} />}
         </div>
 
         <div className="text-xs text-secondary-t flex justify-between w-full">
