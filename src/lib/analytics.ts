@@ -5,7 +5,7 @@ const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
 export function initializeAnalytics(): void {
   if (GA_MEASUREMENT_ID) {
-    ReactGA.initialize(GA_MEASUREMENT_ID);
+    ReactGA.initialize(GA_MEASUREMENT_ID, { gtagOptions: { anonymize_ip: true } });
   }
 
   const posthogKey = import.meta.env.VITE_POSTHOG_API_KEY;
@@ -15,6 +15,7 @@ export function initializeAnalytics(): void {
       api_host: posthogHost,
       capture_pageview: false,
       capture_pageleave: true,
+      ip: false,
       session_recording: { maskAllInputs: true },
     });
   }
