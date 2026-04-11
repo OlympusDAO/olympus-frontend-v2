@@ -86,7 +86,7 @@ export const TYPE_CONFIG: Record<ActivityType, ActivityTypeConfig> = {
   },
   "cooler-withdraw-collateral": {
     protocol: "Cooler",
-    actionLabel: "W/D Collateral",
+    actionLabel: "Withdraw Collateral",
     icon: <Icon name="banknoteArrowDownIcon" className={iconClass} />,
     verb: "withdrew collateral",
   },

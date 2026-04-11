@@ -5,6 +5,7 @@ export interface TreasuryHistoryPoint {
   date: string;
   liquidBacking: number;
   backedSupply: number;
+  marketValue: number;
 }
 
 export function useTreasuryHistory(days = 7) {
@@ -28,6 +29,7 @@ export function useTreasuryHistory(days = 7) {
         date: string;
         treasuryLiquidBacking: number;
         ohmBackedSupply: number;
+        treasuryMarketValue: number;
       }> = json.data ?? [];
 
       records.sort((a, b) => a.date.localeCompare(b.date));
@@ -36,6 +38,7 @@ export function useTreasuryHistory(days = 7) {
         date: r.date,
         liquidBacking: r.treasuryLiquidBacking || 0,
         backedSupply: r.ohmBackedSupply || 0,
+        marketValue: r.treasuryMarketValue || 0,
       }));
     },
     staleTime: 300_000,

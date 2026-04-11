@@ -55,13 +55,15 @@ export const router = createHashRouter([
       // Cooler section
       { path: "cooler/borrow", element: <CoolerBorrowPage /> },
       { path: "cooler/v1", element: <CoolerV1Page /> },
-      { path: "cooler/activity", element: <CoolerActivityLayout /> },
+      { path: "cooler/explorer", element: <CoolerActivityLayout /> },
+      { path: "cooler/activity", element: <Navigate to="/cooler/explorer" replace /> },
       { path: "cooler/metrics", element: <CoolerMetricsPage /> },
 
       // CDs section
       { path: "cds/deposit", element: <CDPage /> },
       { path: "cds/borrow", element: <BorrowPage /> },
-      { path: "cds/statistics", element: <StatisticsPage /> },
+      { path: "cds/metrics", element: <StatisticsPage /> },
+      { path: "cds/statistics", element: <Navigate to="/cds/metrics" replace /> },
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
       // DAO section
