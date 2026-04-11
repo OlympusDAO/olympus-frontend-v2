@@ -10,10 +10,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Card } from "@/components/ui/card";
-import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData";
-import { useV2HistoricalData } from "@/lib/hooks/cooler/useV2Data";
-import { formatUSD } from "@/lib/hooks/cooler/utils";
+import { Card } from "@/components/ui/card.tsx";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData.ts";
+import { useV2HistoricalData } from "@/lib/hooks/cooler/useV2Data.ts";
+import type { Format } from "@number-flow/react";
 
 const CHART_COLORS = {
   v1: "var(--blue)",
@@ -22,6 +23,13 @@ const CHART_COLORS = {
   text: "var(--text-secondary)",
 } as const;
 
+const USD_COMPACT: Format = {
+  style: "currency",
+  currency: "USD",
+  notation: "compact",
+  maximumFractionDigits: 1,
+};
+
 interface CombinedDataPoint {
   date: string;
   dateLabel: string;
@@ -29,7 +37,47 @@ interface CombinedDataPoint {
   v2: number;
 }
 
-export const ProtocolUtilizationChart: React.FC = () => {
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toFixed(0)}`;
+}
+
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload: CombinedDataPoint }>;
+}) {
+  if (!active || !payload?.[0]) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-surface-tooltip shadow-tooltip rounded-[20px] px-3 py-2 text-sm">
+      <p className="text-secondary-t mb-2">{data.date}</p>
+      <div className="flex flex-col gap-1">
+        <div className="flex justify-between gap-4">
+          <span className="font-medium" style={{ color: CHART_COLORS.v1 }}>
+            V1
+          </span>
+          <NumberFlow value={data.v1} format={USD_COMPACT} />
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="font-medium" style={{ color: CHART_COLORS.v2 }}>
+            V2
+          </span>
+          <NumberFlow value={data.v2} format={USD_COMPACT} />
+        </div>
+        <div className="flex justify-between gap-4 border-t border-a10 pt-1 mt-1">
+          <span className="font-medium">Total</span>
+          <NumberFlow value={data.v1 + data.v2} format={USD_COMPACT} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const MetricsProtocolUtilizationChart: React.FC = () => {
   const { data: v1UtilData, isLoading: v1Loading } = useV1UtilizationData();
   const { data: v2Data, isLoading: v2Loading } = useV2HistoricalData(120);
 
@@ -78,40 +126,11 @@ export const ProtocolUtilizationChart: React.FC = () => {
       ? chartData[chartData.length - 1].v1 + chartData[chartData.length - 1].v2
       : 0;
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
-    return `$${value.toFixed(0)}`;
-  };
-
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{ payload: CombinedDataPoint; dataKey: string; value: number; color: string }>;
-  }) => {
-    if (!active || !payload || payload.length === 0) return null;
-    const data = payload[0].payload;
-    return (
-      <div className="bg-surface-tooltip border border-a10 rounded-xl p-3 shadow-lg">
-        <p className="text-xs text-secondary-t mb-2">{data.date}</p>
-        <p className="text-sm font-medium" style={{ color: CHART_COLORS.v1 }}>
-          V1: {formatUSD(data.v1)}
-        </p>
-        <p className="text-sm font-medium" style={{ color: CHART_COLORS.v2 }}>
-          V2: {formatUSD(data.v2)}
-        </p>
-        <p className="text-sm font-medium mt-1 border-t border-a10 pt-1">
-          Total: {formatUSD(data.v1 + data.v2)}
-        </p>
-      </div>
-    );
-  };
+  console.log("chartData", chartData);
 
   if (isLoading) {
     return (
-      <Card className="p-6">
+      <Card className="px-6 py-5">
         <div className="flex justify-between items-start mb-4">
           <div className="w-40 h-5 bg-surface-a5 rounded animate-pulse" />
           <div className="w-32 h-5 bg-surface-a5 rounded animate-pulse" />
@@ -122,11 +141,15 @@ export const ProtocolUtilizationChart: React.FC = () => {
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
+    <Card className="px-6 py-5">
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-1">
           <h3 className="text-base font-medium text-secondary-t">Protocol Utilization</h3>
-          <p className="text-2xl font-semibold mt-1">{formatUSD(currentTotal)}</p>
+          <NumberFlow
+            className="text-xl/[24px] font-semibold tracking-[0.2px]"
+            value={currentTotal}
+            format={{ notation: "standard" }}
+          />
           <span className="text-xs text-tertiary-t">Total borrowed</span>
         </div>
       </div>
@@ -164,7 +187,7 @@ export const ProtocolUtilizationChart: React.FC = () => {
               axisLine={false}
               width={55}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={CustomTooltip} />
             <Legend
               verticalAlign="top"
               align="right"

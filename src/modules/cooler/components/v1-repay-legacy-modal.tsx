@@ -20,7 +20,7 @@ interface RepayLegacyModalProps {
   clearingHouseData: ClearingHouseData | null;
 }
 
-export function RepayLegacyModal({
+export function V1RepayLegacyModal({
   isOpen,
   onClose,
   loan,

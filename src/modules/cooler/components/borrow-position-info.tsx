@@ -34,7 +34,7 @@ function calculateLtv(debt: bigint, liquidationThreshold: bigint): string {
   return ltv.toFixed(2);
 }
 
-export function PositionInfo({
+export function BorrowPositionInfo({
   projectedCollateral,
   projectedDebt,
   liquidationThreshold,

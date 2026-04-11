@@ -31,7 +31,7 @@ function formatTxHash(hash: `0x${string}`) {
   return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 }
 
-export function CoolerApprovalModal({
+export function BorrowCoolerApprovalModal({
   isOpen,
   onClose,
   title,

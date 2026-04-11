@@ -1,11 +1,12 @@
 import type React from "react";
-import { Card } from "@/components/ui/card";
-import { useClearinghouseStats, useBorrowers } from "@/lib/hooks/cooler/useV1Data";
-import { useV2ProtocolData, useV2Accounts } from "@/lib/hooks/cooler/useV2Data";
-import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData";
-import { formatUSD, formatGOHM } from "@/lib/hooks/cooler/utils";
+import { Card } from "@/components/ui/card.tsx";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { useClearinghouseStats, useBorrowers } from "@/lib/hooks/cooler/useV1Data.ts";
+import { useV2ProtocolData, useV2Accounts } from "@/lib/hooks/cooler/useV2Data.ts";
+import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData.ts";
+import type { Format } from "@number-flow/react";
 
-export const ProtocolOverview: React.FC = () => {
+export const MetricsProtocolOverview: React.FC = () => {
   const { data: v1Stats, isLoading: v1StatsLoading } = useClearinghouseStats();
   const { data: v1UtilData, isLoading: v1UtilLoading } = useV1UtilizationData();
   const { data: v1BorrowersData, isLoading: v1BorrowersLoading } = useBorrowers();
@@ -19,9 +20,9 @@ export const ProtocolOverview: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="p-6">
-            <div className="w-24 h-4 bg-surface-a5 rounded animate-pulse mb-3" />
-            <div className="w-32 h-8 bg-surface-a5 rounded animate-pulse mb-2" />
+          <Card key={i} className="flex flex-col gap-1 px-6 py-5">
+            <div className="w-24 h-4 bg-surface-a5 rounded animate-pulse" />
+            <div className="w-32 h-6 bg-surface-a5 rounded animate-pulse" />
             <div className="w-20 h-3 bg-surface-a5 rounded animate-pulse" />
           </Card>
         ))}
@@ -65,35 +66,51 @@ export const ProtocolOverview: React.FC = () => {
   const totalBorrowers = v1TotalBorrowers + v2TotalAccounts;
   const totalPositions = v1ActiveLoans + v2ActivePositions;
 
-  const metrics = [
-    {
-      label: "Total Collateral",
-      value: `${formatGOHM(totalCollateral)} gOHM`,
-      sub: "Across all versions",
-    },
-    {
-      label: "Total Debt",
-      value: formatUSD(totalDebt),
-      sub: "Outstanding debt",
-    },
-    {
-      label: "Total Borrowers",
-      value: totalBorrowers.toLocaleString(),
-      sub: "Unique borrowers",
-    },
-    {
-      label: "Active Positions",
-      value: totalPositions.toLocaleString(),
-      sub: "Loans and positions",
-    },
-  ];
+  const metrics: { label: string; value: number; format: Format; suffix?: string; sub: string }[] =
+    [
+      {
+        label: "Total Collateral",
+        value: totalCollateral,
+        format: { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 },
+        suffix: "gOHM",
+        sub: "Across all versions",
+      },
+      {
+        label: "Total Debt",
+        value: totalDebt,
+        format: {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        },
+        sub: "Outstanding debt",
+      },
+      {
+        label: "Total Borrowers",
+        value: totalBorrowers,
+        format: { style: "decimal", notation: "standard", maximumFractionDigits: 0 },
+        sub: "Unique borrowers",
+      },
+      {
+        label: "Active Positions",
+        value: totalPositions,
+        format: { style: "decimal", maximumFractionDigits: 0 },
+        sub: "Loans and positions",
+      },
+    ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {metrics.map((metric) => (
-        <Card key={metric.label} className="p-6">
-          <span className="text-sm text-secondary-t">{metric.label}</span>
-          <p className="text-2xl font-semibold mt-1">{metric.value}</p>
+        <Card key={metric.label} className="flex flex-col gap-1 px-6 py-5">
+          <span className="text-base text-secondary-t">{metric.label}</span>
+          <NumberFlow
+            className="text-xl/[24px] font-semibold tracking-[0.2px]"
+            value={metric.value}
+            format={metric.format}
+            suffix={metric.suffix}
+          />
           <span className="text-xs text-tertiary-t">{metric.sub}</span>
         </Card>
       ))}

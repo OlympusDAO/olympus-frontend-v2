@@ -1,16 +1,16 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 import {
   useClearinghouseStats,
   useActiveLoans,
   useTopBorrow,
   useTopLooper,
   useTopTotalBorrows,
-} from "@/lib/hooks/cooler/useV1Data";
-import { formatUSD, calculateDaysUntilDefault } from "@/lib/hooks/cooler/utils";
+} from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatUSD, calculateDaysUntilDefault } from "@/lib/hooks/cooler/utils.ts";
 
-export const V1StatsCards: React.FC = () => {
+export const MetricsV1StatsCards: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useClearinghouseStats();
   const { data: activeLoansData, isLoading: loansLoading } = useActiveLoans();
   const { data: topBorrowData, isLoading: topBorrowLoading } = useTopBorrow();

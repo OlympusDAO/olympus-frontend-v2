@@ -24,7 +24,7 @@ interface MigrateModalProps {
 
 type MigrateVersion = "v1" | "v2" | "both";
 
-export function MigrateModal({
+export function V1MigrateModal({
   isOpen,
   onClose,
   v1CoolerAddress,

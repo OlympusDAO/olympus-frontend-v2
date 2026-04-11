@@ -3,9 +3,9 @@ import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { V1StatsBar } from "../components/v1-stats-bar";
 import { V1LoansTable } from "../components/v1-loans-table";
-import { RepayLegacyModal } from "../components/repay-legacy-modal";
-import { ExtendLoanModal } from "../components/extend-loan-modal";
-import { MigrateModal } from "../components/migrate-modal";
+import { V1RepayLegacyModal } from "../components/v1-repay-legacy-modal.tsx";
+import { V1ExtendLoanModal } from "../components/v1-extend-loan-modal.tsx";
+import { V1MigrateModal } from "../components/v1-migrate-modal.tsx";
 import {
   useGetClearingHouse,
   type ClearingHouseVersion,
@@ -123,8 +123,6 @@ export function CoolerV1Page() {
 
   return (
     <div data-slot="cooler-v1-page" className="space-y-6">
-      <h2 className="text-xl font-semibold">Cooler Loans V1</h2>
-
       <V1StatsBar clearingHouseData={activeClearingHouse} loans={allLoans} isLoading={isLoading} />
 
       {allLoans.length > 0 && (
@@ -140,7 +138,7 @@ export function CoolerV1Page() {
         isLoading={isLoading}
       />
 
-      <RepayLegacyModal
+      <V1RepayLegacyModal
         isOpen={!!repayLoan}
         onClose={() => setRepayLoan(null)}
         loan={repayLoan}
@@ -149,7 +147,7 @@ export function CoolerV1Page() {
         clearingHouseData={repayContext?.clearingHouseData ?? null}
       />
 
-      <ExtendLoanModal
+      <V1ExtendLoanModal
         isOpen={!!extendLoan}
         onClose={() => setExtendLoan(null)}
         loan={extendLoan}
@@ -162,7 +160,7 @@ export function CoolerV1Page() {
         clearingHouseVersion={extendContext?.version ?? "clearingHouseV1"}
       />
 
-      <MigrateModal
+      <V1MigrateModal
         isOpen={isMigrateOpen}
         onClose={() => setIsMigrateOpen(false)}
         v1CoolerAddress={v1CoolerAddress ?? ""}

@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { ChevronUp, ChevronDown, Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 import {
   Table,
   TableBody,
@@ -17,14 +17,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data";
-import { useBorrowers, type BorrowerStat } from "@/lib/hooks/cooler/useV1Data";
-import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils";
+} from "@/components/ui/table.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { cn } from "@/lib/utils.ts";
+import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data.ts";
+import { useBorrowers, type BorrowerStat } from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils.ts";
 
 // ── V2 Accounts ──
 
@@ -403,7 +403,7 @@ function V1BorrowersView() {
 
 // ── Combined Accounts View ──
 
-export function AccountsView() {
+export function ActivityAccountsView() {
   const [version, setVersion] = useState<"v2" | "v1">("v2");
 
   return (

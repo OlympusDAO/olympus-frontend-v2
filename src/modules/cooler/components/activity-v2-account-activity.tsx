@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ChevronUp, ChevronDown, Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 import {
   Table,
   TableBody,
@@ -8,11 +8,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data";
-import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils";
+} from "@/components/ui/table.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { useV2Accounts, type V2Account } from "@/lib/hooks/cooler/useV2Data.ts";
+import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils.ts";
 
 type SortField = "collateral" | "debt";
 

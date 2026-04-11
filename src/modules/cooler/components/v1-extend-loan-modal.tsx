@@ -25,7 +25,7 @@ interface ExtendLoanModalProps {
   clearingHouseVersion: ClearingHouseVersion;
 }
 
-export function ExtendLoanModal({
+export function V1ExtendLoanModal({
   isOpen,
   onClose,
   loan,

@@ -5,8 +5,8 @@ import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Icon } from "@/components/icon";
-import { LtvSlider } from "./ltv-slider";
-import { CoolerApprovalModal } from "./cooler-approval-modal";
+import { BorrowLtvSlider } from "./borrow-ltv-slider.tsx";
+import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
@@ -347,7 +347,7 @@ export function RepayForm({ loan }: RepayFormProps) {
         </div>
 
         <div className="px-1">
-          <LtvSlider
+          <BorrowLtvSlider
             ltvPercentage={ltvPercentage}
             onLtvChange={handleLtvChange}
             isRepayMode={true}
@@ -364,7 +364,7 @@ export function RepayForm({ loan }: RepayFormProps) {
         </Button>
       </div>
 
-      <CoolerApprovalModal
+      <BorrowCoolerApprovalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={getActionLabel()}

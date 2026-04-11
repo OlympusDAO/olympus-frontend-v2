@@ -10,9 +10,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Card } from "@/components/ui/card";
-import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData";
-import { formatUSD } from "@/lib/hooks/cooler/utils";
+import { Card } from "@/components/ui/card.tsx";
+import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData.ts";
+import { formatUSD } from "@/lib/hooks/cooler/utils.ts";
 
 const CHART_COLORS = {
   principal: "var(--blue)",
@@ -28,7 +28,7 @@ interface ChartDataPoint {
   totalInterestReceivables: number;
 }
 
-export const V1UtilizationChart: React.FC = () => {
+export const MetricsV1UtilizationChart: React.FC = () => {
   const { data: v1Data, isLoading } = useV1UtilizationData();
 
   const chartData = useMemo((): ChartDataPoint[] => {

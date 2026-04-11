@@ -4,8 +4,8 @@ import { parseUnits, formatUnits } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
-import { LtvSlider } from "./ltv-slider";
-import { CoolerApprovalModal } from "./cooler-approval-modal";
+import { BorrowLtvSlider } from "./borrow-ltv-slider.tsx";
+import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
@@ -379,7 +379,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
         />
 
         <div className="px-1">
-          <LtvSlider
+          <BorrowLtvSlider
             ltvPercentage={ltvPercentage}
             onLtvChange={handleLtvChange}
             isRepayMode={false}
@@ -396,7 +396,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
         </Button>
       </div>
 
-      <CoolerApprovalModal
+      <BorrowCoolerApprovalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={getActionLabel()}

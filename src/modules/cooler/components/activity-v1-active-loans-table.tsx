@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 import {
   Table,
   TableBody,
@@ -16,11 +16,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useDefaultedLoans, type DefaultedLoan } from "@/lib/hooks/cooler/useV1Data";
-import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils";
+} from "@/components/ui/table.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils.ts";
+import { useActiveLoans, type ActiveLoan } from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatUSD, formatAddress, calculateDaysUntilDefault } from "@/lib/hooks/cooler/utils.ts";
 
 function formatCollateral(value: string): string {
   return `${Number(value).toFixed(4)} gOHM`;
@@ -34,7 +34,7 @@ function getEtherscanUrl(address: string): string {
   return `https://etherscan.io/address/${address}`;
 }
 
-const columns: ColumnDef<DefaultedLoan>[] = [
+const columns: ColumnDef<ActiveLoan>[] = [
   {
     id: "borrower",
     header: "Wallet",
@@ -77,31 +77,31 @@ const columns: ColumnDef<DefaultedLoan>[] = [
       Number(a.original.currentExpiryTimestamp) - Number(b.original.currentExpiryTimestamp),
   },
   {
-    id: "principal",
+    id: "daysUntilDefault",
+    header: "Days Until Default",
+    accessorFn: (row) => calculateDaysUntilDefault(Number(row.currentExpiryTimestamp)),
+    cell: ({ row }) => {
+      const days = calculateDaysUntilDefault(Number(row.original.currentExpiryTimestamp));
+      return <span className={days <= 7 ? "text-red font-bold" : ""}>{days}</span>;
+    },
+  },
+  {
+    accessorKey: "principal",
     header: "Principal",
-    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.defaultedPrincipal ?? 0),
-    cell: ({ row }) => {
-      const event = row.original.defaultedClaimEvents[0];
-      return event ? formatUSDFromString(event.defaultedPrincipal) : "-";
-    },
+    cell: ({ row }) => formatUSDFromString(row.original.principal),
+    sortingFn: (a, b) => Number(a.original.principal) - Number(b.original.principal),
   },
   {
-    id: "collateral",
+    accessorKey: "interest",
+    header: "Interest",
+    cell: ({ row }) => formatUSDFromString(row.original.interest),
+    sortingFn: (a, b) => Number(a.original.interest) - Number(b.original.interest),
+  },
+  {
+    accessorKey: "collateral",
     header: "Collateral",
-    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralQuantityClaimed ?? 0),
-    cell: ({ row }) => {
-      const event = row.original.defaultedClaimEvents[0];
-      return event ? formatCollateral(event.collateralQuantityClaimed) : "-";
-    },
-  },
-  {
-    id: "collateralValue",
-    header: "Collateral Value",
-    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralValueClaimed ?? 0),
-    cell: ({ row }) => {
-      const event = row.original.defaultedClaimEvents[0];
-      return event ? formatUSDFromString(event.collateralValueClaimed) : "-";
-    },
+    cell: ({ row }) => formatCollateral(row.original.collateral),
+    sortingFn: (a, b) => Number(a.original.collateral) - Number(b.original.collateral),
   },
   {
     accessorKey: "loanId",
@@ -113,15 +113,16 @@ const columns: ColumnDef<DefaultedLoan>[] = [
 function LoadingSkeleton() {
   return (
     <Card className="p-6">
-      <div className="h-5 w-48 bg-surface-a5 rounded animate-pulse mb-4" />
+      <div className="h-5 w-40 bg-surface-a5 rounded animate-pulse mb-4" />
       <div className="h-64 bg-surface-a5 rounded animate-pulse" />
     </Card>
   );
 }
 
-export function V1DefaultedLoansTable() {
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useDefaultedLoans();
+export function ActivityV1ActiveLoansTable() {
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useActiveLoans();
 
+  // Auto-fetch all pages
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -131,7 +132,7 @@ export function V1DefaultedLoansTable() {
   const loans = useMemo(() => data?.pages.flatMap((page) => page.coolerLoans) ?? [], [data]);
 
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "currentExpiryTimestamp", desc: true },
+    { id: "currentExpiryTimestamp", desc: false },
   ]);
 
   const table = useReactTable({
@@ -155,7 +156,7 @@ export function V1DefaultedLoansTable() {
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
-        <h3 className="text-lg font-semibold">Defaulted Loans</h3>
+        <h3 className="text-lg font-semibold">Active Loans</h3>
         <span className="bg-surface-a5 text-secondary-t text-xs font-medium px-2 py-0.5 rounded-full">
           Cooler V1
         </span>
@@ -207,13 +208,14 @@ export function V1DefaultedLoansTable() {
                 colSpan={columns.length}
                 className="h-24 text-center text-secondary-t py-4"
               >
-                No defaulted loans found
+                No active loans found
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
 
+      {/* Pagination */}
       <div className="flex items-center justify-between mt-4">
         <p className="text-sm text-secondary-t">
           {loans.length} loan{loans.length !== 1 ? "s" : ""} total

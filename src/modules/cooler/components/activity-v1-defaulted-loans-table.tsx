@@ -7,7 +7,8 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { Card } from "@/components/ui/card";
+import { ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
+import { Card } from "@/components/ui/card.tsx";
 import {
   Table,
   TableBody,
@@ -15,11 +16,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useBorrowers, type BorrowerStat } from "@/lib/hooks/cooler/useV1Data";
-import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils";
+} from "@/components/ui/table.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils.ts";
+import { useDefaultedLoans, type DefaultedLoan } from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils.ts";
 
 function formatCollateral(value: string): string {
   return `${Number(value).toFixed(4)} gOHM`;
@@ -33,68 +34,93 @@ function getEtherscanUrl(address: string): string {
   return `https://etherscan.io/address/${address}`;
 }
 
-const columns: ColumnDef<BorrowerStat>[] = [
+const columns: ColumnDef<DefaultedLoan>[] = [
   {
-    accessorKey: "borrower",
-    header: "Address",
+    id: "borrower",
+    header: "Wallet",
+    accessorFn: (row) => row.borrower.id,
     cell: ({ row }) => (
       <a
-        href={getEtherscanUrl(row.original.borrower)}
+        href={getEtherscanUrl(row.original.borrower.id)}
         target="_blank"
         rel="noopener noreferrer"
         className="font-mono text-secondary-t hover:text-primary-t transition-colors"
       >
-        {formatAddress(row.original.borrower)}
+        {formatAddress(row.original.borrower.id)}
       </a>
     ),
   },
   {
-    accessorKey: "activeLoans",
-    header: "Active Loans",
-    sortingFn: (a, b) => a.original.activeLoans - b.original.activeLoans,
+    accessorKey: "cooler",
+    header: "Cooler",
+    cell: ({ row }) => (
+      <a
+        href={getEtherscanUrl(row.original.cooler)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-secondary-t hover:text-primary-t transition-colors"
+      >
+        {formatAddress(row.original.cooler)}
+        <ExternalLink className="size-3" />
+      </a>
+    ),
+    sortingFn: (a, b) => a.original.cooler.localeCompare(b.original.cooler),
   },
   {
-    accessorKey: "totalDefaultedLoans",
-    header: "Defaulted",
-    sortingFn: (a, b) => a.original.totalDefaultedLoans - b.original.totalDefaultedLoans,
-  },
-  {
-    accessorKey: "totalLoanExtensions",
-    header: "Extensions",
-    sortingFn: (a, b) => a.original.totalLoanExtensions - b.original.totalLoanExtensions,
-  },
-  {
-    accessorKey: "totalLoans",
-    header: "Total Loans",
-    sortingFn: (a, b) => a.original.totalLoans - b.original.totalLoans,
-  },
-  {
-    accessorKey: "currentInterestDue",
-    header: "Interest Due",
-    cell: ({ row }) => formatUSDFromString(row.original.currentInterestDue),
+    accessorKey: "currentExpiryTimestamp",
+    header: "Expiry Date",
+    cell: ({ row }) => {
+      const date = new Date(Number(row.original.currentExpiryTimestamp) * 1000);
+      return <span>{date.toLocaleDateString()}</span>;
+    },
     sortingFn: (a, b) =>
-      Number(a.original.currentInterestDue) - Number(b.original.currentInterestDue),
+      Number(a.original.currentExpiryTimestamp) - Number(b.original.currentExpiryTimestamp),
   },
   {
-    accessorKey: "currentCollateral",
+    id: "principal",
+    header: "Principal",
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.defaultedPrincipal ?? 0),
+    cell: ({ row }) => {
+      const event = row.original.defaultedClaimEvents[0];
+      return event ? formatUSDFromString(event.defaultedPrincipal) : "-";
+    },
+  },
+  {
+    id: "collateral",
     header: "Collateral",
-    cell: ({ row }) => formatCollateral(row.original.currentCollateral),
-    sortingFn: (a, b) =>
-      Number(a.original.currentCollateral) - Number(b.original.currentCollateral),
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralQuantityClaimed ?? 0),
+    cell: ({ row }) => {
+      const event = row.original.defaultedClaimEvents[0];
+      return event ? formatCollateral(event.collateralQuantityClaimed) : "-";
+    },
+  },
+  {
+    id: "collateralValue",
+    header: "Collateral Value",
+    accessorFn: (row) => Number(row.defaultedClaimEvents[0]?.collateralValueClaimed ?? 0),
+    cell: ({ row }) => {
+      const event = row.original.defaultedClaimEvents[0];
+      return event ? formatUSDFromString(event.collateralValueClaimed) : "-";
+    },
+  },
+  {
+    accessorKey: "loanId",
+    header: "Loan ID",
+    sortingFn: (a, b) => Number(a.original.loanId) - Number(b.original.loanId),
   },
 ];
 
 function LoadingSkeleton() {
   return (
     <Card className="p-6">
-      <div className="h-5 w-40 bg-surface-a5 rounded animate-pulse mb-4" />
+      <div className="h-5 w-48 bg-surface-a5 rounded animate-pulse mb-4" />
       <div className="h-64 bg-surface-a5 rounded animate-pulse" />
     </Card>
   );
 }
 
-export function V1BorrowersTable() {
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useBorrowers();
+export function ActivityV1DefaultedLoansTable() {
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useDefaultedLoans();
 
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -102,15 +128,14 @@ export function V1BorrowersTable() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const borrowers = useMemo(
-    () => data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
-    [data],
-  );
+  const loans = useMemo(() => data?.pages.flatMap((page) => page.coolerLoans) ?? [], [data]);
 
-  const [sorting, setSorting] = useState<SortingState>([{ id: "totalLoans", desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "currentExpiryTimestamp", desc: true },
+  ]);
 
   const table = useReactTable({
-    data: borrowers,
+    data: loans,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -130,7 +155,7 @@ export function V1BorrowersTable() {
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
-        <h3 className="text-lg font-semibold">All-Time Borrowers</h3>
+        <h3 className="text-lg font-semibold">Defaulted Loans</h3>
         <span className="bg-surface-a5 text-secondary-t text-xs font-medium px-2 py-0.5 rounded-full">
           Cooler V1
         </span>
@@ -151,8 +176,14 @@ export function V1BorrowersTable() {
                 >
                   <span className="inline-flex items-center gap-1">
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" && " \u25B2"}
-                    {header.column.getIsSorted() === "desc" && " \u25BC"}
+                    {header.column.getCanSort() &&
+                      (header.column.getIsSorted() === "asc" ? (
+                        <ChevronUp className="size-4" />
+                      ) : header.column.getIsSorted() === "desc" ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronUp className="size-4 text-disabled-t" />
+                      ))}
                   </span>
                 </TableHead>
               ))}
@@ -176,7 +207,7 @@ export function V1BorrowersTable() {
                 colSpan={columns.length}
                 className="h-24 text-center text-secondary-t py-4"
               >
-                No borrowers found
+                No defaulted loans found
               </TableCell>
             </TableRow>
           )}
@@ -185,7 +216,7 @@ export function V1BorrowersTable() {
 
       <div className="flex items-center justify-between mt-4">
         <p className="text-sm text-secondary-t">
-          {borrowers.length} borrower{borrowers.length !== 1 ? "s" : ""} total
+          {loans.length} loan{loans.length !== 1 ? "s" : ""} total
           {isFetchingNextPage && " (loading more...)"}
         </p>
         <div className="flex items-center gap-2">

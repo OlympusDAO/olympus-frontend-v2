@@ -11,9 +11,9 @@ import {
   Legend,
 } from "recharts";
 import { startOfDay, addDays, differenceInDays, format } from "date-fns";
-import { Card } from "@/components/ui/card";
-import { useActiveLoans } from "@/lib/hooks/cooler/useV1Data";
-import { formatUSD } from "@/lib/hooks/cooler/utils";
+import { Card } from "@/components/ui/card.tsx";
+import { useActiveLoans } from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatUSD } from "@/lib/hooks/cooler/utils.ts";
 
 const CHART_COLORS = {
   gte121: "var(--green)",
@@ -37,7 +37,7 @@ interface MaturityDataPoint {
   expiredValue: number;
 }
 
-export const LoanMaturityChart: React.FC = () => {
+export const MetricsLoanMaturityChart: React.FC = () => {
   const { data: activeLoansData, isLoading } = useActiveLoans();
   const [showValues, setShowValues] = useState(false);
 

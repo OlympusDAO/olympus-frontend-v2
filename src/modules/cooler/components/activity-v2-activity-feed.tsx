@@ -1,11 +1,11 @@
 import { AlertTriangle, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card.tsx";
 import {
   useV2RecentActivity,
   useV2Liquidations,
   type V2Activity,
-} from "@/lib/hooks/cooler/useV2Data";
-import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils";
+} from "@/lib/hooks/cooler/useV2Data.ts";
+import { formatUSD, formatGOHM, formatAddress } from "@/lib/hooks/cooler/utils.ts";
 
 function getActivityIcon(type: string) {
   switch (type) {
@@ -99,7 +99,7 @@ function LoadingSkeleton() {
   );
 }
 
-export function V2ActivityFeed() {
+export function ActivityV2ActivityFeed() {
   const { data: recentActivity, isLoading: activityLoading } = useV2RecentActivity();
   const { data: liquidations, isLoading: liquidationsLoading } = useV2Liquidations();
 

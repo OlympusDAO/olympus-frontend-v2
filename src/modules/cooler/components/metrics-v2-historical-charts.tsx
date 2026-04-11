@@ -9,9 +9,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Card } from "@/components/ui/card";
-import { useV2HistoricalData } from "@/lib/hooks/cooler/useV2Data";
-import { formatUSD, formatGOHM, formatPercentage } from "@/lib/hooks/cooler/utils";
+import { Card } from "@/components/ui/card.tsx";
+import { useV2HistoricalData } from "@/lib/hooks/cooler/useV2Data.ts";
+import { formatUSD, formatGOHM, formatPercentage } from "@/lib/hooks/cooler/utils.ts";
 
 const CHART_COLORS = {
   grid: "var(--border-a10)",
@@ -103,7 +103,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   };
 
   return (
-    <Card className="p-6">
+    <Card className="px-6 py-5">
       <h3 className="text-base font-medium text-secondary-t mb-4">{title}</h3>
       {data.length === 0 ? (
         <div className="w-full h-[200px] flex items-center justify-center text-secondary-t">
@@ -150,7 +150,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   );
 };
 
-export const V2HistoricalCharts: React.FC = () => {
+export const MetricsV2HistoricalCharts: React.FC = () => {
   const { data, isLoading } = useV2HistoricalData(150);
 
   const chartData = useMemo((): ProcessedDataPoint[] => {
@@ -172,7 +172,7 @@ export const V2HistoricalCharts: React.FC = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="p-6">
+          <Card key={i} className="px-6 py-5">
             <div className="w-40 h-5 bg-surface-a5 rounded animate-pulse mb-4" />
             <div className="w-full h-[200px] bg-surface-a5 rounded-xl animate-pulse" />
           </Card>

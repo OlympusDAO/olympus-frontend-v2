@@ -6,7 +6,7 @@ interface LtvSliderProps {
   isRepayMode: boolean;
 }
 
-export function LtvSlider({ ltvPercentage, onLtvChange, isRepayMode }: LtvSliderProps) {
+export function BorrowLtvSlider({ ltvPercentage, onLtvChange, isRepayMode }: LtvSliderProps) {
   return (
     <div data-slot="ltv-slider" className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
