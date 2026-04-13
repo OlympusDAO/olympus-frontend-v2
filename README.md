@@ -11,6 +11,12 @@ pnpm codegen           # Generate API client from OpenAPI spec (required)
 pnpm dev
 ```
 
+Lockfile installs are frozen by default. If you intentionally need to re-generate `pnpm-lock.yaml`, run:
+
+```bash
+pnpm install --no-frozen-lockfile
+```
+
 Requires Node.js 24+ and pnpm.
 
 > **Important:** Run `pnpm codegen` after initial install and whenever the API spec changes. It generates `src/generated/olympusUnits.ts` — typed React Query hooks for the Olympus Units API. The app will not compile without this file.
@@ -116,3 +122,11 @@ Config lives in `orval.config.ts`. The spec URL is controlled by the `OLYMPUS_AP
 ## Contributing
 
 See [CLAUDE.md](./CLAUDE.md) for coding conventions and architectural guidelines.
+
+## Security Hardening
+
+- **Package manager enforcement:** pnpm is required via `packageManager`, `preinstall` (`only-allow`), and `.npmrc` strict settings.
+- **Frozen lockfile by default:** installs fail if `pnpm-lock.yaml` is out of sync, which keeps CI and local installs deterministic.
+- **CI coverage:** `.github/workflows/ci.yml` runs `lint:check`, build, and tests (when a `test` script is present).
+- **Dependency audit:** `.github/workflows/audit.yml` runs `pnpm audit --audit-level moderate` on pull requests.
+- **Snyk verification:** run `snyk test --all-projects` locally to validate open-source dependency risk posture.
