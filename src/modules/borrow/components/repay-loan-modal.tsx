@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
+import { trackRepayLoan } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,6 +182,11 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
       handleRepay();
     }
   };
+
+  useEffect(() => {
+    if (!isRepaySuccess) return;
+    trackRepayLoan({ amount: repayAmount, txHash: repayHash });
+  }, [isRepaySuccess]);
 
   // Reset state when modal opens/closes
   useEffect(() => {

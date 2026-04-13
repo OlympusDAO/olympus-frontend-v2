@@ -1,52 +1,93 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card.tsx";
-import { Icon } from "@/components/icon.tsx";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
 import { useGohmPrice } from "@/lib/hooks/useGohmPrice.tsx";
 import { useGohmConversionRate } from "@/lib/hooks/useGohmConversion.tsx";
-import { ArrowLeftRight } from "lucide-react";
+import { RiArrowLeftRightLine } from "@remixicon/react";
+import { PriceChange } from "@/components/price-change.tsx";
+import { useOhmPriceHistory } from "@/modules/pulse/hooks/useOhmPriceHistory.ts";
+import { useGohmPriceHistory } from "@/modules/pulse/hooks/useGohmPriceHistory.ts";
 
 export function WrapInfoCards() {
   const { formattedPrice: ohmPrice, isLoading: ohmLoading } = useOhmPrice();
   const { formattedPrice: gohmPrice, isLoading: gohmLoading } = useGohmPrice();
   const { conversionRate, isLoading: indexLoading } = useGohmConversionRate();
+  const { data: ohmPriceHistory } = useOhmPriceHistory();
+  const { data: gohmPriceHistory } = useGohmPriceHistory();
+
+  const ohmChange24h = ohmPriceHistory?.change24h ?? 0;
+  const gohmChange24h = gohmPriceHistory?.change24h ?? 0;
+
+  const [inverted, setInverted] = useState(false);
+
+  const rate = Number(conversionRate);
+  const fromLabel = inverted ? "gOHM" : "OHM";
+  const toLabel = inverted ? "OHM" : "gOHM";
+  const toValue = inverted && rate > 0 ? 1 / rate : rate;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="flex flex-row items-center p-4 gap-3 h-25">
-        <Icon name="OHMColorTokenIcon" size={40} />
-        <div className="flex-1 min-w-0">
-          <span className="text-md text-secondary-t">OHM Price</span>
-          <div className="text-2xl font-bold leading-none">
-            {ohmLoading ? "Loading..." : `$${ohmPrice}`}
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card className="items-center p-6">
+        <p className="text-[15px]/[20px] text-secondary-t">OHM Price</p>
+        <div className="flex items-center gap-x-2">
+          {ohmLoading ? (
+            <Skeleton className="h-6 w-24" />
+          ) : (
+            <NumberFlow className="text-[20px]/[24px] font-semibold" value={ohmPrice} />
+          )}
+          {ohmPriceHistory && <PriceChange percentage={ohmChange24h} timeframe="24h" />}
         </div>
       </Card>
 
-      <Card className="flex flex-row items-center p-4 gap-3 h-25">
-        <Icon name="GOHMColorTokenIcon" size={40} />
-        <div className="flex-1 min-w-0">
-          <span className="text-md text-secondary-t">gOHM Price</span>
-          <div className="text-2xl font-bold leading-none">
-            {gohmLoading ? "Loading..." : `$${gohmPrice}`}
-          </div>
+      <Card className="items-center p-6">
+        <p className="text-[15px]/[20px] text-secondary-t">gOHM Price</p>
+        <div className="flex items-center gap-x-2">
+          {gohmLoading ? (
+            <Skeleton className="h-6 w-24" />
+          ) : (
+            <NumberFlow className="text-[20px]/[24px] font-semibold" value={gohmPrice} />
+          )}
+          {gohmPriceHistory && <PriceChange percentage={gohmChange24h} timeframe="24h" />}
         </div>
       </Card>
 
-      <Card className="flex flex-row items-center p-4 gap-3 h-25">
-        <div className="w-10 h-10 rounded-full bg-surface-a3 flex items-center justify-center">
-          <ArrowLeftRight className="w-5 h-5 text-secondary-t" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <span className="text-md text-secondary-t">Conversion Rate</span>
-          <div className="text-2xl font-bold leading-none">
-            {indexLoading ? (
-              "Loading..."
-            ) : conversionRate ? (
-              <span>1 OHM = {conversionRate} gOHM</span>
-            ) : (
-              "--"
-            )}
-          </div>
+      <Card className="items-center p-6">
+        <p className="text-[15px]/[20px] text-secondary-t">Conversion Rate</p>
+        <div className="flex items-center gap-x-2">
+          {indexLoading ? (
+            <Skeleton className="h-6 w-40" />
+          ) : (
+            <div className="flex items-center gap-x-0.5">
+              <NumberFlow
+                className="text-[20px]/[24px] font-semibold"
+                value={1}
+                format={{ style: "decimal" }}
+                suffix={fromLabel}
+              />
+              ≈
+              <NumberFlow
+                className="text-[20px]/[24px] font-semibold"
+                value={toValue}
+                format={{
+                  style: "decimal",
+                  notation: "standard",
+                  ...(!inverted && { maximumFractionDigits: 6 }),
+                }}
+                suffix={toLabel}
+              />
+            </div>
+          )}
+          <Button
+            className="size-6"
+            variant="secondary"
+            size="sm"
+            onClick={() => setInverted((v) => !v)}
+          >
+            <RiArrowLeftRightLine className="size-3" />
+          </Button>
         </div>
       </Card>
     </div>

@@ -6,6 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
@@ -16,15 +17,28 @@ import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useTreasuryHistory } from "@/modules/pulse/hooks/useTreasuryHistory";
 
 const DECIMAL = { style: "decimal", notation: "standard" } as const;
+const COMPACT_USD = {
+  style: "currency",
+  currency: "USD",
+  notation: "compact",
+  maximumFractionDigits: 1,
+} as const;
+const COMPACT_NUM = { notation: "compact", maximumFractionDigits: 2 } as const;
 
 const DAYS_OPTIONS = [
   { value: "7", label: "7d" },
   { value: "30", label: "30d" },
   { value: "90", label: "90d" },
+  { value: "180", label: "180d" },
+  { value: "365", label: "1y" },
+  { value: "1825", label: "All" },
 ];
 
 const GREEN = "#4ade80";
 const PURPLE = "#a78bfa";
+const ORANGE = "#fb923c";
+
+const CHART_EVENTS = [{ date: "2025-02-26", label: "V1 Migrator", color: "#f87171" }];
 
 function formatCompactUsd(v: number) {
   return new Intl.NumberFormat("en-US", {
@@ -38,7 +52,7 @@ function formatCompactUsd(v: number) {
 function formatCompactNum(v: number) {
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 2,
   }).format(v);
 }
 
@@ -46,6 +60,7 @@ interface ChartEntry {
   date: string;
   liquidBacking: number;
   backedSupply: number;
+  marketValue: number;
 }
 
 interface TooltipEntry {
@@ -63,22 +78,28 @@ function BackingTooltip({
   label?: string;
 }) {
   if (!active || !payload?.length) return null;
+  const mv = payload.find((p) => p.dataKey === "marketValue")?.value ?? 0;
   const lb = payload.find((p) => p.dataKey === "liquidBacking")?.value ?? 0;
   const bs = payload.find((p) => p.dataKey === "backedSupply")?.value ?? 0;
   const dateStr = label ? format(parseISO(label), "MMM d, yyyy") : "";
 
   return (
-    <div className="bg-surface-bg-l2 shadow-surface-level-2 rounded-xl px-4 py-3 text-sm">
-      <p className="text-secondary-t mb-2 text-xs">{dateStr}</p>
+    <div className="bg-surface-tooltip shadow-tooltip rounded-[20px] px-3 py-2 text-sm">
+      <p className="text-secondary-t mb-1.5 text-xs">{dateStr}</p>
       <div className="flex items-center gap-2">
-        <span className="size-2 rounded-full" style={{ backgroundColor: GREEN }} />
-        <span className="text-secondary-t">Liquid Backing</span>
-        <span className="ml-auto font-semibold">{formatCompactUsd(lb as number)}</span>
+        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: ORANGE }} />
+        <span className="text-secondary-t">Market Value</span>
+        <NumberFlow value={mv} format={COMPACT_USD} className="ml-auto font-semibold" />
       </div>
       <div className="flex items-center gap-2 mt-1">
-        <span className="size-2 rounded-full" style={{ backgroundColor: PURPLE }} />
+        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: GREEN }} />
+        <span className="text-secondary-t">Liquid Backing</span>
+        <NumberFlow value={lb} format={COMPACT_USD} className="ml-auto font-semibold" />
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: PURPLE }} />
         <span className="text-secondary-t">Backed Supply</span>
-        <span className="ml-auto font-semibold">{formatCompactNum(bs as number)}</span>
+        <NumberFlow value={bs} format={COMPACT_NUM} className="ml-auto font-semibold" />
       </div>
     </div>
   );
@@ -131,12 +152,22 @@ export function TreasuryBackingCard() {
 
   const chartData: ChartEntry[] = historyPoints ?? [];
 
-  // X-axis tick interval based on range
-  const tickInterval = days === "7" ? 1 : days === "30" ? 6 : 14;
+  const tickInterval =
+    days === "7"
+      ? 1
+      : days === "30"
+        ? 6
+        : days === "90"
+          ? 14
+          : days === "180"
+            ? 30
+            : days === "365"
+              ? 60
+              : 120;
 
   return (
     <Card className="flex flex-col gap-4 p-6">
-      <h3 className="text-[18px]/[20px] font-semibold">How Backing per OHM Is Calculated</h3>
+      <h3 className="text-[18px]/[20px] font-semibold">Liquid Backing per Backed OHM</h3>
 
       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         {/* LEFT: Formula */}
@@ -190,8 +221,12 @@ export function TreasuryBackingCard() {
         {/* RIGHT: Chart */}
         <div className="flex h-full max-md:h-80 flex-col gap-4 bg-surface-a3 rounded-xl py-3.5 px-3">
           {/* Legend + filter */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-4 text-sm flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full" style={{ backgroundColor: ORANGE }} />
+                <span className="text-secondary-t">Market Value</span>
+              </div>
               <div className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full" style={{ backgroundColor: GREEN }} />
                 <span className="text-secondary-t">Liquid Backing</span>
@@ -210,6 +245,10 @@ export function TreasuryBackingCard() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
                   <defs>
+                    <linearGradient id="gradMarket" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={ORANGE} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={ORANGE} stopOpacity={0.02} />
+                    </linearGradient>
                     <linearGradient id="gradLiquid" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={GREEN} stopOpacity={0.25} />
                       <stop offset="100%" stopColor={GREEN} stopOpacity={0.02} />
@@ -238,7 +277,11 @@ export function TreasuryBackingCard() {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={formatCompactUsd}
-                    domain={["dataMin * 0.98", "dataMax * 1.02"]}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
                     width={56}
                   />
 
@@ -249,11 +292,38 @@ export function TreasuryBackingCard() {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={formatCompactNum}
-                    domain={["dataMin * 0.998", "dataMax * 1.002"]}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
                     width={64}
                   />
 
                   <Tooltip content={<BackingTooltip />} />
+
+                  {CHART_EVENTS.map((ev) => (
+                    <ReferenceLine
+                      key={ev.date}
+                      x={ev.date}
+                      yAxisId="left"
+                      stroke={ev.color}
+                      strokeDasharray="4 2"
+                      strokeWidth={1}
+                      label={{ value: ev.label, position: "top", fontSize: 10, fill: ev.color }}
+                    />
+                  ))}
+
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="marketValue"
+                    stroke={ORANGE}
+                    strokeWidth={1.5}
+                    fill="url(#gradMarket)"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
 
                   <Area
                     yAxisId="left"

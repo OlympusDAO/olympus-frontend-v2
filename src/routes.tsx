@@ -5,16 +5,12 @@ import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
 import { CDPage } from "@/modules/cds/pages";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
-import { CoolerMetricsPage } from "@/modules/cooler-metrics/pages";
-import { CoolerActivityLayout } from "@/modules/cooler-activity/pages";
-import { V2ActivityFeed } from "@/modules/cooler-activity/components/v2-activity-feed";
-import { AccountsView } from "@/modules/cooler-activity/components/accounts-view";
-import { V1ActiveLoansTable } from "@/modules/cooler-activity/components/v1-active-loans-table";
-import { V1DefaultedLoansTable } from "@/modules/cooler-activity/components/v1-defaulted-loans-table";
+import { CoolerMetricsPage } from "@/modules/cooler/pages/metrics-page.tsx";
+import { CoolerActivityLayout } from "@/modules/cooler/pages/activity-page.tsx";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
 import { UtilityPage } from "@/modules/ohm/pages/utility-page.tsx";
-import { BridgePage } from "@/modules/bridge/pages";
-import { CoolerBorrowPage } from "@/modules/cooler/pages";
+import { BridgePage } from "@/modules/ohm/pages/bridge-page.tsx";
+import { CoolerBorrowPage } from "@/modules/cooler/pages/borrow-page.tsx";
 import { CoolerV1Page } from "@/modules/cooler/pages/v1";
 import { ProposalsPage } from "@/modules/governance/pages/proposals-page";
 import { ProposalPage } from "@/modules/governance/pages/proposal-page";
@@ -59,23 +55,15 @@ export const router = createHashRouter([
       // Cooler section
       { path: "cooler/borrow", element: <CoolerBorrowPage /> },
       { path: "cooler/v1", element: <CoolerV1Page /> },
-      {
-        path: "cooler/activity",
-        element: <CoolerActivityLayout />,
-        children: [
-          { index: true, element: <Navigate to="/cooler/activity/feed" replace /> },
-          { path: "feed", element: <V2ActivityFeed /> },
-          { path: "accounts", element: <AccountsView /> },
-          { path: "active-loans", element: <V1ActiveLoansTable /> },
-          { path: "defaulted-loans", element: <V1DefaultedLoansTable /> },
-        ],
-      },
+      { path: "cooler/explorer", element: <CoolerActivityLayout /> },
+      { path: "cooler/activity", element: <Navigate to="/cooler/explorer" replace /> },
       { path: "cooler/metrics", element: <CoolerMetricsPage /> },
 
       // CDs section
       { path: "cds/deposit", element: <CDPage /> },
       { path: "cds/borrow", element: <BorrowPage /> },
-      { path: "cds/statistics", element: <StatisticsPage /> },
+      { path: "cds/metrics", element: <StatisticsPage /> },
+      { path: "cds/statistics", element: <Navigate to="/cds/metrics" replace /> },
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
       // DAO section

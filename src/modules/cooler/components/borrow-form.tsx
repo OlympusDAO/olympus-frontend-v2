@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { trackCoolerBorrow } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
-import { LtvSlider } from "./ltv-slider";
-import { CoolerApprovalModal } from "./cooler-approval-modal";
+import { BorrowLtvSlider } from "./borrow-ltv-slider.tsx";
+import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
@@ -73,6 +74,26 @@ export function BorrowForm({ loan }: BorrowFormProps) {
   const isComposite = collateralAmount > ZERO && borrowAmount > ZERO;
   const isBorrowOnly = collateralAmount === ZERO && borrowAmount > ZERO;
   const isCollateralOnly = collateralAmount > ZERO && borrowAmount === ZERO;
+
+  const borrowTxSuccess = isComposite
+    ? isAddCollateralAndBorrowSuccess
+    : isBorrowOnly
+      ? isBorrowSuccess
+      : isAddCollateralSuccess;
+  const borrowTxHash = isComposite
+    ? addCollateralAndBorrowHash
+    : isBorrowOnly
+      ? borrowHash
+      : addCollateralHash;
+
+  useEffect(() => {
+    if (!borrowTxSuccess) return;
+    trackCoolerBorrow({
+      borrowAmount: formatUnits(borrowAmount, 18),
+      collateralAmount: formatUnits(collateralAmount, 18),
+      txHash: borrowTxHash,
+    });
+  }, [borrowTxSuccess]);
 
   // The spender for approval depends on operation type
   const spenderAddress = isComposite ? compositesAddress : monoCoolerAddress;
@@ -358,7 +379,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
         />
 
         <div className="px-1">
-          <LtvSlider
+          <BorrowLtvSlider
             ltvPercentage={ltvPercentage}
             onLtvChange={handleLtvChange}
             isRepayMode={false}
@@ -375,7 +396,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
         </Button>
       </div>
 
-      <CoolerApprovalModal
+      <BorrowCoolerApprovalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={getActionLabel()}

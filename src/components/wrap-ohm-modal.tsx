@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
+import { trackWrapOhm, trackUnwrapGohm } from "@/lib/analytics";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useWrapOhm } from "@/lib/hooks/useWrapOhm";
@@ -72,6 +74,15 @@ export function WrapOhmModal({
   const isExecuting = mode === "wrap" ? isWrapping : isUnwrapping;
   const executeSuccess = mode === "wrap" ? wrapSuccess : unwrapSuccess;
   const executeHash = mode === "wrap" ? wrapHash : unwrapHash;
+
+  useEffect(() => {
+    if (!executeSuccess) return;
+    if (mode === "wrap") {
+      trackWrapOhm({ amount: inputAmount, txHash: executeHash });
+    } else {
+      trackUnwrapGohm({ amount: inputAmount, txHash: executeHash });
+    }
+  }, [executeSuccess]);
 
   // Step logic
   const getCurrentStep = () => {

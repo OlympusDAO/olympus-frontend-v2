@@ -22,6 +22,9 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { CircleProgress } from "@/components/ui/progress.tsx";
+import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
+import iconLight from "@/assets/protocol-1-b.png";
+import iconDark from "@/assets/protocol-1-l.png";
 
 export function ProtocolYrf() {
   const revenue = useWeeklyRevenue();
@@ -100,7 +103,12 @@ export function ProtocolYrf() {
         </div>
       </div>
       <div className="flex items-center gap-4 mt-4">
-        <div className="size-18 flex items-center justify-center">icon</div>
+        <ColorModeImage
+          srcDark={iconDark}
+          srcLight={iconLight}
+          alt="YRF Icon"
+          className="min-w-18 h-18"
+        />
         <div>
           <p className="text-[15px]/[20px] font-semibold mb-1">
             Treasury yield is converted into OHM demand

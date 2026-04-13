@@ -17,6 +17,7 @@ type ChainMeta = {
 
 const CHAIN_META: Record<number, ChainMeta> = {
   1: { label: "Ethereum", icon: ethereumIcon },
+  11155111: { label: "Sepolia", icon: ethereumIcon },
   42161: { label: "Arbitrum", icon: arbitrumIcon },
   137: { label: "Polygon", icon: polygonIcon },
   10: { label: "Optimism", icon: optimismIcon },

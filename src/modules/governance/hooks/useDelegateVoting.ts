@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import gOHMAbi from "@/abis/gOHM";
@@ -6,6 +6,7 @@ import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import type { Address } from "viem";
+import { trackDelegate } from "@/lib/analytics";
 
 /**
  * Mutation hook for delegating gOHM voting power to another address.
@@ -14,6 +15,7 @@ import type { Address } from "viem";
 export function useDelegateVoting() {
   const queryClient = useQueryClient();
   const gohmAddress = getContractAddress(ContractName.GOHM, mainnet.id);
+  const delegateeRef = useRef<string | undefined>(undefined);
 
   const {
     data: hash,
@@ -34,7 +36,8 @@ export function useDelegateVoting() {
 
   useEffect(() => {
     if (isConfirmed) {
-      // Invalidate wagmi's readContract cache for delegation and voting weight
+      trackDelegate({ delegatee: delegateeRef.current ?? "", txHash: hash });
+      delegateeRef.current = undefined;
       queryClient.invalidateQueries({ queryKey: [{ entity: "readContract" }] });
       queryClient.invalidateQueries({ queryKey: ["governance", "votingWeight"] });
     }
@@ -73,6 +76,7 @@ export function useDelegateVoting() {
 
     resetWrite();
     resetToast();
+    delegateeRef.current = delegationAddress;
 
     writeContract({
       address: gohmAddress,

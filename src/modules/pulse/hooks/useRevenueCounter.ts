@@ -42,10 +42,10 @@ export function useRevenueCounter() {
       return;
     }
 
-    // Animate at ~20fps
+    // Update every 30s to match realistic revenue accumulation pace
     const interval = setInterval(() => {
       setDisplayValue(getDisplayValue());
-    }, 50);
+    }, 30_000);
 
     // Set initial value immediately
     setDisplayValue(getDisplayValue());

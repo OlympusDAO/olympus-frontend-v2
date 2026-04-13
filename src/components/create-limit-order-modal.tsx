@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { trackCreateLimitOrder } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink } from "lucide-react";
 import { parseEther } from "viem";
@@ -113,6 +115,16 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
       minFillSize: minFillSizeBigInt,
     });
   };
+
+  useEffect(() => {
+    if (!isCreateSuccess) return;
+    trackCreateLimitOrder({
+      amount: depositAmount,
+      term: selectedTerm ?? "",
+      price: maxPrice,
+      txHash: createHash,
+    });
+  }, [isCreateSuccess]);
 
   // Determine current step
   const getCurrentStep = () => {

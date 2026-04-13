@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
 import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
-import { useMultiChainBalance } from "@/lib/hooks/useMultiChainBalance";
+import { useAllTokenBalances } from "@/lib/hooks/useAllTokenBalances";
 import { TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
@@ -28,24 +29,20 @@ export function BalancesPage() {
 
   const ohmPriceNum = ohmPriceBigInt != null ? parseFloat(formatUnits(ohmPriceBigInt, 18)) : 0;
 
-  // Balances for each token
-  const ohmBalances = useMultiChainBalance(TOKENS.OHM);
-  const sohmBalances = useMultiChainBalance(TOKENS.SOHM);
-  const gohmBalances = useMultiChainBalance(TOKENS.GOHM);
-  const wsohmBalances = useMultiChainBalance(TOKENS.WSOHM);
-  const v1OhmBalances = useMultiChainBalance(TOKENS.V1_OHM);
-  const v1SohmBalances = useMultiChainBalance(TOKENS.V1_SOHM);
+  const tokenList = useMemo(
+    () => [TOKENS.OHM, TOKENS.SOHM, TOKENS.GOHM, TOKENS.WSOHM, TOKENS.V1_OHM, TOKENS.V1_SOHM],
+    [],
+  );
+  const { balances: tokenBalances, isLoading: balancesLoading } = useAllTokenBalances(tokenList);
 
-  const allBalances = [
-    ohmBalances,
-    sohmBalances,
-    gohmBalances,
-    wsohmBalances,
-    v1OhmBalances,
-    v1SohmBalances,
-  ];
+  const ohmBalances = tokenBalances["OHM"];
+  const sohmBalances = tokenBalances["sOHM"];
+  const gohmBalances = tokenBalances["gOHM"];
+  const wsohmBalances = tokenBalances["wsOHM"];
+  const v1OhmBalances = tokenBalances["OHM v1"];
+  const v1SohmBalances = tokenBalances["sOHM v1"];
 
-  const isLoading = ohmPriceLoading || gohmPriceLoading || allBalances.some((b) => b.isLoading);
+  const isLoading = ohmPriceLoading || gohmPriceLoading || balancesLoading;
 
   // Compute total USD
   // OHM, sOHM, v1 OHM, v1 sOHM priced at ohmPriceNum
@@ -58,86 +55,97 @@ export function BalancesPage() {
     parseFloat(v1OhmBalances.formattedTotalBalance) * ohmPriceNum +
     parseFloat(v1SohmBalances.formattedTotalBalance) * ohmPriceNum;
 
-  const hasBalances = totalUsd >= 0.01 || allBalances.some((b) => b.totalBalance > 0n);
+  const hasBalances =
+    totalUsd >= 0.01 ||
+    [ohmBalances, sohmBalances, gohmBalances, wsohmBalances, v1OhmBalances, v1SohmBalances].some(
+      (b) => b.totalBalance > 0n,
+    );
 
   // Build token entries for the table
-  const tokens: {
-    symbol: string;
-    label: string;
-    sublabel?: string;
-    icon: IconName;
-    balances: typeof ohmBalances;
-    price: number;
-  }[] = [
-    {
-      symbol: "OHM",
-      label: "OHM",
-      icon: "OHMColorTokenIcon",
-      balances: ohmBalances,
-      price: ohmPriceNum,
-    },
-    {
-      symbol: "sOHM",
-      label: "sOHM",
-      sublabel: "Staked OHM",
-      icon: "OHMColorTokenIcon",
-      balances: sohmBalances,
-      price: ohmPriceNum,
-    },
-    {
-      symbol: "gOHM",
-      label: "gOHM",
-      sublabel: "Governance OHM",
-      icon: "GOHMColorTokenIcon",
-      balances: gohmBalances,
-      price: gohmPriceNum,
-    },
-    {
-      symbol: "wsOHM",
-      label: "wsOHM",
-      sublabel: "Wrapped sOHM (legacy)",
-      icon: "GOHMColorTokenIcon",
-      balances: wsohmBalances,
-      price: gohmPriceNum,
-    },
-    {
-      symbol: "OHM v1",
-      label: "OHM v1",
-      sublabel: "Legacy",
-      icon: "OHMColorTokenIcon",
-      balances: v1OhmBalances,
-      price: ohmPriceNum,
-    },
-    {
-      symbol: "sOHM v1",
-      label: "sOHM v1",
-      sublabel: "Legacy",
-      icon: "OHMColorTokenIcon",
-      balances: v1SohmBalances,
-      price: ohmPriceNum,
-    },
-  ];
+  const tokens = useMemo(
+    () => [
+      {
+        symbol: "OHM",
+        label: "OHM",
+        icon: "OHMColorTokenIcon" as IconName,
+        balances: ohmBalances,
+        price: ohmPriceNum,
+      },
+      {
+        symbol: "sOHM",
+        label: "sOHM",
+        sublabel: "Staked OHM",
+        icon: "OHMColorTokenIcon" as IconName,
+        balances: sohmBalances,
+        price: ohmPriceNum,
+      },
+      {
+        symbol: "gOHM",
+        label: "gOHM",
+        sublabel: "Governance OHM",
+        icon: "GOHMColorTokenIcon" as IconName,
+        balances: gohmBalances,
+        price: gohmPriceNum,
+      },
+      {
+        symbol: "wsOHM",
+        label: "wsOHM",
+        sublabel: "Wrapped sOHM (legacy)",
+        icon: "GOHMColorTokenIcon" as IconName,
+        balances: wsohmBalances,
+        price: gohmPriceNum,
+      },
+      {
+        symbol: "OHM v1",
+        label: "OHM v1",
+        sublabel: "Legacy",
+        icon: "OHMColorTokenIcon" as IconName,
+        balances: v1OhmBalances,
+        price: ohmPriceNum,
+      },
+      {
+        symbol: "sOHM v1",
+        label: "sOHM v1",
+        sublabel: "Legacy",
+        icon: "OHMColorTokenIcon" as IconName,
+        balances: v1SohmBalances,
+        price: ohmPriceNum,
+      },
+    ],
+    [
+      ohmBalances,
+      sohmBalances,
+      gohmBalances,
+      wsohmBalances,
+      v1OhmBalances,
+      v1SohmBalances,
+      ohmPriceNum,
+      gohmPriceNum,
+    ],
+  );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl ">
       <BalanceInfoCards isMobile={isMobile} />
 
-      {!effectivelyConnected ? (
-        <BalanceDisconnectedState />
-      ) : (
-        <>
-          <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
-          {hasBalances ? (
-            isMobile ? (
-              <BalanceCards tokens={tokens} />
+      <div className="mt-8">
+        {!effectivelyConnected ? (
+          <BalanceDisconnectedState />
+        ) : (
+          <>
+            <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
+            {hasBalances ? (
+              isMobile ? (
+                <BalanceCards tokens={tokens} />
+              ) : (
+                <BalanceTable tokens={tokens} />
+              )
             ) : (
-              <BalanceTable tokens={tokens} />
-            )
-          ) : (
-            <BalanceEmptyState isLoading={isLoading} />
-          )}
-        </>
-      )}
+              <BalanceEmptyState isLoading={isLoading} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

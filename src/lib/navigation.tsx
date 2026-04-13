@@ -84,7 +84,7 @@ export const NAV_SECTIONS: NavSection[] = [
     path: "/cooler",
     items: [
       { label: "Borrow", path: "/cooler/borrow" },
-      { label: "Activity", path: "/cooler/activity" },
+      { label: "Explorer", path: "/cooler/explorer" },
       { label: "Metrics", path: "/cooler/metrics" },
       { label: "Cooler V1", path: "/cooler/v1" },
     ],
@@ -98,7 +98,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Deposit", path: "/cds/deposit" },
       { label: "Borrow", path: "/cds/borrow" },
-      { label: "Statistics", path: "/cds/statistics" },
+      { label: "Metrics", path: "/cds/metrics" },
       { label: "Activity", path: "/cds/activity" },
     ],
   },

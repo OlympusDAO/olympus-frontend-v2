@@ -10,6 +10,9 @@ import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { formatUsd } from "@/lib/liveness/formatters";
 import { PulseDot } from "@/components/pulse-dot.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
+import iconDark from "@/assets/protocol-2-l.png";
+import iconLight from "@/assets/protocol-2-b.png";
 
 export function ProtocolEmissionManager() {
   const { data: em, isLoading } = useEmissionManager();
@@ -54,7 +57,12 @@ export function ProtocolEmissionManager() {
         </div>
       </div>
       <div className="flex items-center gap-4 mt-4">
-        <div className="size-18 flex items-center justify-center">icon</div>
+        <ColorModeImage
+          srcDark={iconDark}
+          srcLight={iconLight}
+          alt="Emission manager"
+          className="min-w-18 h-18"
+        />
         <div>
           <p className="text-[15px]/[20px] font-semibold mb-1">
             Supply only expands when the market demands it

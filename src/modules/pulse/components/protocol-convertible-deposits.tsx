@@ -12,6 +12,9 @@ import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ProtocolDataSource } from "./protocol-data-source";
+import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
+import iconDark from "@/assets/protocol-4-l.png";
+import iconLight from "@/assets/protocol-4-b.png";
 
 export function ProtocolConvertibleDeposits() {
   const { data: cd, isLoading: cdLoading } = useCdStatistics();
@@ -86,7 +89,13 @@ export function ProtocolConvertibleDeposits() {
         </div>
       </div>
       <div className="flex items-center gap-4 mt-4">
-        <div className="size-18 flex items-center justify-center">icon</div>
+        <ColorModeImage
+          srcDark={iconDark}
+          srcLight={iconLight}
+          alt="Emission manager"
+          className="min-w-18 h-18"
+        />
+
         <div>
           <p className="text-[15px]/[20px] font-semibold mb-1">
             New capital enters through Convertible Deposits

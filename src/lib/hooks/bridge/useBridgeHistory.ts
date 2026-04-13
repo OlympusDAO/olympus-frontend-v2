@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { formatUnits } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import { BRIDGE_CHAINS } from "@/modules/bridge/constants";
+import { BRIDGE_CHAINS } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
 
 export interface BridgeHistoryItem {

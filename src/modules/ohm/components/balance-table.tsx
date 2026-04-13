@@ -1,4 +1,11 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from "@tanstack/react-table";
 import {
   Table,
   TableHeader,
@@ -29,6 +36,14 @@ type RowAction = {
   label: string;
   to?: string;
   disabled?: boolean;
+};
+
+type Row = {
+  key: string;
+  token: TokenEntry;
+  chain: ChainBalance;
+  action: RowAction;
+  usdValue: number;
 };
 
 function getAction(symbol: string, chainName: string): RowAction {
@@ -69,77 +84,116 @@ function formatUsd(value: number): string {
   })}`;
 }
 
-export function BalanceTable({ tokens }: BalanceTableProps) {
-  // Flatten tokens × chains into rows, filtering out dust (< $0.01)
-  const rows: {
-    key: string;
-    token: TokenEntry;
-    chain: ChainBalance;
-    action: RowAction;
-    usdValue: number;
-  }[] = [];
+const columnHelper = createColumnHelper<Row>();
 
-  for (const token of tokens) {
-    for (const chain of token.balances.balances) {
-      if (chain.balance > 0n) {
-        const usdValue = parseFloat(chain.formattedBalance) * token.price;
-        if (token.price > 0 && usdValue < 0.01) continue;
-        const action = getAction(token.symbol, chain.chainName);
-        rows.push({
-          key: `${token.symbol}-${chain.chainId}`,
-          token,
-          chain,
-          action,
-          usdValue,
-        });
+const columns = [
+  columnHelper.accessor("token", {
+    header: "Asset",
+    cell: ({ getValue }) => {
+      const token = getValue();
+      return (
+        <div className="flex items-center gap-2.5">
+          <Icon name={token.icon} size={28} />
+          <div>
+            <div className="font-medium">{token.label}</div>
+            {token.sublabel && <div className="text-xs text-tertiary-t">{token.sublabel}</div>}
+          </div>
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor("chain", {
+    header: "Chain",
+    cell: ({ getValue }) => <ChainIcon chainId={getValue().chainId} />,
+  }),
+  columnHelper.accessor(
+    (row) => ({ balance: row.chain.formattedBalance, usdValue: row.usdValue }),
+    {
+      id: "balance",
+      header: "Balance",
+      cell: ({ getValue }) => {
+        const { balance, usdValue } = getValue();
+        return (
+          <>
+            <div className="font-semibold">{formatBalance(balance)}</div>
+            <div className="text-xs text-secondary-t">{formatUsd(usdValue)}</div>
+          </>
+        );
+      },
+    },
+  ),
+  columnHelper.accessor((row) => row.token.price, {
+    id: "price",
+    header: "Price",
+    cell: ({ getValue }) => <div className="font-semibold">{formatUsd(getValue())}</div>,
+  }),
+  columnHelper.accessor("action", {
+    header: "",
+    cell: ({ getValue }) => {
+      const action = getValue();
+      return action.to ? (
+        <Button render={<Link to={action.to} />}>{action.label}</Button>
+      ) : (
+        <Button disabled>{action.label}</Button>
+      );
+    },
+  }),
+];
+
+export function BalanceTable({ tokens }: BalanceTableProps) {
+  const data = useMemo<Row[]>(() => {
+    const rows: Row[] = [];
+    for (const token of tokens) {
+      for (const chain of token.balances.balances) {
+        if (chain.balance > 0n) {
+          const usdValue = parseFloat(chain.formattedBalance) * token.price;
+          if (token.price > 0 && usdValue < 0.01) continue;
+          rows.push({
+            key: `${token.symbol}-${chain.chainId}`,
+            token,
+            chain,
+            action: getAction(token.symbol, chain.chainName),
+            usdValue,
+          });
+        }
       }
     }
-  }
+    return rows;
+  }, [tokens]);
 
-  if (rows.length === 0) return null;
+  const table = useReactTable({
+    data,
+    columns,
+    getRowId: (row) => row.key,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  if (data.length === 0) return null;
 
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Asset</TableHead>
-          <TableHead>Chain</TableHead>
-          <TableHead>Balance</TableHead>
-          <TableHead>Price</TableHead>
-          <TableHead />
-        </TableRow>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id}>
+                {flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
       </TableHeader>
       <TableBody>
-        {rows.map((row) => (
-          <TableRow key={row.key}>
-            <TableCell>
-              <div className="flex items-center gap-2.5">
-                <Icon name={row.token.icon} size={28} />
-                <div>
-                  <div className="font-medium">{row.token.label}</div>
-                  {row.token.sublabel && (
-                    <div className="text-xs text-tertiary-t">{row.token.sublabel}</div>
-                  )}
-                </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <ChainIcon chainId={row.chain.chainId} />
-            </TableCell>
-            <TableCell>
-              <div className="font-semibold">{formatBalance(row.chain.formattedBalance)}</div>
-              <div className="text-xs text-secondary-t">{formatUsd(row.usdValue)}</div>
-            </TableCell>
-            <TableCell>
-              <div className="font-semibold">{formatUsd(row.token.price)}</div>
-            </TableCell>
-            <TableCell className="text-right">
-              {row.action.to ? (
-                <Button render={<Link to={row.action.to} />}>{row.action.label}</Button>
-              ) : (
-                <Button disabled>{row.action.label}</Button>
-              )}
-            </TableCell>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id}>
+            {row.getVisibleCells().map((cell) => (
+              <TableCell
+                key={cell.id}
+                className={cell.column.id === "action" ? "text-right" : undefined}
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
           </TableRow>
         ))}
       </TableBody>

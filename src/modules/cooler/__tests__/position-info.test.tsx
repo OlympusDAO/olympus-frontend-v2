@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { parseUnits } from "viem";
-import { PositionInfo } from "../components/position-info";
+import { BorrowPositionInfo } from "../components/borrow-position-info.tsx";
 
 // Mock the Icon component to avoid SVG rendering issues in jsdom
 vi.mock("@/components/icon", () => ({
@@ -10,7 +10,7 @@ vi.mock("@/components/icon", () => ({
   ),
 }));
 
-describe("PositionInfo", () => {
+describe("BorrowPositionInfo", () => {
   const defaultProps = {
     projectedCollateral: parseUnits("10", 18),
     projectedDebt: parseUnits("5000", 18),
@@ -22,7 +22,7 @@ describe("PositionInfo", () => {
   };
 
   it("renders all position fields when data exists", () => {
-    render(<PositionInfo {...defaultProps} />);
+    render(<BorrowPositionInfo {...defaultProps} />);
 
     expect(screen.getByText("Collateral")).toBeDefined();
     expect(screen.getByText("Debt")).toBeDefined();
@@ -32,14 +32,14 @@ describe("PositionInfo", () => {
   });
 
   it("displays formatted gOHM value with 4 decimals", () => {
-    render(<PositionInfo {...defaultProps} />);
+    render(<BorrowPositionInfo {...defaultProps} />);
 
     // 10 gOHM formatted
     expect(screen.getByText(/10\.0000 gOHM/)).toBeDefined();
   });
 
   it("displays formatted USDS debt with 2 decimals", () => {
-    render(<PositionInfo {...defaultProps} />);
+    render(<BorrowPositionInfo {...defaultProps} />);
 
     // 5000 USDS formatted
     expect(screen.getByText(/5,000\.00 USDS/)).toBeDefined();
@@ -47,7 +47,7 @@ describe("PositionInfo", () => {
 
   it("shows empty state when no position data", () => {
     render(
-      <PositionInfo
+      <BorrowPositionInfo
         projectedCollateral={0n}
         projectedDebt={0n}
         liquidationThreshold={0n}
@@ -62,19 +62,19 @@ describe("PositionInfo", () => {
   });
 
   it("shows 'Position Overview' in borrow mode", () => {
-    render(<PositionInfo {...defaultProps} />);
+    render(<BorrowPositionInfo {...defaultProps} />);
 
     expect(screen.getByText("Position Overview")).toBeDefined();
   });
 
   it("shows 'Projected Position' in repay mode", () => {
-    render(<PositionInfo {...defaultProps} isRepayMode={true} />);
+    render(<BorrowPositionInfo {...defaultProps} isRepayMode={true} />);
 
     expect(screen.getByText("Projected Position")).toBeDefined();
   });
 
   it("calculates buffer to liquidation correctly", () => {
-    render(<PositionInfo {...defaultProps} />);
+    render(<BorrowPositionInfo {...defaultProps} />);
 
     // Buffer = 8500 - 5000 = 3500 USDS
     expect(screen.getByText(/3,500\.00 USDS/)).toBeDefined();
@@ -82,7 +82,7 @@ describe("PositionInfo", () => {
 
   it("shows zero buffer when debt exceeds liquidation threshold", () => {
     render(
-      <PositionInfo
+      <BorrowPositionInfo
         {...defaultProps}
         projectedDebt={parseUnits("9000", 18)}
         liquidationThreshold={parseUnits("8500", 18)}

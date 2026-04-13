@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { Wallet } from "lucide-react";
 
 type WalletValueProps = {
@@ -8,20 +9,18 @@ type WalletValueProps = {
 
 export function BalanceWalletValue({ totalUsd, isLoading }: WalletValueProps) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-x-2 mb-3">
       <Wallet className="size-5" />
-      <span className="text-xl font-semibold">In Wallet</span>
+      <span className="text-[20px]/[24px] font-semibold">In Wallet</span>
       <span className="text-tertiary-t">·</span>
       {isLoading ? (
         <Skeleton className="h-7 w-32" />
       ) : (
-        <span className="text-primary-t text-xl font-semibold">
-          $
-          {totalUsd.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
+        <NumberFlow
+          className=" text-[20px]/[24px] font-semibold"
+          format={{ notation: "standard" }}
+          value={totalUsd}
+        />
       )}
     </div>
   );

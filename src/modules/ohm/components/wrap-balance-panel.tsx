@@ -1,4 +1,5 @@
 import { Icon } from "@/components/icon";
+import { Separator } from "@/components/ui/separator";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { TokenName, getTokenAddress, TOKENS } from "@/lib/tokens";
 import { useAccount, useChainId } from "wagmi";
@@ -49,6 +50,7 @@ export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePan
           after={showAfter ? afterOhm : undefined}
           decimals={2}
         />
+        <Separator />
         <BalanceRow
           icon="GOHMColorTokenIcon"
           symbol="gOHM"

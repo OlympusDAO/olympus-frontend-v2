@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useEffect } from "react";
+import { trackUnwrapReceiptToken } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,6 +183,11 @@ export const UnwrapReceiptTokenModal: React.FC<UnwrapReceiptTokenModalProps> = (
       hash: isUnwrapSuccess ? unwrapHash : undefined,
     },
   ];
+
+  useEffect(() => {
+    if (!isUnwrapSuccess) return;
+    trackUnwrapReceiptToken({ amount: unwrapAmount, txHash: unwrapHash });
+  }, [isUnwrapSuccess]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
