@@ -51,6 +51,10 @@ export enum ContractName {
   // Governance
   GOVERNOR_BRAVO = "GOVERNOR_BRAVO",
 
+  // Treasury
+  DAO_TREASURY = "DAO_TREASURY",
+  SUSDS = "SUSDS",
+
   // Bridge
   CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
   CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
@@ -165,6 +169,16 @@ export const CONTRACTS: ContractAddresses = {
   // ── Governance ───────────────────────────────────────
   [ContractName.GOVERNOR_BRAVO]: {
     [mainnet.id]: "0x0941233c964e7d7Efeb05D253176E5E634cEFfcD",
+  },
+
+  // ── Treasury ────────────────────────────────────────
+  [ContractName.DAO_TREASURY]: {
+    [mainnet.id]: "0xa8687A15D4BE32CC8F0a8a7B9704a4C3993D9613",
+    [sepolia.id]: "0xC48abD1431f17212379557397Dd603912174131E",
+  },
+  [ContractName.SUSDS]: {
+    [mainnet.id]: "0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD",
+    [sepolia.id]: "0x74Ca575601aa47a1aa44bD6786F3C0be36afA079",
   },
 
   // ── Bridge ──────────────────────────────────────────

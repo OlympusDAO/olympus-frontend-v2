@@ -1,6 +1,7 @@
 import { NumberFlow } from "@/components/ui/number-flow";
 import { Card } from "@/components/ui/card";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
+import { useMonoCoolerCapacity } from "@/lib/hooks/cooler/useMonoCoolerCapacity";
 import { formatUnits } from "viem";
 import type { Format } from "@number-flow/react";
 
@@ -9,6 +10,7 @@ type Stat = {
   value: number | null;
   format: Format;
   suffix?: string;
+  loading?: boolean;
 };
 
 function bigintToNumber(value: bigint): number {
@@ -17,13 +19,15 @@ function bigintToNumber(value: bigint): number {
 
 export function BorrowStatsBar() {
   const { position, isLoading } = useMonoCoolerPosition();
+  const { globalCapacity, isLoading: capacityLoading } = useMonoCoolerCapacity();
 
   const stats: Stat[] = [
     {
       label: "Capacity Remaining",
-      value: position ? bigintToNumber(position.maxOriginationDebtAmount) : null,
+      value: globalCapacity !== undefined ? bigintToNumber(globalCapacity) : null,
       format: { style: "decimal", maximumFractionDigits: 0 },
       suffix: "USDS",
+      loading: capacityLoading,
     },
     {
       label: "Borrow per gOHM",
@@ -52,7 +56,7 @@ export function BorrowStatsBar() {
           <p className="text-base font-normal text-secondary-t">{stat.label}</p>
           <NumberFlow
             className="text-xl/[24px] font-semibold tracking-[0.2px]"
-            value={isLoading || stat.value === null ? "-" : stat.value}
+            value={(stat.loading ?? isLoading) || stat.value === null ? "-" : stat.value}
             format={stat.format}
             suffix={stat.suffix}
             suffixNoSpace={stat.suffix === "%"}

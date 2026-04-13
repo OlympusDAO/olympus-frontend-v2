@@ -138,12 +138,12 @@ describe("useMonoCoolerCalculations", () => {
       collateral: parseUnits("10", 18),
     };
 
-    it("initializes borrowAmount to current debt in repay mode", () => {
+    it("initializes borrowAmount to zero in repay mode", () => {
       const { result } = renderHookWithProviders(() =>
         useMonoCoolerCalculations({ loan: existingLoan, isRepayMode: true }),
       );
 
-      expect(result.current.borrowAmount).toBe(existingLoan.debt);
+      expect(result.current.borrowAmount).toBe(0n);
     });
 
     it("caps repay amount at current debt", () => {
@@ -159,10 +159,15 @@ describe("useMonoCoolerCalculations", () => {
       expect(result.current.borrowAmount).toBe(existingLoan.debt);
     });
 
-    it("calculates collateral to be released", () => {
+    it("calculates collateral to be released on full repay", () => {
       const { result } = renderHookWithProviders(() =>
         useMonoCoolerCalculations({ loan: existingLoan, isRepayMode: true }),
       );
+
+      // Set repay amount to full debt
+      act(() => {
+        result.current.handleDebtChange(existingLoan.debt);
+      });
 
       // Full repay at 100% LTV → all collateral released
       expect(result.current.collateralToBeReleased).toBe(existingLoan.collateral);
@@ -172,6 +177,11 @@ describe("useMonoCoolerCalculations", () => {
       const { result } = renderHookWithProviders(() =>
         useMonoCoolerCalculations({ loan: existingLoan, isRepayMode: true }),
       );
+
+      // Set repay amount to full debt
+      act(() => {
+        result.current.handleDebtChange(existingLoan.debt);
+      });
 
       // Full repay → projected debt = 0
       expect(result.current.projectedDebt).toBe(0n);
