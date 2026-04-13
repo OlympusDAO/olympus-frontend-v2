@@ -11,7 +11,7 @@ pnpm codegen           # Generate API client from OpenAPI spec (required)
 pnpm dev
 ```
 
-Requires Node.js 20+ and pnpm.
+Requires Node.js 24+ and pnpm.
 
 > **Important:** Run `pnpm codegen` after initial install and whenever the API spec changes. It generates `src/generated/olympusUnits.ts` — typed React Query hooks for the Olympus Units API. The app will not compile without this file.
 
