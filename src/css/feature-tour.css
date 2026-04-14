@@ -1,25 +1,38 @@
 /* Driver.js popover overrides for Olympus dark theme */
 
+[data-tour="sidebar-nav"].driver-active-element {
+  outline: 1.5px solid var(--text-primary);
+  outline-offset: 3px;
+}
+
+[data-tour^="nav-"].driver-active-element {
+  border-radius: 20px;
+  box-shadow: 0 0 0 1.5px var(--text-primary);
+}
+
+.driver-popover-navigation-btns {
+  display: none;
+}
+
 .olympus-tour-popover.driver-popover {
   background-color: var(--surface-modal);
-  border-radius: 12px;
+  border-radius: 24px;
   min-width: 280px;
   max-width: 320px;
   padding: 20px;
   box-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
-  border: 0.5px solid var(--border-a10);
 }
 
 .olympus-tour-popover .driver-popover-title {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
 .olympus-tour-popover .driver-popover-description {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--text-secondary);
   margin-bottom: 0;
@@ -64,18 +77,19 @@
 .olympus-tour-dots {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .olympus-tour-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background-color: var(--surface-a20);
-  transition: background-color 0.2s;
+  border-radius: 100px;
+  background-color: var(--text-tertiary);
+  transition: width 0.2s, background-color 0.2s;
 }
 
 .olympus-tour-dot.active {
+  width: 18px;
   background-color: var(--text-primary);
 }
 

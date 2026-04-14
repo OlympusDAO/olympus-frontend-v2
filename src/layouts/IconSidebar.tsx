@@ -29,7 +29,7 @@ function IconNavItem({
     <Link
       to={to}
       data-tour={dataTour}
-      className="group flex flex-col items-center gap-1 px-3 pb-3 w-16"
+      className="group flex flex-col items-center gap-1 px-[7px] pb-3 w-[54px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -72,7 +72,10 @@ export function IconSidebar() {
 
   return (
     <aside className="shrink-0 flex items-center p-1.5">
-      <div className="w-16 h-full flex flex-col items-center pb-3 rounded-[100px] bg-sidebar-bg shadow-surface-level-2">
+      <div
+        className="w-16 h-full flex flex-col items-center pb-3 rounded-[100px] bg-sidebar-bg shadow-surface-level-2"
+        data-tour="sidebar-nav"
+      >
         {/* Logo */}
         <div className="flex items-center justify-center p-4">
           <Link to="/">
@@ -81,7 +84,7 @@ export function IconSidebar() {
         </div>
 
         {/* Main nav items */}
-        <nav data-tour="sidebar-nav" className="flex-1 flex flex-col items-center pt-2">
+        <nav className="flex-1 flex flex-col items-center pt-2">
           {NAV_SECTIONS.map((section) => (
             <IconNavItem
               key={section.id}

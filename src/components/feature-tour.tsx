@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { driver, type DriveStep } from "driver.js";
 import { useFeatureTour } from "@/lib/hooks/useFeatureTour";
 import { FeatureTourWelcomeModal } from "@/components/feature-tour-welcome-modal";
+import { badgeVariants } from "@/components/ui/badge.tsx";
+
+const NEW_BADGE = `<span class="${badgeVariants({ variant: "filled", color: "green", size: "sm" })}" style="vertical-align:middle;margin:0 3px;font-size:8px;padding:1px 5px">NEW</span>`;
 
 function buildSteps(): DriveStep[] {
   return [
@@ -11,17 +14,16 @@ function buildSteps(): DriveStep[] {
         title: "Everything starts here",
         description: `
           <ul>
-            <li><strong>Pulse</strong> — Live revenue, treasury health, buyback and emission activity, and every on-chain action</li>
-            <li><strong>OHM</strong> — Balances, swapping (previously Stake), bridging across chains</li>
-            <li><strong>Cooler</strong> — Borrow USDS against your gOHM at 0.5% APR, no liquidation risk</li>
-            <li><strong>CDs</strong> — Convertible Deposits — now built into the app</li>
-            <li><strong>DAO</strong> — Vote on proposals, delegate, view on-chain governance</li>
-            <li><strong>Engage</strong> — CD participants accumulate iOHM, convertible to OHM below market</li>
+            <li><strong>Pulse</strong>${NEW_BADGE}. Live revenue, treasury health, buyback and emission activity, and every on-chain action.</li>
+            <li><strong>OHM.</strong> Balances, wrapping (previously Stake), bridging across chains.</li>
+            <li><strong>Cooler.</strong> Borrow USDS against your gOHM at 0.5% APR, no liquidation risk.</li>
+            <li><strong>CDs.</strong> Convertible Deposits — now built into the app.</li>
+            <li><strong>DAO.</strong> Vote on proposals, delegate, view contract parameters (previously Govern).</li>
+            <li><strong>Engage</strong>${NEW_BADGE}. CD participants accumulate iOHM, convertible to OHM below market.</li>
           </ul>
         `,
         side: "right",
         align: "center",
-        nextBtnText: "Next →",
       },
     },
     {
@@ -39,7 +41,6 @@ function buildSteps(): DriveStep[] {
         `,
         side: "right",
         align: "center",
-        nextBtnText: "Next →",
       },
     },
     {
@@ -50,7 +51,6 @@ function buildSteps(): DriveStep[] {
           "CDs are now fully integrated into the main app. Same positions, same mechanics — deposit, borrow, and track activity all from the sidebar.",
         side: "right",
         align: "center",
-        nextBtnText: "Next →",
       },
     },
     {
@@ -61,10 +61,49 @@ function buildSteps(): DriveStep[] {
           "Convertible Deposit participants receive iOHM — the right to purchase OHM at a discount to market. The more you participate, the more you accumulate.",
         side: "right",
         align: "center",
-        doneBtnText: "Got It",
       },
     },
   ];
+}
+
+function injectFooter(
+  popover: { wrapper: HTMLElement },
+  stepIndex: number,
+  totalSteps: number,
+  onSkip: () => void,
+  onNext: () => void,
+  isLast: boolean,
+) {
+  // Guard: prevent re-entrant calls (driver.js MutationObserver loop)
+  if (popover.wrapper.querySelector(".olympus-tour-footer")) return;
+
+  const footer = document.createElement("div");
+  footer.className = "olympus-tour-footer";
+
+  const dots = document.createElement("div");
+  dots.className = "olympus-tour-dots";
+  dots.innerHTML = Array.from({ length: totalSteps })
+    .map((_, i) => `<span class="olympus-tour-dot${i === stepIndex ? " active" : ""}"></span>`)
+    .join("");
+
+  const buttons = document.createElement("div");
+  buttons.className = "olympus-tour-buttons";
+
+  const skipBtn = document.createElement("button");
+  skipBtn.className = "olympus-tour-btn olympus-tour-btn-skip";
+  skipBtn.textContent = "Skip";
+  skipBtn.addEventListener("click", onSkip);
+
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "olympus-tour-btn olympus-tour-btn-next";
+  nextBtn.textContent = isLast ? "Got It" : "Next";
+  nextBtn.addEventListener("click", onNext);
+
+  buttons.appendChild(skipBtn);
+  buttons.appendChild(nextBtn);
+  footer.appendChild(dots);
+  footer.appendChild(buttons);
+  popover.wrapper.appendChild(footer);
 }
 
 export function FeatureTour() {
@@ -79,23 +118,37 @@ export function FeatureTour() {
   saveStepRef.current = saveStep;
 
   useEffect(() => {
+    const steps = buildSteps();
+
     const driverInstance = driver({
       animate: true,
       overlayOpacity: 0.5,
       popoverClass: "olympus-tour-popover",
-      showButtons: ["next", "close"],
-      showProgress: true,
-      progressText: "{{current}} / {{total}}",
-      steps: buildSteps(),
-      onCloseClick: (_el, _step, opts) => {
-        saveStepRef.current(opts.state.activeIndex ?? 0);
-        driverInstance.destroy();
-      },
-      onDestroyStarted: () => {
-        if (!driverInstance.hasNextStep()) {
-          completeTourRef.current();
-        }
-        driverInstance.destroy();
+      showButtons: [],
+      allowClose: false,
+      steps,
+      onPopoverRender: (popover, opts) => {
+        const index = opts.state.activeIndex ?? 0;
+        const isLast = index === steps.length - 1;
+
+        injectFooter(
+          popover,
+          index,
+          steps.length,
+          () => {
+            saveStepRef.current(index);
+            driverInstance.destroy();
+          },
+          () => {
+            if (isLast) {
+              completeTourRef.current();
+              driverInstance.destroy();
+            } else {
+              driverInstance.moveNext();
+            }
+          },
+          isLast,
+        );
       },
     });
 
