@@ -13,13 +13,22 @@ import {
   type NavSection,
 } from "@/lib/navigation";
 
-function IconNavItem({ section, isActive }: { section: NavSection; isActive: boolean }) {
+function IconNavItem({
+  section,
+  isActive,
+  "data-tour": dataTour,
+}: {
+  section: NavSection;
+  isActive: boolean;
+  "data-tour"?: string;
+}) {
   const to = getDefaultPathForSection(section);
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Link
       to={to}
+      data-tour={dataTour}
       className="group flex flex-col items-center gap-1 px-3 pb-3 w-16"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -72,12 +81,13 @@ export function IconSidebar() {
         </div>
 
         {/* Main nav items */}
-        <nav className="flex-1 flex flex-col items-center pt-2">
+        <nav data-tour="sidebar-nav" className="flex-1 flex flex-col items-center pt-2">
           {NAV_SECTIONS.map((section) => (
             <IconNavItem
               key={section.id}
               section={section}
               isActive={activeSection?.id === section.id}
+              data-tour={`nav-${section.id}`}
             />
           ))}
         </nav>

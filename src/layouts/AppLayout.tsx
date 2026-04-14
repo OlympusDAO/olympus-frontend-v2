@@ -6,6 +6,7 @@ import { SubNav } from "@/layouts/SubNav";
 import { Header } from "@/layouts/Header";
 import { ToasterProvider } from "@/components/ui/sonner";
 import { Footer } from "@/layouts/footer.tsx";
+import { FeatureTour } from "@/components/feature-tour";
 
 export default function AppLayout() {
   return (
@@ -34,6 +35,7 @@ export default function AppLayout() {
           </div>
         </div>
         <ToasterProvider />
+        <FeatureTour />
       </Providers>
     </NuqsAdapter>
   );

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "driver.js/dist/driver.css";
+@import "./feature-tour.css";
 
 /* fonts */
 /*@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";*/
