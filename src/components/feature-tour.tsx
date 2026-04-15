@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { driver, type DriveStep } from "driver.js";
 import { useFeatureTour } from "@/lib/hooks/useFeatureTour";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { FeatureTourWelcomeModal } from "@/components/feature-tour-welcome-modal";
+
+const DESKTOP_BREAKPOINT = 1023.5;
 const NEW_BADGE = `<span class="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase inline-flex items-center justify-center" style="vertical-align:middle;margin:0 3px">NEW</span>`;
 
 function buildSteps(): DriveStep[] {
@@ -106,7 +109,11 @@ function injectFooter(
 
 export function FeatureTour() {
   const { shouldShowModal, startTour, skipTour, completeTour, saveStep } = useFeatureTour();
-  const [modalOpen, setModalOpen] = useState(shouldShowModal);
+  const { isMobile, isTablet } = useIsMobile();
+  // Lazy init: check window width synchronously to avoid flicker on first render
+  const [modalOpen, setModalOpen] = useState(
+    () => shouldShowModal && window.innerWidth > DESKTOP_BREAKPOINT,
+  );
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
 
   // Refs for callbacks used inside useEffect — prevents stale closures with [] deps
@@ -158,14 +165,17 @@ export function FeatureTour() {
     };
   }, []);
 
+  const isDesktop = !isMobile && !isTablet;
+
   return (
     <FeatureTourWelcomeModal
-      open={modalOpen}
+      open={modalOpen && isDesktop}
       onSkip={() => {
         setModalOpen(false);
         skipTour();
       }}
       onStart={() => {
+        if (!isDesktop) return;
         setModalOpen(false);
         startTour();
         setTimeout(() => driverRef.current?.drive(), 150);
