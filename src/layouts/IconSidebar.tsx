@@ -16,10 +16,12 @@ import {
 function IconNavItem({
   section,
   isActive,
+  isNew,
   "data-tour": dataTour,
 }: {
   section: NavSection;
   isActive: boolean;
+  isNew?: boolean;
   "data-tour"?: string;
 }) {
   const to = getDefaultPathForSection(section);
@@ -29,7 +31,7 @@ function IconNavItem({
     <Link
       to={to}
       data-tour={dataTour}
-      className="group flex flex-col items-center gap-1 px-[7px] pb-3 w-[54px]"
+      className="group flex flex-col items-center gap-1  w-13.5 rounded-[40px] p-1.25 pb-2.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -56,12 +58,17 @@ function IconNavItem({
       </div>
       <span
         className={cn(
-          "text-xs font-medium leading-[12px] transition-colors",
+          "text-xs font-medium leading-3 transition-colors",
           isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
         )}
       >
         {section.label}
       </span>
+      {isNew && (
+        <div className="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase flex items-center justify-center">
+          new
+        </div>
+      )}
     </Link>
   );
 }
@@ -91,6 +98,7 @@ export function IconSidebar() {
               section={section}
               isActive={activeSection?.id === section.id}
               data-tour={`nav-${section.id}`}
+              isNew={section.isNew}
             />
           ))}
         </nav>

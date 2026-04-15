@@ -26,6 +26,7 @@ export type NavSection = {
   icon: ReactNode | ComponentType<AnimatedIconProps>;
   path: string;
   items: NavItem[];
+  isNew?: boolean;
   hideNavIfNotMultisig?: boolean;
 };
 
@@ -54,6 +55,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "home",
     label: "Pulse",
     sidebarTitle: "Pulse",
+    isNew: true,
     icon: lottieIcon(pulseAnimation),
     path: "/home",
     items: [
@@ -119,6 +121,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: "engage",
     label: "Engage",
+    isNew: true,
     sidebarTitle: "Engage",
     icon: lottieIcon(engageAnimation),
     path: "/engage",

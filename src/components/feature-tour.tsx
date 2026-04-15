@@ -2,9 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { driver, type DriveStep } from "driver.js";
 import { useFeatureTour } from "@/lib/hooks/useFeatureTour";
 import { FeatureTourWelcomeModal } from "@/components/feature-tour-welcome-modal";
-import { badgeVariants } from "@/components/ui/badge.tsx";
-
-const NEW_BADGE = `<span class="${badgeVariants({ variant: "filled", color: "green", size: "sm" })}" style="vertical-align:middle;margin:0 3px;font-size:8px;padding:1px 5px">NEW</span>`;
+const NEW_BADGE = `<span class="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase inline-flex items-center justify-center" style="vertical-align:middle;margin:0 3px">NEW</span>`;
 
 function buildSteps(): DriveStep[] {
   return [

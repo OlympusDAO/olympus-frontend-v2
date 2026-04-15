@@ -6,8 +6,9 @@
 }
 
 [data-tour^="nav-"].driver-active-element {
-  border-radius: 20px;
-  box-shadow: 0 0 0 1.5px var(--text-primary);
+  border-color: var(--text-primary);
+  border-width: 1px;
+  color: var(--text-primary);
 }
 
 .driver-popover-navigation-btns {
