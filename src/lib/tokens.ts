@@ -80,7 +80,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
   WSOHM: {
     addresses: {
       [mainnet.id]: "0xCa76543Cf381ebBB277bE79574059e32108e3E65",
-      [arbitrum.id]: "0x739ca6D71365a08f584c8FC4e1029021FcefBD18",
+      [arbitrum.id]: "0x739CA6D71365A08f584c8fC4e1029021fCEfbD18",
       [avalanche.id]: "0x8CD309e14575203535EF120b5b0Ab4DDeD0C2073",
     },
     symbol: "wsOHM",
@@ -89,7 +89,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
   },
   V1_OHM: {
     addresses: {
-      [mainnet.id]: "0x383518188c0c6d7730D91b2c03a03C36BCD12f65",
+      [mainnet.id]: "0x383518188c0c6d7730d91b2c03a03c837814a899",
     },
     symbol: "OHM v1",
     decimals: 9,
