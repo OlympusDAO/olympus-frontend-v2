@@ -32,10 +32,10 @@ export function OverviewConvertibleDeposits() {
       {/* Header */}
       <div className=" flex items-center justify-between">
         <TooltipInfo title="Convertible Deposits allow users to deposit stablecoins and lock in an OHM conversion price.">
-          <p className=" text-[15px]/[20px] font-semibold text-primary-t"> Convertible Deposits </p>
+          <p className="text-sm/5 font-semibold text-primary-t">Convertible Deposits</p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-secondary-t font-medium">{statusLabel}</span>
+          <span className="text-xs/4 text-secondary-t font-normal">{statusLabel}</span>
           <PulseDot variant={statusColor} />
         </div>
       </div>
@@ -44,21 +44,24 @@ export function OverviewConvertibleDeposits() {
       {/* Body */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="mb-1 text-[15px]/[20px] text-secondary-t font-medium">Total Value Locked</p>
-          <NumberFlow value={totalDepositsUsd} className="text-[32px]/[40px] font-semibold" />
-          <div className="flex items-center gap-x-0.5">
+          <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+          <NumberFlow
+            value={totalDepositsUsd}
+            className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+          />
+          <div className="mt-0.5 flex items-center gap-x-0.5">
             <NumberFlow
               suffix="recent bids ·"
               format={{ style: "decimal" }}
               value={activeBidsCount}
-              className="text-secondary-t text-xs font-medium"
+              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
             />
             <NumberFlow
               suffix="premium"
               prefix="+"
               format={{ style: "percent", maximumFractionDigits: 0 }}
               value={premiumPct / 100}
-              className="text-secondary-t text-xs font-medium"
+              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
             />
           </div>
         </div>

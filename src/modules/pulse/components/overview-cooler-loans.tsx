@@ -19,13 +19,13 @@ export function OverviewCoolerLoans() {
       {/* Header */}
       <div className=" flex items-center justify-between">
         <TooltipInfo title="Cooler Loans allow gOHM holders to borrow stablecoins at a fixed APR with no liquidation risk up to LTV.">
-          <p className=" text-[15px]/[20px] font-semibold text-primary-t"> Cooler Loans</p>
+          <p className="text-sm/5 font-semibold text-primary-t">Cooler Loans</p>
         </TooltipInfo>
         <NumberFlow
           suffix="APR"
           value={interestRate / 100}
           format={{ style: "percent", notation: "standard" }}
-          className="text-xs text-secondary-t font-medium"
+          className="text-xs/4 text-secondary-t font-normal"
         />
       </div>
       <Separator className="w-full my-4" />
@@ -33,13 +33,16 @@ export function OverviewCoolerLoans() {
       {/* Body */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="mb-1 text-[15px]/[20px] text-secondary-t font-medium">Total Borrowed</p>
-          <NumberFlow value={totalBorrowed} className="text-[32px]/[40px] font-semibold" />
+          <p className="text-sm/5 text-secondary-t font-normal">Total Borrowed</p>
+          <NumberFlow
+            value={totalBorrowed}
+            className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+          />
           <NumberFlow
             suffix="gOHM collateral locked"
             value={totalCollateral}
             format={{ style: "decimal", notation: "standard" }}
-            className="text-xs text-secondary-t font-medium"
+            className="mt-0.5 block text-xs/4 text-secondary-t font-normal [--number-flow-char-height:1.3333em]"
           />
         </div>
 

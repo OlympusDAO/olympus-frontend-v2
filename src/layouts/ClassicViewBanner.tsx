@@ -41,7 +41,7 @@ export function ClassicViewBanner({ deadline = "June 1" }: ClassicViewBannerProp
         <div className="flex items-center gap-1">
           <RiBrushLine className="size-4 text-primary-t shrink-0" />
           <span className="text-xs font-semibold text-primary-t">New look!</span>
-          <span className="text-xs text-secondary-t hidden sm:inline-block">
+          <span className="text-xs font-normal text-secondary-t hidden sm:inline-block">
             You can switch back to the classic view until {deadline}
           </span>
         </div>
