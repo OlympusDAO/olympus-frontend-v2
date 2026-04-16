@@ -13,14 +13,25 @@ import {
   type NavSection,
 } from "@/lib/navigation";
 
-function IconNavItem({ section, isActive }: { section: NavSection; isActive: boolean }) {
+function IconNavItem({
+  section,
+  isActive,
+  isNew,
+  "data-tour": dataTour,
+}: {
+  section: NavSection;
+  isActive: boolean;
+  isNew?: boolean;
+  "data-tour"?: string;
+}) {
   const to = getDefaultPathForSection(section);
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Link
       to={to}
-      className="group flex flex-col items-center gap-1 px-3 pb-3 w-16"
+      data-tour={dataTour}
+      className="group flex flex-col items-center gap-1  w-13.5 rounded-[40px] p-1.25 pb-2.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -47,12 +58,17 @@ function IconNavItem({ section, isActive }: { section: NavSection; isActive: boo
       </div>
       <span
         className={cn(
-          "text-xs font-medium leading-[12px] transition-colors",
+          "text-xs font-medium leading-3 transition-colors",
           isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
         )}
       >
         {section.label}
       </span>
+      {isNew && (
+        <div className="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase flex items-center justify-center">
+          new
+        </div>
+      )}
     </Link>
   );
 }
@@ -63,7 +79,10 @@ export function IconSidebar() {
 
   return (
     <aside className="shrink-0 flex items-center p-1.5">
-      <div className="w-16 h-full flex flex-col items-center pb-3 rounded-[100px] bg-sidebar-bg shadow-surface-level-2">
+      <div
+        className="w-16 h-full flex flex-col items-center pb-3 rounded-[100px] bg-sidebar-bg shadow-surface-level-2"
+        data-tour="sidebar-nav"
+      >
         {/* Logo */}
         <div className="flex items-center justify-center p-4">
           <Link to="/">
@@ -78,6 +97,8 @@ export function IconSidebar() {
               key={section.id}
               section={section}
               isActive={activeSection?.id === section.id}
+              data-tour={`nav-${section.id}`}
+              isNew={section.isNew}
             />
           ))}
         </nav>
