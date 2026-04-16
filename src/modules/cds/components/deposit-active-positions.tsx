@@ -72,7 +72,7 @@ const PositionTokenName = ({
   );
 };
 
-export const ActivePositions = () => {
+export const DepositActivePositions = () => {
   const { formattedPrice: ohmPrice, isLoading: isOhmPriceLoading } = useOhmPrice();
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isWrapModalOpen, setIsWrapModalOpen] = useState(false);

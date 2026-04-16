@@ -2,7 +2,7 @@ import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
 import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
-import { CDPage } from "@/modules/cds/pages";
+import { CDPage } from "@/modules/cds/pages/deposit-page.tsx";
 import { BorrowPage } from "@/modules/borrow/pages";
 import { StatisticsPage } from "@/modules/statistics/pages";
 import { CoolerMetricsPage } from "@/modules/cooler/pages/metrics-page.tsx";

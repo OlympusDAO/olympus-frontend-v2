@@ -35,7 +35,7 @@ type LimitOrder = {
     | undefined;
 };
 
-export const OpenLimitOrders = () => {
+export const DepositOpenLimitOrders = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<LimitOrder | null>(null);
 

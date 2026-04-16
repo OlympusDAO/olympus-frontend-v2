@@ -4,33 +4,57 @@ import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
 import { cn } from "@/lib/utils";
 
+interface ProgressProps extends React.ComponentProps<typeof ProgressPrimitive.Root> {
+  indicatorColor?: string;
+  indicatorClassName?: string;
+  /** When provided, renders a split bar: primary color fills (100 - overflowPercent)%,
+   *  secondary (red) fills overflowPercent%. The bar appears 100% full. */
+  overflowPercent?: number;
+}
+
 function Progress({
   className,
   value,
   indicatorColor,
   indicatorClassName,
+  overflowPercent,
   ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root> & {
-  indicatorColor?: string;
-  indicatorClassName?: string;
-}) {
+}: ProgressProps) {
   const clampedValue = Math.min(value ?? 0, 100);
+  const primaryWidth = overflowPercent !== undefined ? 100 - overflowPercent : clampedValue;
+
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
-      value={value ?? null}
-      className={cn("bg-primary/20 relative h-2 w-full overflow-hidden rounded-full", className)}
+      value={overflowPercent !== undefined ? null : (value ?? null)}
+      className={cn("relative h-3 w-full overflow-hidden rounded-full bg-surface-a10", className)}
       {...props}
     >
       <ProgressPrimitive.Track className="h-full w-full">
-        <ProgressPrimitive.Indicator
-          data-slot="progress-indicator"
-          className={cn("h-full w-full flex-1 transition-all", indicatorClassName)}
-          style={{
-            transform: `translateX(-${100 - clampedValue}%)`,
-            ...(!indicatorClassName ? { backgroundColor: indicatorColor ?? "var(--yellow)" } : {}),
-          }}
-        />
+        {overflowPercent !== undefined ? (
+          <div className="flex h-full w-full">
+            <div
+              className={cn(
+                "h-full bg-green shadow-(--shadow-button-secondary) transition-all",
+                indicatorClassName,
+              )}
+              style={{ width: `${primaryWidth}%` }}
+            />
+            <div className="h-full flex-1 bg-red" />
+          </div>
+        ) : (
+          <ProgressPrimitive.Indicator
+            data-slot="progress-indicator"
+            className={cn(
+              "h-full w-full flex-1 bg-green transition-all shadow-[var(--shadow-button-secondary)]",
+              indicatorClassName,
+            )}
+            style={{
+              transform: `translateX(-${100 - clampedValue}%)`,
+              ...(!indicatorClassName && indicatorColor ? { backgroundColor: indicatorColor } : {}),
+            }}
+          />
+        )}
       </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
   );

@@ -50,7 +50,7 @@ interface PendingRedemption {
   facility: `0x${string}`;
 }
 
-export const TokenBalances: React.FC = () => {
+export const DepositTokenBalances: React.FC = () => {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
