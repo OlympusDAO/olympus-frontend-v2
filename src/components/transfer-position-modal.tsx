@@ -1,9 +1,11 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { trackTransferPosition } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { Loader2, CheckIcon, ExternalLink } from "lucide-react";
 import { useTransferPosition } from "@/lib/hooks/cds/useTransferPosition";
 import { isAddress } from "viem";
@@ -32,31 +34,20 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
   onClose,
   position,
 }) => {
-  const [recipientAddress, setRecipientAddress] = useState("");
-  const [addressError, setAddressError] = useState("");
   const { address: userAddress } = useAccount();
+
+  const form = useForm<{ recipientAddress: string }>({
+    defaultValues: { recipientAddress: "" },
+  });
 
   const { transferPosition, isPending: isTransferring, isSuccess, hash } = useTransferPosition();
 
-  const handleTransfer = () => {
+  const handleTransfer = (values: { recipientAddress: string }) => {
     if (!position) return;
-    if (!recipientAddress.trim()) {
-      setAddressError("Recipient address is required");
-      return;
-    }
-    if (!isAddress(recipientAddress)) {
-      setAddressError("Invalid wallet address");
-      return;
-    }
-    if (userAddress && recipientAddress.toLowerCase() === userAddress.toLowerCase()) {
-      setAddressError("Cannot transfer to your own wallet address");
-      return;
-    }
-
     try {
       transferPosition({
         positionId: position.positionId,
-        to: recipientAddress as `0x${string}`,
+        to: values.recipientAddress as `0x${string}`,
         queryKey: ["userPositions"],
       });
     } catch (error) {
@@ -64,10 +55,11 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
     }
   };
 
-  const handleAddressChange = (value: string) => {
-    setRecipientAddress(value);
-    if (addressError) setAddressError("");
-  };
+  const buttonState = useMemo(() => {
+    if (isTransferring) return { disabled: true, label: "Transferring..." };
+    if (!position) return { disabled: true, label: "Transfer Position" };
+    return { disabled: false, label: "Transfer Position" };
+  }, [isTransferring, position]);
 
   // Helper function to format transaction hash for display
   const formatTxHash = (hash?: `0x${string}`) => {
@@ -78,15 +70,14 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setRecipientAddress("");
-      setAddressError("");
+      form.reset();
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
 
   useEffect(() => {
     if (!isSuccess) return;
-    trackTransferPosition({ toAddress: recipientAddress, txHash: hash });
-  }, [isSuccess]);
+    trackTransferPosition({ toAddress: form.getValues("recipientAddress"), txHash: hash });
+  }, [isSuccess, form.getValues, hash]);
 
   // Show success state
   if (isSuccess) {
@@ -139,41 +130,45 @@ export const TransferPositionModal: React.FC<TransferPositionModalProps> = ({
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-6">
-          {/* Recipient Address Input */}
-          <div className="space-y-2">
-            <label
-              htmlFor="recipientAddress"
-              className="text-sm font-medium text-gray-900 dark:text-gray-100"
-            >
-              Recipient Wallet Address
-            </label>
-            <Input
-              id="recipientAddress"
-              type="text"
-              placeholder="0x...123"
-              value={recipientAddress}
-              onChange={(e) => handleAddressChange(e.target.value)}
-              className={addressError ? "border-red-500 focus:ring-red-500" : ""}
-            />
-            {addressError && <p className="text-sm text-red-600">{addressError}</p>}
-          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleTransfer)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="recipientAddress"
+                rules={{
+                  required: "Recipient address is required",
+                  validate: (val) => {
+                    if (!isAddress(val)) return "Invalid wallet address";
+                    if (userAddress && val.toLowerCase() === userAddress.toLowerCase())
+                      return "Cannot transfer to your own wallet address";
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <label htmlFor="recipientAddress" className="text-sm font-medium">
+                      Recipient Wallet Address
+                    </label>
+                    <FormControl>
+                      <Input id="recipientAddress" placeholder="0x...123" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Transfer Button */}
-          <Button
-            onClick={handleTransfer}
-            disabled={isTransferring || !recipientAddress.trim() || !position}
-            className="w-full"
-            size="lg"
-          >
-            {isTransferring ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Transferring...
-              </>
-            ) : (
-              "Transfer Position"
-            )}
-          </Button>
+              <Button type="submit" disabled={buttonState.disabled} className="w-full" size="lg">
+                {isTransferring ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Transferring...
+                  </>
+                ) : (
+                  buttonState.label
+                )}
+              </Button>
+            </form>
+          </Form>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,27 +1,32 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type RowData,
+} from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import OHMIcon from "@/assets/OHM.png";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { RiMoreFill, RiArrowRightSLine } from "@remixicon/react";
 import { ConvertToOHMModal } from "@/components/convert-to-ohm-modal";
 import { WrapPositionModal } from "@/components/wrap-position-modal";
 import { TransferPositionModal } from "@/components/transfer-position-modal";
 import { RedeemPositionModal } from "@/components/redeem-position-modal";
 import { useUserPositions } from "@/lib/hooks/cds/useUserPositions";
 import { formatEther } from "viem";
-import { useDiscount } from "@/lib/hooks/cds/useDiscount";
 import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
 import { formatTermSuffix } from "@/lib/utils";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
+import { Icon } from "@/components/icon";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Position = {
   id: bigint;
@@ -40,16 +45,45 @@ type Position = {
     | undefined;
 };
 
-// Component to display discount for individual positions
-const PositionDiscount = ({ conversionPrice }: { conversionPrice: bigint }) => {
-  const { formattedDiscount, isLoading } = useDiscount(conversionPrice);
+// ─── Table meta ───────────────────────────────────────────────────────────────
 
-  if (isLoading) return <span className="text-secondary-t font-medium">Loading...</span>;
+declare module "@tanstack/react-table" {
+  interface TableMeta<TData extends RowData> {
+    onConvert: (position: Position) => void;
+    onWrap: (position: Position) => void;
+    onUnwrap: (position: Position) => void;
+    onTransfer: (position: Position, displayName: string) => void;
+    onRedeem: (position: Position) => void;
+    ohmPrice: string;
+  }
+}
 
-  return <span className="text-secondary-t font-medium">{formattedDiscount}</span>;
-};
+// ─── Helper functions ─────────────────────────────────────────────────────────
 
-// Component to display dynamic token name
+function formatPositionAmount(remainingDeposit: bigint) {
+  return parseFloat(formatEther(remainingDeposit)).toFixed(2);
+}
+
+function formatExpiryDate(expiry: number) {
+  return new Date(expiry * 1000).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getDaysUntilExpiry(expiry: number) {
+  const diffTime = new Date(expiry * 1000).getTime() - Date.now();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function calculateOhmReceived(remainingDeposit: bigint, conversionPrice: bigint) {
+  const ohmAmount = (remainingDeposit * BigInt(1e9)) / conversionPrice;
+  return (Number(ohmAmount) / 1e9).toFixed(2);
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
 const PositionTokenName = ({
   asset,
   periodMonths,
@@ -61,19 +95,149 @@ const PositionTokenName = ({
 }) => {
   const { tokenId } = useReceiptTokenId(asset, periodMonths);
   const { tokenName } = useReceiptTokenName(tokenId);
-
-  // Use fallback (no loading state to avoid jerkiness)
-  const displayName = tokenName || `Receipt-${formatTermSuffix(periodMonths)}`;
-
+  const displayName = tokenName || `cdUSDS-${formatTermSuffix(periodMonths)}`;
   return (
-    <span>
+    <span className="text-xs font-semibold">
       {amount} {displayName}
     </span>
   );
 };
 
+// ─── Cell components ──────────────────────────────────────────────────────────
+
+const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice: string }) => {
+  if (!position.data) return null;
+  const amount = formatPositionAmount(position.data.remainingDeposit);
+  const ohmReceived = calculateOhmReceived(
+    position.data.remainingDeposit,
+    position.data.conversionPrice,
+  );
+  const ohmUsd = ohmPrice
+    ? `$${(parseFloat(ohmReceived) * parseFloat(ohmPrice)).toFixed(2)}`
+    : null;
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* cdUSDS pill */}
+      <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
+        <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
+        <div className="flex flex-col">
+          <PositionTokenName
+            asset={position.data.asset}
+            periodMonths={position.data.periodMonths}
+            amount={amount}
+          />
+          <span className="text-xs text-secondary-t">${amount}</span>
+        </div>
+      </div>
+
+      <RiArrowRightSLine className="size-4 text-secondary-t shrink-0" />
+
+      {/* OHM pill */}
+      <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
+        <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold">{ohmReceived} OHM</span>
+          {ohmUsd && <span className="text-xs text-secondary-t">{ohmUsd}</span>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatusCell = ({ position }: { position: Position }) => {
+  if (!position.data) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <Badge variant="filled" color="green" size="sm">
+        Convertible
+      </Badge>
+      {position.data.wrapped && (
+        <Badge variant="filled" color="purple" size="sm">
+          NFT
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+const PriceCell = ({ position }: { position: Position }) => {
+  if (!position.data) return null;
+  const price = parseFloat(formatEther(position.data.conversionPrice)).toFixed();
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs font-semibold whitespace-nowrap">{price} USDS/OHM</span>
+      <span className="text-xs text-secondary-t">${price}</span>
+    </div>
+  );
+};
+
+const ExpiryCell = ({ position }: { position: Position }) => {
+  if (!position.data) return null;
+  const expiryDate = formatExpiryDate(position.data.expiry);
+  const daysLeft = getDaysUntilExpiry(position.data.expiry);
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs font-semibold whitespace-nowrap">{expiryDate}</span>
+      <span className="text-xs text-secondary-t">
+        {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
+      </span>
+    </div>
+  );
+};
+
+const ActionsCell = ({
+  position,
+  meta,
+}: {
+  position: Position;
+  meta: ReturnType<typeof useReactTable<Position>>["options"]["meta"];
+}) => {
+  if (!position.data || !meta) return null;
+
+  return (
+    <div className="flex items-center gap-2 justify-end">
+      <Button size="sm" onClick={() => meta.onConvert(position)}>
+        Convert
+      </Button>
+
+      {!position.data.wrapped ? (
+        <Button size="sm" variant="secondary" onClick={() => meta.onWrap(position)}>
+          Wrap
+        </Button>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button size="sm" variant="secondary" className="w-8 h-8 p-0" />}
+          >
+            <RiMoreFill className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => meta.onUnwrap(position)}>Unwrap</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const displayName = `cdUSDS-${formatTermSuffix(position.data?.periodMonths)}`;
+                meta.onTransfer(position, displayName);
+              }}
+            >
+              Transfer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onRedeem(position)}>Redeem</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  );
+};
+
+// ─── Column definitions ───────────────────────────────────────────────────────
+
+const columnHelper = createColumnHelper<Position>();
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export const DepositActivePositions = () => {
-  const { formattedPrice: ohmPrice, isLoading: isOhmPriceLoading } = useOhmPrice();
+  const { formattedPrice: ohmPrice } = useOhmPrice();
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isWrapModalOpen, setIsWrapModalOpen] = useState(false);
   const [wrapModalMode, setWrapModalMode] = useState<"wrap" | "unwrap">("wrap");
@@ -113,50 +277,11 @@ export const DepositActivePositions = () => {
 
   const [selectedRedeemPosition, setSelectedRedeemPosition] = useState<Position | null>(null);
 
-  // Get user positions
   const { positions, isLoading: isLoadingPositions, error: positionsError } = useUserPositions();
-
-  // Helper function to format position data
-  const formatPositionAmount = (remainingDeposit: bigint) => {
-    return parseFloat(formatEther(remainingDeposit)).toFixed(2);
-  };
-
-  const formatExpiryDate = (expiry: number) => {
-    const date = new Date(expiry * 1000);
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const getDaysUntilExpiry = (expiry: number) => {
-    const expiryDate = new Date(expiry * 1000);
-    const now = new Date();
-    const diffTime = expiryDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const calculateOhmReceived = (remainingDeposit: bigint, conversionPrice: bigint) => {
-    // remainingDeposit is in 18 decimals, conversionPrice is in 18 decimals
-    // OHM has 9 decimals, so we need to adjust the result
-    // Formula: (remainingDeposit * 1e9) / conversionPrice
-    const ohmAmount = (remainingDeposit * BigInt(1e9)) / conversionPrice;
-    // Convert from 9 decimal places to display format
-    return (Number(ohmAmount) / 1e9).toFixed(2);
-  };
-
-  const calculateOhmUsdValue = (ohmAmount: string) => {
-    if (isOhmPriceLoading || !ohmPrice) return "$0.00";
-    const usdValue = parseFloat(ohmAmount) * parseFloat(ohmPrice);
-    return `$${usdValue.toFixed(2)}`;
-  };
 
   const handleConvert = (position: Position) => {
     if (!position.data) return;
-    // Convert to the expected modal position format
-    const modalPosition = {
+    setSelectedConvertPosition({
       id: position.id,
       data: {
         remainingDeposit: position.data.remainingDeposit,
@@ -165,20 +290,13 @@ export const DepositActivePositions = () => {
         expiry: BigInt(position.data.expiry),
         asset: position.data.asset,
       },
-    };
-    setSelectedConvertPosition(modalPosition);
+    });
     setIsConvertModalOpen(true);
-  };
-
-  const handleCloseConvertModal = () => {
-    setIsConvertModalOpen(false);
-    setSelectedConvertPosition(null);
   };
 
   const handleWrap = (position: Position) => {
     if (!position.data) return;
-    // Convert to the expected modal position format
-    const modalPosition = {
+    setSelectedPosition({
       id: position.id,
       data: {
         remainingDeposit: position.data.remainingDeposit,
@@ -186,16 +304,14 @@ export const DepositActivePositions = () => {
         periodMonths: position.data.periodMonths,
         expiry: BigInt(position.data.expiry),
       },
-    };
-    setSelectedPosition(modalPosition);
+    });
     setWrapModalMode("wrap");
     setIsWrapModalOpen(true);
   };
 
   const handleUnwrap = (position: Position) => {
     if (!position.data) return;
-    // Convert to the expected modal position format
-    const modalPosition = {
+    setSelectedPosition({
       id: position.id,
       data: {
         remainingDeposit: position.data.remainingDeposit,
@@ -203,21 +319,13 @@ export const DepositActivePositions = () => {
         periodMonths: position.data.periodMonths,
         expiry: BigInt(position.data.expiry),
       },
-    };
-    setSelectedPosition(modalPosition);
+    });
     setWrapModalMode("unwrap");
     setIsWrapModalOpen(true);
   };
 
-  const handleCloseWrapModal = () => {
-    setIsWrapModalOpen(false);
-    setSelectedPosition(null);
-  };
-
-  const handleTransfer = (position: Position) => {
+  const handleTransfer = (position: Position, displayName: string) => {
     if (!position.data) return;
-    // Note: displayName will be fetched dynamically in the modal using ReceiptTokenManager
-    const displayName = `cdUSDS-${formatTermSuffix(position.data.periodMonths)}`;
     setSelectedTransferPosition({
       positionId: Number(position.id),
       asset: position.data.asset || "",
@@ -230,314 +338,279 @@ export const DepositActivePositions = () => {
     setIsTransferModalOpen(true);
   };
 
-  const handleCloseTransferModal = () => {
-    setIsTransferModalOpen(false);
-    setSelectedTransferPosition(null);
-  };
-
   const handleRedeem = (position: Position) => {
     setSelectedRedeemPosition(position);
     setIsRedeemModalOpen(true);
   };
 
-  const handleCloseRedeemModal = () => {
-    setIsRedeemModalOpen(false);
-    setSelectedRedeemPosition(null);
-  };
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "convertible",
+        header: "Convertible",
+        cell: ({ row }) => <ConvertibleCell position={row.original} ohmPrice={ohmPrice} />,
+      }),
+      columnHelper.display({
+        id: "status",
+        header: "Status",
+        cell: ({ row }) => <StatusCell position={row.original} />,
+      }),
+      columnHelper.display({
+        id: "price",
+        header: "Price",
+        cell: ({ row }) => <PriceCell position={row.original} />,
+      }),
+      columnHelper.display({
+        id: "expiry",
+        header: "Conversion Expiry",
+        cell: ({ row }) => <ExpiryCell position={row.original} />,
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row, table }) => <ActionsCell position={row.original} meta={table.options.meta} />,
+      }),
+    ],
+    [ohmPrice],
+  );
+
+  const table = useReactTable({
+    data: positions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id.toString(),
+    meta: {
+      onConvert: handleConvert,
+      onWrap: handleWrap,
+      onUnwrap: handleUnwrap,
+      onTransfer: handleTransfer,
+      onRedeem: handleRedeem,
+      ohmPrice,
+    },
+  });
+
+  const formatPositionAmountLocal = (remainingDeposit: bigint) =>
+    parseFloat(formatEther(remainingDeposit)).toFixed(2);
 
   return (
     <>
       <h2 className="text-xl font-semibold mb-3">Active Positions</h2>
-      <Card className="p-6 space-y-4">
-        {isLoadingPositions ? (
-          <div className="text-center py-8 text-secondary-t">Loading positions...</div>
-        ) : positionsError ? (
-          <div className="text-center py-8 text-red-600">Error loading positions</div>
-        ) : positions.length === 0 ? (
-          <div className="text-center py-8 text-secondary-t">No active positions</div>
-        ) : (
-          <>
-            {/* Mobile cards view */}
-            <div className="block md:hidden space-y-4">
-              {positions.map((position) => {
-                if (!position.data) return null;
 
-                const amount = formatPositionAmount(position.data.remainingDeposit);
-                const expiryDate = formatExpiryDate(position.data.expiry);
-                const daysLeft = getDaysUntilExpiry(position.data.expiry);
-                const conversionPrice = parseFloat(
-                  formatEther(position.data.conversionPrice),
-                ).toFixed(2);
-                const ohmReceived = calculateOhmReceived(
-                  position.data.remainingDeposit,
-                  position.data.conversionPrice,
-                );
+      {isLoadingPositions || positionsError || positions.length === 0 ? (
+        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
+          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
+            <span className="text-xs text-secondary-t font-normal">Active Positions</span>
+          </div>
+          <div className="p-8 text-center text-secondary-t text-sm">
+            {isLoadingPositions
+              ? "Loading positions..."
+              : positionsError
+                ? "Error loading positions"
+                : "No active positions"}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Mobile cards */}
+          <div className="block md:hidden space-y-4">
+            {positions.map((position) => {
+              if (!position.data) return null;
+              const amount = formatPositionAmountLocal(position.data.remainingDeposit);
+              const expiryDate = formatExpiryDate(position.data.expiry);
+              const daysLeft = getDaysUntilExpiry(position.data.expiry);
+              const conversionPrice = parseFloat(
+                formatEther(position.data.conversionPrice),
+              ).toFixed(2);
+              const ohmReceived = calculateOhmReceived(
+                position.data.remainingDeposit,
+                position.data.conversionPrice,
+              );
 
-                return (
-                  <div key={position.id.toString()} className="rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8" />
-                      <div>
-                        <div className="font-medium">
-                          <PositionTokenName
-                            asset={position.data.asset}
-                            periodMonths={position.data.periodMonths}
-                            amount={amount}
-                          />
-                        </div>
-                        <div className="text-sm text-secondary-t">${amount}</div>
+              return (
+                <div
+                  key={position.id.toString()}
+                  className="rounded-2xl border border-a5-b p-4 space-y-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
+                    <div>
+                      <div className="text-sm font-semibold">
+                        {amount} cdUSDS-{formatTermSuffix(position.data.periodMonths)}
                       </div>
-                      <span className="text-gray-400 mx-2">→</span>
-                      <img src={OHMIcon} alt="OHM" className="w-8 h-8" />
-                      <div>
-                        <div className="font-medium">{ohmReceived} OHM</div>
-                        <div className="text-sm text-secondary-t">
-                          {calculateOhmUsdValue(ohmReceived)}
-                        </div>
-                      </div>
+                      <div className="text-xs text-secondary-t">${amount}</div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-secondary-t">Status:</span>
-                        <div className="mt-1 flex flex-col gap-1">
-                          <Badge className="bg-green/20 text-green rounded-full px-3 py-1 w-fit">
-                            Convertible
-                          </Badge>
-                          {position.data.wrapped && (
-                            <Badge className="bg-purple/20 text-purple rounded-full px-3 py-1 w-fit">
-                              NFT
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-secondary-t">Discount:</span>
-                        <div className="mt-1">
-                          <PositionDiscount conversionPrice={position.data.conversionPrice} />
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-secondary-t">Price:</span>
-                        <div className="mt-1 font-medium">{conversionPrice} USDS/OHM</div>
-                      </div>
-                      <div>
-                        <span className="text-secondary-t">Expiry:</span>
-                        <div className="mt-1 font-medium">{expiryDate}</div>
-                        <div className="text-xs text-secondary-t">
-                          {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" className="flex-1" onClick={() => handleConvert(position)}>
-                        Convert
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="tertiary"
-                        className="flex-1"
-                        onClick={() => handleRedeem(position)}
-                      >
-                        Redeem
-                      </Button>
-                      {!position.data.wrapped ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="flex-1"
-                          onClick={() => handleWrap(position)}
-                        >
-                          Wrap
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="flex-1"
-                          onClick={() => handleUnwrap(position)}
-                        >
-                          Unwrap
-                        </Button>
-                      )}
+                    <RiArrowRightSLine className="size-4 text-secondary-t mx-1" />
+                    <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+                    <div>
+                      <div className="text-sm font-semibold">{ohmReceived} OHM</div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
 
-            {/* Desktop table view */}
-            <Table className="hidden md:table">
-              <TableHeader className="[&_tr]:border-b-0">
-                <TableRow className="border-b-0">
-                  <TableHead className="text-secondary-t font-normal">Convertible</TableHead>
-                  <TableHead className="text-secondary-t font-normal">Status</TableHead>
-                  <TableHead className="text-secondary-t font-normal">Price</TableHead>
-                  <TableHead className="text-secondary-t font-normal">Discount</TableHead>
-                  <TableHead className="text-secondary-t font-normal">Conversion Expiry</TableHead>
-                  <TableHead className="text-secondary-t font-normal text-end">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {positions.map((position) => {
-                  if (!position.data) return null;
-
-                  const amount = formatPositionAmount(position.data.remainingDeposit);
-                  const expiryDate = formatExpiryDate(position.data.expiry);
-                  const daysLeft = getDaysUntilExpiry(position.data.expiry);
-                  const conversionPrice = parseFloat(
-                    formatEther(position.data.conversionPrice),
-                  ).toFixed(2);
-                  const ohmReceived = calculateOhmReceived(
-                    position.data.remainingDeposit,
-                    position.data.conversionPrice,
-                  );
-
-                  return (
-                    <TableRow key={position.id.toString()} className="border-b-0">
-                      <TableCell className="py-4">
-                        <div className="flex items-center gap-3 w-fit">
-                          <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 shrink-0 w-fit">
-                            <img
-                              src={cdUSDSIcon}
-                              alt="Receipt Token"
-                              className="w-8 h-8 shrink-0"
-                            />
-                            <div className="flex flex-col">
-                              <div className="font-medium whitespace-nowrap">
-                                <PositionTokenName
-                                  asset={position.data.asset}
-                                  periodMonths={position.data.periodMonths}
-                                  amount={amount}
-                                />
-                              </div>
-                              <div className="text-sm text-secondary-t whitespace-nowrap">
-                                ${amount}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-gray-400 mx-2 shrink-0">→</span>
-                          <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 shrink-0 w-fit">
-                            <img src={OHMIcon} alt="OHM" className="w-8 h-8 shrink-0" />
-                            <div className="flex flex-col">
-                              <div className="font-medium whitespace-nowrap">{ohmReceived} OHM</div>
-                              <div className="text-sm text-secondary-t whitespace-nowrap">
-                                {calculateOhmUsdValue(ohmReceived)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex flex-col gap-1">
-                          <Badge className="bg-green/20 text-green rounded-full px-3 py-1 w-fit">
-                            Convertible
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-secondary-t text-xs">Status:</span>
+                      <div className="mt-1 flex flex-col gap-1">
+                        <Badge className="bg-green/20 text-green text-[10px] font-semibold rounded-full px-2 py-0.5 w-fit border-0">
+                          Convertible
+                        </Badge>
+                        {position.data.wrapped && (
+                          <Badge className="bg-purple/20 text-purple text-[10px] font-semibold rounded-full px-2 py-0.5 w-fit border-0">
+                            NFT
                           </Badge>
-                          {position.data.wrapped && (
-                            <Badge className="bg-purple/20 text-purple rounded-full px-3 py-1 w-fit">
-                              NFT
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="space-y-1">
-                          <div className="font-medium">{conversionPrice} USDS/OHM</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <PositionDiscount conversionPrice={position.data.conversionPrice} />
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="space-y-1">
-                          <div className="font-medium">{expiryDate}</div>
-                          <div className="text-sm text-secondary-t">
-                            {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button size="sm" onClick={() => handleConvert(position)}>
-                            Convert
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="tertiary"
-                            onClick={() => handleRedeem(position)}
-                          >
-                            Redeem
-                          </Button>
-                          {position.data.wrapped && (
-                            <Button
-                              size="sm"
-                              variant="tertiary"
-                              onClick={() => handleTransfer(position)}
-                            >
-                              Transfer
-                            </Button>
-                          )}
-                          {!position.data.wrapped ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="rounded-full"
-                              onClick={() => handleWrap(position)}
-                            >
-                              Wrap
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="rounded-full"
-                              onClick={() => handleUnwrap(position)}
-                            >
-                              Unwrap
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </>
-        )}
-      </Card>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-secondary-t text-xs">Price:</span>
+                      <div className="mt-1 text-xs font-semibold">{conversionPrice} USDS/OHM</div>
+                    </div>
+                    <div>
+                      <span className="text-secondary-t text-xs">Expiry:</span>
+                      <div className="mt-1 text-xs font-semibold">{expiryDate}</div>
+                      <div className="text-xs text-secondary-t">
+                        {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
+                      </div>
+                    </div>
+                  </div>
 
-      {/* Modals - only render when needed */}
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" className="flex-1" onClick={() => handleConvert(position)}>
+                      Convert
+                    </Button>
+                    {!position.data.wrapped ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1"
+                        onClick={() => handleWrap(position)}
+                      >
+                        Wrap
+                      </Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={<Button size="sm" variant="secondary" className="w-9 h-9 p-0" />}
+                        >
+                          <RiMoreFill className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleUnwrap(position)}>
+                            Unwrap
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleTransfer(
+                                position,
+                                `cdUSDS-${formatTermSuffix(position.data?.periodMonths)}`,
+                              )
+                            }
+                          >
+                            Transfer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleRedeem(position)}>
+                            Redeem
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
+            <table className="w-full">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="bg-surface-a3 border-b border-a5-b">
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className={[
+                          "px-3 py-3 text-xs text-secondary-t font-normal text-left whitespace-nowrap",
+                          header.id === "convertible" && "w-[360px]",
+                          header.id === "status" && "w-[136px]",
+                          header.id === "price" && "w-[168px]",
+                          header.id === "expiry" && "w-[128px]",
+                          header.id === "actions" && "w-[184px] text-right",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="border-b border-a5-b last:border-0 h-16">
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={[
+                          "px-3 py-3",
+                          cell.column.id === "convertible" && "w-[360px]",
+                          cell.column.id === "status" && "w-[136px]",
+                          cell.column.id === "price" && "w-[168px]",
+                          cell.column.id === "expiry" && "w-[128px]",
+                          cell.column.id === "actions" && "w-[184px]",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       {isConvertModalOpen && selectedConvertPosition && (
         <ConvertToOHMModal
           isOpen={isConvertModalOpen}
-          onClose={handleCloseConvertModal}
+          onClose={() => {
+            setIsConvertModalOpen(false);
+            setSelectedConvertPosition(null);
+          }}
           position={selectedConvertPosition}
         />
       )}
-
       {isWrapModalOpen && selectedPosition && (
         <WrapPositionModal
           isOpen={isWrapModalOpen}
-          onClose={handleCloseWrapModal}
+          onClose={() => {
+            setIsWrapModalOpen(false);
+            setSelectedPosition(null);
+          }}
           position={selectedPosition}
           mode={wrapModalMode}
         />
       )}
-
       {isTransferModalOpen && selectedTransferPosition && (
         <TransferPositionModal
           isOpen={isTransferModalOpen}
-          onClose={handleCloseTransferModal}
+          onClose={() => {
+            setIsTransferModalOpen(false);
+            setSelectedTransferPosition(null);
+          }}
           position={selectedTransferPosition}
         />
       )}
-
       {isRedeemModalOpen && selectedRedeemPosition && (
         <RedeemPositionModal
           isOpen={isRedeemModalOpen}
-          onClose={handleCloseRedeemModal}
+          onClose={() => {
+            setIsRedeemModalOpen(false);
+            setSelectedRedeemPosition(null);
+          }}
           position={selectedRedeemPosition}
         />
       )}

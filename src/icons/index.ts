@@ -18,6 +18,7 @@ export { default as OHMColorTokenIcon } from "./tokens/ohm-color.svg?react";
 export { default as GOHMColorTokenIcon } from "./tokens/gohm-color.svg?react";
 export { default as iOHMTokenIcon } from "./tokens/iOHM.svg?react";
 export { default as drachmaTokenIcon } from "./tokens/drachma.svg?react";
+export { default as cdUSDSIcon } from "./tokens/cdUSDS.svg?react";
 
 export { default as EthereumChainIcon } from "./chains/ethereum.svg?react";
 export { default as ArbitrumChainIcon } from "./chains/arbitrum.svg?react";

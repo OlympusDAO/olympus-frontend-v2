@@ -1,22 +1,27 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { useCallback, useMemo, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { RiMoreFill } from "@remixicon/react";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/icon";
 import { CancelLimitOrderModal } from "@/components/cancel-limit-order-modal";
 import { useUserLimitOrders } from "@/lib/hooks/cds/useUserLimitOrders";
 import { formatEther } from "viem";
 import { formatMaxPrice } from "@/lib/utils/priceCalculations";
 import { formatTermSuffix } from "@/lib/utils";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type LimitOrder = {
   id: bigint;
@@ -35,78 +40,168 @@ type LimitOrder = {
     | undefined;
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatAmount(amount: bigint) {
+  return parseFloat(formatEther(amount)).toFixed(2);
+}
+
+function getFillPercentage(depositSpent: bigint, depositBudget: bigint) {
+  if (depositBudget === 0n) return 0;
+  return Number((depositSpent * 100n) / depositBudget);
+}
+
+// ─── Cell components ──────────────────────────────────────────────────────────
+
+const columnHelper = createColumnHelper<LimitOrder>();
+
+const OrderCell = ({ order }: { order: LimitOrder }) => {
+  if (!order.data) return null;
+  const fillPct = getFillPercentage(order.data.depositSpent, order.data.depositBudget);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 w-fit">
+        <Icon name="cdUSDSIcon" size={32} className="text-a10-b shrink-0" />
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold">
+            {formatAmount(order.data.depositBudget)} cdUSDS-
+            {formatTermSuffix(order.data.depositPeriod)}
+          </span>
+          <span className="text-xs text-secondary-t">
+            {formatAmount(order.data.depositSpent)} / {formatAmount(order.data.depositBudget)}{" "}
+            filled
+          </span>
+        </div>
+      </div>
+      <Progress value={fillPct} className="h-1 w-40" />
+    </div>
+  );
+};
+
+const PriceCell = ({ order }: { order: LimitOrder }) => {
+  if (!order.data) return null;
+  return (
+    <span className="text-xs font-semibold">{formatMaxPrice(order.data.maxPrice)} USDS/OHM</span>
+  );
+};
+
+const TermCell = ({ order }: { order: LimitOrder }) => {
+  if (!order.data) return null;
+  return (
+    <span className="text-xs font-semibold">{formatTermSuffix(order.data.depositPeriod)}</span>
+  );
+};
+
+const IncentiveCell = ({ order }: { order: LimitOrder }) => {
+  if (!order.data) return null;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs font-semibold">{formatAmount(order.data.incentiveBudget)} USDS</span>
+      <span className="text-xs text-secondary-t">
+        {formatAmount(order.data.incentiveSpent)} spent
+      </span>
+    </div>
+  );
+};
+
+const ActionsCell = ({
+  order,
+  onCancel,
+}: {
+  order: LimitOrder;
+  onCancel: (order: LimitOrder) => void;
+}) => {
+  if (!order.data) return null;
+  const isFilled = order.data.depositSpent >= order.data.depositBudget;
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="secondary" size="sm" className="w-8 h-8 p-0" disabled={isFilled} />
+          }
+        >
+          <RiMoreFill size={16} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onCancel(order)}>Cancel</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export const DepositOpenLimitOrders = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<LimitOrder | null>(null);
 
-  // Get user's limit orders
-  const { orders, isLoading: isLoadingOrders, error: ordersError } = useUserLimitOrders();
+  const { orders, isLoading, error } = useUserLimitOrders();
 
-  // Helper function to format amounts
-  const formatAmount = (amount: bigint) => {
-    return parseFloat(formatEther(amount)).toFixed(2);
-  };
-
-  // Calculate fill percentage
-  const getFillPercentage = (depositSpent: bigint, depositBudget: bigint) => {
-    if (depositBudget === 0n) return 0;
-    return Number((depositSpent * 100n) / depositBudget);
-  };
-
-  // Get status badge with consistent styling
-  const getStatusBadge = (depositSpent: bigint, depositBudget: bigint) => {
-    const fillPercentage = getFillPercentage(depositSpent, depositBudget);
-
-    if (fillPercentage === 0) {
-      return <Badge className="bg-blue/20 text-blue rounded-full px-3 py-1 w-fit">Active</Badge>;
-    } else if (fillPercentage < 100) {
-      return (
-        <Badge className="bg-yellow/20 text-yellow rounded-full px-3 py-1 w-fit">
-          Partially Filled
-        </Badge>
-      );
-    } else {
-      return <Badge className="bg-gray/20 text-gray rounded-full px-3 py-1 w-fit">Filled</Badge>;
-    }
-  };
-
-  // Handle cancel order
-  const handleCancelOrder = (order: LimitOrder) => {
+  const handleCancel = useCallback((order: LimitOrder) => {
     setSelectedOrder(order);
     setIsCancelModalOpen(true);
-  };
+  }, []);
 
-  if (isLoadingOrders) {
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "order",
+        header: "Order",
+        cell: ({ row }) => <OrderCell order={row.original} />,
+      }),
+      columnHelper.display({
+        id: "price",
+        header: "Max Price",
+        cell: ({ row }) => <PriceCell order={row.original} />,
+      }),
+      columnHelper.display({
+        id: "term",
+        header: "Term",
+        cell: ({ row }) => <TermCell order={row.original} />,
+      }),
+      columnHelper.display({
+        id: "incentive",
+        header: "Keeper Incentive",
+        cell: ({ row }) => <IncentiveCell order={row.original} />,
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => <ActionsCell order={row.original} onCancel={handleCancel} />,
+      }),
+    ],
+    [handleCancel],
+  );
+
+  const table = useReactTable({
+    data: orders ?? [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id.toString(),
+  });
+
+  // ─── Loading / Error / Empty states ───────────────────────────────────────
+
+  const stateMessage = isLoading
+    ? "Loading orders..."
+    : error
+      ? "Error loading orders. Please try again."
+      : !orders || orders.length === 0
+        ? "No open limit orders"
+        : null;
+
+  if (stateMessage) {
     return (
       <>
         <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-        <Card className="p-6">
-          <div className="text-center py-8 text-secondary-t">Loading orders...</div>
-        </Card>
-      </>
-    );
-  }
-
-  if (ordersError) {
-    return (
-      <>
-        <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-        <Card className="p-6">
-          <div className="text-center py-8 text-red-500">
-            Error loading orders. Please try again.
+        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
+          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
+            <span className="text-xs text-secondary-t font-normal">Open Limit Orders</span>
           </div>
-        </Card>
-      </>
-    );
-  }
-
-  if (!orders || orders.length === 0) {
-    return (
-      <>
-        <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-        <Card className="p-6">
-          <div className="text-center py-8 text-secondary-t">No open limit orders</div>
-        </Card>
+          <div className="p-8 text-center text-secondary-t text-sm">{stateMessage}</div>
+        </div>
       </>
     );
   }
@@ -114,174 +209,114 @@ export const DepositOpenLimitOrders = () => {
   return (
     <>
       <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-      <Card className="p-6 space-y-4">
-        {/* Desktop Table View */}
-        <Table className="hidden md:table">
-          <TableHeader className="[&_tr]:border-b-0">
-            <TableRow className="border-b-0">
-              <TableHead className="text-secondary-t font-normal">Order Details</TableHead>
-              <TableHead className="text-secondary-t font-normal">Budget & Filled</TableHead>
-              <TableHead className="text-secondary-t font-normal">Status</TableHead>
-              <TableHead className="text-secondary-t font-normal text-end">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => {
-              if (!order.data) return null;
 
-              const remaining = order.data.depositBudget - order.data.depositSpent;
-              const fillPercentage = getFillPercentage(
-                order.data.depositSpent,
-                order.data.depositBudget,
-              );
-
-              return (
-                <TableRow key={order.id.toString()} className="border-b-0">
-                  {/* Order Details */}
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-3 border rounded-full p-[6px] border-a10-b pr-4 w-fit">
-                      <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8 shrink-0" />
-                      <div className="flex flex-col">
-                        <div className="font-medium whitespace-nowrap">
-                          {formatAmount(order.data.depositBudget)} cdUSDS-
-                          {formatTermSuffix(order.data.depositPeriod)}
-                        </div>
-                        <div className="text-sm text-secondary-t whitespace-nowrap">
-                          {formatMaxPrice(order.data.maxPrice)} USDS/OHM
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* Budget & Filled */}
-                  <TableCell className="py-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-secondary-t">Total:</span>
-                        <span className="font-medium">
-                          {formatAmount(order.data.depositBudget)} USDS
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-secondary-t">Filled:</span>
-                        <span className="font-medium">
-                          {formatAmount(order.data.depositSpent)} USDS
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-secondary-t">Remaining:</span>
-                        <span className="font-medium">{formatAmount(remaining)} USDS</span>
-                      </div>
-                      <Progress value={fillPercentage} className="h-2" />
-                    </div>
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell className="py-4">
-                    <div className="flex flex-col gap-1">
-                      {getStatusBadge(order.data.depositSpent, order.data.depositBudget)}
-                      {fillPercentage > 0 && fillPercentage < 100 && (
-                        <span className="text-xs text-secondary-t">
-                          {fillPercentage.toFixed(0)}% filled
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Action */}
-                  <TableCell className="py-4 text-right">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-full"
-                      onClick={() => handleCancelOrder(order)}
-                      disabled={order.data.depositSpent === order.data.depositBudget}
-                    >
-                      Cancel
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-
-        {/* Mobile Card View */}
-        <div className="md:hidden space-y-4">
-          {orders.map((order) => {
-            if (!order.data) return null;
-
-            const remaining = order.data.depositBudget - order.data.depositSpent;
-            const fillPercentage = getFillPercentage(
-              order.data.depositSpent,
-              order.data.depositBudget,
-            );
-
-            return (
-              <Card key={order.id.toString()} className="p-4 space-y-3">
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src={cdUSDSIcon} alt="Receipt Token" className="w-8 h-8" />
-                    <div>
-                      <div className="font-medium">
-                        {formatAmount(order.data.depositBudget)} cdUSDS-
-                        {formatTermSuffix(order.data.depositPeriod)}
-                      </div>
-                      <div className="text-sm text-secondary-t">
-                        {formatMaxPrice(order.data.maxPrice)} USDS/OHM
-                      </div>
-                    </div>
-                  </div>
-                  {getStatusBadge(order.data.depositSpent, order.data.depositBudget)}
-                </div>
-
-                {/* Budget Info */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-t">Total:</span>
-                    <span className="font-medium">
-                      {formatAmount(order.data.depositBudget)} USDS
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-t">Filled:</span>
-                    <span className="font-medium">
-                      {formatAmount(order.data.depositSpent)} USDS
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-t">Remaining:</span>
-                    <span className="font-medium">{formatAmount(remaining)} USDS</span>
-                  </div>
-                  <Progress value={fillPercentage} className="h-2" />
-                  {fillPercentage > 0 && fillPercentage < 100 && (
-                    <div className="text-xs text-secondary-t text-center">
-                      {fillPercentage.toFixed(0)}% filled
-                    </div>
-                  )}
-                </div>
-
-                {/* Action */}
-                <div className="pt-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full rounded-full"
-                    onClick={() => handleCancelOrder(order)}
-                    disabled={order.data.depositSpent === order.data.depositBudget}
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
+        <table className="w-full">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="bg-surface-a3 border-b border-a5-b">
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className={[
+                      "px-3 py-3 text-xs text-secondary-t font-normal text-left whitespace-nowrap",
+                      header.id === "price" && "w-[200px]",
+                      header.id === "term" && "w-[160px]",
+                      header.id === "incentive" && "w-[160px]",
+                      header.id === "actions" && "w-[80px] text-right",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
-                    Cancel
-                  </Button>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="border-b border-a5-b last:border-0 h-16">
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className={[
+                      "px-3 py-3",
+                      cell.column.id === "price" && "w-[200px]",
+                      cell.column.id === "term" && "w-[160px]",
+                      cell.column.id === "incentive" && "w-[160px]",
+                      cell.column.id === "actions" && "w-[80px]",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-3">
+        {(orders ?? []).map((order) => {
+          if (!order.data) return null;
+          const fillPct = getFillPercentage(order.data.depositSpent, order.data.depositBudget);
+          const isFilled = order.data.depositSpent >= order.data.depositBudget;
+          return (
+            <div key={order.id.toString()} className="rounded-2xl border border-a5-b p-4 space-y-3">
+              {/* Token pill */}
+              <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 w-fit">
+                <Icon name="cdUSDSIcon" size={32} className="text-a10-b shrink-0" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold">
+                    {formatAmount(order.data.depositBudget)} cdUSDS-
+                    {formatTermSuffix(order.data.depositPeriod)}
+                  </span>
+                  <span className="text-xs text-secondary-t">
+                    {formatAmount(order.data.depositSpent)} /{" "}
+                    {formatAmount(order.data.depositBudget)} filled
+                  </span>
                 </div>
-              </Card>
-            );
-          })}
-        </div>
-      </Card>
+              </div>
+
+              <Progress value={fillPct} className="h-1" />
+
+              {/* Details grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-secondary-t">Max Price</p>
+                  <p className="font-semibold">{formatMaxPrice(order.data.maxPrice)} USDS/OHM</p>
+                </div>
+                <div>
+                  <p className="text-secondary-t">Term</p>
+                  <p className="font-semibold">{formatTermSuffix(order.data.depositPeriod)}</p>
+                </div>
+                <div>
+                  <p className="text-secondary-t">Keeper Incentive</p>
+                  <p className="font-semibold">{formatAmount(order.data.incentiveBudget)} USDS</p>
+                </div>
+              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={() => handleCancel(order)}
+                disabled={isFilled}
+              >
+                Cancel
+              </Button>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Modal */}
-      {selectedOrder && (
+      {selectedOrder?.data && (
         <CancelLimitOrderModal
           isOpen={isCancelModalOpen}
           onClose={() => {
@@ -289,7 +324,7 @@ export const DepositOpenLimitOrders = () => {
             setSelectedOrder(null);
           }}
           orderId={selectedOrder.id}
-          orderData={selectedOrder.data!}
+          orderData={selectedOrder.data}
         />
       )}
     </>
