@@ -18,7 +18,7 @@ export function FeatureTourWelcomeModal({ open, onSkip, onStart }: FeatureTourWe
     >
       <DialogContent
         showCloseButton={false}
-        className="w-[448px] min-w-[448px] gap-0 p-0 overflow-hidden"
+        className="w-[448px] min-w-[448px] gap-0 p-0 overflow-hidden rounded-[40px]"
       >
         {/* Video */}
         <video
@@ -27,11 +27,11 @@ export function FeatureTourWelcomeModal({ open, onSkip, onStart }: FeatureTourWe
           loop
           muted
           playsInline
-          className="w-full object-cover aspect-video"
+          className="w-full h-[280px] object-cover"
         />
 
         {/* Text + buttons */}
-        <div className="flex flex-col px-5 py-6">
+        <div className="flex flex-col px-6 py-6">
           <div className="text-center mb-6">
             <h2 className="text-[20px]/[24px] font-semibold text-primary-t mb-3">
               Olympus, Redesigned
