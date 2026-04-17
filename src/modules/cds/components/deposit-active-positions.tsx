@@ -216,7 +216,7 @@ const ActionsCell = ({
             <DropdownMenuItem onClick={() => meta.onUnwrap(position)}>Unwrap</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                const displayName = `cdUSDS-${formatTermSuffix(position.data?.periodMonths)}`;
+                const displayName = `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`;
                 meta.onTransfer(position, displayName);
               }}
             >
@@ -501,7 +501,7 @@ export const DepositActivePositions = () => {
                             onClick={() =>
                               handleTransfer(
                                 position,
-                                `cdUSDS-${formatTermSuffix(position.data?.periodMonths)}`,
+                                `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`,
                               )
                             }
                           >

@@ -3,7 +3,7 @@ import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
 import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
 import { CDPage } from "@/modules/cds/pages/deposit-page.tsx";
-import { BorrowPage } from "@/modules/borrow/pages";
+import { BorrowPage } from "@/modules/cds/pages/borrow-page.tsx";
 import { StatisticsPage } from "@/modules/statistics/pages";
 import { CoolerMetricsPage } from "@/modules/cooler/pages/metrics-page.tsx";
 import { CoolerActivityLayout } from "@/modules/cooler/pages/activity-page.tsx";

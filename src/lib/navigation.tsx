@@ -101,7 +101,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Deposit", path: "/cds/deposit" },
       { label: "Borrow", path: "/cds/borrow" },
       { label: "Metrics", path: "/cds/metrics" },
-      { label: "Activity", path: "/cds/activity" },
+      // { label: "Activity", path: "/cds/activity" },
     ],
   },
   {
