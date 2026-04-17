@@ -161,6 +161,13 @@ export const BorrowPage = () => {
     return (parseFloat(borrowAmount) / parseFloat(collateralAmount)) * 100;
   }, [collateralAmount, borrowAmount]);
 
+  const liquidationPrice = useMemo(() => {
+    const collateral = parseFloat(collateralAmount);
+    const borrow = parseFloat(borrowAmount);
+    if (!collateral || !borrow || !maxBorrowDecimal) return null;
+    return borrow / (collateral * maxBorrowDecimal);
+  }, [collateralAmount, borrowAmount, maxBorrowDecimal]);
+
   const usdsToken: TokenWithBalance = {
     addresses: {},
     address: usdsAddress,
@@ -416,7 +423,9 @@ export const BorrowPage = () => {
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-xs text-secondary-t">Liquidation Price</span>
-                    <span className="text-xs font-semibold">$20.54</span>
+                    <span className="text-xs font-semibold">
+                      {liquidationPrice != null ? `$${liquidationPrice.toFixed(4)}` : "—"}
+                    </span>
                   </div>
                 </div>
               </div>
