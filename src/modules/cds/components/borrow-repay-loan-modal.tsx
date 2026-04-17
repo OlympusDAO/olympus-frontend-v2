@@ -1,23 +1,25 @@
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
-import { trackRepayLoan } from "@/lib/analytics";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { trackRepayLoan } from "@/lib/analytics.ts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
+import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
+import { Icon } from "@/components/icon.tsx";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
-import USDSIcon from "@/assets/USDS.png";
 import { formatEther, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Link } from "react-router-dom";
-import { blockExplorerTxBaseUrl } from "@/lib/helpers";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
-import { useRedemptionLoan } from "@/lib/hooks/cds/useRedemptionLoan";
-import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
-import { getTokenAddress, TokenName } from "@/lib/tokens";
-import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
-import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useRepayLoan } from "@/lib/hooks/cds/useRepayLoan";
+import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
+import { ContractName, requireContractAddress } from "@/lib/contracts.ts";
+import { useRedemptionLoan } from "@/lib/hooks/cds/useRedemptionLoan.ts";
+import { useTokenBalance } from "@/lib/hooks/useTokenBalance.tsx";
+import { getTokenAddress, TokenName } from "@/lib/tokens.ts";
+import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
+import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
+import { useRepayLoan } from "@/lib/hooks/cds/useRepayLoan.tsx";
+import type { TokenWithBalance } from "@/lib/hooks/useToken.tsx";
 
 interface RepayLoanModalProps {
   isOpen: boolean;
@@ -27,38 +29,34 @@ interface RepayLoanModalProps {
   collateralToken: string;
 }
 
-const formatTxHash = (hash: string) => {
-  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
-};
+const formatTxHash = (hash: string) => `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
-export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
+export const BorrowRepayLoanModal: React.FC<RepayLoanModalProps> = ({
   isOpen,
   onClose,
   redemptionId,
   collateralAmount,
   collateralToken,
 }) => {
-  const [repayAmount, setRepayAmount] = useState("");
   const [showSteps, setShowSteps] = useState(false);
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
 
-  // Fetch loan data
+  const form = useForm({ defaultValues: { repayAmount: "" } });
+  const repayAmount = form.watch("repayAmount");
+
   const { loanData, refetch: refetchLoan } = useRedemptionLoan(
     userAddress,
     redemptionId ?? undefined,
   );
 
-  // Get USDS token address and balance
   const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const { balance: usdsBalance } = useTokenBalance(usdsTokenAddress, userAddress);
 
-  // Get the target contract address for approval (DepositRedemptionVault)
   const targetContractAddress = chainId
     ? requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId)
     : undefined;
 
-  // Token approval hooks
   const {
     allowance,
     refetch: refetchAllowance,
@@ -73,7 +71,6 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     reset: resetApproval,
   } = useTokenApproval();
 
-  // Repay loan hook
   const {
     repayLoan,
     isPending: isRepaying,
@@ -82,7 +79,6 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     reset: resetRepay,
   } = useRepayLoan();
 
-  // Calculate total debt
   const totalDebt = useMemo(() => {
     if (!loanData) return "0";
     const principal = parseFloat(formatEther(loanData.principal));
@@ -90,28 +86,29 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     return (principal + interest).toFixed(2);
   }, [loanData]);
 
-  // Check if approval is needed
+  const maxRepayableAmount = useMemo(() => {
+    const debt = parseFloat(totalDebt);
+    const balance = usdsBalance ? parseFloat(formatEther(usdsBalance)) : 0;
+    return Math.min(debt, balance).toFixed(2);
+  }, [totalDebt, usdsBalance]);
+
   const needsApproval = useMemo(() => {
     if (!repayAmount || repayAmount === "0" || !allowance || !loanData) return false;
     try {
       const repayAmountBigInt = parseEther(repayAmount);
-      // Need to approve for repayment amount + slippage buffer (0.1% of principal)
       const maxSlippage = (loanData.principal * 10n) / 10000n;
-      const requiredAllowance = repayAmountBigInt + maxSlippage;
-      return allowance < requiredAllowance;
+      return allowance < repayAmountBigInt + maxSlippage;
     } catch {
       return false;
     }
   }, [repayAmount, allowance, loanData]);
 
-  // Determine current step
   const currentStep = useMemo(() => {
     if (isRepaySuccess) return 3;
     if (!needsApproval || approvalSuccess) return 2;
     return 1;
   }, [approvalSuccess, needsApproval, isRepaySuccess]);
 
-  // Validation
   const isValidAmount = useMemo(() => {
     if (!repayAmount || repayAmount === "0") return false;
     try {
@@ -124,18 +121,15 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     }
   }, [repayAmount, totalDebt, usdsBalance]);
 
-  // Handlers
   const handleApprove = async () => {
     if (!repayAmount || !usdsTokenAddress || !targetContractAddress || !loanData) return;
     try {
       const amount = parseEther(repayAmount);
-      // Approve for the repayment amount plus slippage buffer (0.1% of principal)
       const maxSlippage = (loanData.principal * 10n) / 10000n;
-      const approvalAmount = amount + maxSlippage;
       approve({
         tokenAddress: usdsTokenAddress,
         spender: targetContractAddress,
-        amount: approvalAmount,
+        amount: amount + maxSlippage,
         queryKey,
       });
       await refetchAllowance();
@@ -147,40 +141,17 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
   const handleRepay = async () => {
     if (!repayAmount || redemptionId === null || !loanData) return;
     try {
-      const amount = parseEther(repayAmount);
-      // Allow for up to 0.1% overpayment due to rounding in asset->share conversion
-      // This is checked against the principal portion only, not the total payment
-      // Using percentage instead of fixed amount to handle varying loan sizes
       const maxSlippage = (loanData.principal * 10n) / 10000n;
-
-      repayLoan({
-        redemptionId,
-        amount,
-        maxSlippage,
-      });
+      repayLoan({ redemptionId, amount: parseEther(repayAmount), maxSlippage });
     } catch (error) {
       console.error("Repayment failed:", error);
     }
   };
 
-  // Calculate the max amount user can actually repay (lesser of debt or balance)
-  const maxRepayableAmount = useMemo(() => {
-    const debt = parseFloat(totalDebt);
-    const balance = usdsBalance ? parseFloat(formatEther(usdsBalance)) : 0;
-    return Math.min(debt, balance).toFixed(2);
-  }, [totalDebt, usdsBalance]);
-
-  const handleMaxClick = () => {
-    setRepayAmount(maxRepayableAmount);
-  };
-
   const handleStartRepay = () => {
     if (!isValidAmount) return;
     setShowSteps(true);
-    if (!needsApproval) {
-      // If no approval needed, skip to repay
-      handleRepay();
-    }
+    if (!needsApproval) handleRepay();
   };
 
   useEffect(() => {
@@ -188,21 +159,28 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
     trackRepayLoan({ amount: repayAmount, txHash: repayHash });
   }, [isRepaySuccess]);
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setRepayAmount("");
+      form.reset();
       setShowSteps(false);
       resetApproval();
       resetRepay();
-      if (redemptionId !== null) {
-        refetchLoan();
-      }
+      if (redemptionId !== null) refetchLoan();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, redemptionId, refetchLoan, resetApproval, resetRepay]);
+  }, [isOpen, redemptionId]);
 
-  // Steps configuration
+  const usdsToken: TokenWithBalance = {
+    addresses: {},
+    address: usdsTokenAddress,
+    symbol: "USDS",
+    decimals: 18,
+    icon: "USDSColorTokenIcon",
+    balance: usdsBalance ?? 0n,
+    formattedBalance: usdsBalance ? formatEther(usdsBalance) : "0",
+    price: 1,
+  };
+
   const steps = [
     {
       number: 1,
@@ -217,7 +195,6 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
       number: 2,
       title: "Repay Loan",
       detail: `-${parseFloat(repayAmount || "0").toFixed(2)} USDS`,
-      icon: USDSIcon,
       isActive: currentStep === 2,
       isCompleted: isRepaySuccess,
       isLoading: currentStep === 2 && isRepaying,
@@ -252,7 +229,6 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
           </DialogHeader>
 
           <div className="px-6 pb-6">
-            {/* Steps UI */}
             <div className="bg-surface-a3 border border-a3-b rounded-3xl">
               {steps.map((step, index) => (
                 <div key={step.number}>
@@ -293,10 +269,6 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
                           </Link>
                         )}
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
                     </div>
                   </div>
                   {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
@@ -340,7 +312,7 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
                         Repaying...
                       </>
                     ) : currentStep === 1 ? (
-                      `Approve USDS`
+                      "Approve USDS"
                     ) : (
                       "Repay Loan"
                     )}
@@ -363,76 +335,54 @@ export const RepayLoanModal: React.FC<RepayLoanModalProps> = ({
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-4">
-          {/* Repay Amount Input */}
-          <div>
-            <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Repay</span>
-              </div>
-              <div className="relative">
-                <Input
-                  type="number"
-                  value={repayAmount}
-                  onChange={(e) => setRepayAmount(e.target.value)}
-                  placeholder="0.00"
-                  min={0}
-                  max={totalDebt}
-                  onScroll={(e) => e.currentTarget.blur()}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  className="text-3xl h-12 pr-24 border-0 shadow-none pl-0 bg-transparent"
-                />
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <div className="flex items-center gap-1 rounded-full bg-surface-a5 p-2 border border-a5-b">
-                    <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
-                    <span className="font-medium text-sm">USDS</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between items-center mt-2 text-sm">
-                <div className="flex items-center gap-1 text-secondary-t">
-                  <span>USDS Balance:</span>
-                  <span>{usdsBalance ? parseFloat(formatEther(usdsBalance)).toFixed(2) : "0"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-secondary-t">Max debt:</span>
-                  <span>{totalDebt}</span>
-                  <Button variant="secondary" className="h-6" onClick={handleMaxClick}>
-                    Max
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="repayAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <TokenBigInput
+                    label="Repay"
+                    token={usdsToken}
+                    value={field.value}
+                    onChange={(val) => form.setValue("repayAmount", val)}
+                    onMax={() => form.setValue("repayAmount", maxRepayableAmount)}
+                    balanceLabel="USDS Balance:"
+                  />
+                </FormItem>
+              )}
+            />
+          </Form>
 
           {/* Position Info */}
-          <div className="bg-surface-a3 rounded-xl p-4 border border-a3-b space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary-t">Collateral</span>
+          <div className="flex flex-col rounded-2xl border border-a3-b bg-surface-a3 p-4">
+            <div className="flex items-center justify-between border-b border-a3-b py-2">
+              <span className="text-xs text-secondary-t">Collateral</span>
               <div className="flex items-center gap-1">
-                <img src={cdUSDSIcon} alt="cdUSDS" className="w-4 h-4" />
-                <span className="font-medium">
+                <Icon name="cdUSDSIcon" className="size-4" />
+                <span className="text-xs font-semibold">
                   {collateralAmount} {collateralToken}
                 </span>
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary-t">Debt</span>
+            <div className="flex items-center justify-between border-b border-a3-b py-2">
+              <span className="text-xs text-secondary-t">Debt</span>
               <div className="flex items-center gap-1">
-                <img src={USDSIcon} alt="USDS" className="w-4 h-4" />
-                <span className="font-medium">{totalDebt} USDS</span>
+                <Icon name="USDSColorTokenIcon" className="size-4" />
+                <span className="text-xs font-semibold">{totalDebt} USDS</span>
               </div>
             </div>
             {loanData && (
               <>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-secondary-t">Principal</span>
-                  <span className="font-medium">
+                <div className="flex items-center justify-between border-b border-a3-b py-2">
+                  <span className="text-xs text-secondary-t">Principal</span>
+                  <span className="text-xs font-semibold">
                     {parseFloat(formatEther(loanData.principal)).toFixed(2)} USDS
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-secondary-t">Interest</span>
-                  <span className="font-medium">
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-secondary-t">Interest</span>
+                  <span className="text-xs font-semibold">
                     {parseFloat(formatEther(loanData.interest)).toFixed(2)} USDS
                   </span>
                 </div>

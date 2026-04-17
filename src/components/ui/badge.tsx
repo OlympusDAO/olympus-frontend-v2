@@ -16,6 +16,7 @@ const badgeVariants = cva("inline-flex items-center justify-center w-full", {
       green: "",
       red: "",
       gray: "",
+      purple: "",
     },
     size: {
       sm: "h-5 py-[3px] px-[6px] text-[10px]/[14px]",
@@ -48,6 +49,11 @@ const badgeVariants = cva("inline-flex items-center justify-center w-full", {
       variant: "filled",
       color: "red",
       className: "bg-red/20 text-red",
+    },
+    {
+      variant: "filled",
+      color: "purple",
+      className: "bg-purple/20 text-purple",
     },
     {
       variant: "filled",

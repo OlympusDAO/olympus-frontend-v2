@@ -1,23 +1,24 @@
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
-import { trackExtendLoan } from "@/lib/analytics";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { trackExtendLoan } from "@/lib/analytics.ts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
+import { Icon } from "@/components/icon.tsx";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
-import USDSIcon from "@/assets/USDS.png";
 import { formatEther } from "viem";
+import type { TokenWithBalance } from "@/lib/hooks/useToken.tsx";
 import { useAccount, useChainId } from "wagmi";
 import { Link } from "react-router-dom";
-import { blockExplorerTxBaseUrl } from "@/lib/helpers";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
-import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
-import { getTokenAddress, TokenName } from "@/lib/tokens";
-import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
-import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useExtendLoan } from "@/lib/hooks/cds/useExtendLoan";
-import { usePreviewExtendLoan } from "@/lib/hooks/cds/usePreviewExtendLoan";
+import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
+import { ContractName, requireContractAddress } from "@/lib/contracts.ts";
+import { useTokenBalance } from "@/lib/hooks/useTokenBalance.tsx";
+import { getTokenAddress, TokenName } from "@/lib/tokens.ts";
+import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
+import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
+import { useExtendLoan } from "@/lib/hooks/cds/useExtendLoan.tsx";
+import { usePreviewExtendLoan } from "@/lib/hooks/cds/usePreviewExtendLoan.tsx";
 
 interface ExtendLoanModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const formatTxHash = (hash: string) => {
 
 const EXTENSION_PERIODS = [1, 3, 6, 12]; // months
 
-export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
+export const BorrowExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
   isOpen,
   onClose,
   redemptionId,
@@ -107,6 +108,17 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
     if (!interestPayable) return "0";
     return parseFloat(formatEther(interestPayable)).toFixed(2);
   }, [interestPayable]);
+
+  const usdsToken: TokenWithBalance = {
+    addresses: {},
+    address: usdsTokenAddress,
+    symbol: "USDS",
+    decimals: 18,
+    icon: "USDSColorTokenIcon",
+    balance: usdsBalance ?? 0n,
+    formattedBalance: usdsBalance ? formatEther(usdsBalance) : "0",
+    price: 1,
+  };
 
   // Format new due date
   const formattedNewDueDate = useMemo(() => {
@@ -366,25 +378,33 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
             <span className="text-sm font-medium mb-3 block">Extension Period</span>
             <div className="grid grid-cols-5 gap-2">
               {EXTENSION_PERIODS.map((months) => (
-                <Button
+                <button
                   key={months}
-                  variant={!isCustomMode && selectedMonths === months ? "default" : "tertiary"}
+                  type="button"
+                  className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
+                    !isCustomMode && selectedMonths === months
+                      ? "border-a10-b bg-surface-a10 text-primary-t"
+                      : "border-a3-b bg-surface-a3 text-secondary-t hover:bg-surface-a5"
+                  }`}
                   onClick={() => {
                     setIsCustomMode(false);
                     setSelectedMonths(months);
                   }}
-                  className="h-12"
                 >
                   {months}m
-                </Button>
+                </button>
               ))}
-              <Button
-                variant={isCustomMode ? "default" : "tertiary"}
+              <button
+                type="button"
+                className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
+                  isCustomMode
+                    ? "border-a10-b bg-surface-a10 text-primary-t"
+                    : "border-a3-b bg-surface-a3 text-secondary-t hover:bg-surface-a5"
+                }`}
                 onClick={() => setIsCustomMode(true)}
-                className="h-12"
               >
                 Custom
-              </Button>
+              </button>
             </div>
 
             {/* Custom input - only show when custom mode active */}
@@ -412,52 +432,40 @@ export const ExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
           </div>
 
           {/* Interest Cost Display */}
-          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Interest Cost</span>
-            </div>
-            <div className="relative">
-              <div className="text-3xl h-12 flex items-center font-medium">
-                {isLoadingPreview ? "..." : parseFloat(interestCost).toFixed(2)}
-              </div>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <div className="flex items-center gap-1 rounded-full bg-surface-a5 p-2 border border-a5-b">
-                  <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
-                  <span className="font-medium text-sm">USDS</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-between items-center mt-2 text-sm">
-              <div className="flex items-center gap-1 text-secondary-t">
-                <span>USDS Balance:</span>
-                <span>{usdsBalance ? parseFloat(formatEther(usdsBalance)).toFixed(2) : "0"}</span>
-              </div>
-            </div>
-          </div>
+          <TokenBigInput
+            label="Interest Cost"
+            token={usdsToken}
+            value={isLoadingPreview ? "" : interestCost}
+            onChange={() => {}}
+            disabled
+            balanceLabel="USDS Balance:"
+          />
 
           {/* Position Info */}
-          <div className="bg-surface-a3 rounded-xl p-4 border border-a3-b space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary-t">Collateral</span>
+          <div className="flex flex-col rounded-2xl border border-a3-b bg-surface-a3 p-4">
+            <div className="flex items-center justify-between border-b border-a3-b py-2">
+              <span className="text-xs text-secondary-t">Collateral</span>
               <div className="flex items-center gap-1">
-                <img src={cdUSDSIcon} alt="cdUSDS" className="w-4 h-4" />
-                <span className="font-medium">
+                <Icon name="cdUSDSIcon" className="size-4" />
+                <span className="text-xs font-semibold">
                   {collateralAmount} {collateralToken}
                 </span>
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary-t">Current Debt</span>
+            <div className="flex items-center justify-between border-b border-a3-b py-2">
+              <span className="text-xs text-secondary-t">Current Debt</span>
               <div className="flex items-center gap-1">
-                <img src={USDSIcon} alt="USDS" className="w-4 h-4" />
-                <span className="font-medium">
+                <Icon name="USDSColorTokenIcon" className="size-4" />
+                <span className="text-xs font-semibold">
                   {(parseFloat(principal) + parseFloat(interest)).toFixed(2)} USDS
                 </span>
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-secondary-t">New Due Date</span>
-              <span className="font-medium">{isLoadingPreview ? "..." : formattedNewDueDate}</span>
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-secondary-t">New Due Date</span>
+              <span className="text-xs font-semibold">
+                {isLoadingPreview ? "..." : formattedNewDueDate}
+              </span>
             </div>
           </div>
 

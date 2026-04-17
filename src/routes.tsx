@@ -2,9 +2,9 @@ import { createHashRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
 import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
-import { CDPage } from "@/modules/cds/pages";
-import { BorrowPage } from "@/modules/borrow/pages";
-import { StatisticsPage } from "@/modules/statistics/pages";
+import { CDPage } from "@/modules/cds/pages/deposit-page.tsx";
+import { BorrowPage } from "@/modules/cds/pages/borrow-page.tsx";
+import { CDMetricsPage } from "@/modules/cds/pages/metrics-page.tsx";
 import { CoolerMetricsPage } from "@/modules/cooler/pages/metrics-page.tsx";
 import { CoolerActivityLayout } from "@/modules/cooler/pages/activity-page.tsx";
 import { WrapPage } from "@/modules/ohm/pages/wrap-page.tsx";
@@ -62,7 +62,7 @@ export const router = createHashRouter([
       // CDs section
       { path: "cds/deposit", element: <CDPage /> },
       { path: "cds/borrow", element: <BorrowPage /> },
-      { path: "cds/metrics", element: <StatisticsPage /> },
+      { path: "cds/metrics", element: <CDMetricsPage /> },
       { path: "cds/statistics", element: <Navigate to="/cds/metrics" replace /> },
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 

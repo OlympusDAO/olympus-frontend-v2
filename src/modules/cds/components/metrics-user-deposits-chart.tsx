@@ -2,22 +2,46 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, startOfDay, eachDayOfInterval, subDays } from "date-fns";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
 import {
   useStatisticsData,
   useAllTimeDeposits,
   type TimeRange,
-} from "@/lib/hooks/cds/useStatisticsData";
+} from "@/lib/hooks/cds/useStatisticsData.tsx";
 
 const CHART_COLORS = {
   barGradientStart: "var(--green)",
-  barGradientEnd: "oklch(69.043% 0.12334 156.209 / 0.3)", // green with transparency
+  barTopBorder: "var(--green)",
   grid: "var(--border-a10)",
-  text: "var(--text-secondary)",
+  text: "var(--text-tertiary)",
 } as const;
+
+interface GradientBarProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}
+
+function GradientBar({ x = 0, y = 0, width = 0, height = 0 }: GradientBarProps) {
+  if (height <= 0) return null;
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} fill="url(#depositsBarGradient)" />
+      <line
+        x1={x}
+        y1={y}
+        x2={x + width}
+        y2={y}
+        stroke={CHART_COLORS.barTopBorder}
+        strokeWidth={1.5}
+      />
+    </g>
+  );
+}
 
 interface DailyDeposit {
   date: number;
@@ -25,7 +49,7 @@ interface DailyDeposit {
   amount: number;
 }
 
-export const UserDepositsChart: React.FC = () => {
+export const MetricsUserDepositsChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { data: statisticsData, isLoading } = useStatisticsData(timeRange);
@@ -107,11 +131,11 @@ export const UserDepositsChart: React.FC = () => {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-surface-tooltip border border-a10 rounded-xl p-3 shadow-lg">
-        <p className="text-xs text-secondary-t mb-1">
+      <div className="bg-surface-tooltip border border-a3-b rounded-2xl px-3 py-2 shadow-md">
+        <p className="text-xs text-secondary-t mb-1.5">
           {format(new Date(data.date), "MMM dd, yyyy")}
         </p>
-        <p className="text-sm font-medium">Depositor USD: {formatCurrency(data.amount)}</p>
+        <p className="text-xs font-semibold">Depositor USD: {formatCurrency(data.amount)}</p>
       </div>
     );
   };
@@ -137,30 +161,20 @@ export const UserDepositsChart: React.FC = () => {
     <Card className="p-6">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <h3 className="text-base font-medium text-secondary-t">User Deposits</h3>
+          <div className="flex items-center gap-1.5 mb-2">
+            <h3 className="text-xl font-semibold">User Deposits</h3>
             <InfoTooltip title="USD value deposited by users into the Convertible Deposit System.">
               <RiInformationFill size={16} className="text-tertiary-t" />
             </InfoTooltip>
           </div>
-          <div className="flex items-baseline gap-4">
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-secondary-t">Total</span>
-                <InfoTooltip title="All-time total deposits from users since launch.">
-                  <RiInformationFill size={14} className="text-tertiary-t" />
-                </InfoTooltip>
-              </div>
-              <p className="text-2xl font-semibold">{formatCurrency(totalDeposits)}</p>
+          <div className="flex items-start gap-6">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm text-secondary-t">Total</span>
+              <p className="text-lg font-semibold">{formatCurrency(totalDeposits)}</p>
             </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-secondary-t">{periodLabel}</span>
-                <InfoTooltip title="New deposits made during the selected time period.">
-                  <RiInformationFill size={14} className="text-tertiary-t" />
-                </InfoTooltip>
-              </div>
-              <p className="text-2xl font-semibold">{formatCurrency(periodDeposits)}</p>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm text-secondary-t">{periodLabel}</span>
+              <p className="text-lg font-semibold">{formatCurrency(periodDeposits)}</p>
             </div>
           </div>
         </div>
@@ -184,37 +198,37 @@ export const UserDepositsChart: React.FC = () => {
           No deposit data available
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+            barCategoryGap="20%"
+          >
             <defs>
               <linearGradient id="depositsBarGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={CHART_COLORS.barGradientStart} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={CHART_COLORS.barGradientStart} stopOpacity={0.05} />
+                <stop offset="100%" stopColor={CHART_COLORS.barGradientStart} stopOpacity={0.03} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="dateLabel"
-              stroke={CHART_COLORS.text}
-              fontSize={11}
+              tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               tickFormatter={(value) => formatCurrency(value)}
-              stroke={CHART_COLORS.text}
-              fontSize={11}
+              tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               width={50}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--surface-a5)" }} />
-            <Bar
-              dataKey="amount"
-              fill="url(#depositsBarGradient)"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={40}
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: "var(--surface-a5)", opacity: 0.5 }}
             />
+            <Bar dataKey="amount" shape={<GradientBar />} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
       )}

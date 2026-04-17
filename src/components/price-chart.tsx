@@ -57,13 +57,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({ depositPeriod, className
 
   // Process historical data into chart format
   const chartData = useMemo((): ChartDataPoint[] => {
-    if (!historicalData || !tickStep) return [];
+    if (!historicalData) return [];
 
     const tickData = processHistoricalData(
       historicalData.depositPeriodSnapshots,
       historicalData.bids,
       historicalData.snapshots,
-      tickStep,
+      tickStep ?? 10000,
     );
 
     return toChartData(tickData);

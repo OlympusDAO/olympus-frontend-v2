@@ -1,6 +1,8 @@
 import type React from "react";
+import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { InfoIcon, CheckCircle, ExternalLink, Loader2 } from "lucide-react";
 import { useWrapPosition } from "@/lib/hooks/cds/useWrapPosition";
 import { useUnwrapPosition } from "@/lib/hooks/cds/useUnwrapPosition";
@@ -34,6 +36,8 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
   queryKey,
   mode,
 }) => {
+  const form = useForm<Record<string, never>>({});
+
   const {
     wrap,
     isPending: isWrapPending,
@@ -209,23 +213,27 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
           </div>
 
           <div className="mt-6">
-            <Button
-              onClick={handleAction}
-              disabled={isPending || !position}
-              className="w-full"
-              size="lg"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === "wrap" ? "Wrapping..." : "Unwrapping..."}
-                </>
-              ) : mode === "wrap" ? (
-                "Wrap into NFT"
-              ) : (
-                "Unwrap Position"
-              )}
-            </Button>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAction)}>
+                <Button
+                  type="submit"
+                  disabled={isPending || !position}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {mode === "wrap" ? "Wrapping..." : "Unwrapping..."}
+                    </>
+                  ) : mode === "wrap" ? (
+                    "Wrap into NFT"
+                  ) : (
+                    "Unwrap Position"
+                  )}
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </DialogContent>
