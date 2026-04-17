@@ -2,15 +2,15 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, startOfDay, eachDayOfInterval, subDays } from "date-fns";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
 import {
   useStatisticsData,
   useAllTimeDeposits,
   type TimeRange,
-} from "@/lib/hooks/cds/useStatisticsData";
+} from "@/lib/hooks/cds/useStatisticsData.tsx";
 
 const CHART_COLORS = {
   barGradientStart: "var(--green)",
@@ -49,7 +49,7 @@ interface DailyDeposit {
   amount: number;
 }
 
-export const UserDepositsChart: React.FC = () => {
+export const MetricsUserDepositsChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { data: statisticsData, isLoading } = useStatisticsData(timeRange);

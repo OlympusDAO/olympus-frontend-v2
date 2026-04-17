@@ -10,15 +10,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, startOfDay } from "date-fns";
-import { Card } from "@/components/ui/card";
-import { Segmented } from "@/components/ui/tabs";
-import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card.tsx";
+import { Segmented } from "@/components/ui/tabs.tsx";
+import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
 import {
   useStatisticsData,
   useCurrentStatistics,
   type TimeRange,
-} from "@/lib/hooks/cds/useStatisticsData";
+} from "@/lib/hooks/cds/useStatisticsData.tsx";
 
 const CHART_COLORS = {
   area: "var(--purple)",
@@ -33,7 +33,7 @@ interface YieldDataPoint {
   cumulativeYield: number;
 }
 
-export const CumulativeYieldChart: React.FC = () => {
+export const MetricsCumulativeYieldChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { data: statisticsData, isLoading } = useStatisticsData(timeRange);

@@ -1,8 +1,8 @@
 import type React from "react";
-import { Card } from "@/components/ui/card";
-import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card.tsx";
+import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
-import { useCurrentConvertibleOhm } from "@/lib/hooks/cds/useStatisticsData";
+import { useCurrentConvertibleOhm } from "@/lib/hooks/cds/useStatisticsData.tsx";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 
 interface StatCardProps {
@@ -27,7 +27,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, tooltip, subtitle }) 
   );
 };
 
-export const ConversionStats: React.FC = () => {
+export const MetricsConversionStats: React.FC = () => {
   const { data: treasuryMetrics, isLoading: isLoadingTreasury } = useTreasuryMetrics();
   const { data: convertibleData, isLoading: isLoadingConvertibleOhm } = useCurrentConvertibleOhm();
 

@@ -11,16 +11,16 @@ import {
   ReferenceLine,
 } from "recharts";
 import { format, startOfDay } from "date-fns";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip as InfoTooltip } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
 import {
   useStatisticsData,
   useCurrentStatistics,
   type TimeRange,
-} from "@/lib/hooks/cds/useStatisticsData";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
+} from "@/lib/hooks/cds/useStatisticsData.tsx";
+import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
 
 const CHART_COLORS = {
   barGradientStart: "var(--blue)",
@@ -35,7 +35,7 @@ interface DailyRepurchase {
   ohmAmount: number;
 }
 
-export const OhmRepurchasesChart: React.FC = () => {
+export const MetricsOhmRepurchasesChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { data: statisticsData, isLoading: isLoadingStats } = useStatisticsData(timeRange);
