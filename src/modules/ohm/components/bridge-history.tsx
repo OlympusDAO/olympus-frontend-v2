@@ -37,6 +37,27 @@ import { ExplorerLink } from "@/components/explorer-link.tsx";
 
 const PAGE_SIZE = 20;
 
+// Normalize LayerZero IDs to regular EVM chain IDs for UI rendering.
+// Handles both legacy LZ IDs (e.g. 101) and v2 endpoint IDs (e.g. 30101).
+const BRIDGE_CHAIN_ID_NORMALIZATION: Record<number, number> = {
+  // Legacy LayerZero chain IDs
+  101: 1, // Ethereum
+  106: 43114, // Avalanche
+  110: 42161, // Arbitrum
+  184: 8453, // Base
+  362: 80094, // Berachain
+  // LayerZero v2 endpoint IDs
+  30101: 1,
+  30106: 43114,
+  30110: 42161,
+  30184: 8453,
+  30362: 80094,
+};
+
+function normalizeBridgeChainId(chainId: number): number {
+  return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
+}
+
 const columnHelper = createColumnHelper<BridgeHistoryItem>();
 
 const columns = [
@@ -120,7 +141,15 @@ export function BridgeHistory() {
   const { address } = useAccount();
   const { history, isLoading } = useBridgeHistory();
 
-  const data = useMemo(() => history, [history]);
+  const data = useMemo(
+    () =>
+      history.map((item) => ({
+        ...item,
+        srcChainId: normalizeBridgeChainId(item.srcChainId),
+        dstChainId: normalizeBridgeChainId(item.dstChainId),
+      })),
+    [history],
+  );
 
   const table = useReactTable({
     data,
