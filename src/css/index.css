@@ -59,4 +59,15 @@
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
+
+  /*
+   * NumberFlow internally renders <number-flow-react> with a shadow DOM that
+   * applies `padding: round(nearest, calc(var(--number-flow-mask-height, 0.25em) / 2), 1px) ...`
+   * to .number__inner. At default 0.25em this becomes ~4px top/bottom (e.g. 4px at 32px font),
+   * creating visible vertical padding around digits. Zero out the mask-height so the digit
+   * box hugs the glyphs. CSS custom properties inherit through shadow DOM, so this propagates.
+   */
+  number-flow-react {
+    --number-flow-mask-height: 0px;
+  }
 }

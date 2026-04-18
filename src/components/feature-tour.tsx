@@ -5,7 +5,8 @@ import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { FeatureTourWelcomeModal } from "@/components/feature-tour-welcome-modal";
 
 const DESKTOP_BREAKPOINT = 1023.5;
-const NEW_BADGE = `<span class="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase inline-flex items-center justify-center" style="vertical-align:middle;margin:0 3px">NEW</span>`;
+const TIGHT_POPOVER_CLASS = "olympus-tour-popover olympus-tour-popover-tight";
+const NEW_BADGE = `<span class="px-1.25 pt-px mx-[3px] rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase inline-flex items-center justify-center align-middle relative -top-px">NEW</span>`;
 
 function buildSteps(): DriveStep[] {
   return [
@@ -32,16 +33,17 @@ function buildSteps(): DriveStep[] {
       popover: {
         title: "Pulse – the protocol, live",
         description: `
-          <p style="margin-bottom:8px">What the protocol is doing, what backs it, and every action it takes.</p>
+          <p style="margin-bottom:20px">What the protocol is doing, what backs it, and every action it takes.</p>
           <ul>
-            <li><strong>Overview</strong> — Live revenue, treasury health, buyback and emission activity</li>
-            <li><strong>Treasury</strong> — What backs every OHM — assets, liabilities, and protocol-owned liquidity</li>
-            <li><strong>Protocol</strong> — Where revenue comes from and how it flows through buybacks and emissions</li>
-            <li><strong>Feed</strong> — Every on-chain action as it happens</li>
+            <li><strong>Overview.</strong> Live revenue, treasury health, buyback and emission activity</li>
+            <li><strong>Treasury.</strong> What backs every OHM — assets, liabilities, and protocol-owned liquidity</li>
+            <li><strong>Protocol.</strong> Where revenue comes from and how it flows through buybacks and emissions</li>
+            <li><strong>Feed.</strong> Every on-chain action as it happens</li>
           </ul>
         `,
         side: "right",
         align: "center",
+        popoverClass: TIGHT_POPOVER_CLASS,
       },
     },
     {
@@ -52,6 +54,7 @@ function buildSteps(): DriveStep[] {
           "CDs are now fully integrated into the main app. Same positions, same mechanics — deposit, borrow, and track activity all from the sidebar.",
         side: "right",
         align: "center",
+        popoverClass: TIGHT_POPOVER_CLASS,
       },
     },
     {
@@ -59,12 +62,42 @@ function buildSteps(): DriveStep[] {
       popover: {
         title: "Engage – Coming Soon",
         description:
-          "Convertible Deposit participants receive iOHM — the right to purchase OHM at a discount to market. The more you participate, the more you accumulate.",
+          "Convertible Deposits participants receive convOHM — the right to purchase OHM at a discount to market. The more you participate, the more you accumulate.",
         side: "right",
         align: "center",
+        popoverClass: TIGHT_POPOVER_CLASS,
       },
     },
   ];
+}
+
+// Must match border-width in .driver-popover-arrow (feature-tour.css).
+const ARROW_HALF = 8;
+const ARROW_HEIGHT = ARROW_HALF * 2;
+// Keeps the arrow clear of the popover's rounded corners.
+const ARROW_EDGE_PADDING = 16;
+
+function alignArrow(popoverWrapper: HTMLElement, element: Element | undefined) {
+  if (!element) return;
+  const arrow = popoverWrapper.querySelector<HTMLElement>(".driver-popover-arrow");
+  if (!arrow) return;
+
+  const isSideArrow =
+    arrow.classList.contains("driver-popover-arrow-side-left") ||
+    arrow.classList.contains("driver-popover-arrow-side-right");
+  if (!isSideArrow) return;
+
+  const elRect = element.getBoundingClientRect();
+  const popRect = popoverWrapper.getBoundingClientRect();
+  const elCenterY = elRect.top + elRect.height / 2;
+
+  const rawTop = elCenterY - popRect.top - ARROW_HALF;
+  const maxTop = popRect.height - ARROW_EDGE_PADDING - ARROW_HEIGHT;
+  const clampedTop = Math.max(ARROW_EDGE_PADDING, Math.min(rawTop, maxTop));
+
+  arrow.style.top = `${clampedTop}px`;
+  arrow.style.bottom = "auto";
+  arrow.style.marginTop = "0";
 }
 
 function injectFooter(
@@ -116,7 +149,6 @@ export function FeatureTour() {
   );
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
 
-  // Refs for callbacks used inside useEffect — prevents stale closures with [] deps
   const completeTourRef = useRef(completeTour);
   const saveStepRef = useRef(saveStep);
   completeTourRef.current = completeTour;
@@ -131,6 +163,9 @@ export function FeatureTour() {
       popoverClass: "olympus-tour-popover",
       showButtons: [],
       allowClose: false,
+      stagePadding: 0,
+      stageRadius: 100,
+      popoverOffset: 16,
       steps,
       onPopoverRender: (popover, opts) => {
         const index = opts.state.activeIndex ?? 0;
@@ -154,12 +189,33 @@ export function FeatureTour() {
           },
           isLast,
         );
+
+        // Defer to a microtask so driver.js has finished its own positioning
+        // pass before we read the popover's geometry.
+        queueMicrotask(() => alignArrow(popover.wrapper, opts.state.activeElement));
       },
     });
+
+    let rafId: number | null = null;
+    const handleReposition = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (!driverInstance.isActive()) return;
+        const el = driverInstance.getActiveElement();
+        const wrapper = document.querySelector<HTMLElement>(".olympus-tour-popover.driver-popover");
+        if (el && wrapper) alignArrow(wrapper, el);
+      });
+    };
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
 
     driverRef.current = driverInstance;
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
       driverInstance.destroy();
       driverRef.current = null;
     };

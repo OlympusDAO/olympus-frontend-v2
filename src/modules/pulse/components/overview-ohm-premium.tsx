@@ -32,12 +32,12 @@ export function OverviewOhmPremium() {
     <Card className="flex items-center justify-between gap-4 p-5 max-xs:flex-col max-xs:items-start">
       <div className="min-w-0">
         <TooltipInfo title="OHM Premium = OHM Price − Liquid Backing Per OHM. Represents how much the market values OHM above its backing.">
-          <p className="mb-1 text-[15px]/[20px] font-semibold text-primary-t"> OHM Premium</p>
+          <p className="text-sm/5 font-semibold text-primary-t">OHM Premium</p>
         </TooltipInfo>
         <div className="flex gap-x-2 mt-1">
           <NumberFlow
             value={premium > 0 ? premium : 0}
-            className="tabular-nums text-2xl font-bold tracking-tight"
+            className="tabular-nums text-xl/6 font-semibold tracking-tight"
           />
           {dataPoints.length >= 2 && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>

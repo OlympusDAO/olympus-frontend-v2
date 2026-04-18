@@ -19,7 +19,7 @@ const buttonVariants = cva(
       size: {
         xs: "text-[12px]/[16px] h-[24px] gap-[6px] px-[12px] has-[>svg:first-child]:pl-[9px] has-[>svg:last-child]:pr-[9px] [&_svg:not([class*='size-'])]:size-[12px]",
         sm: "text-[12px]/[16px] h-[32px] gap-[8px] px-[14px] has-[>svg:first-child]:pl-[12px] has-[>svg:last-child]:pr-[12px] [&_svg:not([class*='size-'])]:size-[16px]",
-        md: "text-[15px]/[20px] h-[40px] px-[16px] py-2.5 has-[>svg:first-child]:pl-[12px] has-[>svg:last-child]:pr-[12px] gap-[8px] [&_svg:not([class*='size-'])]:size-[20px]",
+        md: "text-[14px]/[20px] h-[40px] px-[16px] py-2.5 has-[>svg:first-child]:pl-[12px] has-[>svg:last-child]:pr-[12px] gap-[8px] [&_svg:not([class*='size-'])]:size-[20px]",
         lg: "text-[18px]/[24px] h-[48px] px-[24px] has-[>svg:first-child]:pl-[20px] has-[>svg:last-child]:pr-[20px] gap-[10px] [&_svg:not([class*='size-'])]:size-[24px]",
       },
     },

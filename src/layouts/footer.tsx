@@ -86,11 +86,11 @@ export function Footer() {
       <div className="flex flex-col gap-1 pb-2 px-3 min-[650px]:hidden">
         {/* Row 1: Next Beat + socials */}
         <div className="flex items-center justify-center gap-x-3">
-          <div className="flex items-center gap-x-2 w-[128px]">
+          <div className="flex items-center gap-x-2 w-[160px] shrink-0">
             <CircleProgress size={16} type="success" value={progress} />
-            <div className="flex items-center gap-x-1 text-[12px]/[15px]">
+            <div className="flex items-center gap-x-1 text-[12px]/[15px] whitespace-nowrap">
               <p className="text-secondary-t">Next Beat</p>
-              <p>{beatLabel}</p>
+              <p className="tabular-nums">{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-5 w-px" />
@@ -144,11 +144,11 @@ export function Footer() {
       {/* Desktop: single row (≥ 650px) */}
       <div className="hidden min-[650px]:flex px-6 items-center justify-between w-full h-full">
         <div className="flex items-center">
-          <div className="flex items-center gap-x-2 w-[128px]">
+          <div className="flex items-center gap-x-2 w-[160px] shrink-0">
             <CircleProgress size={16} type="success" value={progress} />
-            <div className="flex items-center gap-x-1 text-[12px]/[15px]">
+            <div className="flex items-center gap-x-1 text-[12px]/[15px] whitespace-nowrap">
               <p className="text-secondary-t">Next Beat</p>
-              <p>{beatLabel}</p>
+              <p className="tabular-nums">{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />

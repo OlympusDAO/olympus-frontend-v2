@@ -130,7 +130,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-a5 border border-a3-b text-secondary-t">
             {config.icon}
           </div>
-          <span className="text-[15px]/[20px] font-semibold">{config.actionLabel}</span>
+          <span className="text-sm/5 font-semibold">{config.actionLabel}</span>
         </div>
       );
     },
@@ -142,11 +142,11 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
       const config = TYPE_CONFIG[item.type];
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-[15px]/[20px] font-semibold">
+          <p className="text-sm/5 font-semibold">
             {item.address ? <span>{formatAddress(item.address)}</span> : <span>Protocol</span>}{" "}
             <span className="text-secondary-t">{config.verb}</span> <span>{item.primaryValue}</span>
           </p>
-          <p className="text-xs text-tertiary-t">{item.secondaryValue}</p>
+          <p className="text-xs/4 font-normal text-tertiary-t">{item.secondaryValue}</p>
         </div>
       );
     },
@@ -162,7 +162,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
           : null;
 
       const timeText = (
-        <span className="whitespace-nowrap text-sm tabular-nums text-tertiary-t">
+        <span className="whitespace-nowrap text-sm/5 font-normal tabular-nums text-tertiary-t">
           {formatDistanceToNow(item.timestamp * 1000, { addSuffix: true })}
         </span>
       );
@@ -173,7 +173,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
         <ExplorerLink
           chainId={MAINNET_CHAIN_ID}
           href={txLink}
-          className="flex items-center gap-x-1 text-[15px]/[20px] text-secondary-t"
+          className="flex items-center gap-x-1 text-sm/5 text-secondary-t"
         >
           {timeText}
           <RiArrowRightUpLine size={16} />

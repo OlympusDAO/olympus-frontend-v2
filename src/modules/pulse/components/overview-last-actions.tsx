@@ -59,8 +59,8 @@ export function OverviewLastActions() {
     <Card className="overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
-        <p className="text-[15px]/[20px] font-semibold">Last Protocol Actions</p>
-        <Button variant="secondary" size="md" render={<Link to="/home/feed" />}>
+        <p className="text-sm/5 font-semibold">Last Protocol Actions</p>
+        <Button variant="secondary" size="sm" render={<Link to="/home/feed" />}>
           View All
           <RiArrowRightSLine />
         </Button>
