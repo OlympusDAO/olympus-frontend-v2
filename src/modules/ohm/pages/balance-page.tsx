@@ -56,8 +56,6 @@ export function BalancesPage() {
     parseFloat(v1OhmBalances.formattedTotalBalance) * ohmPriceNum +
     parseFloat(v1SohmBalances.formattedTotalBalance) * ohmPriceNum;
 
-  console.log("totalUsd", totalUsd);
-
   const hasBalances =
     totalUsd >= 0.01 ||
     [ohmBalances, sohmBalances, gohmBalances, wsohmBalances, v1OhmBalances, v1SohmBalances].some(

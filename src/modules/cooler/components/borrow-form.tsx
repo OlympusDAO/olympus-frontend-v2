@@ -160,9 +160,6 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     }
   };
 
-  console.log("borrowAmount", borrowAmount);
-  console.log("additionalBorrowingAvailable", additionalBorrowingAvailable);
-  console.log("borrowAmount > ZERO", borrowAmount > ZERO);
   // Validation state for the main button
   const validationState = useMemo(() => {
     if (!address) return { label: "Connect Wallet", disabled: true };
