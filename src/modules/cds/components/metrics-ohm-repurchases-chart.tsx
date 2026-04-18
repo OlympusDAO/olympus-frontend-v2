@@ -20,7 +20,8 @@ import {
   useCurrentStatistics,
   type TimeRange,
 } from "@/lib/hooks/cds/useStatisticsData.tsx";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { TokenName } from "@/lib/tokens.ts";
 
 const CHART_COLORS = {
   barGradientStart: "var(--blue)",
@@ -40,15 +41,10 @@ export const MetricsOhmRepurchasesChart: React.FC = () => {
 
   const { data: statisticsData, isLoading: isLoadingStats } = useStatisticsData(timeRange);
   const { data: currentStats } = useCurrentStatistics();
-  const { price: ohmPrice, isLoading: isLoadingPrice } = useOhmPrice();
+  const OHMToken = useToken(TokenName.OHM);
+  const ohmPriceNumber = OHMToken.price;
 
-  const isLoading = isLoadingStats || isLoadingPrice;
-
-  // Get OHM price as number (18 decimals)
-  const ohmPriceNumber = useMemo(() => {
-    if (!ohmPrice) return 0;
-    return Number(ohmPrice) / 1e18;
-  }, [ohmPrice]);
+  const isLoading = isLoadingStats;
 
   // Calculate total claimed yield in period
   const totalClaimedYield = useMemo(() => {

@@ -2,6 +2,7 @@ import { useTokenBalance } from "./useTokenBalance";
 import { formatUnits, type Address } from "viem";
 import { useChainId } from "wagmi";
 import { TOKENS, type TokenInfo, getTokenAddress } from "@/lib/tokens.ts";
+import { useTokenPrice } from "@/lib/hooks/useTokenPrice.tsx";
 
 export type TokenWithBalance = TokenInfo & {
   balance: bigint | undefined;
@@ -14,13 +15,13 @@ export function useToken(symbol: keyof typeof TOKENS, account?: Address): TokenW
   const chainId = useChainId();
   const info = TOKENS[symbol];
   const tokenAddress = getTokenAddress(symbol, chainId);
-
+  const { price } = useTokenPrice(chainId, tokenAddress);
   const { balance } = useTokenBalance(tokenAddress, account);
 
   return {
     ...info,
     address: tokenAddress,
-    price: 0,
+    price,
     balance,
     formattedBalance: balance !== undefined ? formatUnits(balance, info.decimals) : "0",
   };

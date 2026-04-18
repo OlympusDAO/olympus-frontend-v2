@@ -2,6 +2,7 @@ import { formatUnits } from "viem";
 import { useGasPrice } from "wagmi";
 import { Separator } from "@/components/ui/separator.tsx";
 import { CircleProgress } from "@/components/ui/progress.tsx";
+import { Icon } from "@/components/icon.tsx";
 import { cn } from "@/lib/utils";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import {
@@ -16,12 +17,10 @@ import {
 } from "@remixicon/react";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import { type Theme, useTheme } from "@/components/theme-provider.tsx";
-import OhmSvg from "@/assets/OHM.svg";
-import GohmSvg from "@/assets/gOHM.svg";
 import { useEpochTimer } from "@/lib/hooks/liveness/useEpochTimer";
-import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
 import type * as React from "react";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { TokenName } from "@/lib/tokens.ts";
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
   { value: "system", label: "System", icon: <RiContrastLine className="size-4" /> },
@@ -70,11 +69,10 @@ function pad(n: number) {
 export function Footer() {
   const { theme, setTheme } = useTheme();
   const { hours, minutes, seconds, progress } = useEpochTimer();
-  const { data: metrics } = useTreasuryMetrics();
-  const { price: gohmPrice } = useGohmPrice();
   const { data: gasPriceWei } = useGasPrice({ query: { refetchInterval: 15_000 } });
+  const GOHMToken = useToken(TokenName.GOHM);
+  const OHMToken = useToken(TokenName.OHM);
 
-  const ohmPrice = metrics?.ohmPrice ?? 0;
   const gasPriceGwei = gasPriceWei ? Math.round(Number(formatUnits(gasPriceWei, 9))) : 0;
   const beatLabel = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 
@@ -121,12 +119,12 @@ export function Footer() {
         {/* Row 2: OHM + gOHM + Gas + Theme */}
         <div className="flex items-center gap-x-2 justify-between">
           <div className="flex items-center gap-x-1">
-            <img src={OhmSvg} alt="OHM" className="size-4" />
-            <NumberFlow value={ohmPrice} className="text-[12px]/[16px]" />
+            <Icon name={OHMToken.icon} className="size-4" />
+            <NumberFlow value={OHMToken.price} className="text-[12px]/[16px]" />
           </div>
           <div className="flex items-center gap-x-1">
-            <img src={GohmSvg} alt="gOHM" className="size-4" />
-            <NumberFlow value={gohmPrice} className="text-[12px]/[16px]" />
+            <Icon name={GOHMToken.icon} className="size-4" />
+            <NumberFlow value={GOHMToken.price} className="text-[12px]/[16px]" />
           </div>
           <div className="flex items-center gap-x-1">
             <RiGasStationLine className="size-4 text-secondary-t" />
@@ -176,13 +174,13 @@ export function Footer() {
         </div>
         <div className="flex items-center">
           <div className="flex items-center gap-x-1">
-            <img src={OhmSvg} alt="OHM" className="size-4" />
-            <NumberFlow value={ohmPrice} className="text-[12px]/[16px]" />
+            <Icon name={OHMToken.icon} className="size-4" />
+            <NumberFlow value={OHMToken.price} className="text-[12px]/[16px]" />
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />
           <div className="flex items-center gap-x-1">
-            <img src={GohmSvg} alt="gOHM" className="size-4" />
-            <NumberFlow value={gohmPrice} className="text-[12px]/[16px]" />
+            <Icon name={GOHMToken.icon} className="size-4" />
+            <NumberFlow value={GOHMToken.price} className="text-[12px]/[16px]" />
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />
           <div className="flex items-center gap-x-1">

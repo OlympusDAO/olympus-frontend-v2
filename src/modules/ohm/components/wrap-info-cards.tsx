@@ -3,17 +3,17 @@ import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice.tsx";
 import { useGohmConversionRate } from "@/lib/hooks/useGohmConversion.tsx";
 import { RiArrowLeftRightLine } from "@remixicon/react";
 import { PriceChange } from "@/components/price-change.tsx";
 import { useOhmPriceHistory } from "@/modules/pulse/hooks/useOhmPriceHistory.ts";
 import { useGohmPriceHistory } from "@/modules/pulse/hooks/useGohmPriceHistory.ts";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { TokenName } from "@/lib/tokens.ts";
 
 export function WrapInfoCards() {
-  const { formattedPrice: ohmPrice, isLoading: ohmLoading } = useOhmPrice();
-  const { formattedPrice: gohmPrice, isLoading: gohmLoading } = useGohmPrice();
+  const GOHMToken = useToken(TokenName.GOHM);
+  const OHMToken = useToken(TokenName.OHM);
   const { conversionRate, isLoading: indexLoading } = useGohmConversionRate();
   const { data: ohmPriceHistory } = useOhmPriceHistory();
   const { data: gohmPriceHistory } = useGohmPriceHistory();
@@ -33,10 +33,10 @@ export function WrapInfoCards() {
       <Card className="items-center p-6">
         <p className="text-[15px]/[20px] text-secondary-t">OHM Price</p>
         <div className="flex items-center gap-x-2">
-          {ohmLoading ? (
+          {!OHMToken.price ? (
             <Skeleton className="h-6 w-24" />
           ) : (
-            <NumberFlow className="text-[20px]/[24px] font-semibold" value={ohmPrice} />
+            <NumberFlow className="text-[20px]/[24px] font-semibold" value={OHMToken.price} />
           )}
           {ohmPriceHistory && <PriceChange percentage={ohmChange24h} timeframe="24h" />}
         </div>
@@ -45,10 +45,10 @@ export function WrapInfoCards() {
       <Card className="items-center p-6">
         <p className="text-[15px]/[20px] text-secondary-t">gOHM Price</p>
         <div className="flex items-center gap-x-2">
-          {gohmLoading ? (
+          {!GOHMToken.price ? (
             <Skeleton className="h-6 w-24" />
           ) : (
-            <NumberFlow className="text-[20px]/[24px] font-semibold" value={gohmPrice} />
+            <NumberFlow className="text-[20px]/[24px] font-semibold" value={GOHMToken.price} />
           )}
           {gohmPriceHistory && <PriceChange percentage={gohmChange24h} timeframe="24h" />}
         </div>

@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
 import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
 import { useAccount } from "wagmi";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice.tsx";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice.tsx";
 import { TokenName } from "@/lib/tokens.ts";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 import { parseUnits, parseEther } from "viem";
@@ -26,8 +24,8 @@ export function WrapForm({
   onSubmit,
 }: WrapFormProps) {
   const { address } = useAccount();
-  const { formattedPrice: ohmPrice } = useOhmPrice();
-  const { formattedPrice: gohmPrice } = useGohmPrice();
+  const GOHMToken = useToken(TokenName.GOHM);
+  const OHMToken = useToken(TokenName.OHM);
 
   const inputTokenName = mode === "wrap" ? TokenName.OHM : TokenName.GOHM;
   const outputTokenName = mode === "wrap" ? TokenName.GOHM : TokenName.OHM;
@@ -39,17 +37,17 @@ export function WrapForm({
   const inputToken = useMemo(
     () => ({
       ...inputTokenBase,
-      price: mode === "wrap" ? parseFloat(ohmPrice) : parseFloat(gohmPrice),
+      price: mode === "wrap" ? OHMToken.price : GOHMToken.price,
     }),
-    [inputTokenBase, ohmPrice, gohmPrice, mode],
+    [inputTokenBase, OHMToken.price, GOHMToken.price, mode],
   );
 
   const outputToken = useMemo(
     () => ({
       ...outputTokenBase,
-      price: mode === "wrap" ? parseFloat(gohmPrice) : parseFloat(ohmPrice),
+      price: mode === "wrap" ? GOHMToken.price : OHMToken.price,
     }),
-    [outputTokenBase, ohmPrice, gohmPrice, mode],
+    [outputTokenBase, OHMToken.price, GOHMToken.price, mode],
   );
 
   const form = useForm<{ inputAmount: string; outputAmount: string }>({
