@@ -116,7 +116,7 @@ function TooltipInfo({
 }: ITooltipProps) {
   return (
     <div className="flex items-center gap-x-1">
-      <p className={cn(className, "text-secondary-t font-semibold")}>{children}</p>
+      <span className={cn(className, "text-secondary-t font-semibold")}>{children}</span>
       <Tooltip
         classNameContent={classNameContent}
         triggerProps={triggerProps}

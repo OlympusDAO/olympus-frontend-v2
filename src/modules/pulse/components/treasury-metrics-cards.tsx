@@ -2,14 +2,14 @@ import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
-import treasuryMarketDark from "@/assets/treasury-market-value_dark.png";
-import treasuryMarketLight from "@/assets/treasury-market-value_light.png";
-import liquidBackingDark from "@/assets/liquid-backing_dark.png";
-import liquidBackingLight from "@/assets/liquid-backing_light.png";
-import backingPerDark from "@/assets/backing-per-ohm_dark.png";
-import backingPerLight from "@/assets/backing-per-ohm_light.png";
-import supplyDark from "@/assets/ohm_supply_dark.png";
-import supplyLight from "@/assets/ohm_supply_light.png";
+import treasuryMarketDark from "@/assets/treasury-market-value_dark.webp";
+import treasuryMarketLight from "@/assets/treasury-market-value_light.webp";
+import liquidBackingDark from "@/assets/liquid-backing_dark.webp";
+import liquidBackingLight from "@/assets/liquid-backing_light.webp";
+import backingPerDark from "@/assets/backing-per-ohm_dark.webp";
+import backingPerLight from "@/assets/backing-per-ohm_light.webp";
+import supplyDark from "@/assets/ohm_supply_dark.webp";
+import supplyLight from "@/assets/ohm_supply_light.webp";
 
 export function TreasuryMetricsCards() {
   const { data } = useTreasuryMetrics();
@@ -24,8 +24,11 @@ export function TreasuryMetricsCards() {
           className="w-12"
         />
         <div className="flex flex-col gap-0.5">
-          <p className="text-secondary-t text-[15px]/[20px] font-medium">Treasury Market Value</p>
-          <NumberFlow value={data?.treasuryMarketValue ?? 0} className="text-2xl font-semibold" />
+          <p className="text-secondary-t text-sm font-normal">Treasury Market Value</p>
+          <NumberFlow
+            value={data?.treasuryMarketValue ?? 0}
+            className="text-2xl font-semibold [--number-flow-char-height:32px]"
+          />
         </div>
       </Card>
 
@@ -37,8 +40,11 @@ export function TreasuryMetricsCards() {
           className="size-12"
         />
         <div className="flex flex-col gap-0.5">
-          <p className="text-secondary-t text-[15px]/[20px] font-medium">Liquid Backing</p>
-          <NumberFlow value={data?.treasuryLiquidBacking ?? 0} className="text-2xl font-semibold" />
+          <p className="text-secondary-t text-sm font-normal">Liquid Backing</p>
+          <NumberFlow
+            value={data?.treasuryLiquidBacking ?? 0}
+            className="text-2xl font-semibold [--number-flow-char-height:32px]"
+          />
         </div>
       </Card>
 
@@ -50,10 +56,10 @@ export function TreasuryMetricsCards() {
           className="size-12"
         />
         <div className="flex flex-col gap-0.5">
-          <p className="text-secondary-t text-[15px]/[20px] font-medium">Backing Per OHM</p>
+          <p className="text-secondary-t text-sm font-normal">Backing Per OHM</p>
           <NumberFlow
             value={data?.treasuryLiquidBackingPerOhmBacked ?? 0}
-            className="text-2xl font-semibold"
+            className="text-2xl font-semibold [--number-flow-char-height:32px]"
           />
         </div>
       </Card>
@@ -66,11 +72,11 @@ export function TreasuryMetricsCards() {
           className="size-12"
         />
         <div className="flex flex-col gap-0.5">
-          <p className="text-secondary-t text-[15px]/[20px] font-medium">OHM Supply</p>
+          <p className="text-secondary-t text-sm font-normal">OHM Supply</p>
           <NumberFlow
             value={data?.ohmTotalSupply ?? 0}
             format={{ style: "decimal" }}
-            className="text-2xl font-semibold"
+            className="text-2xl font-semibold [--number-flow-char-height:32px]"
           />
         </div>
       </Card>
