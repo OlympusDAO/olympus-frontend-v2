@@ -101,7 +101,7 @@ export function ProtocolEmissionManager() {
         <div className="space-y-0.5">
           <p className="text-xs font-normal text-secondary-t">Trigger Price</p>
           <NumberFlow
-            className="tabular-nums text-sm font-semibold"
+            className="text-sm font-semibold"
             value={emissionTriggerPrice}
             suffix="/OHM"
           />
@@ -119,7 +119,7 @@ export function ProtocolEmissionManager() {
             Base Rate
           </TooltipInfo>
           <NumberFlow
-            className="tabular-nums text-sm font-semibold"
+            className="text-sm font-semibold"
             value={state.baseEmissionRate}
             format={{ style: "percent" }}
           />
@@ -131,7 +131,7 @@ export function ProtocolEmissionManager() {
           >
             EM Backing
           </TooltipInfo>
-          <NumberFlow className="tabular-nums text-sm font-semibold" value={state.backing} />
+          <NumberFlow className="text-sm font-semibold" value={state.backing} />
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export function ProtocolEmissionManager() {
             <div>
               <p className="text-xs font-normal text-secondary-t">Supply Emitted</p>
               <NumberFlow
-                className="tabular-nums text-sm font-semibold"
+                className="text-sm font-semibold"
                 format={{ style: "decimal", notation: "standard" }}
                 value={Math.round(em.totalSupplyEmitted)}
                 prefix="+"
@@ -160,7 +160,7 @@ export function ProtocolEmissionManager() {
             <div>
               <p className="text-xs font-normal text-secondary-t">Reserves Added</p>
               <NumberFlow
-                className="tabular-nums text-sm font-semibold"
+                className="text-sm font-semibold"
                 value={Math.round(em.totalReservesAdded)}
                 prefix="+"
               />

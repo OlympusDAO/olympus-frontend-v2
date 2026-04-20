@@ -166,7 +166,7 @@ export function ProtocolYrf() {
           </TooltipInfo>
           <div className="flex items-center gap-x-1">
             <CircleProgress value={Math.min(budgetDeployed, 100)} size={18} strokeWidth={2.5} />
-            <div className="tabular-nums text-sm font-semibold">
+            <div className="text-sm font-semibold">
               <div className="flex items-center gap-x-1">
                 <NumberFlow value={currentWeekUsdSpent} className="text-sm" /> /
                 <NumberFlow value={currentWeeklyYield} className="text-sm" />
@@ -186,7 +186,7 @@ export function ProtocolYrf() {
           >
             Est. Weekly Burns
           </TooltipInfo>
-          <div className="tabular-nums text-sm font-semibold">
+          <div className="text-sm font-semibold">
             <div className="flex items-center gap-x-1">
               <NumberFlow
                 format={{ style: "decimal", notation: "standard" }}
@@ -209,7 +209,7 @@ export function ProtocolYrf() {
           >
             Current Capacity
           </TooltipInfo>
-          <p className="tabular-nums text-sm font-semibold">
+          <p className="text-sm font-semibold">
             <NumberFlow value={todayCapacity} />{" "}
             <span className="font-normal text-secondary-t">
               Resets in {pad(epoch.hours)}:{pad(epoch.minutes)}:{pad(epoch.seconds)}
@@ -266,7 +266,7 @@ export function ProtocolYrf() {
                             OHM Burned
                           </span>
                         </div>
-                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap tabular-nums">
+                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap">
                           {formatNumber(data.ohmBurned)}
                         </span>
                       </div>
@@ -274,7 +274,7 @@ export function ProtocolYrf() {
                         <span className="text-secondary-t text-xs/4 font-normal whitespace-nowrap">
                           {data.usdSpent > 0 ? "Spent" : "Budget"}
                         </span>
-                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap tabular-nums">
+                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap">
                           {data.usdSpent > 0
                             ? formatUsd(data.usdSpent, true)
                             : formatUsd(data.yieldBudget, true)}

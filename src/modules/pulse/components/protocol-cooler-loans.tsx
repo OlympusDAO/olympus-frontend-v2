@@ -93,7 +93,7 @@ export function ProtocolCoolerLoans() {
             <NumberFlow
               value={cooler.totalCollateralGohm}
               format={{ style: "decimal", notation: "standard", maximumFractionDigits: 0 }}
-              className="text-xs font-normal text-secondary-t tabular-nums"
+              className="text-xs font-normal text-secondary-t"
             />
             <span className="text-xs font-normal text-secondary-t">gOHM collateral locked</span>
           </div>
@@ -128,7 +128,7 @@ export function ProtocolCoolerLoans() {
               notation: "compact",
               maximumFractionDigits: 1,
             }}
-            className="text-sm font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
         <div>
@@ -146,7 +146,7 @@ export function ProtocolCoolerLoans() {
               notation: "compact",
               maximumFractionDigits: 1,
             }}
-            className="text-sm font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
       </div>
@@ -169,7 +169,7 @@ export function ProtocolCoolerLoans() {
                 notation: "compact",
                 maximumFractionDigits: 1,
               }}
-              className="text-sm font-semibold tabular-nums"
+              className="text-sm font-semibold"
             />
           </div>
           <div>
@@ -182,7 +182,7 @@ export function ProtocolCoolerLoans() {
                 notation: "compact",
                 maximumFractionDigits: 1,
               }}
-              className="text-sm font-semibold tabular-nums"
+              className="text-sm font-semibold"
             />
           </div>
         </div>

@@ -109,7 +109,7 @@ export function Footer() {
             <CircleProgress size={16} type="success" value={progress} />
             <div className="flex items-center gap-x-1 text-[12px]/[15px] whitespace-nowrap">
               <p className="text-secondary-t">Next Beat</p>
-              <p className="tabular-nums">{beatLabel}</p>
+              <p>{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-5 w-px" />
@@ -171,7 +171,7 @@ export function Footer() {
             <CircleProgress size={16} type="success" value={progress} />
             <div className="flex items-center gap-x-1 text-[12px]/[15px] whitespace-nowrap">
               <p className="text-secondary-t">Next Beat</p>
-              <p className="tabular-nums">{beatLabel}</p>
+              <p>{beatLabel}</p>
             </div>
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />

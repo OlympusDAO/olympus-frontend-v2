@@ -37,7 +37,7 @@ export function OverviewOhmPremium() {
         <div className="flex gap-x-2 mt-1">
           <NumberFlow
             value={premium > 0 ? premium : 0}
-            className="tabular-nums text-xl/6 font-semibold tracking-tight"
+            className="text-xl/6 font-semibold tracking-tight"
           />
           {dataPoints.length >= 2 && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>

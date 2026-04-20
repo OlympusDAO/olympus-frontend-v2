@@ -162,7 +162,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
           : null;
 
       const timeText = (
-        <span className="whitespace-nowrap text-sm/5 font-normal tabular-nums text-tertiary-t">
+        <span className="whitespace-nowrap text-sm/5 font-normal text-tertiary-t">
           {formatDistanceToNow(item.timestamp * 1000, { addSuffix: true })}
         </span>
       );

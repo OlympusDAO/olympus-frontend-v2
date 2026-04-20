@@ -122,7 +122,7 @@ export function ProtocolConvertibleDeposits() {
             }}
             className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
           />
-          <p className="mt-0.5 text-xs font-normal text-secondary-t tabular-nums">
+          <p className="mt-0.5 text-xs font-normal text-secondary-t">
             {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
             premium
           </p>
@@ -152,7 +152,7 @@ export function ProtocolConvertibleDeposits() {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }}
-            className="text-sm font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
         <div>
@@ -165,7 +165,7 @@ export function ProtocolConvertibleDeposits() {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }}
-            className="text-sm font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
       </div>
@@ -188,7 +188,7 @@ export function ProtocolConvertibleDeposits() {
         </div>
         {/* Values row */}
         <div className="grid grid-cols-2 items-center">
-          <p className="text-sm font-semibold tabular-nums flex items-center gap-x-1 flex-wrap">
+          <p className="text-sm font-semibold flex items-center gap-x-1 flex-wrap">
             <NumberFlow
               prefix="+"
               suffix=" OHM"
@@ -216,7 +216,7 @@ export function ProtocolConvertibleDeposits() {
               maximumFractionDigits: 1,
             }}
             prefix="+"
-            className="text-sm font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
       </div>

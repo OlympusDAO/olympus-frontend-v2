@@ -23,10 +23,7 @@ export function OverviewLiquidBacking() {
       <div className="min-w-0">
         <p className="mb-1 text-sm/5 font-semibold">Liquid Backing Per OHM</p>
         <div className="flex gap-x-2">
-          <NumberFlow
-            value={currentBacking}
-            className="tabular-nums text-xl/6 font-semibold tracking-tight"
-          />
+          <NumberFlow value={currentBacking} className="text-xl/6 font-semibold tracking-tight" />
           {dataPoints.length >= 2 && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>
       </div>
