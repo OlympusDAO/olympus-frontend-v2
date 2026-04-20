@@ -23,8 +23,8 @@ import { Icon } from "@/components/icon.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { CircleProgress } from "@/components/ui/progress.tsx";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
-import iconLight from "@/assets/protocol-1-b.png";
-import iconDark from "@/assets/protocol-1-l.png";
+import iconLight from "@/assets/protocol-1-b.webp";
+import iconDark from "@/assets/protocol-1-l.webp";
 
 export function ProtocolYrf() {
   const revenue = useWeeklyRevenue();
@@ -90,16 +90,14 @@ export function ProtocolYrf() {
   }));
 
   return (
-    <Card className="p-5">
-      <div className=" flex items-center justify-between">
+    <Card className="p-5 flex flex-col">
+      <div className="flex items-center justify-between">
         <TooltipInfo title="The Yield Repurchase Facility converts protocol revenue into OHM buybacks, creating continuous buy pressure.">
-          <p className="text-[15px]/[20px] font-semibold text-primary-t">
-            Yield Repurchase Facility
-          </p>
+          <p className="text-sm font-semibold text-primary-t">Yield Repurchase Facility</p>
         </TooltipInfo>
-        <div className="flex items-center gap-2 ">
-          <PulseDot variant="green" />
+        <div className="flex items-center gap-2">
           <span className="text-xs text-secondary-t">Active</span>
+          <PulseDot variant="green" />
         </div>
       </div>
       <div className="flex items-center gap-4 mt-4">
@@ -110,10 +108,8 @@ export function ProtocolYrf() {
           className="min-w-18 h-18"
         />
         <div>
-          <p className="text-[15px]/[20px] font-semibold mb-1">
-            Treasury yield is converted into OHM demand
-          </p>
-          <p className="text-secondary-t text-xs">
+          <p className="text-sm font-semibold mb-1">Treasury yield is converted into OHM demand</p>
+          <p className="text-secondary-t text-xs font-normal">
             The Yield Repurchase Facility uses protocol revenue to buy back and burn OHM each week.
             Backing from burned OHM is reclaimed and recycled, amplifying buying power.
           </p>
@@ -121,64 +117,60 @@ export function ProtocolYrf() {
       </div>
       <Separator className="my-4" />
       {/* Lifetime Burn Banner */}
-      <div className="flex items-center justify-between w-full">
-        <div className="w-full">
+      <div className="grid grid-cols-2 items-end">
+        <div className="space-y-1">
           <TooltipInfo title="Total OHM repurchased via YRF bond markets since inception (across v1.0, v1.1, v1.2).">
-            <p className="text-xs">Lifetime OHM Removed from Supply</p>
+            <p className="text-sm font-normal text-secondary-t">Lifetime OHM Repurchased</p>
           </TooltipInfo>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-x-2">
-              <Icon name="OHMColorTokenIcon" />
-              <NumberFlow
-                format={{ style: "decimal", notation: "standard" }}
-                value={totalOhmBurned}
-                className="text-[32px]/[40px] font-semibold"
-              />
-            </div>
-            <div>
-              <div className="flex justify-end">
-                <TooltipInfo
-                  title={`At the current YRF buyback rate of ${formatNumber(weeklyBurns)} OHM/week, annualized supply change is ${formatNumber(Math.round(annualBurnsAtCurrentRate))} OHM. Does not account for potential CD conversions.`}
-                >
-                  <p className="text-xs">Annual Supply Impact</p>
-                </TooltipInfo>
-              </div>
-              <div className="flex items-center gap-x-1">
-                <NumberFlow
-                  format={{ style: "percent", notation: "standard" }}
-                  value={supplyDeflationRate}
-                  className="text-[15px]/[20px] font-semibold"
-                />
-                <NumberFlow
-                  format={{ style: "decimal", notation: "compact" }}
-                  suffix="OHM/yr"
-                  value={annualBurnsAtCurrentRate}
-                  className="text-[15px]/[20px] text-secondary-t"
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-x-2">
+            <Icon name="OHMColorTokenIcon" size={28} />
+            <NumberFlow
+              format={{ style: "decimal", notation: "standard" }}
+              value={totalOhmBurned}
+              className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+            />
+          </div>
+        </div>
+        <div className="space-y-0.5">
+          <TooltipInfo
+            title={`At the current YRF buyback rate of ${formatNumber(weeklyBurns)} OHM/week, annualized supply change is ${formatNumber(Math.round(annualBurnsAtCurrentRate))} OHM. Does not account for potential CD conversions.`}
+          >
+            <p className="text-xs font-normal text-secondary-t">Annual Supply Impact</p>
+          </TooltipInfo>
+          <div className="flex items-center gap-x-1">
+            <NumberFlow
+              format={{ style: "percent", notation: "standard" }}
+              value={supplyDeflationRate}
+              className="text-sm font-semibold"
+            />
+            <NumberFlow
+              format={{ style: "decimal", notation: "compact" }}
+              suffix="OHM/yr"
+              value={annualBurnsAtCurrentRate}
+              className="text-sm font-normal text-secondary-t"
+            />
           </div>
         </div>
       </div>
 
       <Separator className="my-4" />
 
-      <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+      <div className="grid grid-cols-2 gap-y-5">
         {/* Weekly Yield Budget */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <TooltipInfo
             title={`Weekly yield budget set by YRF contract: ${formatUsd(currentWeeklyYield)}. Actual spend can exceed budget via rollover from previous weeks. Today's market capacity: ${formatUsd(todayCapacity)}. Lifetime yield budgeted: ${formatUsd(totalYieldDeployed, true)}.`}
-            className="text-xs text-tertiary-t"
+            className="text-xs font-normal text-secondary-t"
           >
             Weekly Yield Budget
           </TooltipInfo>
           <div className="flex items-center gap-x-1">
             <CircleProgress value={Math.min(budgetDeployed, 100)} size={18} strokeWidth={2.5} />
-            <div className="tabular-nums text-[15px]/[20px] font-semibold">
-              <div className="flex items-center gap-x-0.5">
-                <NumberFlow value={currentWeekUsdSpent} className="text-[15px]/[20px]" /> /
-                <NumberFlow value={currentWeeklyYield} className="text-[15px]/[20px]" />
-                <span className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
+            <div className="tabular-nums text-sm font-semibold">
+              <div className="flex items-center gap-x-1">
+                <NumberFlow value={currentWeekUsdSpent} className="text-sm" /> /
+                <NumberFlow value={currentWeeklyYield} className="text-sm" />
+                <span className="text-sm text-secondary-t font-normal flex items-center">
                   (<NumberFlow format={{ style: "percent" }} value={budgetDeployed / 100} />)
                 </span>
               </div>
@@ -187,21 +179,22 @@ export function ProtocolYrf() {
         </div>
 
         {/* Est. Weekly Burns */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <TooltipInfo
             title={`${formatUsd(weeklyYield)} weekly revenue / $${ohmPrice.toFixed(2)} OHM price = ${formatNumber(weeklyBurns)} OHM`}
-            className="text-xs text-tertiary-t"
+            className="text-xs font-normal text-secondary-t"
           >
             Est. Weekly Burns
           </TooltipInfo>
-          <div className="tabular-nums text-[15px]/[20px] font-semibold">
-            <div className="flex items-center gap-x-0.5">
+          <div className="tabular-nums text-sm font-semibold">
+            <div className="flex items-center gap-x-1">
               <NumberFlow
+                format={{ style: "decimal", notation: "standard" }}
                 suffix="OHM"
                 value={Math.round(weeklyBurns)}
-                className="text-[15px]/[20px]"
+                className="text-sm"
               />
-              <span className="text-[15px]/[20px] text-secondary-t font-normal flex items-center">
+              <span className="text-sm text-secondary-t font-normal flex items-center">
                 ({formatUsd(weeklyBurns * ohmPrice, true)})
               </span>
             </div>
@@ -209,14 +202,14 @@ export function ProtocolYrf() {
         </div>
 
         {/* Current Capacity */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <TooltipInfo
             title="The maximum amount of OHM the YRF can purchase in the current epoch. Resets each beat."
-            className="text-xs text-tertiary-t"
+            className="text-xs font-normal text-secondary-t"
           >
             Current Capacity
           </TooltipInfo>
-          <p className="tabular-nums text-[15px]/[20px] font-semibold">
+          <p className="tabular-nums text-sm font-semibold">
             <NumberFlow value={todayCapacity} />{" "}
             <span className="font-normal text-secondary-t">
               Resets in {pad(epoch.hours)}:{pad(epoch.minutes)}:{pad(epoch.seconds)}
@@ -228,12 +221,12 @@ export function ProtocolYrf() {
       <Separator className="my-4" />
       {/* Weekly OHM Burned Chart */}
       {chartData.length > 0 && (
-        <div className="">
-          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-secondary-t">
+        <div className="[&_*:focus]:outline-none [&_*:focus-visible]:outline-none">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-primary-t">
             {hasBondData ? "OHM Repurchased per Week" : "Est. OHM Repurchased per Week"}
           </p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
+            <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: -30 }}>
               <defs>
                 <linearGradient id="gradYrfBurn" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--green)" stopOpacity={0.05} />
@@ -262,14 +255,31 @@ export function ProtocolYrf() {
                   if (!active || !payload?.length) return null;
                   const data = payload[0].payload;
                   return (
-                    <div className="rounded-lg border border-a10-b bg-surface-tooltip px-3 py-2 text-sm shadow-lg">
-                      <p className="font-medium">Week of {data.name}</p>
-                      <p className="tabular-nums text-green">{formatNumber(data.ohmBurned)} OHM</p>
-                      <p className="text-xs text-tertiary-t">
-                        {data.usdSpent > 0
-                          ? `${formatUsd(data.usdSpent, true)} spent`
-                          : `${formatUsd(data.yieldBudget, true)} budget`}
+                    <div className="bg-surface-tooltip shadow-tooltip flex flex-col gap-1.5 rounded-[20px] px-3 py-2">
+                      <p className="text-secondary-t text-center text-xs/4 font-semibold whitespace-nowrap">
+                        Week of {data.name}
                       </p>
+                      <div className="flex w-full items-center justify-between gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-2.5 shrink-0 rounded-full bg-green" />
+                          <span className="text-secondary-t text-xs/4 font-normal whitespace-nowrap">
+                            OHM Burned
+                          </span>
+                        </div>
+                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap tabular-nums">
+                          {formatNumber(data.ohmBurned)}
+                        </span>
+                      </div>
+                      <div className="flex w-full items-center justify-between gap-4">
+                        <span className="text-secondary-t text-xs/4 font-normal whitespace-nowrap">
+                          {data.usdSpent > 0 ? "Spent" : "Budget"}
+                        </span>
+                        <span className="text-primary-t text-xs/4 font-semibold whitespace-nowrap tabular-nums">
+                          {data.usdSpent > 0
+                            ? formatUsd(data.usdSpent, true)
+                            : formatUsd(data.yieldBudget, true)}
+                        </span>
+                      </div>
                     </div>
                   );
                 }}

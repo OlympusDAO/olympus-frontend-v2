@@ -11,8 +11,8 @@ import { formatUsd } from "@/lib/liveness/formatters";
 import { PulseDot } from "@/components/pulse-dot.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
-import iconDark from "@/assets/protocol-2-l.png";
-import iconLight from "@/assets/protocol-2-b.png";
+import iconDark from "@/assets/protocol-2-l.webp";
+import iconLight from "@/assets/protocol-2-b.webp";
 
 export function ProtocolEmissionManager() {
   const { data: em, isLoading } = useEmissionManager();
@@ -47,9 +47,9 @@ export function ProtocolEmissionManager() {
 
   return (
     <Card className="p-5 flex flex-col">
-      <div className=" flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <TooltipInfo title="The Emission Manager controls OHM supply expansion when price premium over backing exceeds the minimum threshold.">
-          <p className="text-[15px]/[20px] font-semibold text-primary-t"> Emission Manager</p>
+          <p className="text-sm font-semibold text-primary-t">Emission Manager</p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
           <span className="text-xs text-secondary-t">{statusLabel}</span>
@@ -64,10 +64,10 @@ export function ProtocolEmissionManager() {
           className="min-w-18 h-18"
         />
         <div>
-          <p className="text-[15px]/[20px] font-semibold mb-1">
+          <p className="text-sm font-semibold mb-1">
             Supply only expands when the market demands it
           </p>
-          <p className="text-secondary-t text-xs">
+          <p className="text-secondary-t text-xs font-normal">
             The Emission Manager monitors OHM's premium to backing. Above threshold, it enables
             controlled supply growth via CDs. Below it, YRF buybacks dominate and supply contracts.
           </p>
@@ -76,15 +76,15 @@ export function ProtocolEmissionManager() {
       <Separator className="my-4" />
 
       {/* Premium Gauge — hero element */}
-      <div className="">
-        <TooltipInfo
-          title={`Emissions activate when OHM premium over EM backing ($${state.backing.toFixed(2)}) exceeds ${thresholdPct.toFixed(0)}%. Current premium: ${currentPremium.toFixed(1)}%. OHM needs to reach ${formatUsd(emissionTriggerPrice)} to trigger.`}
-          className="text-[15px]/[20px] text-secondary-t"
-        >
-          Premium to Threshold
-        </TooltipInfo>
-        <div className="mt-2 flex items-center max-xs:flex-col max-xs:items-start">
-          <div className="flex items-center gap-x-2 min-w-55.5 max-xs:min-w-0">
+      <div className="grid grid-cols-2 items-end max-xs:grid-cols-1 max-xs:gap-y-3">
+        <div className="space-y-1">
+          <TooltipInfo
+            title={`Emissions activate when OHM premium over EM backing ($${state.backing.toFixed(2)}) exceeds ${thresholdPct.toFixed(0)}%. Current premium: ${currentPremium.toFixed(1)}%. OHM needs to reach ${formatUsd(emissionTriggerPrice)} to trigger.`}
+            className="text-sm font-normal text-secondary-t"
+          >
+            Premium to Threshold
+          </TooltipInfo>
+          <div className="flex items-center gap-x-2">
             <CircleProgress
               value={Math.min(premiumProgress, 100)}
               size={28}
@@ -92,34 +92,34 @@ export function ProtocolEmissionManager() {
               type={premiumExceedsThreshold ? "success" : "warning"}
             />
             <NumberFlow
-              className="text-[32px]/[40px] font-semibold"
+              className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
               format={{ style: "percent" }}
               value={currentPremium / 100}
             />
           </div>
-          <div className="text-right">
-            <p className="text-xs text-secondary-t">Trigger Price</p>
-            <NumberFlow
-              className="tabular-nums text-[15px]/[20px] font-semibold"
-              value={emissionTriggerPrice}
-              suffix="/OHM"
-            />
-          </div>
+        </div>
+        <div className="space-y-0.5">
+          <p className="text-xs font-normal text-secondary-t">Trigger Price</p>
+          <NumberFlow
+            className="tabular-nums text-sm font-semibold"
+            value={emissionTriggerPrice}
+            suffix="/OHM"
+          />
         </div>
       </div>
 
       <Separator className="my-4" />
 
-      <div className="flex items-center gap-4 max-xs:flex-col max-xs:items-start">
-        <div className="min-w-55.5 max-xs:min-w-0">
+      <div className="grid grid-cols-2 max-xs:grid-cols-1 max-xs:gap-y-4">
+        <div>
           <TooltipInfo
             title="The base rate of OHM supply expansion per beat when emissions are active."
-            className="text-xs text-tertiary-t"
+            className="text-xs font-normal text-secondary-t"
           >
             Base Rate
           </TooltipInfo>
           <NumberFlow
-            className="tabular-nums text-[15px]/[20px] font-semibold"
+            className="tabular-nums text-sm font-semibold"
             value={state.baseEmissionRate}
             format={{ style: "percent" }}
           />
@@ -127,14 +127,11 @@ export function ProtocolEmissionManager() {
         <div>
           <TooltipInfo
             title="Backing price used by the Emission Manager to calculate premium. Updated periodically."
-            className="text-xs text-tertiary-t"
+            className="text-xs font-normal text-secondary-t"
           >
             EM Backing
           </TooltipInfo>
-          <NumberFlow
-            className="tabular-nums text-[15px]/[20px] font-semibold"
-            value={state.backing}
-          />
+          <NumberFlow className="tabular-nums text-sm font-semibold" value={state.backing} />
         </div>
       </div>
 
@@ -144,16 +141,16 @@ export function ProtocolEmissionManager() {
           <div className="mb-3">
             <TooltipInfo
               title={`Last ${em.recentBackingUpdates.length} emission beats showing OHM supply added and reserves collected per beat.`}
-              className="text-xs font-medium uppercase tracking-widest text-secondary-t"
+              className="text-xs font-semibold uppercase tracking-[0.08em] text-primary-t"
             >
               Last {em.recentBackingUpdates.length} Emission Beats
             </TooltipInfo>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2">
             <div>
-              <p className="text-xs text-tertiary-t">Supply Emitted</p>
+              <p className="text-xs font-normal text-secondary-t">Supply Emitted</p>
               <NumberFlow
-                className="tabular-nums text-[15px]/[20px] font-semibold"
+                className="tabular-nums text-sm font-semibold"
                 format={{ style: "decimal", notation: "standard" }}
                 value={Math.round(em.totalSupplyEmitted)}
                 prefix="+"
@@ -161,9 +158,9 @@ export function ProtocolEmissionManager() {
               />
             </div>
             <div>
-              <p className="text-xs text-tertiary-t">Reserves Added</p>
+              <p className="text-xs font-normal text-secondary-t">Reserves Added</p>
               <NumberFlow
-                className="tabular-nums text-[15px]/[20px] font-semibold"
+                className="tabular-nums text-sm font-semibold"
                 value={Math.round(em.totalReservesAdded)}
                 prefix="+"
               />

@@ -287,7 +287,7 @@ export function RevenueFlowDiagram({
                 ref={(el) => {
                   sourceRefs.current[i] = el;
                 }}
-                className="rounded-xl border px-3 py-2 text-right transition-opacity"
+                className="rounded-xl border px-3 py-2 text-center transition-opacity"
                 style={{
                   borderColor: `color-mix(in oklch, ${s.color} 20%, transparent)`,
                   backgroundColor: `color-mix(in oklch, ${s.color} 5%, transparent)`,
@@ -323,7 +323,7 @@ export function RevenueFlowDiagram({
                   Weekly Revenue
                 </p>
               </div>
-              <p className="tabular-nums text-2xl font-bold tracking-tight">
+              <p className="tabular-nums text-2xl font-semibold tracking-tight">
                 {formatUsd(totalRevenue, true)}
               </p>
               <p className="mt-0.5 text-xs text-secondary-t">
@@ -344,7 +344,7 @@ export function RevenueFlowDiagram({
                   Buyback & Burn
                 </p>
               </div>
-              <p className="tabular-nums text-xl font-bold tracking-tight">
+              <p className="tabular-nums text-xl font-semibold tracking-tight">
                 {weeklyBurnsFormatted} OHM
               </p>
               <p className="mt-0.5 text-xs text-secondary-t">
@@ -362,7 +362,7 @@ export function RevenueFlowDiagram({
                   Backing Per OHM
                 </p>
               </div>
-              <p className="tabular-nums text-xl font-bold tracking-tight text-green">
+              <p className="tabular-nums text-xl font-semibold tracking-tight text-green">
                 {backingValue}
               </p>
               <p className="mt-0.5 text-xs text-secondary-t">{deflationRate}% annual deflation</p>
@@ -433,7 +433,9 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Weekly Revenue
           </p>
-          <p className="mt-1 tabular-nums text-2xl font-bold">{formatUsd(totalRevenue, true)}</p>
+          <p className="mt-1 tabular-nums text-2xl font-semibold">
+            {formatUsd(totalRevenue, true)}
+          </p>
         </div>
 
         {/* Arrow down */}
@@ -467,7 +469,7 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Buyback & Burn
           </p>
-          <p className="mt-1 tabular-nums text-lg font-bold">{weeklyBurnsFormatted} OHM</p>
+          <p className="mt-1 tabular-nums text-lg font-semibold">{weeklyBurnsFormatted} OHM</p>
         </div>
 
         {/* Arrow down */}
@@ -502,7 +504,7 @@ export function RevenueFlowDiagram({
           <p className="text-[10px] font-medium uppercase tracking-widest text-tertiary-t">
             Backing Per OHM
           </p>
-          <p className="mt-1 tabular-nums text-lg font-bold text-green">{backingValue}</p>
+          <p className="mt-1 tabular-nums text-lg font-semibold text-green">{backingValue}</p>
           <p className="text-[10px] text-tertiary-t">{deflationRate}% deflation/yr</p>
         </div>
       </div>
