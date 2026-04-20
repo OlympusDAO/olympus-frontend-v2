@@ -14,6 +14,7 @@ import type { Format } from "@number-flow/react";
 import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { Segmented } from "@/components/ui/tabs.tsx";
+import { Spinner } from "@/components/spinner";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useTreasuryHistory } from "@/modules/pulse/hooks/useTreasuryHistory";
 import goldenTexture from "@/assets/golden-texture.webp";
@@ -143,7 +144,7 @@ export function TreasuryBackingCard() {
               style={{ backgroundImage: `url(${goldenTexture})` }}
             />
             <div className="flex flex-col gap-2">
-              <p className="text-sm/5 font-normal">
+              <p className="text-sm/5 font-semibold">
                 The Olympus treasury manages protocol assets primarily consisting of stables, LP
                 positions and the Cooler loan book.
               </p>
@@ -301,15 +302,9 @@ export function TreasuryBackingCard() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 items-center justify-center">
-            <p className="text-secondary-t text-sm">
-              Loading chart data
-              <span className="inline-flex">
-                <span className="animate-[loading-dot_1.2s_ease-in-out_infinite]">.</span>
-                <span className="animate-[loading-dot_1.2s_ease-in-out_0.2s_infinite]">.</span>
-                <span className="animate-[loading-dot_1.2s_ease-in-out_0.4s_infinite]">.</span>
-              </span>
-            </p>
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2">
+            <Spinner className="size-8" />
+            <p className="text-secondary-t text-sm">Loading chart data</p>
           </div>
         )}
       </div>

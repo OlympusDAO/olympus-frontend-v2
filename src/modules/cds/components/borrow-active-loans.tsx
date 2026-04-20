@@ -21,6 +21,7 @@ import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault.ts";
 import { getContractAddress, ContractName } from "@/lib/contracts.ts";
 import { formatEther } from "viem";
 import { formatTermSuffix } from "@/lib/utils.ts";
+import { Spinner } from "@/components/spinner.tsx";
 import { BorrowRepayLoanModal } from "./borrow-repay-loan-modal.tsx";
 import { BorrowExtendLoanModal } from "./borrow-extend-loan-modal.tsx";
 
@@ -259,7 +260,10 @@ export const BorrowActiveLoans = () => {
           <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
             <span className="text-xs text-secondary-t font-normal">Active Loans</span>
           </div>
-          <div className="p-8 text-center text-secondary-t text-sm">Loading loans...</div>
+          <div className="flex flex-col items-center justify-center gap-2 p-8">
+            <Spinner className="size-8" />
+            <p className="text-secondary-t text-sm">Loading loans</p>
+          </div>
         </div>
       ) : loansWithData.length === 0 ? (
         <div className="rounded-3xl overflow-hidden shadow-surface-level-2">

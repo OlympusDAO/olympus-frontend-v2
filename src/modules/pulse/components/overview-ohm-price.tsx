@@ -27,7 +27,12 @@ export function OverviewOhmPrice() {
         </div>
       </div>
 
-      <SparklineChart data={dataPoints} dataKey="price" isPositive={isPositive} />
+      <SparklineChart
+        data={dataPoints}
+        dataKey="price"
+        isPositive={isPositive}
+        valueLabel="OHM Price"
+      />
     </Card>
   );
 }

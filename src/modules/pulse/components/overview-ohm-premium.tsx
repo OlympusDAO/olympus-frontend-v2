@@ -43,7 +43,12 @@ export function OverviewOhmPremium() {
         </div>
       </div>
 
-      <SparklineChart data={premiumDataPoints} dataKey="premium" isPositive={isPositive} />
+      <SparklineChart
+        data={premiumDataPoints}
+        dataKey="premium"
+        isPositive={isPositive}
+        valueLabel="OHM Premium"
+      />
     </Card>
   );
 }

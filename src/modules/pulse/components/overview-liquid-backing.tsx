@@ -31,7 +31,12 @@ export function OverviewLiquidBacking() {
         </div>
       </div>
 
-      <SparklineChart data={dataPoints} dataKey="backing" isPositive={isPositive} />
+      <SparklineChart
+        data={dataPoints}
+        dataKey="backing"
+        isPositive={isPositive}
+        valueLabel="Liquid Backing"
+      />
     </Card>
   );
 }

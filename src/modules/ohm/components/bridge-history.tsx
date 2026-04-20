@@ -21,6 +21,7 @@ import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Spinner } from "@/components/spinner.tsx";
 import {
   Table,
   TableHeader,
@@ -179,8 +180,9 @@ export function BridgeHistory() {
   if (isLoading) {
     return (
       <Card className="flex items-center justify-center">
-        <div className="flex items-center justify-center py-16">
-          <p className="text-sm text-secondary-t">Loading bridge history...</p>
+        <div className="flex flex-col items-center justify-center gap-2 py-16">
+          <Spinner className="size-8" />
+          <p className="text-sm text-secondary-t">Loading bridge history</p>
         </div>
       </Card>
     );

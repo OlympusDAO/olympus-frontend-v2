@@ -139,11 +139,11 @@ export function TreasuryAssetsCard() {
           </PieChart>
         </div>
 
-        <table className="flex-1 text-sm min-w-0">
+        <table className="flex-1 text-sm min-w-0 w-full">
           <thead>
             <tr className="border-b border-a10-b">
               <th className="pb-2 text-left text-xs font-normal text-secondary-t">Asset</th>
-              <th className="pb-2 text-right text-xs font-normal text-secondary-t">APY</th>
+              <th className="pb-2 pr-4 text-right text-xs font-normal text-secondary-t">APY</th>
               <th className="pb-2 text-right text-xs font-normal text-secondary-t">Value</th>
             </tr>
           </thead>

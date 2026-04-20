@@ -15,6 +15,7 @@ import { Form, FormField, FormItem } from "@/components/ui/form";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { InfoIcon, Settings } from "lucide-react";
 import { CreatePositionModal } from "@/components/create-position-modal";
+import { Spinner } from "@/components/spinner";
 import { DepositPositionInfo } from "./deposit-position-info";
 import { useDepositPeriods } from "@/lib/hooks/cds/useDepositPeriods";
 import { useToken } from "@/lib/hooks/useToken";
@@ -161,7 +162,10 @@ export function DepositMarketForm({
             </TooltipInfo>
             <TabsList className="rounded-full w-full">
               {isLoadingPeriods ? (
-                <div className="text-sm text-secondary-t">Loading terms...</div>
+                <div className="flex items-center gap-2 text-sm text-secondary-t">
+                  <Spinner className="size-4" />
+                  Loading terms
+                </div>
               ) : enabledPeriods.length === 0 ? (
                 <div className="text-sm text-secondary-t">No terms available</div>
               ) : (
