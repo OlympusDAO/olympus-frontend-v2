@@ -36,10 +36,10 @@ export function BalancesPage() {
   );
   const { balances: tokenBalances, isLoading: balancesLoading } = useAllTokenBalances(tokenList);
 
-  const ohmBalances = tokenBalances["OHM"];
-  const sohmBalances = tokenBalances["sOHM"];
-  const gohmBalances = tokenBalances["gOHM"];
-  const wsohmBalances = tokenBalances["wsOHM"];
+  const ohmBalances = tokenBalances.OHM;
+  const sohmBalances = tokenBalances.sOHM;
+  const gohmBalances = tokenBalances.gOHM;
+  const wsohmBalances = tokenBalances.wsOHM;
   const v1OhmBalances = tokenBalances["OHM v1"];
   const v1SohmBalances = tokenBalances["sOHM v1"];
 
@@ -68,7 +68,7 @@ export function BalancesPage() {
       {
         symbol: "OHM",
         label: "OHM",
-        icon: "OHMColorTokenIcon" as IconName,
+        icon: "OHMTokenIcon" as IconName,
         balances: ohmBalances,
         price: ohmPriceNum,
       },
@@ -76,7 +76,7 @@ export function BalancesPage() {
         symbol: "sOHM",
         label: "sOHM",
         sublabel: "Staked OHM",
-        icon: "OHMColorTokenIcon" as IconName,
+        icon: "OHMTokenIcon" as IconName,
         balances: sohmBalances,
         price: ohmPriceNum,
       },
@@ -84,7 +84,7 @@ export function BalancesPage() {
         symbol: "gOHM",
         label: "gOHM",
         sublabel: "Governance OHM",
-        icon: "GOHMColorTokenIcon" as IconName,
+        icon: "GOHMTokenIcon" as IconName,
         balances: gohmBalances,
         price: gohmPriceNum,
       },
@@ -92,7 +92,7 @@ export function BalancesPage() {
         symbol: "wsOHM",
         label: "wsOHM",
         sublabel: "Wrapped sOHM (legacy)",
-        icon: "GOHMColorTokenIcon" as IconName,
+        icon: "GOHMTokenIcon" as IconName,
         balances: wsohmBalances,
         price: gohmPriceNum,
       },
@@ -100,7 +100,7 @@ export function BalancesPage() {
         symbol: "OHM v1",
         label: "OHM v1",
         sublabel: "Legacy",
-        icon: "OHMColorTokenIcon" as IconName,
+        icon: "OHMTokenIcon" as IconName,
         balances: v1OhmBalances,
         price: ohmPriceNum,
       },
@@ -108,7 +108,7 @@ export function BalancesPage() {
         symbol: "sOHM v1",
         label: "sOHM v1",
         sublabel: "Legacy",
-        icon: "OHMColorTokenIcon" as IconName,
+        icon: "OHMTokenIcon" as IconName,
         balances: v1SohmBalances,
         price: ohmPriceNum,
       },

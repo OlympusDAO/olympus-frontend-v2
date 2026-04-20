@@ -14,8 +14,8 @@ export { default as diamondPlusIcon } from "./diamond-plus.svg?react";
 export { default as banknoteArrowDownIcon } from "./banknote-arrow-down.svg?react";
 
 export { default as USDSColorTokenIcon } from "./tokens/usds-color.svg?react";
-export { default as OHMColorTokenIcon } from "./tokens/ohm-color.svg?react";
-export { default as GOHMColorTokenIcon } from "./tokens/gohm-color.svg?react";
+export { default as OHMTokenIcon } from "./tokens/OHM.svg?react";
+export { default as GOHMTokenIcon } from "./tokens/gOHM.svg?react";
 export { default as iOHMTokenIcon } from "./tokens/iOHM.svg?react";
 export { default as drachmaTokenIcon } from "./tokens/drachma.svg?react";
 export { default as cdUSDSIcon } from "./tokens/cdUSDS.svg?react";

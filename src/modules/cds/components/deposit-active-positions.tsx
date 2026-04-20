@@ -134,7 +134,7 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
 
       {/* OHM pill */}
       <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
-        <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+        <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
           <span className="text-xs font-semibold">{ohmReceived} OHM</span>
           {ohmPrice && <span className="text-xs text-secondary-t">{ohmPrice}</span>}
@@ -193,6 +193,7 @@ const ActionsCell = ({
   meta: ReturnType<typeof useReactTable<Position>>["options"]["meta"];
 }) => {
   if (!position.data || !meta) return null;
+  const { periodMonths, wrapped } = position.data;
 
   return (
     <div className="flex items-center gap-2 justify-end">
@@ -200,7 +201,7 @@ const ActionsCell = ({
         Convert
       </Button>
 
-      {!position.data.wrapped ? (
+      {!wrapped ? (
         <Button size="sm" variant="secondary" onClick={() => meta.onWrap?.(position)}>
           Wrap
         </Button>
@@ -215,7 +216,7 @@ const ActionsCell = ({
             <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                const displayName = `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`;
+                const displayName = `cdUSDS-${formatTermSuffix(periodMonths)}`;
                 meta.onTransfer?.(position, displayName);
               }}
             >
@@ -415,6 +416,7 @@ export const DepositActivePositions = () => {
           <div className="block md:hidden space-y-4">
             {positions.map((position) => {
               if (!position.data) return null;
+              const { periodMonths } = position.data;
               const amount = formatPositionAmountLocal(position.data.remainingDeposit);
               const expiryDate = formatExpiryDate(position.data.expiry);
               const daysLeft = getDaysUntilExpiry(position.data.expiry);
@@ -440,7 +442,7 @@ export const DepositActivePositions = () => {
                       <div className="text-xs text-secondary-t">${amount}</div>
                     </div>
                     <RiArrowRightSLine className="size-4 text-secondary-t mx-1" />
-                    <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+                    <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
                     <div>
                       <div className="text-sm font-semibold">{ohmReceived} OHM</div>
                     </div>
@@ -499,10 +501,7 @@ export const DepositActivePositions = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleTransfer(
-                                position,
-                                `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`,
-                              )
+                              handleTransfer(position, `cdUSDS-${formatTermSuffix(periodMonths)}`)
                             }
                           >
                             Transfer

@@ -66,7 +66,7 @@ export function BorrowPositionInfo({
         <div className="flex flex-col gap-3">
           <InfoRow label="Collateral">
             <div className="flex items-center gap-1.5">
-              <Icon name="GOHMColorTokenIcon" className="size-4" />
+              <Icon name="GOHMTokenIcon" className="size-4" />
               <span className="font-medium">{formatGohm(projectedCollateral)} gOHM</span>
             </div>
           </InfoRow>

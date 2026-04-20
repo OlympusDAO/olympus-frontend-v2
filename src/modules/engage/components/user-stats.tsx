@@ -72,7 +72,7 @@ export const UserStats = () => {
           <div className="flex items-center justify-between">
             <p className="text-[15px]/[20px] text-secondary-t">Available to Convert</p>
             <div className="flex items-center gap-x-1">
-              <Icon name="OHMColorTokenIcon" className="size-4" />
+              <Icon name="OHMTokenIcon" className="size-4" />
               <NumberFlow
                 value={0}
                 format={{ style: "decimal", notation: "standard" }}
@@ -83,7 +83,7 @@ export const UserStats = () => {
           <div className="flex items-center justify-between">
             <p className="text-[15px]/[20px] text-secondary-t">Converted</p>
             <div className="flex items-center gap-x-1">
-              <Icon name="OHMColorTokenIcon" className="size-4" />
+              <Icon name="OHMTokenIcon" className="size-4" />
               <NumberFlow
                 value={0}
                 format={{ style: "decimal", notation: "standard" }}

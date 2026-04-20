@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export type Theme = "dark" | "light" | "system";
 
@@ -22,6 +22,26 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+/**
+ * Suppress CSS transitions for a single frame so that swapping the theme class
+ * does not trigger mid-transition animations on shadows, backgrounds, etc.
+ * Pattern borrowed from next-themes.
+ */
+function disableTransitionsOnce() {
+  const style = document.createElement("style");
+  style.appendChild(
+    document.createTextNode(
+      "*,*::before,*::after{-webkit-transition:none!important;transition:none!important;animation:none!important}",
+    ),
+  );
+  document.head.appendChild(style);
+  // Force a reflow so the style takes effect before the class swap.
+  (() => window.getComputedStyle(document.body))();
+  window.setTimeout(() => {
+    document.head.removeChild(style);
+  }, 1);
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
@@ -32,35 +52,39 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
   );
 
-  useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove("light", "dark");
-
+  const resolvedTheme = useMemo<"light" | "dark">(() => {
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
-
-    root.classList.add(theme);
+    return theme;
   }, [theme]);
 
-  const value = {
-    theme,
-    resolvedTheme: (theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-      : theme) as "light" | "dark",
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
-  };
+  const isFirstRun = useRef(true);
+
+  useLayoutEffect(() => {
+    const root = window.document.documentElement;
+    // Skip the transition kill on the first run — the class is already set by the
+    // blocking script in index.html, so there is nothing to animate away from.
+    if (!isFirstRun.current) {
+      disableTransitionsOnce();
+    }
+    isFirstRun.current = false;
+    root.classList.remove("light", "dark");
+    root.classList.add(resolvedTheme);
+    root.style.colorScheme = resolvedTheme;
+  }, [resolvedTheme]);
+
+  const value = useMemo<ThemeProviderState>(
+    () => ({
+      theme,
+      resolvedTheme,
+      setTheme: (next: Theme) => {
+        localStorage.setItem(storageKey, next);
+        setTheme(next);
+      },
+    }),
+    [theme, resolvedTheme, storageKey],
+  );
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

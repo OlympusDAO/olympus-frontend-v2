@@ -43,7 +43,7 @@ export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePan
 
       <div className="space-y-3 text-sm">
         <BalanceRow
-          icon="OHMColorTokenIcon"
+          icon="OHMTokenIcon"
           symbol="OHM"
           label="OHM Balance"
           before={ohmBalanceNum.toFixed(2)}
@@ -52,7 +52,7 @@ export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePan
         />
         <Separator />
         <BalanceRow
-          icon="GOHMColorTokenIcon"
+          icon="GOHMTokenIcon"
           symbol="gOHM"
           label="gOHM Balance"
           before={gohmBalanceNum.toFixed(4)}
@@ -72,7 +72,7 @@ function BalanceRow({
   after,
   decimals,
 }: {
-  icon: "OHMColorTokenIcon" | "GOHMColorTokenIcon";
+  icon: "OHMTokenIcon" | "GOHMTokenIcon";
   symbol: string;
   label: string;
   before: string;

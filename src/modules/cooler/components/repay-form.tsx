@@ -86,13 +86,13 @@ export function RepayForm({ loan }: RepayFormProps) {
   useEffect(() => {
     if (!repayTxSuccess) return;
     trackCoolerRepay({ repayAmount: formatUnits(repayAmount, 18), txHash: repayTxHash });
-  }, [repayTxSuccess]);
+  }, [repayTxSuccess, repayAmount, repayTxHash]);
 
   // Spender for USDS approval
   const spenderAddress = isComposite ? compositesAddress : monoCoolerAddress;
 
   const { allowance, queryKey: allowanceQueryKey } = useTokenAllowance(
-    usdsToken.address!,
+    usdsToken.address as `0x${string}`,
     address,
     spenderAddress,
   );
@@ -162,7 +162,14 @@ export function RepayForm({ loan }: RepayFormProps) {
       return { label: "Insufficient USDS Balance", disabled: true };
     if (isBelowMinDebt && projectedDebt > ZERO)
       return { label: "Minimum debt is 1,000 USDS", disabled: true };
-    return { label: getActionLabel(), disabled: false };
+    const label = isComposite
+      ? "Repay & Withdraw"
+      : isRepayOnly
+        ? isFullRepay
+          ? "Repay All"
+          : "Repay"
+        : "Enter Amount";
+    return { label, disabled: false };
   }, [
     address,
     repayAmount,
@@ -173,12 +180,6 @@ export function RepayForm({ loan }: RepayFormProps) {
     isRepayOnly,
     isFullRepay,
   ]);
-
-  function getActionLabel() {
-    if (isComposite) return "Repay & Withdraw";
-    if (isRepayOnly) return isFullRepay ? "Repay All" : "Repay";
-    return "Enter Amount";
-  }
 
   const handleSubmitClick = () => {
     if (validationState.disabled) return;
@@ -340,7 +341,7 @@ export function RepayForm({ loan }: RepayFormProps) {
               {collateralToBeReleased > ZERO ? formatGohm(collateralToBeReleased) : "0.0000"}
             </p>
             <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2">
-              <Icon name="GOHMColorTokenIcon" className="size-5" />
+              <Icon name="GOHMTokenIcon" className="size-5" />
               <p className="text-[15px]/[20px] font-semibold whitespace-nowrap">gOHM</p>
             </div>
           </div>

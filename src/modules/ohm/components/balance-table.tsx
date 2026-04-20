@@ -93,10 +93,12 @@ const columns = [
       const token = getValue();
       return (
         <div className="flex items-center gap-2.5">
-          <Icon name={token.icon} size={28} />
+          <Icon name={token.icon} className="size-9" />
           <div>
-            <div className="font-medium">{token.label}</div>
-            {token.sublabel && <div className="text-xs text-tertiary-t">{token.sublabel}</div>}
+            <div className="text-sm/5 font-medium">{token.label}</div>
+            {token.sublabel && (
+              <div className="text-xs/4 font-normal text-secondary-t">{token.sublabel}</div>
+            )}
           </div>
         </div>
       );
@@ -104,7 +106,7 @@ const columns = [
   }),
   columnHelper.accessor("chain", {
     header: "Chain",
-    cell: ({ getValue }) => <ChainIcon chainId={getValue().chainId} />,
+    cell: ({ getValue }) => <ChainIcon chainId={getValue().chainId} size={24} />,
   }),
   columnHelper.accessor(
     (row) => ({ balance: row.chain.formattedBalance, usdValue: row.usdValue }),
@@ -115,8 +117,8 @@ const columns = [
         const { balance, usdValue } = getValue();
         return (
           <>
-            <div className="font-semibold">{formatBalance(balance)}</div>
-            <div className="text-xs text-secondary-t">{formatUsd(usdValue)}</div>
+            <div className="text-sm/5 font-semibold">{formatBalance(balance)}</div>
+            <div className="text-xs/4 font-normal text-secondary-t">{formatUsd(usdValue)}</div>
           </>
         );
       },
@@ -125,7 +127,7 @@ const columns = [
   columnHelper.accessor((row) => row.token.price, {
     id: "price",
     header: "Price",
-    cell: ({ getValue }) => <div className="font-semibold">{formatUsd(getValue())}</div>,
+    cell: ({ getValue }) => <div className="text-sm/5 font-semibold">{formatUsd(getValue())}</div>,
   }),
   columnHelper.accessor("action", {
     header: "",

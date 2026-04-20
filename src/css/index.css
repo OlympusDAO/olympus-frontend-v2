@@ -9,6 +9,19 @@
 @import "./variables.css";
 @import "./theme.css";
 
+/*
+ * Render chain icons in the RainbowKit "Switch Networks" modal as rectangles (native SVG shape).
+ * RainbowKit prefixes all testIds with `rk-`, so each AsyncImage wrapper ends up as
+ * `data-testid="rk-chain-option-<id>-icon"`. The wrapper has `overflow: hidden` and a full
+ * border-radius (vanilla-extract class) that clips the icon into a circle.
+ * Placed at the root (outside @layer) so it wins over RainbowKit's unlayered styles.
+ */
+[data-testid^="rk-chain-option-"][data-testid$="-icon"],
+[data-testid^="rk-chain-option-"][data-testid$="-icon"] img {
+  /* biome-ignore lint: needed to override library styles */
+  border-radius: 0 !important;
+}
+
 @layer base {
   /* Remove default focus states */
   *:focus,

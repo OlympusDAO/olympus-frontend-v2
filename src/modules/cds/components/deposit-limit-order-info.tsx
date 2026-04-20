@@ -1,5 +1,5 @@
 import { TooltipInfo } from "@/components/ui/tooltip";
-import OHMIcon from "@/assets/OHM.png";
+import { Icon } from "@/components/icon";
 import { calculateOhmAtMaxPrice, parseMaxPrice, formatOhm } from "@/lib/utils/priceCalculations";
 import { parseEther } from "viem";
 
@@ -44,7 +44,7 @@ export function DepositLimitOrderInfo({
             Potential OHM (at max price)
           </TooltipInfo>
           <div className="flex items-center gap-1">
-            <img src={OHMIcon} alt="OHM" className="w-4 h-4" />
+            <Icon name="OHMTokenIcon" className="size-4" />
             <span className="text-xs font-semibold">{formatOhm(expectedOhm)} OHM</span>
           </div>
         </div>

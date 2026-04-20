@@ -98,7 +98,7 @@ const columns = [
     header: "Amount",
     cell: ({ getValue }) => (
       <div className="flex items-center gap-x-1">
-        <Icon name="OHMColorTokenIcon" size={20} />
+        <Icon name="OHMTokenIcon" size={20} />
         <NumberFlow
           className="text-xs font-semibold"
           value={Number(getValue())}

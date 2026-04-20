@@ -123,7 +123,7 @@ export function ProtocolYrf() {
             <p className="text-sm font-normal text-secondary-t">Lifetime OHM Repurchased</p>
           </TooltipInfo>
           <div className="flex items-center gap-x-2">
-            <Icon name="OHMColorTokenIcon" size={28} />
+            <Icon name="OHMTokenIcon" size={28} />
             <NumberFlow
               format={{ style: "decimal", notation: "standard" }}
               value={totalOhmBurned}

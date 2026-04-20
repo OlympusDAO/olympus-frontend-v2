@@ -10,7 +10,7 @@ import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useRecei
 import { formatTickPrice } from "@/lib/utils/formatters";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
 import cdUSDSIcon from "@/assets/cdUSDS.png";
-import OHMIcon from "@/assets/OHM.png";
+import { Icon } from "@/components/icon";
 
 interface DepositPositionInfoProps {
   depositAmount: string;
@@ -82,7 +82,7 @@ export function DepositPositionInfo({
             Convertible To
           </TooltipInfo>
           <div className="flex items-center gap-1">
-            <img src={OHMIcon} alt="OHM" className="w-4 h-4" />
+            <Icon name="OHMTokenIcon" className="size-4" />
             <span className="text-xs font-semibold">
               {isLoadingPreview
                 ? "Loading..."

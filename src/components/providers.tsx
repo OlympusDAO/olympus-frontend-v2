@@ -1,5 +1,6 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
+import { useMemo } from "react";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { hashFn } from "@wagmi/core/query";
@@ -33,19 +34,20 @@ const queryClient = new QueryClient({
  * Syncs the RainbowKit modal theme with the app's dark/light mode.
  */
 function ThemedRainbowKit({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const resolvedDark = resolvedTheme === "dark";
 
-  const resolvedDark =
-    theme === "dark" ||
-    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  const themeFactory = resolvedDark ? darkTheme : lightTheme;
-  const rkTheme = themeFactory({
-    borderRadius: "medium",
-    fontStack: "system",
-    accentColor: "#FFFFFF",
-    accentColorForeground: "#1A1A1A",
-  });
+  const rkTheme = useMemo(() => {
+    const themeFactory = resolvedDark ? darkTheme : lightTheme;
+    const theme = themeFactory({
+      borderRadius: "medium",
+      fontStack: "system",
+      accentColor: resolvedDark ? "#FFFFFF" : "#000000",
+      accentColorForeground: resolvedDark ? "#1A1A1A" : "#FFFFFF",
+    });
+    theme.shadows.selectedOption = "none";
+    return theme;
+  }, [resolvedDark]);
 
   return <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>;
 }

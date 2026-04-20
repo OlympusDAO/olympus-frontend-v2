@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem } from "@/components/ui/form";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import OHMIcon from "@/assets/OHM.png";
+import { Icon } from "@/components/icon";
 import { usePreviewConvert } from "@/lib/hooks/cds/usePreviewConvert";
 import { useConvertPosition } from "@/lib/hooks/cds/useConvertPosition";
 
@@ -212,7 +212,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
       number: 2,
       title: `Convert to OHM`,
       detail: `${convertAmount} USDS-${term} → ${calculatedReceive} OHM`,
-      icon: OHMIcon,
+      icon: <Icon name="OHMTokenIcon" className="size-5" />,
       isActive: currentStep === 2,
       isCompleted: isSuccess,
       isLoading: currentStep === 2 && isConverting,
@@ -307,9 +307,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
-                    </div>
+                    <div className="flex items-center gap-2">{step.icon}</div>
                   </div>
                   {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
@@ -411,7 +409,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">You Receive</p>
                     <div className="flex items-center gap-2">
-                      <img src={OHMIcon} alt="OHM" className="w-5 h-5" />
+                      <Icon name="OHMTokenIcon" className="size-5" />
                       <span>{calculatedReceive} OHM</span>
                     </div>
                   </div>

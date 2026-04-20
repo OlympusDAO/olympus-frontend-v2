@@ -78,7 +78,7 @@ export function BridgeForm({
   // Approval check — OHM must be approved to the Minter contract
   const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
   const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance } = useTokenAllowance(ohmAddress!, address, minterAddress);
+  const { allowance } = useTokenAllowance(ohmAddress as `0x${string}`, address, minterAddress);
 
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
@@ -318,7 +318,7 @@ function ChainInputSection({
             </span>
           )}
           <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2">
-            <Icon name="OHMColorTokenIcon" className="size-5" />
+            <Icon name="OHMTokenIcon" className="size-5" />
             <span className="text-[15px]/[20px] font-semibold whitespace-nowrap">OHM</span>
           </div>
         </div>
