@@ -32,13 +32,10 @@ export function OverviewYrf() {
       {/* Header */}
       <div className=" flex items-center justify-between">
         <TooltipInfo title="The Yield Repurchase Facility converts protocol revenue into OHM buybacks, creating continuous buy pressure.">
-          <p className=" text-[15px]/[20px] font-semibold text-primary-t">
-            {" "}
-            Yield Repurchase Facility{" "}
-          </p>
+          <p className="text-sm/5 font-semibold text-primary-t">Yield Repurchase Facility</p>
         </TooltipInfo>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-secondary-t md:order-last">
+        <div className="flex items-center gap-2">
+          <span className="text-xs/4 text-secondary-t font-normal">
             {isActive ? "Active" : "Inactive"}
           </span>
           <PulseDot variant={isActive ? "green" : "yellow"} />
@@ -50,17 +47,14 @@ export function OverviewYrf() {
         {/* Left: Lifetime OHM Repurchased */}
         <div>
           <TooltipInfo title="Total OHM repurchased via YRF bond markets since inception.">
-            <p className=" text-[15px]/[20px] text-secondary-t font-medium">
-              {" "}
-              Lifetime OHM Repurchased
-            </p>
+            <p className="text-sm/5 text-secondary-t font-normal">Lifetime OHM Repurchased</p>
           </TooltipInfo>
           <div className="flex items-center gap-x-2 mt-1">
             <Icon className="size-7" name="OHMColorTokenIcon" />
             <NumberFlow
               value={totalOhmBurned}
               format={{ style: "decimal", notation: "standard" }}
-              className="text-[32px]/[32px] font-semibold"
+              className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
             />
           </div>
         </div>
@@ -71,14 +65,14 @@ export function OverviewYrf() {
             <TooltipInfo
               title={`At the current YRF buyback rate, annualized supply change is ${formatNumber(Math.round(annualBurns))} OHM/yr.`}
             >
-              <p className="text-xs text-secondary-t font-medium">Annual Supply Impact</p>
+              <p className="text-xs/4 text-secondary-t font-normal">Annual Supply Impact</p>
             </TooltipInfo>
           </div>
-          <div className="flex items-center gap-x-1">
+          <div className="flex items-center justify-end gap-x-1 mt-1">
             <NumberFlow
               value={supplyDeflationRate / 100}
               format={{ style: "percent", notation: "standard" }}
-              className="text-[15px]/[20px] font-semibold"
+              className="text-sm/5 font-semibold [--number-flow-char-height:1.4286em]"
             />
             <NumberFlow
               suffix="OHM/yr"
@@ -87,7 +81,7 @@ export function OverviewYrf() {
                 style: "decimal",
                 notation: window.innerWidth <= 639 ? "compact" : "standard",
               }}
-              className="text-[15px]/[20px] text-secondary-t"
+              className="text-sm/5 text-secondary-t font-normal [--number-flow-char-height:1.4286em]"
             />
           </div>
         </div>

@@ -30,10 +30,10 @@ function Tabs({ className, variant, ...props }: TabsProps) {
   );
 }
 
-const tabsListVariants = cva("inline-flex p-[4px] w-fit items-center justify-center", {
+const tabsListVariants = cva("inline-flex p-[4px] w-fit items-center justify-center gap-0.5", {
   variants: {
     variant: {
-      segments: "bg-surface-a3 rounded-full",
+      segments: "bg-surface-a3 rounded-full outline outline-1 -outline-offset-1 outline-a3-b",
       underline: "",
       primary: "gap-x-4 p-0",
     },
@@ -68,12 +68,12 @@ function TabsList({ className, variant, size, ...props }: TabsListProps) {
 }
 
 const tabsTriggerVariants = cva(
-  "w-full cursor-pointer inline-flex flex-1 items-center justify-center whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:text-disabled-t disabled:[&_svg]:text-disabled-t [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "cursor-pointer inline-flex items-center justify-center whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:text-disabled-t disabled:[&_svg]:text-disabled-t [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         segments:
-          "bg-transparent rounded-full transition-colors text-secondary-t [&_svg]:text-secondary-t group-data-[active]/tabs-trigger:bg-surface-elastic-tab hover:group-data-[active]/tabs-trigger:bg-surface-a3 group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:shadow-drop-100 group-data-[active]/tabs-trigger:[&_svg]:text-primary-t",
+          "bg-transparent rounded-full transition-colors text-xs leading-4 font-semibold text-secondary-t [&_svg]:text-secondary-t hover:bg-surface-a3 hover:text-primary-t hover:[&_svg]:text-primary-t group-data-[active]/tabs-trigger:bg-surface-elastic-tab group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:[&_svg]:text-primary-t group-data-[active]/tabs-trigger:shadow-drop-100 group-data-[active]/tabs-trigger:hover:bg-surface-elastic-tab group-data-[active]/tabs-trigger:hover:text-primary-t group-data-[active]/tabs-trigger:hover:[&_svg]:text-primary-t",
         underline:
           "py-[18px] px-[20px] text-secondary-t text-sm hover:text-primary-t hover:bg-surface-a3 relative after:content-[''] after:absolute after:transition-colors after:left-0 after:right-0 after:bottom-0 after:w-full after:h-[3px] group-data-[active]/tabs-trigger:after:bg-primary-t",
         primary:
@@ -89,17 +89,17 @@ const tabsTriggerVariants = cva(
       {
         variant: "segments",
         size: "lg",
-        className: "h-[40px] [&_svg:not([class*='size-'])]:size-[24px] py-[8px] px-[14px]",
+        className: "h-[40px] [&_svg:not([class*='size-'])]:size-[24px] gap-3 py-[8px] px-[14px]",
       },
       {
         variant: "segments",
         size: "md",
-        className: "h-[32px] [&_svg:not([class*='size-'])]:size-[20px] text-sm py-[6px] px-[12px]",
+        className: "h-[32px] [&_svg:not([class*='size-'])]:size-[20px] gap-2 py-[6px] px-[12px]",
       },
       {
         variant: "segments",
         size: "sm",
-        className: "h-[24px] [&_svg:not([class*='size-'])]:size-[16px] text-xs py-[4px] px-[8px]",
+        className: "h-[24px] [&_svg:not([class*='size-'])]:size-[16px] gap-1.5 py-[4px] px-[8px]",
       },
     ],
     defaultVariants: {
@@ -122,8 +122,9 @@ function TabsTrigger({
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
-      className={cn("group/tabs-trigger w-full", {
-        " relative before:hidden h-full": variant === "segments",
+      className={cn("group/tabs-trigger", {
+        "relative before:hidden inline-flex items-center": variant === "segments",
+        "w-full": variant !== "segments",
       })}
       {...props}
     >

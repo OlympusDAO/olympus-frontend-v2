@@ -21,10 +21,11 @@ import { TransferPositionModal } from "@/components/transfer-position-modal";
 import { RedeemPositionModal } from "@/components/redeem-position-modal";
 import { useUserPositions } from "@/lib/hooks/cds/useUserPositions";
 import { formatEther } from "viem";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
 import { formatTermSuffix } from "@/lib/utils";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
 import { Icon } from "@/components/icon";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { TokenName } from "@/lib/tokens.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ declare module "@tanstack/react-table" {
     onUnwrap: (position: Position) => void;
     onTransfer: (position: Position, displayName: string) => void;
     onRedeem: (position: Position) => void;
-    ohmPrice: string;
+    ohmPrice: number;
   }
 }
 
@@ -105,16 +106,13 @@ const PositionTokenName = ({
 
 // ─── Cell components ──────────────────────────────────────────────────────────
 
-const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice: string }) => {
+const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice: number }) => {
   if (!position.data) return null;
   const amount = formatPositionAmount(position.data.remainingDeposit);
   const ohmReceived = calculateOhmReceived(
     position.data.remainingDeposit,
     position.data.conversionPrice,
   );
-  const ohmUsd = ohmPrice
-    ? `$${(parseFloat(ohmReceived) * parseFloat(ohmPrice)).toFixed(2)}`
-    : null;
 
   return (
     <div className="flex items-center gap-1">
@@ -138,7 +136,7 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
         <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
           <span className="text-xs font-semibold">{ohmReceived} OHM</span>
-          {ohmUsd && <span className="text-xs text-secondary-t">{ohmUsd}</span>}
+          {ohmPrice && <span className="text-xs text-secondary-t">{ohmPrice}</span>}
         </div>
       </div>
     </div>
@@ -237,7 +235,8 @@ const columnHelper = createColumnHelper<Position>();
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const DepositActivePositions = () => {
-  const { formattedPrice: ohmPrice } = useOhmPrice();
+  const OHMToken = useToken(TokenName.OHM);
+  const ohmPrice = OHMToken.price;
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isWrapModalOpen, setIsWrapModalOpen] = useState(false);
   const [wrapModalMode, setWrapModalMode] = useState<"wrap" | "unwrap">("wrap");

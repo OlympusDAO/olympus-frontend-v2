@@ -30,10 +30,10 @@ export function OverviewEmissionManager() {
       {/* Header */}
       <div className=" flex items-center justify-between">
         <TooltipInfo title="The Emission Manager controls OHM supply expansion when price premium over backing exceeds the minimum threshold.">
-          <p className=" text-[15px]/[20px] font-semibold text-primary-t"> Emission Manager </p>
+          <p className="text-sm/5 font-semibold text-primary-t">Emission Manager</p>
         </TooltipInfo>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-secondary-t">{statusLabel}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs/4 text-secondary-t font-normal">{statusLabel}</span>
           <PulseDot variant={statusColor} />
         </div>
       </div>
@@ -45,25 +45,25 @@ export function OverviewEmissionManager() {
           <TooltipInfo
             title={`Emissions activate when OHM premium over EM backing ($${backing.toFixed(2)}) exceeds ${thresholdPct.toFixed(0)}%.`}
           >
-            <p className="font-medium text-[15px]/[20px]">Premium to Threshold</p>
+            <p className="text-sm/5 text-secondary-t font-normal">Premium to Threshold</p>
           </TooltipInfo>
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-2 mt-1">
             <CircleProgress strokeWidth={4} size={28} value={premiumProgress} />
             <NumberFlow
               value={currentPremium / 100}
               format={{ style: "percent", notation: "standard" }}
-              className="text-[32px]/[32px] font-semibold"
+              className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
             />
           </div>
         </div>
 
         {/* Right: Trigger Price */}
         <div className="text-right">
-          <p className="mb-0.5 text-xs text-secondary-t font-medium">Trigger Price</p>
+          <p className="text-xs/4 text-secondary-t font-normal">Trigger Price</p>
           <NumberFlow
             suffix="/OHM"
             value={emissionTriggerPrice}
-            className="text-[15px]/[20px] font-semibold"
+            className="text-sm/5 font-semibold mt-1 p-0 [--number-flow-char-height:1.4286em]"
           />
         </div>
       </div>

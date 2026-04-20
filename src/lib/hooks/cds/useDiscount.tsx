@@ -1,6 +1,7 @@
 import React from "react";
 import { formatUnits } from "viem";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
+import { useToken } from "@/lib/hooks/useToken.tsx";
+import { TokenName } from "@/lib/tokens.ts";
 
 /**
  * Calculate the discount percentage between the conversion price and current OHM price
@@ -8,13 +9,14 @@ import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
  * @returns discount percentage as a number (e.g., 2.2 for 2.2%)
  */
 export function useDiscount(conversionPrice?: bigint) {
-  const { price: ohmPrice, isLoading: isLoadingPrice } = useOhmPrice();
+  const OHMToken = useToken(TokenName.OHM);
+  const ohmPrice = OHMToken.price;
 
   const discount = React.useMemo(() => {
     if (!ohmPrice || !conversionPrice) return 0;
 
     // Convert both prices to numbers for calculation
-    const ohmPriceFormatted = parseFloat(formatUnits(ohmPrice, 18));
+    const ohmPriceFormatted = ohmPrice;
     const conversionPriceFormatted = parseFloat(formatUnits(conversionPrice, 18));
 
     // Calculate discount: ((market_price - conversion_price) / market_price) * 100
@@ -29,6 +31,5 @@ export function useDiscount(conversionPrice?: bigint) {
   return {
     discount: discount,
     formattedDiscount: discount > 0 ? `${discount.toFixed(1)}%` : "0%",
-    isLoading: isLoadingPrice,
   };
 }

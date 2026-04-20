@@ -38,7 +38,7 @@ function buildSlices(
   );
 
   return [
-    { name: "USDS (Cooler Loans)", value: coolerBorrowed, color: "#7C6AF6", apy: coolerApy },
+    { name: "USDS (Cooler Loans)", value: coolerBorrowed, color: "#8979FF", apy: coolerApy },
     { name: "sUSDe (yield-bearing)", value: susdeValue, color: "#F87171", apy: susdeApy },
     { name: "LP positions", value: lpTotal, color: "#22D3EE", apy: null },
     { name: "sUSDS (yield-bearing)", value: susdsValue, color: "#F59E0B", apy: susdsApy },
@@ -64,9 +64,9 @@ function DonutTooltip({
   const pct = entry.payload.total > 0 ? (entry.value / entry.payload.total) * 100 : 0;
 
   return (
-    <div className="bg-surface-tooltip shadow-tooltip rounded-[20px] px-3 py-2 text-sm">
-      <p className="font-medium">{entry.payload.name}</p>
-      <p className="text-secondary-t">
+    <div className="bg-surface-tooltip shadow-tooltip rounded-[20px] px-3 py-2 max-w-[216px] text-center text-primary-t">
+      <p className="text-xs leading-4 font-normal">{entry.payload.name}</p>
+      <p className="text-sm leading-5 font-semibold">
         <NumberFlow value={pct} format={PERCENT_FORMAT} suffix="%" />
       </p>
     </div>
@@ -100,34 +100,34 @@ export function TreasuryAssetsCard() {
     lpTotal,
   );
 
-  // Attach total to each slice for tooltip %
   const pieData = slices.map((s) => ({ ...s, total: treasuryMarketValue }));
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-5">
       <h3 className="text-[18px]/[20px] font-semibold">Assets</h3>
 
       <Separator />
 
-      {/* Treasury Market Value row */}
       <div className="flex items-center justify-between">
         <TooltipInfo title="All protocol-owned assets at market value">
-          <p className="text-primary-t text-[15px]/[20px]">Treasury Market Value</p>
+          <p className="text-primary-t text-sm font-semibold">Treasury Market Value</p>
         </TooltipInfo>
 
-        <NumberFlow value={treasuryMarketValue} className="text-base font-semibold" />
+        <NumberFlow
+          value={treasuryMarketValue}
+          className="text-sm font-semibold [--number-flow-char-height:20px]"
+        />
       </div>
 
-      {/* Donut + table */}
-      <div className="flex items-start gap-6 overflow-x-auto">
+      <div className="flex items-start gap-4">
         <div className="shrink-0">
-          <PieChart width={180} height={180}>
+          <PieChart width={140} height={140}>
             <Pie
               data={pieData}
               dataKey="value"
               nameKey="name"
-              innerRadius={55}
-              outerRadius={85}
+              innerRadius={42}
+              outerRadius={65}
               paddingAngle={2}
               strokeWidth={0}
             >
@@ -139,7 +139,7 @@ export function TreasuryAssetsCard() {
           </PieChart>
         </div>
 
-        <table className="flex-1 text-sm" style={{ minWidth: "260px" }}>
+        <table className="flex-1 text-sm min-w-0">
           <thead>
             <tr className="border-b border-a10-b">
               <th className="pb-2 text-left text-xs font-normal text-secondary-t">Asset</th>
@@ -177,25 +177,15 @@ export function TreasuryAssetsCard() {
 
       <Separator />
 
-      {/* Free Reserves */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-bold">Free Reserves</p>
-          <p className="text-secondary-t text-xs">
-            Stables &amp; LP positions (available without recalling loans)
-          </p>
-        </div>
-        <NumberFlow value={freeReserves} className="shrink-0 text-base font-semibold" />
+      <div className="flex items-center justify-between gap-4">
+        <TooltipInfo title="Stables & LP positions (available without recalling loans)">
+          <p className="text-primary-t text-sm font-semibold">Free Reserves</p>
+        </TooltipInfo>
+        <NumberFlow
+          value={freeReserves}
+          className="shrink-0 text-sm font-semibold [--number-flow-char-height:20px]"
+        />
       </div>
-
-      <Separator />
-
-      {/* Description */}
-      <blockquote className="border-l-2 border-amber-400 pl-4 text-xs font-semibold">
-        The Olympus treasury manages protocol assets primarily consisting of stables, LP positions
-        and the Cooler loan book. All assets back OHM, except for the OHM side of LP positions to
-        prevent OHM backing itself.
-      </blockquote>
 
       <ProtocolDataSource sources={["Treasury API", "DeFiLlama", "Cooler Subgraph"]} />
     </Card>

@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 import { useAccount } from "wagmi";
-import { useOhmPrice } from "@/lib/hooks/useOhmPrice";
-import { useGohmPrice } from "@/lib/hooks/useGohmPrice";
 import { useAllTokenBalances } from "@/lib/hooks/useAllTokenBalances";
-import { TOKENS } from "@/lib/tokens";
+import { TokenName, TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
 import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
@@ -12,8 +10,8 @@ import { BalanceTable } from "../components/balance-table";
 import { BalanceCards } from "../components/balance-cards";
 import { BalanceEmptyState } from "../components/balance-empty-state.tsx";
 import { BalanceDisconnectedState } from "../components/balance-disconnected-state.tsx";
-import { formatUnits } from "viem";
 import type { IconName } from "@/components/icon";
+import { useToken } from "@/lib/hooks/useToken.tsx";
 
 export function BalancesPage() {
   const { isConnected } = useAccount();
@@ -24,10 +22,13 @@ export function BalancesPage() {
   const effectivelyConnected = mock ? mock.scenario.isConnected : isConnected;
 
   // Prices
-  const { price: ohmPriceBigInt, isLoading: ohmPriceLoading } = useOhmPrice();
-  const { price: gohmPriceNum, isLoading: gohmPriceLoading } = useGohmPrice();
+  // const { price: ohmPriceBigInt, isLoading: ohmPriceLoading } = useOhmPrice();
+  // const { price: gohmPriceNum, isLoading: gohmPriceLoading } = useGohmPrice();
+  const GOHMToken = useToken(TokenName.GOHM);
+  const OHMToken = useToken(TokenName.OHM);
 
-  const ohmPriceNum = ohmPriceBigInt != null ? parseFloat(formatUnits(ohmPriceBigInt, 18)) : 0;
+  const ohmPriceNum = OHMToken.price;
+  const gohmPriceNum = GOHMToken.price;
 
   const tokenList = useMemo(
     () => [TOKENS.OHM, TOKENS.SOHM, TOKENS.GOHM, TOKENS.WSOHM, TOKENS.V1_OHM, TOKENS.V1_SOHM],
@@ -42,7 +43,7 @@ export function BalancesPage() {
   const v1OhmBalances = tokenBalances["OHM v1"];
   const v1SohmBalances = tokenBalances["sOHM v1"];
 
-  const isLoading = ohmPriceLoading || gohmPriceLoading || balancesLoading;
+  const isLoading = balancesLoading;
 
   // Compute total USD
   // OHM, sOHM, v1 OHM, v1 sOHM priced at ohmPriceNum

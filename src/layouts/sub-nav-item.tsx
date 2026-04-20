@@ -19,7 +19,7 @@ export function SubNavItem({
         target="_blank"
         rel="noopener noreferrer"
         onClick={onClick}
-        className="flex items-center justify-between pl-4 pr-3 py-2.5 rounded-full text-base font-medium leading-5 transition-colors text-secondary-t hover:bg-surface-a3 hover:text-primary-t"
+        className="flex items-center justify-between pl-4 pr-3 py-2.5 rounded-full text-sm font-semibold leading-5 transition-colors text-secondary-t hover:bg-surface-a3 hover:text-primary-t"
       >
         <span>{item.label}</span>
         <ExternalLink className="size-3.5 text-tertiary-t" />
@@ -32,10 +32,10 @@ export function SubNavItem({
       to={item.path}
       onClick={onClick}
       className={cn(
-        "flex items-center pl-4 pr-3 py-2.5 rounded-full text-base leading-5 transition-colors",
+        "flex items-center pl-4 pr-3 py-2.5 rounded-full text-sm leading-5 transition-colors",
         isActive
-          ? "bg-surface-a5 ring-[0.5px] ring-inset ring-surface-a10 text-primary-t font-medium"
-          : "font-medium text-secondary-t hover:bg-surface-a3 hover:text-primary-t",
+          ? "bg-surface-a5 ring-[0.5px] ring-inset ring-surface-a10 text-primary-t font-semibold"
+          : "font-semibold text-secondary-t hover:bg-surface-a3 hover:text-primary-t",
       )}
     >
       {item.label}
