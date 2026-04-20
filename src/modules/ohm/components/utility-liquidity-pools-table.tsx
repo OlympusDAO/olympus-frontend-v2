@@ -32,8 +32,8 @@ function TokenPairIcon({
 }) {
   return (
     <div className="flex items-center">
-      <TokenIcon symbol={tokenA.symbol} iconName={tokenA.iconName} className="z-10" />
-      <TokenIcon symbol={tokenB.symbol} iconName={tokenB.iconName} className="-ml-2" />
+      <TokenIcon symbol={tokenA.symbol} iconName={tokenA.iconName} size={20} className="z-10" />
+      <TokenIcon symbol={tokenB.symbol} iconName={tokenB.iconName} size={20} className="-ml-2" />
     </div>
   );
 }
@@ -55,15 +55,14 @@ const columns: ColumnDef<LiquidityPool>[] = [
   },
   {
     id: "network",
-    header: "Network",
-    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} />,
+    header: "Chain",
+    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} size={16} />,
   },
   {
     accessorKey: "tvl",
     header: "TVL",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.tvl}
         format={{
           style: "currency",
@@ -79,7 +78,6 @@ const columns: ColumnDef<LiquidityPool>[] = [
     header: "APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.apy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -88,7 +86,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
   {
     accessorKey: "project",
     header: "Project",
-    cell: ({ row }) => <p className="text-[15px]/[20px] font-semibold">{row.original.project}</p>,
+    cell: ({ row }) => <p>{row.original.project}</p>,
   },
   {
     id: "actions",
@@ -97,7 +95,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
       <div className="flex justify-end">
         <Button
           variant="secondary"
-          size="md"
+          size="xs"
           render={
             <a
               href={row.original.depositUrl}
@@ -107,7 +105,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
             />
           }
         >
-          Deposit <RiArrowRightUpLine size={20} />
+          Deposit <RiArrowRightUpLine size={12} />
         </Button>
       </div>
     ),
@@ -170,7 +168,7 @@ export function UtilityLiquidityPoolsSection() {
         </div>
       </div>
 
-      <Table>
+      <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-surface-a5">

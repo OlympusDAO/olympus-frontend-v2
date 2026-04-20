@@ -97,7 +97,7 @@ export function DevToolbar() {
 
             {/* Testnet info */}
             <div className="flex items-center justify-between">
-              <span>Network</span>
+              <span>Chain</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] text-white ${
                   isOnSepolia ? "bg-amber-600" : "bg-zinc-600"

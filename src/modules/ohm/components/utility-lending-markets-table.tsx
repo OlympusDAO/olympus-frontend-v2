@@ -27,7 +27,7 @@ type MarketFilter = "all" | "ohm" | "gohm";
 function TokenCell({ token }: { token: { symbol: string; iconName: IconName | null } }) {
   return (
     <div className="flex items-center gap-2">
-      <TokenIcon symbol={token.symbol} iconName={token.iconName} />
+      <TokenIcon symbol={token.symbol} iconName={token.iconName} size={20} />
       <span className="font-medium">{token.symbol}</span>
     </div>
   );
@@ -48,15 +48,14 @@ const columns: ColumnDef<LendingMarket>[] = [
   },
   {
     id: "network",
-    header: "Network",
-    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} />,
+    header: "Chain",
+    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} size={16} />,
   },
   {
     accessorKey: "tvl",
     header: "TVL",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.tvl}
         format={{
           style: "currency",
@@ -72,7 +71,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Supply APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.supplyApy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -83,7 +81,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Borrow APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.borrowApy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -94,7 +91,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Available",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.available}
         format={{
           style: "currency",
@@ -108,7 +104,7 @@ const columns: ColumnDef<LendingMarket>[] = [
   {
     accessorKey: "project",
     header: "Project",
-    cell: ({ row }) => <p className="text-[15px]/[20px] font-semibold">{row.original.project}</p>,
+    cell: ({ row }) => <p>{row.original.project}</p>,
   },
   {
     id: "actions",
@@ -117,7 +113,7 @@ const columns: ColumnDef<LendingMarket>[] = [
       <div className="flex justify-end">
         <Button
           variant="secondary"
-          size="md"
+          size="xs"
           render={
             <a
               href={row.original.depositUrl}
@@ -127,7 +123,7 @@ const columns: ColumnDef<LendingMarket>[] = [
             />
           }
         >
-          Deposit <RiArrowRightUpLine size={20} />
+          Deposit <RiArrowRightUpLine size={12} />
         </Button>
       </div>
     ),
@@ -174,7 +170,7 @@ export function UtilityLendingMarketsSection() {
         />
       </div>
 
-      <Table>
+      <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-surface-a5">

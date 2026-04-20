@@ -58,7 +58,7 @@ const COLUMNS = [
   }),
   columnHelper.accessor("chainId", {
     header: "Chain",
-    cell: (info) => <ChainIcon chainId={info.getValue()} size={20} />,
+    cell: (info) => <ChainIcon chainId={info.getValue()} size={16} />,
   }),
   columnHelper.accessor("tvl", {
     header: "TVL",
@@ -103,7 +103,7 @@ export function TreasuryPolTable() {
   });
 
   return isLoading ? (
-    <Table>
+    <Table variant="condensed">
       <TableBody>
         {Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
@@ -117,7 +117,7 @@ export function TreasuryPolTable() {
       </TableBody>
     </Table>
   ) : (
-    <Table>
+    <Table variant="condensed">
       <TableHeader>
         {table.getHeaderGroups().map((hg) => (
           <TableRow key={hg.id}>

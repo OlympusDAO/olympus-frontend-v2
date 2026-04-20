@@ -254,4 +254,7 @@
 
   --breakpoint-xs: 639.5px;
   --breakpoint-md: 1023.5px;
+
+  --table-row-height: 64px;
+  --table-row-height-condensed: 40px;
 }
