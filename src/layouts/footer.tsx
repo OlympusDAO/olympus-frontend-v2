@@ -14,6 +14,7 @@ import {
   RiSunLine,
   RiContrastLine,
   RiTwitterXFill,
+  RiChat3Line,
 } from "@remixicon/react";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import { type Theme, useTheme } from "@/components/theme-provider.tsx";
@@ -66,6 +67,30 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+function ChatButton() {
+  const openChat = () => {
+    const launcher = document.querySelector<HTMLButtonElement>(
+      '#ph-conversations-widget-container button[aria-label="Open chat"]',
+    );
+    launcher?.click();
+  };
+
+  return (
+    <Tooltip title="Chat with us" contentProps={{ side: "top", sideOffset: 4 }}>
+      <button
+        type="button"
+        onClick={openChat}
+        className="flex items-center justify-center size-7 rounded-full transition-colors hover:bg-surface-a5"
+      >
+        <RiChat3Line
+          size={20}
+          className="text-secondary-t transition-colors hover:text-primary-t"
+        />
+      </button>
+    </Tooltip>
+  );
+}
+
 export function Footer() {
   const { theme, setTheme } = useTheme();
   const { hours, minutes, seconds, progress } = useEpochTimer();
@@ -112,6 +137,7 @@ export function Footer() {
                 </a>
               </Tooltip>
             ))}
+            <ChatButton />
           </div>
         </div>
         <Separator />
@@ -170,6 +196,7 @@ export function Footer() {
                 </a>
               </Tooltip>
             ))}
+            <ChatButton />
           </div>
         </div>
         <div className="flex items-center">
