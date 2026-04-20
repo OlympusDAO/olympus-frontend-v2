@@ -14,7 +14,7 @@ import {
   RiSunLine,
   RiContrastLine,
   RiTwitterXFill,
-  RiChat3Line,
+  RiQuestionLine,
 } from "@remixicon/react";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import { type Theme, useTheme } from "@/components/theme-provider.tsx";
@@ -67,7 +67,7 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-function ChatButton() {
+function SupportButton() {
   const openChat = () => {
     const launcher = document.querySelector<HTMLButtonElement>(
       '#ph-conversations-widget-container button[aria-label="Open chat"]',
@@ -76,18 +76,14 @@ function ChatButton() {
   };
 
   return (
-    <Tooltip title="Chat with us" contentProps={{ side: "top", sideOffset: 4 }}>
-      <button
-        type="button"
-        onClick={openChat}
-        className="flex items-center justify-center size-7 rounded-full transition-colors hover:bg-surface-a5"
-      >
-        <RiChat3Line
-          size={20}
-          className="text-secondary-t transition-colors hover:text-primary-t"
-        />
-      </button>
-    </Tooltip>
+    <button
+      type="button"
+      onClick={openChat}
+      className="flex items-center gap-x-1 text-secondary-t hover:text-primary-t transition-colors"
+    >
+      <RiQuestionLine className="size-4" />
+      <span className="text-[12px] leading-none">Support</span>
+    </button>
   );
 }
 
@@ -137,7 +133,6 @@ export function Footer() {
                 </a>
               </Tooltip>
             ))}
-            <ChatButton />
           </div>
         </div>
         <Separator />
@@ -161,7 +156,11 @@ export function Footer() {
               suffix="GWEI"
             />
           </div>
-          <ThemeSwitcher theme={theme} setTheme={setTheme} />
+          <div className="flex items-center gap-x-2">
+            <ThemeSwitcher theme={theme} setTheme={setTheme} />
+            <Separator orientation="vertical" className="h-5 w-px" />
+            <SupportButton />
+          </div>
         </div>
       </div>
 
@@ -196,7 +195,6 @@ export function Footer() {
                 </a>
               </Tooltip>
             ))}
-            <ChatButton />
           </div>
         </div>
         <div className="flex items-center">
@@ -221,6 +219,8 @@ export function Footer() {
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />
           <ThemeSwitcher theme={theme} setTheme={setTheme} />
+          <Separator orientation="vertical" className="h-5 mx-4 w-px" />
+          <SupportButton />
         </div>
       </div>
     </footer>
