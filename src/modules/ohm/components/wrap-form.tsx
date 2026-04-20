@@ -126,7 +126,6 @@ export function WrapForm({
                   label="Receive"
                   token={outputToken}
                   value={field.value}
-                  disabled
                   balanceLabel="Available:"
                 />
               </FormItem>

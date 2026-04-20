@@ -26,12 +26,16 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
  * Suppress CSS transitions for a single frame so that swapping the theme class
  * does not trigger mid-transition animations on shadows, backgrounds, etc.
  * Pattern borrowed from next-themes.
+ *
+ * Do NOT suppress `animation` here: Base UI detects popup close via
+ * `element.getAnimations().finished`, so cancelling an in-flight exit animation
+ * leaves the popup mounted forever (e.g. stuck tooltips on theme switch).
  */
 function disableTransitionsOnce() {
   const style = document.createElement("style");
   style.appendChild(
     document.createTextNode(
-      "*,*::before,*::after{-webkit-transition:none!important;transition:none!important;animation:none!important}",
+      "*,*::before,*::after{-webkit-transition:none!important;transition:none!important}",
     ),
   );
   document.head.appendChild(style);

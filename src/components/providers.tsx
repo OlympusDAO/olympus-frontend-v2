@@ -11,6 +11,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { DevMockProvider } from "@/lib/mock/provider";
 import { DevToolbar } from "@/components/dev-toolbar";
 import { isTestnetMode } from "@/lib/chains";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,9 +70,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="olympus-theme">
-          <ThemedRainbowKit>
-            <DevProvider>{children}</DevProvider>
-          </ThemedRainbowKit>
+          <TooltipProvider delay={100}>
+            <ThemedRainbowKit>
+              <DevProvider>{children}</DevProvider>
+            </ThemedRainbowKit>
+          </TooltipProvider>
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       </QueryClientProvider>

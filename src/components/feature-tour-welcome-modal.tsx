@@ -12,6 +12,7 @@ export function FeatureTourWelcomeModal({ open, onSkip, onStart }: FeatureTourWe
   return (
     <Dialog
       open={open}
+      disablePointerDismissal
       onOpenChange={(isOpen) => {
         if (!isOpen) onSkip();
       }}

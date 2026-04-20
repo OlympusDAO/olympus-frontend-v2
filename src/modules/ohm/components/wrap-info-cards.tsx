@@ -30,8 +30,8 @@ export function WrapInfoCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="items-center p-6">
-        <p className="text-[15px]/[20px] text-secondary-t">OHM Price</p>
+      <Card className="flex flex-col gap-1 p-6">
+        <p className="text-[14px]/[20px] font-normal text-secondary-t">OHM Price</p>
         <div className="flex items-center gap-x-2">
           {!OHMToken.price ? (
             <Skeleton className="h-6 w-24" />
@@ -42,8 +42,8 @@ export function WrapInfoCards() {
         </div>
       </Card>
 
-      <Card className="items-center p-6">
-        <p className="text-[15px]/[20px] text-secondary-t">gOHM Price</p>
+      <Card className="flex flex-col gap-1 p-6">
+        <p className="text-[14px]/[20px] font-normal text-secondary-t">gOHM Price</p>
         <div className="flex items-center gap-x-2">
           {!GOHMToken.price ? (
             <Skeleton className="h-6 w-24" />
@@ -54,8 +54,8 @@ export function WrapInfoCards() {
         </div>
       </Card>
 
-      <Card className="items-center p-6">
-        <p className="text-[15px]/[20px] text-secondary-t">Conversion Rate</p>
+      <Card className="flex flex-col gap-1 p-6">
+        <p className="text-[14px]/[20px] font-normal text-secondary-t">Conversion Rate</p>
         <div className="flex items-center gap-x-2">
           {indexLoading ? (
             <Skeleton className="h-6 w-40" />

@@ -81,10 +81,30 @@ function TokenBigInput({
   const fontSize = calculateFontSize(displayValue);
   const lineHeight = Math.ceil(fontSize * 1.25);
 
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isDisabled) return;
+    const target = e.target as HTMLElement;
+    // Let interactive children handle their own clicks instead of hijacking focus.
+    if (
+      target.closest(
+        'button, a, input, textarea, [role="button"], [role="menuitem"], [data-slot$="trigger"], [data-slot="token-chip"]',
+      )
+    ) {
+      return;
+    }
+    e.currentTarget.querySelector<HTMLInputElement>("input")?.focus();
+  };
+
   const content = (
+    // biome-ignore lint/a11y/noStaticElementInteractions: click widens the mouse hit area for the inner <input>; keyboard users reach the input via Tab
+    // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard handling lives on the inner <input>, not this wrapper
     <div
       data-slot="token-big-input"
-      className="group/biginput flex flex-col gap-3 rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b transition-colors hover:bg-surface-a10"
+      onClick={handleContainerClick}
+      className={cn(
+        "group/biginput flex flex-col gap-[6px] rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b transition-colors hover:border-a10-b focus-within:bg-transparent focus-within:border-a20-b",
+        !isDisabled && "cursor-text",
+      )}
     >
       {/* Header row */}
       {(label || headerRight) && (
@@ -93,7 +113,10 @@ function TokenBigInput({
             <div className="flex items-center gap-1.5">
               {typeof label === "string" ? (
                 <p
-                  className={cn("text-[15px]/[20px] font-medium", isDisabled && "text-disabled-t")}
+                  className={cn(
+                    "text-[14px]/[20px] font-semibold text-primary-t",
+                    isDisabled && "text-disabled-t",
+                  )}
                 >
                   {label}
                 </p>
@@ -120,7 +143,7 @@ function TokenBigInput({
         <input
           placeholder="0.00"
           className={cn(
-            "caret-primary-t text-[32px]/[40px] bg-transparent placeholder:text-disabled-t group-aria-invalid/biginput:text-red group-aria-invalid/biginput:text-shadow-none group-aria-invalid/biginput:bg-transparent w-full pr-1.5 font-semibold outline-none",
+            "caret-primary-t text-primary-t text-[32px]/[40px] bg-transparent placeholder:text-disabled-t group-aria-invalid/biginput:text-red group-aria-invalid/biginput:text-shadow-none group-aria-invalid/biginput:bg-transparent w-full pr-1.5 font-semibold outline-none",
             rest.value && "bg-transparent",
             isDisabled && "caret-disabled-t cursor-not-allowed",
           )}
@@ -148,9 +171,12 @@ function TokenBigInput({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="bg-surface-a3 border border-a3-b inline-flex shrink-0 items-center gap-[8px] rounded-full px-[12px] py-[8px]">
+          <div
+            data-slot="token-chip"
+            className="bg-surface-a3 border border-a3-b inline-flex h-10 shrink-0 cursor-default items-center gap-[8px] rounded-full px-[12px] py-[10px]"
+          >
             <Icon name={icon} className="size-[20px] !rotate-0" />
-            <p className="text-[15px]/[20px] font-semibold whitespace-nowrap">{symbol}</p>
+            <p className="text-[14px]/[20px] font-semibold whitespace-nowrap">{symbol}</p>
           </div>
         )}
       </div>
@@ -159,17 +185,20 @@ function TokenBigInput({
       <div className="flex items-center gap-[8px]">
         <NumberFlow
           className={cn(
-            "text-secondary-t flex-1 text-xs font-normal",
+            "text-secondary-t flex-1 text-[12px]/[16px] font-normal",
             isDisabled && "text-disabled-t",
           )}
           value={+(rest.value || 0) * (token.price || 0)}
           format={{ notation: "standard", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
         />
-        <div className="inline-flex items-center gap-[4px] text-xs font-normal">
+        <div className="inline-flex items-center gap-[4px] text-[12px]/[16px] font-normal">
           <p className={cn("text-secondary-t", isDisabled && "text-disabled-t")}>{balanceLabel}</p>
           {address ? (
             <NumberFlow
-              className={cn("font-medium text-primary-t", isDisabled && "text-disabled-t")}
+              className={cn(
+                "text-[12px]/[16px] font-semibold text-primary-t",
+                isDisabled && "text-disabled-t",
+              )}
               value={dn.toNumber([balance, decimals])}
               format={{
                 style: "decimal",
@@ -178,7 +207,7 @@ function TokenBigInput({
               }}
             />
           ) : (
-            <p className="text-xs font-medium">N/A</p>
+            <p className="text-[12px]/[16px] font-semibold">N/A</p>
           )}
         </div>
         <Button

@@ -4,8 +4,7 @@ import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { TokenName, getTokenAddress, TOKENS } from "@/lib/tokens";
 import { useAccount, useChainId } from "wagmi";
 import { formatUnits } from "viem";
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { RiArrowRightLine } from "@remixicon/react";
 
 interface BalancePanelProps {
   mode: "wrap" | "unwrap";
@@ -38,10 +37,10 @@ export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePan
   const showAfter = inputNum > 0;
 
   return (
-    <div className="rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b space-y-3">
-      <h3 className="font-medium">My Balances</h3>
+    <div className="rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b">
+      <h3 className="mb-4 text-[14px]/[20px] font-semibold text-primary-t">My Balances</h3>
 
-      <div className="space-y-3 text-sm">
+      <div>
         <BalanceRow
           icon="OHMTokenIcon"
           symbol="OHM"
@@ -50,7 +49,7 @@ export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePan
           after={showAfter ? afterOhm : undefined}
           decimals={2}
         />
-        <Separator />
+        <Separator className="my-2" />
         <BalanceRow
           icon="GOHMTokenIcon"
           symbol="gOHM"
@@ -79,25 +78,25 @@ function BalanceRow({
   after?: number;
   decimals: number;
 }) {
-  const isNegative = after != null && after < 0;
-
   return (
     <div className="flex items-center justify-between">
+      <span className="text-[12px]/[16px] font-normal text-secondary-t">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-secondary-t">{label}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <Icon name={icon} size={16} />
-        <span className="font-semibold text-primary-t">
-          {before} {symbol}
-        </span>
+        <div className="flex items-center gap-1">
+          <Icon name={icon} size={16} />
+          <span className="text-[12px]/[16px] font-semibold text-primary-t">
+            {before} {symbol}
+          </span>
+        </div>
         {after != null && (
           <>
-            <ArrowRight className="w-3 h-3 text-secondary-t" />
-            <Icon name={icon} size={16} />
-            <span className={cn("font-semibold text-primary-t", isNegative && "text-red")}>
-              {after.toFixed(decimals)} {symbol}
-            </span>
+            <RiArrowRightLine className="size-4 text-tertiary-t" />
+            <div className="flex items-center gap-1">
+              <Icon name={icon} size={16} />
+              <span className="text-[12px]/[16px] font-semibold text-primary-t">
+                {after.toFixed(decimals)} {symbol}
+              </span>
+            </div>
           </>
         )}
       </div>
