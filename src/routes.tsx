@@ -30,13 +30,13 @@ export const router = createHashRouter([
     Component: AppLayout,
     children: [
       // Redirect root to Pulse overview
-      { index: true, element: <Navigate to="/home/overview" replace /> },
+      { index: true, element: <Navigate to="/pulse/overview" replace /> },
 
-      // Home section
-      { path: "home/overview", element: <OverviewPage /> },
-      { path: "home/treasury", element: <TreasuryPage /> },
-      { path: "home/protocol", element: <ProtocolPage /> },
-      { path: "home/feed", element: <FeedPage /> },
+      // Pulse section
+      { path: "pulse/overview", element: <OverviewPage /> },
+      { path: "pulse/treasury", element: <TreasuryPage /> },
+      { path: "pulse/protocol", element: <ProtocolPage /> },
+      { path: "pulse/feed", element: <FeedPage /> },
 
       // OHM section
       { path: "ohm/balances", element: <BalancesPage /> },
@@ -45,6 +45,10 @@ export const router = createHashRouter([
       { path: "ohm/bridge", element: <BridgePage /> },
 
       // Legacy redirects
+      { path: "home/overview", element: <Navigate to="/pulse/overview" replace /> },
+      { path: "home/treasury", element: <Navigate to="/pulse/treasury" replace /> },
+      { path: "home/protocol", element: <Navigate to="/pulse/protocol" replace /> },
+      { path: "home/feed", element: <Navigate to="/pulse/feed" replace /> },
       { path: "home/balances", element: <Navigate to="/ohm/balances" replace /> },
       { path: "home/wrap", element: <Navigate to="/ohm/wrap" replace /> },
       { path: "home/bridge", element: <Navigate to="/ohm/bridge" replace /> },
@@ -89,7 +93,7 @@ export const router = createHashRouter([
       { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
 
       // Catch-all
-      { path: "*", element: <Navigate to="/home/overview" replace /> },
+      { path: "*", element: <Navigate to="/pulse/overview" replace /> },
     ],
   },
 ]);
