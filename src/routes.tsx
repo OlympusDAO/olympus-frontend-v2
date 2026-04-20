@@ -29,8 +29,8 @@ export const router = createHashRouter([
     path: "/",
     Component: AppLayout,
     children: [
-      // Redirect root to OHM balances
-      { index: true, element: <Navigate to="/ohm/balances" replace /> },
+      // Redirect root to Pulse overview
+      { index: true, element: <Navigate to="/home/overview" replace /> },
 
       // Home section
       { path: "home/overview", element: <OverviewPage /> },
@@ -89,7 +89,7 @@ export const router = createHashRouter([
       { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
 
       // Catch-all
-      { path: "*", element: <Navigate to="/ohm/balances" replace /> },
+      { path: "*", element: <Navigate to="/home/overview" replace /> },
     ],
   },
 ]);
