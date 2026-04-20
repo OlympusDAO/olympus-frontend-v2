@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import type { Format } from "@number-flow/react";
 import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { Segmented } from "@/components/ui/tabs.tsx";
@@ -102,7 +103,7 @@ function TooltipRow({
   color: string;
   label: string;
   value: number;
-  format: Intl.NumberFormatOptions;
+  format: Format;
 }) {
   return (
     <div className="flex w-full items-center justify-between gap-4">
