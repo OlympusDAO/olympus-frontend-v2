@@ -44,6 +44,12 @@
     display: none;
   }
 
+  /* Hide PostHog conversations launcher — we trigger it from the footer instead */
+  #ph-conversations-widget-container button[aria-label="Open chat"] {
+    /* biome-ignore lint: needed to override PostHog inline styles */
+    display: none !important;
+  }
+
   /* Hide number input spinners */
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
