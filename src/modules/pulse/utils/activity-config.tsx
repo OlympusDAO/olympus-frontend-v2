@@ -146,7 +146,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
             {item.address ? <span>{formatAddress(item.address)}</span> : <span>Protocol</span>}{" "}
             <span className="text-secondary-t">{config.verb}</span> <span>{item.primaryValue}</span>
           </p>
-          <p className="text-xs/4 font-normal text-tertiary-t">{item.secondaryValue}</p>
+          <p className="text-xs/4 font-normal text-secondary-t">{item.secondaryValue}</p>
         </div>
       );
     },
@@ -162,7 +162,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
           : null;
 
       const timeText = (
-        <span className="whitespace-nowrap text-sm/5 font-normal text-tertiary-t">
+        <span className="whitespace-nowrap text-sm/5 font-normal text-secondary-t">
           {formatDistanceToNow(item.timestamp * 1000, { addSuffix: true })}
         </span>
       );
@@ -173,7 +173,7 @@ export const ACTIVITY_COLUMNS: ColumnDef<ActivityItem, unknown>[] = [
         <ExplorerLink
           chainId={MAINNET_CHAIN_ID}
           href={txLink}
-          className="flex items-center gap-x-1 text-sm/5 text-secondary-t"
+          className="inline-flex items-center justify-end gap-x-1 text-sm/5 text-secondary-t"
         >
           {timeText}
           <RiArrowRightUpLine size={16} />

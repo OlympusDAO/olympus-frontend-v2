@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useActivityFeed } from "@/lib/hooks/liveness/useActivityFeed";
 import { ACTIVITY_COLUMNS } from "@/modules/pulse/utils/activity-config";
+import { cn } from "@/lib/utils";
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,14 @@ export function OverviewLastActions() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <p className="text-sm/5 font-semibold">Last Protocol Actions</p>
-        <Button variant="secondary" size="sm" render={<Link to="/pulse/feed" />}>
+        <Button
+          variant="secondary"
+          size="sm"
+          render={<Link to="/pulse/feed" />}
+          onClick={() => {
+            document.querySelector("main")?.scrollTo({ top: 0 });
+          }}
+        >
           View All
           <RiArrowRightSLine />
         </Button>
@@ -77,7 +85,10 @@ export function OverviewLastActions() {
               const cells = row.getVisibleCells().map((cell) => (
                 <TableCell
                   key={cell.id}
-                  className={cell.column.id === "description" ? "w-full" : ""}
+                  className={cn(
+                    cell.column.id === "description" && "w-full",
+                    cell.column.id === "time" && "text-right",
+                  )}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
