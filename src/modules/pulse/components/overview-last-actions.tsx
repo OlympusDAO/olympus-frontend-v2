@@ -60,7 +60,7 @@ export function OverviewLastActions() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <p className="text-sm/5 font-semibold">Last Protocol Actions</p>
-        <Button variant="secondary" size="sm" render={<Link to="/home/feed" />}>
+        <Button variant="secondary" size="sm" render={<Link to="/pulse/feed" />}>
           View All
           <RiArrowRightSLine />
         </Button>

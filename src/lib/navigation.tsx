@@ -52,17 +52,17 @@ type BottomNavItem = {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    id: "home",
+    id: "pulse",
     label: "Pulse",
     sidebarTitle: "Pulse",
     isNew: true,
     icon: lottieIcon(pulseAnimation),
-    path: "/home",
+    path: "/pulse",
     items: [
-      { label: "Overview", path: "/home/overview" },
-      { label: "Treasury", path: "/home/treasury" },
-      { label: "Protocol", path: "/home/protocol" },
-      { label: "Feed", path: "/home/feed" },
+      { label: "Overview", path: "/pulse/overview" },
+      { label: "Treasury", path: "/pulse/treasury" },
+      { label: "Protocol", path: "/pulse/protocol" },
+      { label: "Feed", path: "/pulse/feed" },
     ],
   },
   {
