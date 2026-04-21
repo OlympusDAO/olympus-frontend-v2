@@ -35,7 +35,7 @@ function IconNavItem({
         "group flex flex-col items-center gap-1  w-13.5 rounded-[40px] px-1.25 pb-2.5",
         // Extend bounding box 5px above for the feature-tour highlight on Pulse
         // without shifting its visual content.
-        section.id === "home" && "pt-[5px] -mt-[5px]",
+        section.id === "pulse" && "pt-[5px] -mt-[5px]",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

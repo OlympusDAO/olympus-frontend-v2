@@ -49,13 +49,14 @@ type Position = {
 // ─── Table meta ───────────────────────────────────────────────────────────────
 
 declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
-    onConvert: (position: Position) => void;
-    onWrap: (position: Position) => void;
-    onUnwrap: (position: Position) => void;
-    onTransfer: (position: Position, displayName: string) => void;
-    onRedeem: (position: Position) => void;
-    ohmPrice: number;
+    onConvert?: (position: Position) => void;
+    onWrap?: (position: Position) => void;
+    onUnwrap?: (position: Position) => void;
+    onTransfer?: (position: Position, displayName: string) => void;
+    onRedeem?: (position: Position) => void;
+    ohmPrice?: number;
   }
 }
 
@@ -195,12 +196,12 @@ const ActionsCell = ({
 
   return (
     <div className="flex items-center gap-2 justify-end">
-      <Button size="sm" onClick={() => meta.onConvert(position)}>
+      <Button size="sm" onClick={() => meta.onConvert?.(position)}>
         Convert
       </Button>
 
       {!position.data.wrapped ? (
-        <Button size="sm" variant="secondary" onClick={() => meta.onWrap(position)}>
+        <Button size="sm" variant="secondary" onClick={() => meta.onWrap?.(position)}>
           Wrap
         </Button>
       ) : (
@@ -211,16 +212,16 @@ const ActionsCell = ({
             <RiMoreFill className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => meta.onUnwrap(position)}>Unwrap</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 const displayName = `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`;
-                meta.onTransfer(position, displayName);
+                meta.onTransfer?.(position, displayName);
               }}
             >
               Transfer
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onRedeem(position)}>Redeem</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onRedeem?.(position)}>Redeem</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
