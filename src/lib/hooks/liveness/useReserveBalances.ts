@@ -28,7 +28,7 @@ export function useReserveBalances() {
       const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate: yesterday,
-        crossChainDataComplete: true,
+        crossChainDataComplete: false,
         ignoreCache: false,
       });
 

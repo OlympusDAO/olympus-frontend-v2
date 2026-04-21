@@ -210,7 +210,7 @@ export function useCdStatistics() {
         supplyGrowthOhm,
       };
     },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 }
