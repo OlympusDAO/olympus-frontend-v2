@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { isAddress, formatUnits } from "viem";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { RiInformationLine, RiDeleteBinLine, RiAddLine } from "@remixicon/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GOHMTokenIcon } from "@/icons";
 import { useAccount } from "wagmi";
-import { Trash2, Plus } from "lucide-react";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import {
   useMonoCoolerDelegations,
@@ -26,11 +21,6 @@ function createEmptyEntry(): DelegationEntry {
   return { address: "", amount: "" };
 }
 
-/**
- * Dialog for managing Cooler V2 multi-delegation of voting power.
- * Reads current delegations from the MonoCooler contract and applies
- * delta-based changes via applyDelegations().
- */
 export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { address } = useAccount();
   const { position } = useMonoCoolerPosition();
@@ -41,10 +31,8 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
   const [initialDelegations, setInitialDelegations] = useState<Map<string, string>>(new Map());
 
   const maxEntries = position ? Number(position.maxDelegateAddresses) : 10;
-
   const availableCollateral = position ? Number(formatUnits(position.collateral, 18)) : 0;
 
-  // Populate form with current delegations when they load
   useEffect(() => {
     if (delegations && delegations.length > 0) {
       const currentEntries = delegations.map((d) => ({
@@ -67,37 +55,28 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
     }, 0);
   }, [entries]);
 
-  // Check if current state differs from on-chain state
   const hasStateChanged = useMemo(() => {
     const currentMap = new Map(
       entries
         .filter((e) => e.address && e.amount && !isNaN(Number(e.amount)))
         .map((e) => [e.address.toLowerCase(), e.amount]),
     );
-
     if (currentMap.size !== initialDelegations.size) return true;
-
     for (const [addr, amount] of currentMap) {
       const initial = initialDelegations.get(addr);
       if (!initial || initial !== amount) return true;
     }
-
     for (const addr of initialDelegations.keys()) {
       if (!currentMap.has(addr)) return true;
     }
-
     return false;
   }, [entries, initialDelegations]);
 
   const isValid = useMemo(() => {
-    // Allow complete undelegation (all empty)
     const hasInitial = initialDelegations.size > 0;
     const allEmpty = entries.every((e) => !e.address && !e.amount);
     if (hasInitial && allEmpty) return true;
-
     if (totalDelegationAmount > availableCollateral) return false;
-
-    // Check for duplicate addresses
     const addresses = new Set<string>();
     for (const entry of entries) {
       if (entry.address) {
@@ -106,7 +85,6 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
         addresses.add(lower);
       }
     }
-
     return entries.every((entry) => {
       if (!entry.address && !entry.amount) return true;
       if (entry.address || entry.amount) {
@@ -119,7 +97,6 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
   }, [entries, totalDelegationAmount, availableCollateral, initialDelegations]);
 
   function handleClose() {
-    // Reset to on-chain state
     if (delegations && delegations.length > 0) {
       setEntries(
         delegations.map((d) => ({
@@ -139,13 +116,11 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
   }
 
   function updateEntry(index: number, field: keyof DelegationEntry, value: string) {
-    // Prevent duplicate addresses
     if (field === "address" && value) {
       const lower = value.toLowerCase();
       const isDuplicate = entries.some((e, i) => i !== index && e.address.toLowerCase() === lower);
       if (isDuplicate) return;
     }
-
     setEntries((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -177,10 +152,8 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
 
   function handleApplyDelegations() {
     if (!isValid || !delegations) return;
-
     const requests = computeDelegationDeltas(delegations, entries);
     if (requests.length === 0) return;
-
     applyDelegations(requests);
   }
 
@@ -188,122 +161,117 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg p-6 gap-6 rounded-3xl">
         <DialogHeader>
-          <DialogTitle>Manage Cooler V2 Delegations</DialogTitle>
-          <DialogDescription>
-            Delegate your Cooler V2 collateral voting power to up to {maxEntries} unique addresses.
-          </DialogDescription>
+          <DialogTitle className="text-xl/6 font-semibold text-primary-t tracking-[0.2px]">
+            Manage Cooler V2 Delegations
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          {/* Info Banner */}
-          <div className="rounded-lg bg-blue-500/10 px-3 py-2.5 text-xs text-blue-400">
-            You can delegate to up to {maxEntries} unique addresses. The total delegated amount
-            cannot exceed your available collateral.
-          </div>
+        {/* Info Alert */}
+        <div className="flex items-start gap-3 p-3 rounded-2xl bg-blue/10 border border-blue/5">
+          <RiInformationLine className="size-5 text-blue shrink-0" />
+          <p className="text-sm/5 font-semibold text-primary-t">
+            You can delegate your Cooler position to up to {maxEntries} unique addresses.
+          </p>
+        </div>
 
-          {/* Stats */}
-          <div className="flex flex-col gap-1.5 rounded-lg bg-surface-a3 px-3 py-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-secondary-t">Available Collateral</span>
-              <span className="text-sm font-semibold text-primary-t">
+        {/* Stats */}
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between border-b border-a5-b pb-3 mb-3">
+            <span className="text-sm/5 font-normal text-secondary-t">Available Collateral</span>
+            <div className="flex items-center gap-1.5">
+              <GOHMTokenIcon className="size-5" />
+              <span className="text-sm/5 font-semibold text-primary-t">
                 {delegationsLoading ? "..." : `${availableCollateral.toFixed(4)} gOHM`}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-secondary-t">Total Delegation Amount</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm/5 font-normal text-secondary-t">Total Delegation Amount</span>
+            <div className="flex items-center gap-1.5">
+              <GOHMTokenIcon className="size-5" />
               <span
-                className={`text-sm font-semibold ${exceedsCollateral ? "text-red-400" : "text-primary-t"}`}
+                className={`text-sm/5 font-semibold ${exceedsCollateral ? "text-red-400" : "text-primary-t"}`}
               >
                 {totalDelegationAmount.toFixed(4)} gOHM
               </span>
             </div>
           </div>
+        </div>
 
-          {exceedsCollateral && (
-            <div className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">
-              Total delegation exceeds available collateral.
-            </div>
-          )}
-
-          {/* Delegation Entries */}
-          <div className="flex flex-col gap-3">
-            {entries.map((entry, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      placeholder="0x... delegate address"
-                      value={entry.address}
-                      onChange={(e) => updateEntry(index, "address", e.target.value)}
-                      className="font-mono text-xs flex-1"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Amount"
-                      value={entry.amount}
-                      onChange={(e) => updateEntry(index, "amount", e.target.value)}
-                      className="text-xs w-24"
-                    />
-                  </div>
-                  {entry.address && !isAddress(entry.address) && (
-                    <span className="text-[11px] text-red-400">Invalid address</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeEntry(index)}
-                  disabled={entries.length <= 1 && !entry.address && !entry.amount}
-                  className="mt-2 text-tertiary-t hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Trash2 className="size-4" />
-                </button>
+        {/* Delegation Entries */}
+        <div className="flex flex-col gap-2">
+          {entries.map((entry, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <Input
+                placeholder="Delegate Address"
+                value={entry.address}
+                onChange={(e) => updateEntry(index, "address", e.target.value)}
+                className="flex-1"
+              />
+              <div className="relative w-32">
+                <GOHMTokenIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 pointer-events-none" />
+                <Input
+                  type="number"
+                  placeholder="0.0000"
+                  value={entry.amount}
+                  onChange={(e) => updateEntry(index, "amount", e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            ))}
-          </div>
+              <button
+                type="button"
+                onClick={() => removeEntry(index)}
+                disabled={entries.length <= 1 && !entry.address && !entry.amount}
+                className="flex items-center justify-center size-10 rounded-full bg-surface-a5 text-primary-t hover:bg-surface-a10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+              >
+                <RiDeleteBinLine className="size-5" />
+              </button>
+            </div>
+          ))}
+        </div>
 
-          {/* Add Entry */}
-          {entries.length < maxEntries && (
+        {/* Add Entry + Counter */}
+        <div className="flex items-center justify-between">
+          {entries.length < maxEntries ? (
             <button
               type="button"
               onClick={addEntry}
-              className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors self-start"
+              className="flex items-center gap-1 text-xs/4 font-semibold text-primary-t hover:text-blue transition-colors"
             >
-              <Plus className="size-3.5" />
+              <RiAddLine className="size-4" />
               Add Additional Delegation Address
             </button>
-          )}
-
-          {isSuccess ? (
-            <div className="rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 text-center">
-              Delegations updated successfully!
-            </div>
           ) : (
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSetToMyWallet}
-                disabled={!address || !position}
-                className="shrink-0"
-              >
-                Set to My Wallet
-              </Button>
-              <Button
-                onClick={handleApplyDelegations}
-                disabled={!isValid || isPending || !hasStateChanged}
-                className="flex-1"
-              >
-                {isPending ? "Delegating..." : "Delegate Voting"}
-              </Button>
-            </div>
+            <span />
           )}
-
-          <span className="text-[11px] text-tertiary-t text-center">
+          <span className="text-xs/4 text-secondary-t">
             {entries.length} of {maxEntries} delegations
           </span>
         </div>
+
+        {isSuccess ? (
+          <div className="rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 text-center">
+            Delegations updated successfully!
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <Button
+              variant="secondary"
+              onClick={handleSetToMyWallet}
+              disabled={!address || !position}
+            >
+              Set to My Wallet
+            </Button>
+            <Button
+              onClick={handleApplyDelegations}
+              disabled={!isValid || isPending || !hasStateChanged}
+            >
+              {isPending ? "Delegating..." : "Delegate Voting"}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

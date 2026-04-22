@@ -156,7 +156,7 @@ export function UtilityLendingMarketsSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Lending Markets">
             <h2 className="text-xl font-semibold text-primary-t">Lending Markets</h2>

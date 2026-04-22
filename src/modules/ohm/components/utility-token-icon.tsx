@@ -11,15 +11,12 @@ export function TokenIcon({
   className?: string;
   size?: number;
 }) {
-  if (iconName) {
-    return <Icon name={iconName} size={size} className={className} />;
-  }
   return (
     <div
-      className={`rounded-full bg-surface-a10 flex items-center justify-center text-[10px] font-bold shrink-0 ${className ?? ""}`}
+      className={`rounded-full bg-surface-a10 flex items-center justify-center text-[10px] font-bold shrink-0 overflow-hidden ${className ?? ""}`}
       style={{ width: size, height: size }}
     >
-      {symbol.slice(0, 2)}
+      {iconName ? <Icon name={iconName} size={size} /> : symbol.slice(0, 2)}
     </div>
   );
 }

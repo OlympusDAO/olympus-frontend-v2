@@ -1,15 +1,22 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { useAccount } from "wagmi";
 import { useDelegates } from "@/modules/governance/hooks/useDelegates";
-import { useContractParameters } from "@/modules/governance/hooks/useContractParameters";
 import { DelegationCards } from "@/modules/governance/components/delegation-cards";
 import { DelegateRow } from "@/modules/governance/components/delegate-row";
 import { DelegateVotingModal } from "@/modules/governance/components/delegate-voting-modal";
 import { CoolerDelegationModal } from "@/modules/governance/components/cooler-delegation-modal";
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { RiSearch2Line } from "@remixicon/react";
 
 /**
  * Delegates listing page at /dao/delegate.
@@ -19,7 +26,6 @@ export function DelegatesPage() {
   useAccount();
   const navigate = useNavigate();
   const { data: delegates, isLoading } = useDelegates();
-  const { data: parameters } = useContractParameters();
   const [searchQuery, setSearchQuery] = useState("");
   const [delegateModalOpen, setDelegateModalOpen] = useState(false);
   const [coolerModalOpen, setCoolerModalOpen] = useState(false);
@@ -31,8 +37,6 @@ export function DelegatesPage() {
     const query = searchQuery.toLowerCase();
     return delegates.filter((delegate) => delegate.address.toLowerCase().includes(query));
   }, [delegates, searchQuery]);
-
-  const quorum = parameters?.proposalQuorum ? Number(parameters.proposalQuorum) : undefined;
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -46,60 +50,54 @@ export function DelegatesPage() {
       />
 
       {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary-t" />
+      <div className="relative w-full">
+        <RiSearch2Line className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-tertiary-t pointer-events-none" />
         <Input
-          placeholder="Search by address..."
+          placeholder="Search by address"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-10"
         />
       </div>
 
       {/* Delegates Table */}
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-a5-b text-left text-sm text-secondary-t">
-                <th className="px-4 py-3 font-medium">Delegate Address</th>
-                <th className="px-4 py-3 font-medium">Delegations</th>
-                <th className="px-4 py-3 font-medium">Voting Power</th>
-                <th className="px-4 py-3 font-medium">Accounts %</th>
-                <th className="px-4 py-3 font-medium text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-secondary-t">
-                    Loading delegates...
-                  </td>
-                </tr>
-              ) : filteredDelegates.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <div className="flex flex-col items-center justify-center py-12 text-secondary-t">
-                      <Users className="h-10 w-10 mb-3 opacity-40" />
-                      <p className="text-sm">No delegates found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredDelegates.map((delegate) => (
-                  <DelegateRow
-                    key={delegate.id}
-                    delegate={delegate}
-                    quorum={quorum}
-                    onDelegate={() => setDelegateModalOpen(true)}
-                    onClick={() => navigate(`/dao/delegate/${delegate.id}`)}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Delegate Address</TableHead>
+            <TableHead>Delegations</TableHead>
+            <TableHead>Voting Power</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={4} className="py-12 text-center text-secondary-t">
+                Loading delegates...
+              </TableCell>
+            </TableRow>
+          ) : filteredDelegates.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4}>
+                <div className="flex flex-col items-center justify-center py-12 text-secondary-t">
+                  <Users className="h-10 w-10 mb-3 opacity-40" />
+                  <p className="text-sm">No delegates found</p>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredDelegates.map((delegate) => (
+              <DelegateRow
+                key={delegate.id}
+                delegate={delegate}
+                onDelegate={() => setDelegateModalOpen(true)}
+                onClick={() => navigate(`/dao/delegate/${delegate.id}`)}
+              />
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {delegateModalOpen && (
         <DelegateVotingModal open={delegateModalOpen} onClose={() => setDelegateModalOpen(false)} />

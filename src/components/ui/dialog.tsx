@@ -81,7 +81,11 @@ function DialogContent({
           <DialogPrimitive.Close
             data-slot="dialog-close"
             render={
-              <Button variant="tertiary" className="absolute top-4 right-4" size="sm">
+              <Button
+                variant="tertiary"
+                className="absolute top-4 right-4 rounded-full size-8 !p-0 has-[>svg:first-child]:!pl-0 has-[>svg:last-child]:!pr-0"
+                size="sm"
+              >
                 <XIcon />
                 <span className="sr-only">Close</span>
               </Button>

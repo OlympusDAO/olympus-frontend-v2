@@ -1,47 +1,21 @@
-import {
-  Table,
-  TableHeader,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
+import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useProposalVotes, type VoteCast } from "@/modules/governance/hooks/useProposalVotes";
-import { cva } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { abbreviateNumber } from "@/modules/governance/helpers/format";
 import { shortenAddress } from "@/lib/helpers";
+import { RiThumbUpLine, RiThumbDownLine, RiEyeCloseLine } from "@remixicon/react";
 
-const voteBadgeVariants = cva(
-  "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-  {
-    variants: {
-      support: {
-        for: "bg-green-500/20 text-green-400",
-        against: "bg-red-500/20 text-red-400",
-        abstain: "bg-gray-500/20 text-gray-400",
-      },
-    },
-  },
-);
-
-function getSupport(support: number): "for" | "against" | "abstain" {
-  if (support === 1) return "for";
-  if (support === 0) return "against";
-  return "abstain";
-}
-
-function getSupportLabel(support: number): string {
-  if (support === 1) return "For";
-  if (support === 0) return "Against";
-  return "Abstain";
-}
-
-function VoteTable({ votes, isLoading }: { votes: VoteCast[] | undefined; isLoading: boolean }) {
+function VoteTableBody({
+  votes,
+  isLoading,
+}: {
+  votes: VoteCast[] | undefined;
+  isLoading: boolean;
+}) {
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col gap-2 p-6">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}
@@ -54,55 +28,37 @@ function VoteTable({ votes, isLoading }: { votes: VoteCast[] | undefined; isLoad
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Address</TableHead>
-          <TableHead>Vote</TableHead>
-          <TableHead>Weight</TableHead>
-          <TableHead>Reason</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {votes.map((vote) => (
-          <TableRow key={vote.transactionHash}>
-            <TableCell>
-              <a
-                href={`https://etherscan.io/address/${vote.voter.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-xs text-blue-400 hover:text-blue-300"
-              >
-                {shortenAddress(vote.voter.address as `0x${string}`)}
-              </a>
-            </TableCell>
-            <TableCell>
-              <span className={cn(voteBadgeVariants({ support: getSupport(vote.support) }))}>
-                {getSupportLabel(vote.support)}
-              </span>
-            </TableCell>
-            <TableCell>
-              <span className="text-xs text-primary-t">
-                {Number(vote.votes).toLocaleString(undefined, {
-                  maximumFractionDigits: 2,
-                })}{" "}
-                gOHM
-              </span>
-            </TableCell>
-            <TableCell>
-              <span className="text-xs text-secondary-t line-clamp-2 max-w-[200px]">
-                {vote.reason || "--"}
-              </span>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="w-full overflow-x-auto">
+      <table className="w-full caption-bottom">
+        <TableBody>
+          {votes.map((vote) => (
+            <TableRow key={vote.transactionHash}>
+              <TableCell>
+                <a
+                  href={`https://etherscan.io/address/${vote.voter.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm/5 font-semibold text-primary-t hover:text-secondary-t"
+                >
+                  {shortenAddress(vote.voter.address as `0x${string}`)}
+                </a>
+              </TableCell>
+              <TableCell className="text-right">
+                <span className="text-sm/5 font-semibold text-primary-t">
+                  {abbreviateNumber(Number(vote.votes))} gOHM
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </table>
+    </div>
   );
 }
 
 /**
- * Tabbed table showing individual vote records (For, Against, Abstain) for a proposal.
+ * Full-width table of individual vote records with For/Against/Abstain pill tabs
+ * rendered above the column titles inside the same rounded table container.
  */
 export function ProposalParticipation({ proposalId }: { proposalId: string }) {
   const { data: forVotes, isLoading: forLoading } = useProposalVotes({
@@ -119,25 +75,41 @@ export function ProposalParticipation({ proposalId }: { proposalId: string }) {
   });
 
   return (
-    <div data-slot="proposal-participation">
+    <div
+      data-slot="proposal-participation"
+      className="rounded-3xl border border-a5-b bg-surface-bg-l2 shadow-surface-level-2 overflow-hidden"
+    >
       <Tabs defaultValue="for">
-        <TabsList>
-          <TabsTrigger value="for">For {forVotes ? `(${forVotes.length})` : ""}</TabsTrigger>
-          <TabsTrigger value="against">
-            Against {againstVotes ? `(${againstVotes.length})` : ""}
-          </TabsTrigger>
-          <TabsTrigger value="abstain">
-            Abstain {abstainVotes ? `(${abstainVotes.length})` : ""}
-          </TabsTrigger>
-        </TabsList>
+        <div className="bg-surface-a3">
+          <div className="p-4">
+            <TabsList className="w-full [&>[data-slot=tabs-trigger]]:flex-1">
+              <TabsTrigger value="for" className="w-full text-sm/5">
+                <RiThumbUpLine />
+                <span>For {forVotes ? `(${forVotes.length})` : ""}</span>
+              </TabsTrigger>
+              <TabsTrigger value="against" className="w-full text-sm/5">
+                <RiThumbDownLine />
+                <span>Against {againstVotes ? `(${againstVotes.length})` : ""}</span>
+              </TabsTrigger>
+              <TabsTrigger value="abstain" className="w-full text-sm/5">
+                <RiEyeCloseLine />
+                <span>Abstain {abstainVotes ? `(${abstainVotes.length})` : ""}</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="flex items-center h-10 px-6 text-xs text-secondary-t">
+            <span className="flex-1">Address</span>
+            <span className="text-right">Votes</span>
+          </div>
+        </div>
         <TabsContent value="for">
-          <VoteTable votes={forVotes} isLoading={forLoading} />
+          <VoteTableBody votes={forVotes} isLoading={forLoading} />
         </TabsContent>
         <TabsContent value="against">
-          <VoteTable votes={againstVotes} isLoading={againstLoading} />
+          <VoteTableBody votes={againstVotes} isLoading={againstLoading} />
         </TabsContent>
         <TabsContent value="abstain">
-          <VoteTable votes={abstainVotes} isLoading={abstainLoading} />
+          <VoteTableBody votes={abstainVotes} isLoading={abstainLoading} />
         </TabsContent>
       </Tabs>
     </div>

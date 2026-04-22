@@ -1,82 +1,108 @@
+import type React from "react";
 import { cn } from "@/lib/utils";
 
+const TOTAL_CELLS = 10;
+
 /**
- * Three-segment progress bar with a threshold tick marker.
- *
- * The bar shows For (green), Against (red), and remaining (gray) segments.
- * A vertical tick marks the threshold position on the bar.
- * The header shows "actual% / threshold%" with the actual in white and threshold in gray.
+ * Segmented progress bar split into 10 equal-width cells with a 1px gap at the
+ * threshold position. Cells fill left-to-right: green for "For", red for
+ * "Against", with the remainder rendered in the surface-a10 tint.
  */
 export function ApprovalQuorumBar({
   label,
+  icon,
   percentage,
   threshold,
   forPercent,
   againstPercent,
-  thresholdMet,
   className,
 }: {
-  /** Label text (e.g. "Approval", "Quorum") */
   label?: string;
-  /** The main percentage value (e.g. approval % or quorum %) */
+  icon?: React.ReactNode;
   percentage: number;
-  /** The threshold percentage where the tick marker appears (e.g. 60 for approval, 20 for quorum) */
   threshold: number;
-  /** Percentage of the bar filled by "For" votes */
   forPercent: number;
-  /** Percentage of the bar filled by "Against" votes */
   againstPercent: number;
-  /** Whether the threshold has been met */
-  thresholdMet: boolean;
   className?: string;
 }) {
-  const clampedFor = Math.min(Math.max(forPercent, 0), 100);
-  const clampedAgainst = Math.min(Math.max(againstPercent, 0), 100 - clampedFor);
   const clampedThreshold = Math.min(Math.max(threshold, 0), 100);
 
+  const leftCount = Math.min(Math.max(Math.round(clampedThreshold / 10), 0), TOTAL_CELLS);
+
+  const forCells = Math.min(Math.max(Math.round(Math.max(forPercent, 0) / 10), 0), TOTAL_CELLS);
+  const againstCells = Math.min(
+    Math.max(Math.round(Math.max(againstPercent, 0) / 10), 0),
+    TOTAL_CELLS - forCells,
+  );
+
+  const cells: Array<"for" | "against" | "empty"> = Array.from({ length: TOTAL_CELLS }, (_, i) => {
+    if (i < forCells) return "for";
+    if (i < forCells + againstCells) return "against";
+    return "empty";
+  });
+
+  const leftCells = cells.slice(0, leftCount);
+  const rightCells = cells.slice(leftCount);
+
   return (
-    <div data-slot="approval-quorum-bar" className={cn("flex flex-col gap-1", className)}>
-      {/* Header: label actual% / threshold% */}
-      <div className="flex items-baseline gap-1 text-sm">
-        {label && <span className="font-medium text-primary-t">{label}</span>}
-        <span className={cn("font-semibold", thresholdMet ? "text-primary-t" : "text-primary-t")}>
-          {Math.round(percentage)}%
-        </span>
-        <span className="text-secondary-t">/ {Math.round(clampedThreshold)}%</span>
-      </div>
-
-      {/* Bar with three segments + threshold tick */}
-      <div className="relative">
-        <div className="flex h-2 w-full overflow-hidden rounded-full bg-surface-a5">
-          {/* For segment (green) */}
-          {clampedFor > 0 && (
-            <div
-              className={cn(
-                "h-full transition-all duration-300",
-                thresholdMet ? "bg-green-500" : "bg-green-500/60",
-              )}
-              style={{ width: `${clampedFor}%` }}
-            />
-          )}
-          {/* Against segment (red) */}
-          {clampedAgainst > 0 && (
-            <div
-              className="h-full bg-red-500/60 transition-all duration-300"
-              style={{ width: `${clampedAgainst}%` }}
-            />
-          )}
-        </div>
-
-        {/* Threshold tick marker */}
-        {clampedThreshold > 0 && clampedThreshold < 100 && (
-          <div
-            className="absolute top-[-3px] flex flex-col items-center"
-            style={{ left: `${clampedThreshold}%`, transform: "translateX(-50%)" }}
-          >
-            <div className="h-3.5 w-0.5 rounded-full bg-primary-t/60" />
+    <div data-slot="approval-quorum-bar" className={cn("flex flex-col gap-1.5", className)}>
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          label || icon ? "justify-between" : "justify-start",
+        )}
+      >
+        {(label || icon) && (
+          <div className="flex items-center gap-1 min-w-0">
+            {icon}
+            {label && (
+              <span className="text-sm/5 font-semibold text-primary-t truncate">{label}</span>
+            )}
           </div>
         )}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <span className="text-sm/5 font-semibold text-primary-t">{Math.round(percentage)}%</span>
+          <span className="text-sm/5 text-secondary-t">/ {Math.round(clampedThreshold)}%</span>
+        </div>
       </div>
+
+      <div className="flex h-3 w-full items-stretch overflow-hidden">
+        {leftCells.length > 0 && <CellGroup cells={leftCells} widthPercent={clampedThreshold} />}
+        {leftCells.length > 0 && rightCells.length > 0 && <div className="w-px self-stretch" />}
+        {rightCells.length > 0 && (
+          <CellGroup cells={rightCells} widthPercent={100 - clampedThreshold} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CellGroup({
+  cells,
+  widthPercent,
+}: {
+  cells: Array<"for" | "against" | "empty">;
+  widthPercent: number;
+}) {
+  return (
+    <div className="flex items-stretch" style={{ flexBasis: `${widthPercent}%` }}>
+      {cells.map((kind, i) => {
+        const isFirst = i === 0;
+        const isLast = i === cells.length - 1;
+        return (
+          <div
+            key={i}
+            className={cn(
+              "flex-1 self-stretch",
+              kind === "for" && "bg-green",
+              kind === "against" && "bg-red",
+              kind === "empty" && "bg-surface-a10",
+              isFirst && "rounded-l-[3px]",
+              isLast && "rounded-r-[3px]",
+            )}
+          />
+        );
+      })}
     </div>
   );
 }

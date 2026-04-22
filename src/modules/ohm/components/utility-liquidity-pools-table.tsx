@@ -32,7 +32,12 @@ function TokenPairIcon({
 }) {
   return (
     <div className="flex items-center">
-      <TokenIcon symbol={tokenA.symbol} iconName={tokenA.iconName} size={20} className="z-10" />
+      <TokenIcon
+        symbol={tokenA.symbol}
+        iconName={tokenA.iconName}
+        size={20}
+        className="relative z-10"
+      />
       <TokenIcon symbol={tokenB.symbol} iconName={tokenB.iconName} size={20} className="-ml-2" />
     </div>
   );
@@ -139,7 +144,7 @@ export function UtilityLiquidityPoolsSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Liquidity Pools">
             <h2 className="text-xl font-semibold text-primary-t">Liquidity Pools</h2>
@@ -148,6 +153,7 @@ export function UtilityLiquidityPoolsSection() {
         <div className="flex items-center gap-4">
           <Button
             variant="tertiary"
+            size="xs"
             render={
               <a
                 href="https://defillama.com/yields?token=GOHM&token=OHM"
@@ -157,7 +163,7 @@ export function UtilityLiquidityPoolsSection() {
               />
             }
           >
-            Explore More on DefiLlama <RiArrowRightUpLine size={16} />
+            Explore More on DefiLlama <RiArrowRightUpLine size={12} />
           </Button>
           <Segmented
             value={filter}

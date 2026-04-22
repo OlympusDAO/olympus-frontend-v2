@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useVotingWeight } from "@/modules/governance/hooks/useVotingWeight";
 import { useCheckDelegation } from "@/modules/governance/hooks/useCheckDelegation";
 import { shortenAddress } from "@/lib/helpers";
+import { GOHMTokenIcon } from "@/icons";
 
 /**
  * Two stat cards showing the connected wallet's voting power and delegation status.
@@ -24,40 +25,44 @@ export function VotingPowerCards({ startBlock }: { startBlock?: number }) {
 
   return (
     <div data-slot="voting-power-cards" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Card className="p-5">
+      <Card className="py-5 px-6">
         <div className="flex flex-col gap-2">
-          <span className="text-xs text-secondary-t font-medium uppercase tracking-wide">
-            My Voting Power
-          </span>
+          <span className="text-sm/5 font-normal text-secondary-t">My Voting Power</span>
           {weightLoading ? (
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-6 w-32" />
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-semibold text-primary-t">{formattedWeight}</span>
-              <span className="text-sm text-secondary-t">gOHM</span>
+              <GOHMTokenIcon className="size-6" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl/6 font-semibold text-primary-t">{formattedWeight}</span>
+                <span className="text-xl/6 font-semibold text-primary-t">gOHM</span>
+              </div>
             </div>
           )}
         </div>
       </Card>
 
-      <Card className="p-5">
+      <Card className="py-5 px-6">
         <div className="flex flex-col gap-2">
-          <span className="text-xs text-secondary-t font-medium uppercase tracking-wide">
-            Delegated Voting Power
-          </span>
+          <span className="text-sm/5 font-normal text-secondary-t">Delegated Voting Power</span>
           {delegationLoading ? (
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-6 w-32" />
           ) : isDelegated ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-sm text-secondary-t">
+            <div className="flex items-center gap-2">
+              <GOHMTokenIcon className="size-6" />
+              <span className="text-xl/6 font-semibold text-primary-t">
                 Delegated to{" "}
-                <span className="text-primary-t font-mono">
-                  {shortenAddress(delegatee as `0x${string}`)}
-                </span>
+                <span className="font-mono">{shortenAddress(delegatee as `0x${string}`)}</span>
               </span>
             </div>
           ) : (
-            <span className="text-sm text-tertiary-t">Not delegated</span>
+            <div className="flex items-center gap-2">
+              <GOHMTokenIcon className="size-6" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl/6 font-semibold text-primary-t">0</span>
+                <span className="text-xl/6 font-semibold text-primary-t">gOHM</span>
+              </div>
+            </div>
           )}
         </div>
       </Card>

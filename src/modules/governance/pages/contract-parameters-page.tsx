@@ -43,13 +43,11 @@ export function ContractParametersPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <h1 className="text-2xl font-bold">Contract Parameters</h1>
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Parameters Card */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Parameters</h2>
-          <div className="space-y-0">
+          <h2 className="text-xl/6 font-semibold text-primary-t mb-6">Parameters</h2>
+          <div className="flex flex-col">
             <ParameterRow
               label="Proposal Threshold"
               value={`${(parameters.proposalThresholdPercent * 100).toFixed(2)}% (${Number(parameters.proposalThreshold).toFixed(2)} gOHM)`}
@@ -75,8 +73,8 @@ export function ContractParametersPage() {
 
         {/* Contract Addresses Card */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Contract Addresses</h2>
-          <div className="space-y-0">
+          <h2 className="text-xl/6 font-semibold text-primary-t mb-6">Contract Addresses</h2>
+          <div className="flex flex-col">
             <ContractAddressRow
               label="Governance Contract"
               address={parameters.governanceContract}
@@ -100,11 +98,11 @@ function ParameterRow({
   isLast?: boolean;
 }) {
   return (
-    <div
-      className={`flex items-center justify-between py-3 ${isLast ? "" : "border-b border-a5-b"}`}
-    >
-      <span className="text-sm text-secondary-t">{label}</span>
-      <span className="text-sm font-medium">{value}</span>
+    <div className={isLast ? "" : "border-b border-a5-b pb-2 mb-2"}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm/5 font-normal text-secondary-t">{label}</span>
+        <span className="text-sm/5 font-semibold text-primary-t">{value}</span>
+      </div>
     </div>
   );
 }
@@ -119,19 +117,19 @@ function ContractAddressRow({
   isLast?: boolean;
 }) {
   return (
-    <div
-      className={`flex items-center justify-between py-3 ${isLast ? "" : "border-b border-a5-b"}`}
-    >
-      <span className="text-sm text-secondary-t">{label}</span>
-      <a
-        href={getEtherscanUrl(address)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-medium hover:text-blue-400 transition-colors"
-      >
-        <span className="font-mono">{truncateAddress(address)}</span>
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
+    <div className={isLast ? "" : "border-b border-a5-b pb-2 mb-2"}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm/5 font-normal text-secondary-t">{label}</span>
+        <a
+          href={getEtherscanUrl(address)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm/5 font-semibold text-primary-t hover:text-blue transition-colors"
+        >
+          <span className="font-mono">{truncateAddress(address)}</span>
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </div>
     </div>
   );
 }

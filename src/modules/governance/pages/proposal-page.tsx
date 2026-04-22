@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useEnsName } from "wagmi";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useProposal } from "@/modules/governance/hooks/useProposal";
 import { useProposalDetails } from "@/modules/governance/hooks/useProposalDetails";
@@ -17,10 +17,7 @@ import { ProposalParticipation } from "@/modules/governance/components/proposal-
 import { VoteSidebar } from "@/modules/governance/components/vote-sidebar";
 import { VoteModal } from "@/modules/governance/components/vote-modal";
 import { mainnet } from "@/lib/chains";
-
-function truncateAddress(addr: string): string {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
+import { shortenAddress } from "@/lib/helpers";
 
 /**
  * Single proposal detail page at /dao/vote/:id.
@@ -44,8 +41,10 @@ export function ProposalPage() {
   const { queue, isPending: isQueueing } = useQueueProposal();
   const { execute, isPending: isExecuting } = useExecuteProposal();
 
+  const proposerAddress = details?.proposer || proposal?.details.proposer;
+
   const { data: ensName } = useEnsName({
-    address: proposal?.details.proposer as `0x${string}` | undefined,
+    address: proposerAddress as `0x${string}` | undefined,
     chainId: mainnet.id,
   });
 
@@ -59,9 +58,9 @@ export function ProposalPage() {
 
   const proposerDisplay = useMemo(() => {
     if (ensName) return ensName;
-    if (proposal?.details.proposer) return truncateAddress(proposal.details.proposer);
+    if (proposerAddress) return shortenAddress(proposerAddress as `0x${string}`);
     return "...";
-  }, [ensName, proposal?.details.proposer]);
+  }, [ensName, proposerAddress]);
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
 
@@ -134,60 +133,78 @@ export function ProposalPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link to="/dao/vote" className="text-secondary-t hover:text-primary-t transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold">{proposal.title}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[32px]/[40px] font-semibold text-primary-t">{proposal.title}</h1>
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
             {details && <ProposalStatusBadge status={details.status} />}
+            <div className="flex items-center gap-1.5 text-sm/5 font-normal text-secondary-t flex-wrap">
+              <span>By:</span>
+              {proposerAddress && (
+                <a
+                  href={`https://etherscan.io/address/${proposerAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-primary-t hover:underline"
+                >
+                  {proposerDisplay}
+                </a>
+              )}
+              <span>·</span>
+              <span>
+                ID: <span className="font-semibold text-primary-t">{proposal.details.id}</span>
+              </span>
+              <span>·</span>
+              <span>Proposed on: {createdDate}</span>
+            </div>
           </div>
-          <p className="text-sm text-secondary-t mt-1">
-            {createdDate && `Created ${createdDate}`}
-            {proposal.details.proposer && ` | By: ${proposerDisplay}`}
-          </p>
         </div>
         {actionButton}
       </div>
 
+      {/* Divider */}
+      <Separator className="my-8" />
+
       {/* Main content: tabs + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList variant="underline" className="border-b border-a5-b w-full">
-                <TabsTrigger variant="underline" value="description">
-                  Description
-                </TabsTrigger>
-                <TabsTrigger variant="underline" value="executable-code">
-                  Executable Code
-                </TabsTrigger>
-                <TabsTrigger variant="underline" value="participation">
-                  Participation
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="description" className="p-5">
+          <Tabs variant="primary" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList variant="primary">
+              <TabsTrigger variant="primary" value="description">
+                Description
+              </TabsTrigger>
+              <TabsTrigger variant="primary" value="executable-code">
+                Executable Code
+              </TabsTrigger>
+              <TabsTrigger variant="primary" value="participation">
+                Participation
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="description">
+              <Card className="p-6">
                 <ProposalDescription content={proposal.details.description} />
-              </TabsContent>
-              <TabsContent value="executable-code" className="p-5">
+              </Card>
+            </TabsContent>
+            <TabsContent value="executable-code">
+              <Card className="p-6">
                 <ProposalCalldata
                   targets={proposal.details.targets}
                   signatures={proposal.details.signatures}
                   calldatas={proposal.details.calldatas}
                   values={proposal.details.values}
                 />
-              </TabsContent>
-              <TabsContent value="participation" className="p-5">
-                <ProposalParticipation proposalId={String(proposal.details.id)} />
-              </TabsContent>
-            </Tabs>
-          </Card>
+              </Card>
+            </TabsContent>
+            <TabsContent value="participation">
+              <ProposalParticipation proposalId={String(proposal.details.id)} />
+            </TabsContent>
+          </Tabs>
         </div>
 
-        <div>
+        <div className="flex flex-col gap-3">
+          <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Vote</h2>
           {details && (
             <VoteSidebar
               proposalId={proposal.details.id}
