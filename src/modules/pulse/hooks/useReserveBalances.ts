@@ -28,7 +28,7 @@ export function useReserveBalances() {
       const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate: yesterday,
-        crossChainDataComplete: true,
+        crossChainDataComplete: false,
         ignoreCache: false,
       });
 
@@ -81,7 +81,8 @@ export function useReserveBalances() {
 
       return { susdeValue, susdsValue, lpPositions };
     },
-    staleTime: 300_000,
-    refetchInterval: 600_000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }

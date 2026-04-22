@@ -3,12 +3,13 @@ import { NumberFlow } from "@/components/ui/number-flow";
 import { PriceChange } from "@/components/price-change";
 import { useBackingHistory } from "@/lib/hooks/liveness/useBackingHistory";
 import { SparklineChart } from "@/components/ui/sparkline-chart";
+import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 
 export function OverviewLiquidBacking() {
   const { data: history } = useBackingHistory(30);
+  const { data: treasuryMetrics } = useTreasuryMetrics();
 
   const dataPoints = history?.dataPoints ?? [];
-  const currentBacking = history?.currentBacking ?? 0;
 
   const change24h =
     dataPoints.length >= 2
@@ -23,7 +24,10 @@ export function OverviewLiquidBacking() {
       <div className="min-w-0">
         <p className="mb-1 text-sm/5 font-semibold">Liquid Backing Per OHM</p>
         <div className="flex gap-x-2">
-          <NumberFlow value={currentBacking} className="text-xl/6 font-semibold tracking-tight" />
+          <NumberFlow
+            value={treasuryMetrics?.treasuryLiquidBackingPerOhmBacked ?? 0}
+            className="text-xl/6 font-semibold tracking-tight"
+          />
           {dataPoints.length >= 2 && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>
       </div>

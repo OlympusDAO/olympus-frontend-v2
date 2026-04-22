@@ -42,7 +42,7 @@ export function useRevenueCounter() {
       return;
     }
 
-    // Update every 30s to match realistic revenue accumulation pace
+    // Update every 30s to match revenue fetch interval
     const interval = setInterval(() => {
       setDisplayValue(getDisplayValue());
     }, 30_000);
