@@ -29,7 +29,7 @@ function buildSteps(): DriveStep[] {
       },
     },
     {
-      element: '[data-tour="nav-home"]',
+      element: '[data-tour="nav-pulse"]',
       popover: {
         title: "Pulse – the protocol, live",
         description: `
