@@ -30,6 +30,8 @@ Requires Node.js 24+ and pnpm.
 | `VITE_OLYMPUS_UNITS_API_ENDPOINT` | Yes | Olympus Units API base URL (runtime requests) |
 | `VITE_OLYMPUS_SAFE_API_KEY` | Yes | Safe Transaction Service API key for submitting multisig transactions |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
+| `VITE_POSTHOG_API_KEY` | No | PostHog project API key for product analytics |
+| `VITE_POSTHOG_HOST` | No | PostHog host URL (defaults to `https://eu.i.posthog.com`) |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
 
