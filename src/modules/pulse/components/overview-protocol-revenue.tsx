@@ -58,8 +58,8 @@ export function OverviewProtocolRevenue() {
         <NumberFlow
           value={displayValue}
           format={{
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
             notation: "standard",
           }}
           className="tabular-nums text-[clamp(2.5rem,5vw,4rem)] leading-none font-semibold tracking-tight text-primary-t"

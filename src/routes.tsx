@@ -17,7 +17,7 @@ import { ProposalPage } from "@/modules/governance/pages/proposal-page";
 import { DelegatesPage } from "@/modules/governance/pages/delegates-page";
 import { DelegateDetailPage } from "@/modules/governance/pages/delegate-detail-page";
 import { ContractParametersPage } from "@/modules/governance/pages/contract-parameters-page";
-import { EngagePage } from "@/modules/engage/pages/engage-page.tsx";
+import { ComingSoon } from "@/modules/engage/components/coming-soon.tsx";
 import { RewardsManagerPage } from "@/modules/engage/pages/rewards-manager-page.tsx";
 import { OverviewPage } from "@/modules/pulse/pages/overview-page";
 import { TreasuryPage } from "@/modules/pulse/pages/treasury-page";
@@ -81,7 +81,7 @@ export const router = createHashRouter([
       {
         path: "engage",
         children: [
-          { index: true, element: <EngagePage /> },
+          { index: true, element: <ComingSoon /> },
           { path: "rewards-manager", element: <RewardsManagerPage /> },
         ],
       },
