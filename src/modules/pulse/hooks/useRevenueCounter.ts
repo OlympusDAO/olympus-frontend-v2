@@ -42,10 +42,10 @@ export function useRevenueCounter() {
       return;
     }
 
-    // Update every 10s to match revenue fetch interval
+    // Update every 30s to match revenue fetch interval
     const interval = setInterval(() => {
       setDisplayValue(getDisplayValue());
-    }, 10_000);
+    }, 30_000);
 
     // Set initial value immediately
     setDisplayValue(getDisplayValue());

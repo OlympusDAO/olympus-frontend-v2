@@ -49,6 +49,7 @@ export function useReserveYields() {
       return { susdeApy, susdsApy, lpApys };
     },
     staleTime: 300_000,
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }

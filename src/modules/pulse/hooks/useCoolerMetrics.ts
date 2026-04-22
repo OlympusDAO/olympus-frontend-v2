@@ -91,7 +91,8 @@ export function useCoolerMetrics() {
         interestRate,
       };
     },
-    staleTime: 10_000,
-    refetchInterval: 10_000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
