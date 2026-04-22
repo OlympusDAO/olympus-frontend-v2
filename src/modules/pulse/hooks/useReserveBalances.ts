@@ -82,6 +82,6 @@ export function useReserveBalances() {
       return { susdeValue, susdsValue, lpPositions };
     },
     staleTime: 10_000,
-    refetchInterval: 15_000,
+    refetchInterval: 10_000,
   });
 }

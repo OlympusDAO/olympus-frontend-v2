@@ -92,6 +92,6 @@ export function useCoolerMetrics() {
       };
     },
     staleTime: 10_000,
-    refetchInterval: 15_000,
+    refetchInterval: 10_000,
   });
 }

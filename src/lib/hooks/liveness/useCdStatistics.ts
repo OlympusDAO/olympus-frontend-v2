@@ -211,6 +211,6 @@ export function useCdStatistics() {
       };
     },
     staleTime: 10_000,
-    refetchInterval: 15_000,
+    refetchInterval: 10_000,
   });
 }
