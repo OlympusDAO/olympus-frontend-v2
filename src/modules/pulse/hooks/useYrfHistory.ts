@@ -46,40 +46,106 @@ function formatWeekLabel(monday: string): string {
   });
 }
 
+const PAGE_SIZE = 1000;
+
+// Cursor-paginate a subgraph entity using the `id_gt` pattern so we get the
+// full history instead of being capped at a single 1000-row page.
+async function fetchAllPages<T extends { id: string }>(
+  url: string,
+  buildQuery: (idGt: string, first: number) => string,
+  extractPage: (data: Record<string, unknown>) => T[] | undefined,
+): Promise<T[]> {
+  const all: T[] = [];
+  let lastId = "";
+  for (;;) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: buildQuery(lastId, PAGE_SIZE) }),
+    });
+    if (!response.ok) throw new Error("Subgraph fetch failed");
+    const { data, errors } = (await response.json()) as {
+      data?: Record<string, unknown>;
+      errors?: Array<{ message?: string }>;
+    };
+    if (errors) throw new Error(errors[0]?.message || "Subgraph query error");
+    const page = (data && extractPage(data)) ?? [];
+    all.push(...page);
+    if (page.length < PAGE_SIZE) break;
+    lastId = page[page.length - 1].id;
+  }
+  return all;
+}
+
+interface NextYieldSetRow {
+  id: string;
+  nextYieldDecimal: string;
+  blockTimestamp: string;
+  contract: { version: string };
+}
+
+interface RepoMarketRow {
+  id: string;
+  marketId: string;
+  blockTimestamp: string;
+  bidAmountDecimal: string;
+}
+
+interface BondPurchaseRow {
+  id: string;
+  timestamp: string;
+  amountInQuoteToken: string;
+  payoutInPayoutToken: string;
+  marketId: string;
+}
+
 export function useYrfHistory() {
   return useQuery<YrfHistory>({
     queryKey: ["yrfHistory"],
     queryFn: async () => {
-      // 1. Fetch yield events and market IDs from YRF subgraph
-      const yrfQuery = `
-        {
-          nextYieldSets(first: 100, orderBy: blockTimestamp, orderDirection: desc) {
-            nextYieldDecimal
-            blockTimestamp
-            contract { version }
-          }
-          repoMarkets(first: 1000, orderBy: blockTimestamp, orderDirection: desc) {
-            marketId
-            blockTimestamp
-            bidAmountDecimal
-          }
-        }
-      `;
+      // 1. Fetch yield events and market IDs from YRF subgraph (paginated)
+      const [nextYieldSets, repoMarkets] = await Promise.all([
+        fetchAllPages<NextYieldSetRow>(
+          YRF_SUBGRAPH_URL,
+          (idGt, first) => `
+            {
+              nextYieldSets(
+                first: ${first}
+                where: { id_gt: "${idGt}" }
+                orderBy: id
+                orderDirection: asc
+              ) {
+                id
+                nextYieldDecimal
+                blockTimestamp
+                contract { version }
+              }
+            }
+          `,
+          (d) => d.nextYieldSets as NextYieldSetRow[] | undefined,
+        ),
+        fetchAllPages<RepoMarketRow>(
+          YRF_SUBGRAPH_URL,
+          (idGt, first) => `
+            {
+              repoMarkets(
+                first: ${first}
+                where: { id_gt: "${idGt}" }
+                orderBy: id
+                orderDirection: asc
+              ) {
+                id
+                marketId
+                blockTimestamp
+                bidAmountDecimal
+              }
+            }
+          `,
+          (d) => d.repoMarkets as RepoMarketRow[] | undefined,
+        ),
+      ]);
 
-      const yrfResponse = await fetch(YRF_SUBGRAPH_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: yrfQuery }),
-      });
-
-      if (!yrfResponse.ok) throw new Error("Failed to fetch YRF data");
-      const { data: yrfData, errors: yrfErrors } = await yrfResponse.json();
-      if (yrfErrors) throw new Error(yrfErrors[0]?.message || "YRF query error");
-
-      // Extract YRF market IDs for cross-referencing with bond subgraph
-      const yrfMarketIds: string[] = (yrfData?.repoMarkets ?? []).map(
-        (m: { marketId: string }) => m.marketId,
-      );
+      const yrfMarketIds: string[] = repoMarkets.map((m) => m.marketId);
 
       // 2. Fetch actual OHM purchase amounts from bond market subgraph.
       //
@@ -95,40 +161,35 @@ export function useYrfHistory() {
       if (yrfMarketIds.length > 0) {
         try {
           const marketIdList = yrfMarketIds.map((id) => `"${id}"`).join(",");
-
-          const bondQuery = `
-            {
-              bondPurchases(
-                first: 1000
-                where: { marketId_in: [${marketIdList}] }
-                orderBy: timestamp
-                orderDirection: desc
-              ) {
-                timestamp
-                amountInQuoteToken
-                payoutInPayoutToken
-                marketId
+          const bondPurchases = await fetchAllPages<BondPurchaseRow>(
+            BOND_SUBGRAPH_URL,
+            (idGt, first) => `
+              {
+                bondPurchases(
+                  first: ${first}
+                  where: { marketId_in: [${marketIdList}], id_gt: "${idGt}" }
+                  orderBy: id
+                  orderDirection: asc
+                ) {
+                  id
+                  timestamp
+                  amountInQuoteToken
+                  payoutInPayoutToken
+                  marketId
+                }
               }
-            }
-          `;
+            `,
+            (d) => d.bondPurchases as BondPurchaseRow[] | undefined,
+          );
 
-          const bondResponse = await fetch(BOND_SUBGRAPH_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: bondQuery }),
-          });
-
-          if (bondResponse.ok) {
-            const { data: bondData } = await bondResponse.json();
-            for (const purchase of bondData?.bondPurchases ?? []) {
-              const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
-              const usdAmount = parseFloat(purchase.payoutInPayoutToken) || 0;
-              const monday = getWeekMonday(Math.round(Number(purchase.timestamp) / 1000));
-              ohmByWeek[monday] = (ohmByWeek[monday] ?? 0) + ohmAmount;
-              usdByWeek[monday] = (usdByWeek[monday] ?? 0) + usdAmount;
-              totalOhmBurned += ohmAmount;
-              totalUsdSpent += usdAmount;
-            }
+          for (const purchase of bondPurchases) {
+            const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
+            const usdAmount = parseFloat(purchase.payoutInPayoutToken) || 0;
+            const monday = getWeekMonday(Math.round(Number(purchase.timestamp) / 1000));
+            ohmByWeek[monday] = (ohmByWeek[monday] ?? 0) + ohmAmount;
+            usdByWeek[monday] = (usdByWeek[monday] ?? 0) + usdAmount;
+            totalOhmBurned += ohmAmount;
+            totalUsdSpent += usdAmount;
           }
         } catch {
           // Bond data is supplementary; chart falls back to estimates
@@ -140,17 +201,11 @@ export function useYrfHistory() {
         timestamp: number;
         yield: number;
         version: string;
-      }> = (yrfData?.nextYieldSets ?? []).map(
-        (e: {
-          blockTimestamp: string;
-          nextYieldDecimal: string;
-          contract: { version: string };
-        }) => ({
-          timestamp: Number(e.blockTimestamp),
-          yield: parseFloat(e.nextYieldDecimal) || 0,
-          version: e.contract.version,
-        }),
-      );
+      }> = nextYieldSets.map((e) => ({
+        timestamp: Number(e.blockTimestamp),
+        yield: parseFloat(e.nextYieldDecimal) || 0,
+        version: e.contract.version,
+      }));
 
       // Sort ascending for chart
       yieldEvents.sort((a, b) => a.timestamp - b.timestamp);
@@ -187,13 +242,14 @@ export function useYrfHistory() {
       const currentWeekUsdSpent = usdByWeek[currentMonday] ?? 0;
 
       // Recent daily market bids (for activity feed)
-      const recentBids: YrfMarketBid[] = (yrfData?.repoMarkets ?? [])
-        .slice(0, 14)
-        .map((e: { blockTimestamp: string; bidAmountDecimal: string; marketId: string }) => ({
+      const recentBids: YrfMarketBid[] = repoMarkets
+        .map((e) => ({
           timestamp: Number(e.blockTimestamp),
           bidAmount: parseFloat(e.bidAmountDecimal) || 0,
           marketId: e.marketId,
-        }));
+        }))
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 14);
 
       return {
         weeklyYields,

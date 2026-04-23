@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/card";
 import { ProtocolDataSource } from "./protocol-data-source";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipInfo } from "@/components/ui/tooltip";
-import { useWeeklyRevenue } from "@/modules/pulse/hooks/useWeeklyRevenue";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useYrfHistory } from "@/modules/pulse/hooks/useYrfHistory";
@@ -27,13 +26,12 @@ import iconLight from "@/assets/protocol-1-b.png";
 import iconDark from "@/assets/protocol-1-l.png";
 
 export function ProtocolYrf() {
-  const revenue = useWeeklyRevenue();
   const { data: price } = useOhmPrice();
   const { data: treasury } = useTreasuryMetrics();
   const { data: yrfHistory } = useYrfHistory();
   const epoch = useEpochTimer();
 
-  const isLoading = !revenue || !price || !treasury;
+  const isLoading = !price || !treasury || !yrfHistory;
 
   if (isLoading) {
     return (
@@ -49,19 +47,18 @@ export function ProtocolYrf() {
     );
   }
 
-  const weeklyYield = revenue.totalWeekly;
   const ohmPrice = price.price;
-  const weeklyBurns = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
 
-  // Supply impact from YRF at current buyback rate
+  // YRF subgraph data
+  const totalYieldDeployed = yrfHistory.totalYieldDeployed;
+  const totalOhmBurned = yrfHistory.totalOhmBurned;
+  const currentWeeklyYield = yrfHistory.currentWeeklyYield;
+
+  // Supply impact from YRF at current on-chain buyback rate
+  const weeklyBurns = ohmPrice > 0 ? currentWeeklyYield / ohmPrice : 0;
   const annualBurnsAtCurrentRate = weeklyBurns * 52;
   const supplyDeflationRate =
     treasury.ohmTotalSupply > 0 ? (annualBurnsAtCurrentRate / treasury.ohmTotalSupply) * -100 : 0;
-
-  // YRF subgraph data
-  const totalYieldDeployed = yrfHistory?.totalYieldDeployed ?? 0;
-  const totalOhmBurned = yrfHistory?.totalOhmBurned ?? 0;
-  const currentWeeklyYield = yrfHistory?.currentWeeklyYield ?? 0;
 
   // Current week actual spend from bond purchases (based on current calendar week)
   const allWeeks = yrfHistory?.weeklyYields ?? [];
@@ -146,7 +143,7 @@ export function ProtocolYrf() {
               <div className="flex items-center gap-x-1">
                 <NumberFlow
                   format={{ style: "percent", notation: "standard" }}
-                  value={supplyDeflationRate}
+                  value={supplyDeflationRate / 100}
                   className="text-[15px]/[20px] font-semibold"
                 />
                 <NumberFlow
@@ -189,7 +186,7 @@ export function ProtocolYrf() {
         {/* Est. Weekly Burns */}
         <div className="space-y-1">
           <TooltipInfo
-            title={`${formatUsd(weeklyYield)} weekly revenue / $${ohmPrice.toFixed(2)} OHM price = ${formatNumber(weeklyBurns)} OHM`}
+            title={`${formatUsd(currentWeeklyYield)} weekly YRF budget / $${ohmPrice.toFixed(2)} OHM price = ${formatNumber(weeklyBurns)} OHM`}
             className="text-xs text-tertiary-t"
           >
             Est. Weekly Burns
@@ -197,6 +194,7 @@ export function ProtocolYrf() {
           <div className="tabular-nums text-[15px]/[20px] font-semibold">
             <div className="flex items-center gap-x-0.5">
               <NumberFlow
+                format={{ style: "decimal", notation: "standard" }}
                 suffix="OHM"
                 value={Math.round(weeklyBurns)}
                 className="text-[15px]/[20px]"
