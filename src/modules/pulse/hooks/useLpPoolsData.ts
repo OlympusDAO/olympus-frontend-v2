@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { DEFILLAMA_YIELDS_URL, LP_POOL_MAP } from "@/lib/constants";
-import { mapProjectToName, CHAIN_NAME_TO_ID } from "@/modules/ohm/utils/defi-llama";
+import { CHAIN_NAME_TO_ID } from "@/modules/ohm/utils/defi-llama";
 import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
 
 export interface LpPoolRow {
@@ -15,60 +15,58 @@ export interface LpPoolRow {
   ohmDepth: number;
 }
 
-interface DefiLlamaPoolEntry {
-  pool: string;
-  chain: string;
-  project: string;
-  apyBase: number | null;
+// "Uniswap V3 OHM-sUSDS Liquidity Pool" → "Uniswap V3"
+// "Beradrome Kodiak OHM-HONEY LP" → "Beradrome Kodiak"
+// "Camelot OHM-wETH Liquidity Pool" → "Camelot"
+function parseProtocolFromToken(token: string): string {
+  const match = token.match(/^(.+?)\s+[A-Za-z0-9]+-[A-Za-z0-9]+\s+(LP|Liquidity Pool)$/i);
+  return match ? match[1].trim() : token;
 }
 
-async function fetchDefiLlamaPoolMeta(): Promise<
-  Map<string, { project: string; chain: string; apyBase: number }>
-> {
-  const response = await fetch(`${DEFILLAMA_YIELDS_URL}/pools`);
-  if (!response.ok) return new Map();
-  const data = await response.json();
-  const pools: DefiLlamaPoolEntry[] = data?.data ?? [];
-
-  const map = new Map<string, { project: string; chain: string; apyBase: number }>();
-  for (const p of pools) {
-    map.set(p.pool, {
-      project: p.project,
-      chain: p.chain,
-      apyBase: p.apyBase ?? 0,
-    });
-  }
-  return map;
+// Fetches apyBase for every pool in LP_POOL_MAP via DefiLlama's per-pool chart endpoint.
+// We hit the single-pool endpoint (rather than the full /pools list) to minimize payload.
+async function fetchApyBaseByPoolId(poolIds: string[]): Promise<Map<string, number>> {
+  const results = await Promise.all(
+    poolIds.map(async (id) => {
+      try {
+        const res = await fetch(`${DEFILLAMA_YIELDS_URL}/chart/${id}`);
+        if (!res.ok) return [id, 0] as const;
+        const json = await res.json();
+        const points: Array<{ apyBase: number | null }> = json?.data ?? [];
+        const latest = points[points.length - 1];
+        return [id, latest?.apyBase ?? 0] as const;
+      } catch {
+        return [id, 0] as const;
+      }
+    }),
+  );
+  return new Map(results);
 }
 
 export function useLpPoolsData() {
   const { data: reserves } = useReserveBalances();
 
   return useQuery<LpPoolRow[]>({
-    queryKey: ["lpPoolsData"],
+    queryKey: ["lpPoolsData", reserves?.lpPositions?.map((p) => p.name).join(",")],
     enabled: (reserves?.lpPositions?.length ?? 0) > 0,
     queryFn: async () => {
-      const meta = await fetchDefiLlamaPoolMeta();
       const lpPositions = reserves?.lpPositions ?? [];
+      const poolIds = lpPositions
+        .map((p) => LP_POOL_MAP[p.name])
+        .filter((id): id is string => Boolean(id));
+      const apyByPoolId = await fetchApyBaseByPoolId(poolIds);
 
       return lpPositions.map((pos) => {
-        const poolId = LP_POOL_MAP[pos.name];
-        const poolMeta = poolId ? meta.get(poolId) : undefined;
-
-        const protocol = poolMeta ? mapProjectToName(poolMeta.project) : "Unknown";
-        const chain = poolMeta?.chain ?? "—";
-        const EXTRA_CHAIN_IDS: Record<string, number> = { Berachain: 80094 };
-        const chainId =
-          chain !== "—" ? (CHAIN_NAME_TO_ID[chain] ?? EXTRA_CHAIN_IDS[chain] ?? 0) : 0;
-        const apyBase = poolMeta?.apyBase ?? 0;
+        const chainId = CHAIN_NAME_TO_ID[pos.blockchain] ?? 0;
+        const apyBase = apyByPoolId.get(LP_POOL_MAP[pos.name]) ?? 0;
         const weeklyFees = (pos.value * (apyBase / 100)) / 52;
-        const ohmPct = 0.5;
-        const ohmDepth = pos.value * ohmPct;
+        const ohmDepth = Math.max(pos.value - pos.valueExcludingOhm, 0);
+        const ohmPct = pos.value > 0 ? ohmDepth / pos.value : 0;
 
         return {
           name: pos.name,
-          protocol,
-          chain,
+          protocol: parseProtocolFromToken(pos.name),
+          chain: pos.blockchain,
           chainId,
           tvl: pos.value,
           apyBase,

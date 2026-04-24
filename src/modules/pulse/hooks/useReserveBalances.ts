@@ -3,7 +3,9 @@ import { TREASURY_API_URL } from "@/lib/constants";
 
 export interface LpPosition {
   name: string;
+  blockchain: string;
   value: number;
+  valueExcludingOhm: number;
 }
 
 interface ReserveBalances {
@@ -12,22 +14,24 @@ interface ReserveBalances {
   lpPositions: LpPosition[];
 }
 
-// Map treasury tokenRecord names to identify LP positions
-const LP_TOKEN_MATCHERS = ["liquidity pool", " lp"];
+// 30 days — cross-chain indexer lag can leave a pool stale for >1 week
+// (e.g. Arbitrum), so a yesterday-only window drops live positions.
+const LOOKBACK_DAYS = 30;
 
 function isLpToken(token: string): boolean {
   const lower = token.toLowerCase();
-  return LP_TOKEN_MATCHERS.some((m) => lower.includes(m));
+  return lower.includes("liquidity pool") || lower.includes(" lp");
 }
 
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
     queryKey: ["reserveBalances"],
     queryFn: async () => {
-      // Query yesterday's tokenRecords (today's may not be indexed yet)
-      const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
+      const startDate = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000)
+        .toISOString()
+        .split("T")[0];
       const params = JSON.stringify({
-        startDate: yesterday,
+        startDate,
         crossChainDataComplete: false,
         ignoreCache: false,
       });
@@ -41,43 +45,55 @@ export function useReserveBalances() {
       const json = await response.json();
       const records: Array<{
         token: string;
+        blockchain: string;
         balance: string;
         value: string;
+        valueExcludingOhm: string;
         date: string;
         category: string;
       }> = json.data ?? [];
 
       let susdeValue = 0;
       let susdsValue = 0;
-      // Track latest LP values by token name (records ordered by date desc)
-      const lpMap = new Map<string, number>();
+      // Keep the latest record per (token, blockchain) — summing across source wallets on that date.
+      const lpLatestDate = new Map<string, string>();
+      const lpAgg = new Map<string, LpPosition>();
 
       for (const rec of records) {
-        const token = (rec.token || "").toLowerCase();
+        const tokenLower = (rec.token || "").toLowerCase();
         const value = parseFloat(rec.value) || 0;
 
-        if (token === "staked usde" && value > susdeValue) {
+        if (tokenLower === "staked usde" && value > susdeValue) {
           susdeValue = value;
         }
-        if (token === "savings usds" && value > susdsValue) {
+        if (tokenLower === "savings usds" && value > susdsValue) {
           susdsValue = value;
         }
-        // Capture LP positions (first occurrence = latest date)
-        if (
-          isLpToken(rec.token) &&
-          rec.category === "Protocol-Owned Liquidity" &&
-          !lpMap.has(rec.token)
-        ) {
-          lpMap.set(rec.token, value);
+
+        if (isLpToken(rec.token) && rec.category === "Protocol-Owned Liquidity") {
+          const key = `${rec.token}|${rec.blockchain}`;
+          const latest = lpLatestDate.get(key);
+          if (!latest || rec.date > latest) {
+            // New latest date — reset aggregation
+            lpLatestDate.set(key, rec.date);
+            lpAgg.set(key, {
+              name: rec.token,
+              blockchain: rec.blockchain,
+              value,
+              valueExcludingOhm: parseFloat(rec.valueExcludingOhm) || 0,
+            });
+          } else if (rec.date === latest) {
+            // Same date, different source wallet — sum
+            const existing = lpAgg.get(key);
+            if (existing) {
+              existing.value += value;
+              existing.valueExcludingOhm += parseFloat(rec.valueExcludingOhm) || 0;
+            }
+          }
         }
       }
 
-      const lpPositions: LpPosition[] = [];
-      for (const [name, value] of lpMap) {
-        if (value > 1000) {
-          lpPositions.push({ name, value });
-        }
-      }
+      const lpPositions = Array.from(lpAgg.values()).filter((p) => p.value > 1000);
 
       return { susdeValue, susdsValue, lpPositions };
     },
