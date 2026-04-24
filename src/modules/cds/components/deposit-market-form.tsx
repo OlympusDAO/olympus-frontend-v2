@@ -29,12 +29,14 @@ interface DepositMarketFormProps {
   selectedTerm: string;
   onSelectedTermChange: (term: string) => void;
   selectedTermMonths: number;
+  orderTypeTabs?: React.ReactNode;
 }
 
 export function DepositMarketForm({
   selectedTerm,
   onSelectedTermChange,
   selectedTermMonths,
+  orderTypeTabs,
 }: DepositMarketFormProps) {
   const { address: userAddress } = useAccount();
   const [slippage, setSlippage] = useState<string>("1.0");
@@ -153,14 +155,15 @@ export function DepositMarketForm({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left column: form */}
         <div className="space-y-4">
-          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange}>
+          {orderTypeTabs}
+          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange} className="gap-2">
             <TooltipInfo
-              className="text-sm font-light"
+              className="text-sm/5 font-semibold text-primary-t"
               title="The length of time your deposit remains locked before redemption is available. You can choose different terms (e.g., 3 or 6 months), which determine when you can redeem your stablecoins or exercise your Conversion Right into OHM."
             >
               Deposit Terms
             </TooltipInfo>
-            <TabsList className="rounded-full w-full">
+            <TabsList className="rounded-full w-full [&>*]:flex-1">
               {isLoadingPeriods ? (
                 <div className="flex items-center gap-2 text-sm text-secondary-t">
                   <Spinner className="size-4" />
@@ -173,7 +176,7 @@ export function DepositMarketForm({
                   <TabsTrigger
                     key={period.months}
                     value={period.displayName}
-                    className="rounded-full focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
+                    className="w-full rounded-full focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
                   >
                     {period.displayName}
                   </TabsTrigger>

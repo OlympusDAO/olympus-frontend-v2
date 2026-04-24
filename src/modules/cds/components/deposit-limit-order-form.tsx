@@ -29,11 +29,13 @@ import { TokenName } from "@/lib/tokens.ts";
 interface LimitOrderFormProps {
   selectedTerm: string;
   onSelectedTermChange: (term: string) => void;
+  orderTypeTabs?: React.ReactNode;
 }
 
 export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
   selectedTerm,
   onSelectedTermChange,
+  orderTypeTabs,
 }) => {
   const { address: userAddress } = useAccount();
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -158,8 +160,9 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
+          {orderTypeTabs}
           {/* Deposit Terms Tabs */}
-          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange}>
+          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange} className="gap-2">
             <TooltipInfo
               className="text-sm font-light"
               title="The length of time your deposit remains locked before redemption is available."

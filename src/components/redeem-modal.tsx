@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
-import USDSIcon from "@/assets/USDS.png";
+import { Icon, type IconName } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import {
   useInstantRedemption,
@@ -255,7 +254,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, token
         redemptionType === "instant"
           ? `${redeemAmount} USDS-${term} → ${calculatedReceive} USDS`
           : `${redeemAmount} USDS-${term} → ${calculatedReceive} USDS`,
-      icon: redemptionType === "instant" ? USDSIcon : undefined,
+      icon: redemptionType === "instant" ? ("USDSColorTokenIcon" as IconName) : undefined,
       isActive: currentStep === 2,
       isCompleted: isSuccess,
       isLoading: currentStep === 2 && isRedeeming,
@@ -373,7 +372,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, token
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
+                      {step.icon && <Icon name={step.icon} size={20} />}
                     </div>
                   </div>
                   {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
@@ -541,7 +540,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, token
                 />
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2 bg-surface-a3 rounded-full px-3 py-2 border border-a3-b">
-                    <img src={cdUSDSIcon} alt="Receipt Token" className="w-5 h-5" />
+                    <Icon name="cdUSDSIcon" size={20} />
                     <span className="font-medium text-sm">{displayTokenName}</span>
                   </div>
                 </div>
@@ -569,7 +568,7 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, token
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">You Receive</p>
                 <div className="flex items-center gap-2">
-                  <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
+                  <Icon name="USDSColorTokenIcon" size={20} />
                   <span>{calculatedReceive} USDS</span>
                 </div>
               </div>

@@ -41,34 +41,37 @@ export const CDPage = () => {
       <DepositStatsBar selectedTermMonths={selectedTermMonths} />
 
       <div>
-        <h2 className="text-xl font-semibold mb-3">Create Position</h2>
-        <Card className="p-6 space-y-6">
-          {/* Order Type Tabs — only visible when limit orders are enabled */}
-          {isLimitOrdersEnabled && (
-            <Tabs value={orderType} onValueChange={(v) => setOrderType(v as "market" | "limit")}>
-              <TabsList className="rounded-full w-fit">
-                <TabsTrigger value="market" className="rounded-full">
-                  Market
-                </TabsTrigger>
-                <TabsTrigger value="limit" className="rounded-full">
-                  Limit
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
+        <h2 className="text-xl/7 font-semibold mt-8 mb-3">Create Position</h2>
+        <Card className="p-6">
+          {(() => {
+            const orderTypeTabs = isLimitOrdersEnabled ? (
+              <Tabs value={orderType} onValueChange={(v) => setOrderType(v as "market" | "limit")}>
+                <TabsList className="rounded-full w-full [&>*]:flex-1">
+                  <TabsTrigger value="market" className="w-full rounded-full">
+                    Market
+                  </TabsTrigger>
+                  <TabsTrigger value="limit" className="w-full rounded-full">
+                    Limit
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            ) : null;
 
-          {orderType === "market" ? (
-            <DepositMarketForm
-              selectedTerm={selectedTerm}
-              onSelectedTermChange={setSelectedTerm}
-              selectedTermMonths={selectedTermMonths}
-            />
-          ) : (
-            <DepositLimitOrderForm
-              selectedTerm={selectedTerm}
-              onSelectedTermChange={setSelectedTerm}
-            />
-          )}
+            return orderType === "market" ? (
+              <DepositMarketForm
+                selectedTerm={selectedTerm}
+                onSelectedTermChange={setSelectedTerm}
+                selectedTermMonths={selectedTermMonths}
+                orderTypeTabs={orderTypeTabs}
+              />
+            ) : (
+              <DepositLimitOrderForm
+                selectedTerm={selectedTerm}
+                onSelectedTermChange={setSelectedTerm}
+                orderTypeTabs={orderTypeTabs}
+              />
+            );
+          })()}
         </Card>
       </div>
 
@@ -76,11 +79,17 @@ export const CDPage = () => {
 
       <div>
         <Tabs value={positionTab} onValueChange={(v) => setPositionTab(v as "active" | "orders")}>
-          <TabsList className="rounded-full w-fit mb-3">
-            <TabsTrigger value="active" className="rounded-full">
+          <TabsList className="bg-transparent outline-none h-auto w-fit p-0 gap-1 mb-3 shadow-none">
+            <TabsTrigger
+              value="active"
+              className="rounded-full text-sm/5 font-semibold h-[40px] px-4 py-2.5 bg-transparent shadow-none outline-none text-secondary-t hover:bg-surface-a3 hover:text-primary-t group-data-[active]/tabs-trigger:bg-surface-a5 group-data-[active]/tabs-trigger:outline group-data-[active]/tabs-trigger:outline-[0.5px] group-data-[active]/tabs-trigger:-outline-offset-[0.5px] group-data-[active]/tabs-trigger:outline-a10-b group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:shadow-none group-data-[active]/tabs-trigger:hover:bg-surface-a5"
+            >
               Active Positions
             </TabsTrigger>
-            <TabsTrigger value="orders" className="rounded-full">
+            <TabsTrigger
+              value="orders"
+              className="rounded-full text-sm/5 font-semibold h-[40px] px-4 py-2.5 bg-transparent shadow-none outline-none text-secondary-t hover:bg-surface-a3 hover:text-primary-t group-data-[active]/tabs-trigger:bg-surface-a5 group-data-[active]/tabs-trigger:outline group-data-[active]/tabs-trigger:outline-[0.5px] group-data-[active]/tabs-trigger:-outline-offset-[0.5px] group-data-[active]/tabs-trigger:outline-a10-b group-data-[active]/tabs-trigger:text-primary-t group-data-[active]/tabs-trigger:shadow-none group-data-[active]/tabs-trigger:hover:bg-surface-a5"
+            >
               Open Orders
             </TabsTrigger>
           </TabsList>

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckCircle2, ExternalLink } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
+import { Icon } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
@@ -387,7 +387,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-secondary-t">You Receive</span>
               <div className="flex items-center gap-2">
-                <img src={cdUSDSIcon} alt="Receipt Token" className="w-5 h-5" />
+                <Icon name="cdUSDSIcon" size={20} />
                 <span className="text-sm font-medium">
                   {wrapAmount || "0.00"} {displayTokenName} (Wrapped)
                 </span>

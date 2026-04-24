@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Form, FormField, FormItem } from "@/components/ui/form";
@@ -21,8 +20,9 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { formatEther } from "viem";
 import { formatTermSuffix } from "@/lib/utils";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Icon } from "@/components/icon";
+import { RiExchangeFundsLine } from "@remixicon/react";
 import type { TokenWithBalance } from "@/lib/hooks/useToken";
 
 interface BorrowFormValues {
@@ -260,24 +260,18 @@ export const BorrowPage = () => {
       <div className="p-6 rounded-3xl bg-surface-bg-l2 shadow-surface-bg-l2 border border-a5-b">
         {/* Empty / disabled state */}
         {!isLoadingRedemptions && (availableRedemptions.length === 0 || !isGlobalBorrowEnabled) && (
-          <Card className="p-6">
-            <div className="text-center py-8">
-              <p className="text-secondary-t mb-4">
-                {!isGlobalBorrowEnabled
-                  ? "Borrowing is currently disabled."
-                  : !redemptionStatus.hasRedemptions
-                    ? "You don't have any convertible deposit tokens to use as collateral."
-                    : !redemptionStatus.hasNoActiveLoans
-                      ? "All your redemptions already have active loans."
-                      : "Borrowing is currently disabled for your available assets."}
-              </p>
-              {!redemptionStatus.hasRedemptions && isGlobalBorrowEnabled && (
-                <Link to="/">
-                  <Button>Go to Convertible Deposits</Button>
-                </Link>
-              )}
-            </div>
-          </Card>
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <RiExchangeFundsLine className="size-10 text-a10-b" />
+            <p className="text-sm/5 font-semibold text-primary-t text-center">
+              {!isGlobalBorrowEnabled
+                ? "Borrowing is currently disabled."
+                : !redemptionStatus.hasRedemptions
+                  ? "You don't have any convertible deposit tokens to use as collateral."
+                  : !redemptionStatus.hasNoActiveLoans
+                    ? "All your redemptions already have active loans."
+                    : "Borrowing is currently disabled for your available assets."}
+            </p>
+          </div>
         )}
 
         {/* Create position form */}
@@ -319,7 +313,7 @@ export const BorrowPage = () => {
 
                 <Alert type="info">
                   <RiInformationLine size={16} />
-                  <AlertDescription className="text-sm font-semibold text-primary-t">
+                  <AlertDescription className="text-xs/4 font-semibold text-primary-t">
                     Deposit tokens into the Redemption Vault to use them as collateral.
                   </AlertDescription>
                 </Alert>
@@ -373,7 +367,7 @@ export const BorrowPage = () => {
                 <h3 className="text-sm font-semibold">Position Info</h3>
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between border-b border-a3-b py-2">
-                    <span className="text-xs text-secondary-t">Collateral</span>
+                    <span className="text-xs font-normal text-secondary-t">Collateral</span>
                     <div className="flex items-center gap-1">
                       <Icon name="cdUSDSIcon" className="size-4" />
                       <span className="text-xs font-semibold">
@@ -384,7 +378,7 @@ export const BorrowPage = () => {
                   </div>
 
                   <div className="flex items-center justify-between border-b border-a3-b py-2">
-                    <span className="text-xs text-secondary-t">Debt</span>
+                    <span className="text-xs font-normal text-secondary-t">Debt</span>
                     <div className="flex items-center gap-1">
                       <Icon name="USDSColorTokenIcon" className="size-4" />
                       <span className="text-xs font-semibold">
@@ -394,14 +388,14 @@ export const BorrowPage = () => {
                   </div>
 
                   <div className="flex items-center justify-between border-b border-a3-b py-2">
-                    <span className="text-xs text-secondary-t">Borrow APY</span>
+                    <span className="text-xs font-normal text-secondary-t">Borrow APY</span>
                     <span className="text-xs font-semibold">
                       {annualInterestRatePercentage.toFixed(2)}%
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between border-b border-a3-b py-2">
-                    <span className="text-xs text-secondary-t">Loan-to-Value</span>
+                    <span className="text-xs font-normal text-secondary-t">Loan-to-Value</span>
                     <div className="flex items-center gap-1.5">
                       <CircularProgress
                         value={Math.min(currentLTV, 100)}
@@ -415,14 +409,16 @@ export const BorrowPage = () => {
                   </div>
 
                   <div className="flex items-center justify-between border-b border-a3-b py-2">
-                    <span className="text-xs text-secondary-t">Liquidation Loan-to-Value</span>
+                    <span className="text-xs font-normal text-secondary-t">
+                      Liquidation Loan-to-Value
+                    </span>
                     <span className="text-xs font-semibold">
                       {(maxBorrowDecimal * 100).toFixed(0)}%
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs text-secondary-t">Liquidation Price</span>
+                    <span className="text-xs font-normal text-secondary-t">Liquidation Price</span>
                     <span className="text-xs font-semibold">
                       {liquidationPrice != null ? `$${liquidationPrice.toFixed(4)}` : "—"}
                     </span>

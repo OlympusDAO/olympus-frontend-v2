@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem } from "@/components/ui/form";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import USDSIcon from "@/assets/USDS.png";
+import { Icon, type IconName } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { usePositionRedemption } from "@/lib/hooks/cds/usePositionRedemption";
 import { useAccount, useChainId } from "wagmi";
@@ -201,7 +201,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
       number: 2,
       title: "Position Redemption",
       detail: `${redeemAmount} ${displayTokenName} → ${calculatedReceive} USDS`,
-      icon: USDSIcon,
+      icon: "USDSColorTokenIcon" as IconName,
       isActive: currentStep === 2,
       isCompleted: isRedemptionSuccess,
       isLoading: currentStep === 2 && isRedemptionPending,
@@ -288,7 +288,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
+                      {step.icon && <Icon name={step.icon} size={20} />}
                     </div>
                   </div>
                   {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
@@ -422,7 +422,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">You Receive</p>
                     <div className="flex items-center gap-2">
-                      <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
+                      <Icon name="USDSColorTokenIcon" size={20} />
                       <span>{calculatedReceive} USDS</span>
                     </div>
                   </div>

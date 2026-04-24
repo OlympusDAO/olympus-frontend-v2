@@ -10,7 +10,7 @@ import { useDepositManager } from "@/lib/hooks/cds/useDepositManager";
 import { usePreviewBid } from "@/lib/hooks/cds/usePreviewBid";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
+import { Icon, type IconName } from "@/components/icon";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
@@ -166,7 +166,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
       number: 2,
       title: `Deposit & Mint ${displayTokenName}`,
       detail: `${depositAmount} USDS → ${depositAmount} ${displayTokenName}`,
-      icon: cdUSDSIcon,
+      icon: "cdUSDSIcon" as IconName,
       isActive: currentStep === 2,
       isCompleted: bidSuccess,
       isLoading: currentStep === 2 && isBidding,
@@ -279,7 +279,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
+                    {step.icon && <Icon name={step.icon} size={20} />}
                   </div>
                 </div>
                 {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}

@@ -9,7 +9,6 @@ import { useCurrentTick } from "@/lib/hooks/cds/useCurrentTick";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
 import { formatTickPrice } from "@/lib/utils/formatters";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
 import { Icon } from "@/components/icon";
 
 interface DepositPositionInfoProps {
@@ -55,28 +54,28 @@ export function DepositPositionInfo({
   const displayTokenName = tokenName || `Receipt-${selectedTermMonths}m`;
 
   return (
-    <div className="bg-surface-a3 rounded-2xl p-4 flex flex-col gap-4 border border-a3-b">
+    <div className="bg-surface-a3 rounded-2xl px-4 pb-4 pt-6 flex flex-col gap-4 border border-a3-b h-full">
       <h3 className="text-sm font-semibold">Position Info</h3>
 
-      <div className="space-y-2">
-        <div className="flex justify-between items-center border-b border-a5-b pb-2">
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between border-b border-a3-b py-2">
           <TooltipInfo
-            className="text-xs text-secondary-t"
+            className="text-xs font-normal text-secondary-t"
             title="The receipt tokens issued for your deposit. They prove your position and are required to redeem your USDS or exercise your Conversion Right at expiry."
           >
             You Receive
           </TooltipInfo>
           <div className="flex items-center gap-1">
-            <img src={cdUSDSIcon} alt="Receipt Token" className="w-4 h-4" />
+            <Icon name="cdUSDSIcon" size={16} />
             <span className="text-xs font-semibold">
               {formatReceiptTokenAmount(depositAmount || "0")} {displayTokenName}
             </span>
           </div>
         </div>
 
-        <div className="flex justify-between items-center border-b border-a5-b pb-2">
+        <div className="flex items-center justify-between border-b border-a3-b py-2">
           <TooltipInfo
-            className="text-xs text-secondary-t"
+            className="text-xs font-normal text-secondary-t"
             title="The amount of OHM your position can convert into at the predefined conversion price once the deposit term has ended."
           >
             Convertible To
@@ -93,7 +92,7 @@ export function DepositPositionInfo({
           </div>
         </div>
 
-        <div className="flex justify-between items-center border-b border-a5-b pb-2">
+        <div className="flex items-center justify-between border-b border-a3-b py-2">
           <span className="text-xs text-secondary-t">Price</span>
           <span className="text-xs font-semibold">
             {isLoadingPreview
@@ -106,7 +105,7 @@ export function DepositPositionInfo({
           </span>
         </div>
 
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between pt-2">
           <span className="text-xs text-secondary-t">Conversion Expiry</span>
           <span className="text-xs font-semibold">
             {selectedTermMonths > 0 ? getConversionExpiryDate(selectedTermMonths) : "--"}

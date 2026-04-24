@@ -9,6 +9,14 @@ import { RiMoreFill } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -67,7 +75,7 @@ const OrderCell = ({ order }: { order: LimitOrder }) => {
             {formatAmount(order.data.depositBudget)} cdUSDS-
             {formatTermSuffix(order.data.depositPeriod)}
           </span>
-          <span className="text-xs text-secondary-t">
+          <span className="text-xs font-normal text-secondary-t">
             {formatAmount(order.data.depositSpent)} / {formatAmount(order.data.depositBudget)}{" "}
             filled
           </span>
@@ -97,7 +105,7 @@ const IncentiveCell = ({ order }: { order: LimitOrder }) => {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-semibold">{formatAmount(order.data.incentiveBudget)} USDS</span>
-      <span className="text-xs text-secondary-t">
+      <span className="text-xs font-normal text-secondary-t">
         {formatAmount(order.data.incentiveSpent)} spent
       </span>
     </div>
@@ -195,69 +203,53 @@ export const DepositOpenLimitOrders = () => {
   if (stateMessage) {
     return (
       <>
-        <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
-          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
-            <span className="text-xs text-secondary-t font-normal">Open Limit Orders</span>
-          </div>
-          <div className="p-8 text-center text-secondary-t text-sm">{stateMessage}</div>
-        </div>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="py-12 text-center text-sm text-tertiary-t">
+                {stateMessage}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </>
     );
   }
 
   return (
     <>
-      <h2 className="text-xl font-semibold mb-3">Open Limit Orders</h2>
-
       {/* Desktop table */}
-      <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
-        <table className="w-full">
-          <thead>
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-surface-a3 border-b border-a5-b">
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th
+                  <TableHead
                     key={header.id}
-                    className={[
-                      "px-3 py-3 text-xs text-secondary-t font-normal text-left whitespace-nowrap",
-                      header.id === "price" && "w-[200px]",
-                      header.id === "term" && "w-[160px]",
-                      header.id === "incentive" && "w-[160px]",
-                      header.id === "actions" && "w-[80px] text-right",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
+                    className={header.id === "actions" ? "text-right" : ""}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody>
+          </TableHeader>
+          <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-b border-a5-b last:border-0 h-16">
+              <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <td
+                  <TableCell
                     key={cell.id}
-                    className={[
-                      "px-3 py-3",
-                      cell.column.id === "price" && "w-[200px]",
-                      cell.column.id === "term" && "w-[160px]",
-                      cell.column.id === "incentive" && "w-[160px]",
-                      cell.column.id === "actions" && "w-[80px]",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
+                    className={cell.column.id === "actions" ? "text-right" : ""}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Mobile card view */}
@@ -276,7 +268,7 @@ export const DepositOpenLimitOrders = () => {
                     {formatAmount(order.data.depositBudget)} cdUSDS-
                     {formatTermSuffix(order.data.depositPeriod)}
                   </span>
-                  <span className="text-xs text-secondary-t">
+                  <span className="text-xs font-normal text-secondary-t">
                     {formatAmount(order.data.depositSpent)} /{" "}
                     {formatAmount(order.data.depositBudget)} filled
                   </span>
