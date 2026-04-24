@@ -126,8 +126,6 @@ export const MetricsProtocolUtilizationChart: React.FC = () => {
       ? chartData[chartData.length - 1].v1 + chartData[chartData.length - 1].v2
       : 0;
 
-  console.log("chartData", chartData);
-
   if (isLoading) {
     return (
       <Card className="px-6 py-5">
