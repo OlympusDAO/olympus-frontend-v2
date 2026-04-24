@@ -91,7 +91,11 @@ export function LottieIcon({
       // composed with the SVG viewport scale (1/33×) caused some browsers to
       // rasterize intermediate shapes at the authored sub-pixel size. Canvas
       // avoids the per-shape raster pipeline entirely.
-      renderer="canvas"
+      // Cast: lottie-react's <Lottie> component doesn't expose its renderer
+      // generic, so the prop type is locked to "svg" even though the runtime
+      // accepts "canvas". useLottie<"canvas"> would type cleanly but requires
+      // a larger refactor.
+      renderer={"canvas" as "svg"}
       rendererSettings={{
         // Keep pixel-perfect output on HiDPI displays; canvas renderer honors
         // devicePixelRatio when this is not overridden.

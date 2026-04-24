@@ -74,10 +74,10 @@ function Tooltip({
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const open = isControlled ? (openProp as boolean) : uncontrolledOpen;
 
-  const setOpen = React.useCallback(
-    (next: boolean) => {
+  const setOpen = React.useCallback<NonNullable<TooltipPrimitive.Root.Props["onOpenChange"]>>(
+    (next, eventDetails) => {
       if (!isControlled) setUncontrolledOpen(next);
-      onOpenChangeProp?.(next);
+      onOpenChangeProp?.(next, eventDetails);
     },
     [isControlled, onOpenChangeProp],
   );
@@ -94,10 +94,13 @@ function Tooltip({
 
   // On mobile there's no hover, so we make tap toggle the tooltip and disable
   // Base UI's closeOnClick so the tap doesn't immediately dismiss what it opened.
+  // We toggle local state directly here (rather than going through `setOpen`)
+  // because Base UI's onOpenChange contract requires an eventDetails object we
+  // don't have — controlled consumers should drive open state themselves.
   const { onClick: userOnClick, ...restTriggerProps } = triggerProps ?? {};
-  const mobileClick: React.MouseEventHandler<HTMLElement> = (e) => {
+  const mobileClick: NonNullable<TooltipPrimitive.Trigger.Props["onClick"]> = (e) => {
     e.preventDefault();
-    setOpen(!open);
+    if (!isControlled) setUncontrolledOpen((prev) => !prev);
     userOnClick?.(e);
   };
 
