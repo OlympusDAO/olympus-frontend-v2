@@ -23,7 +23,7 @@ export function OverviewEmissionManager() {
   const currentPremium = calcOhmPremiumPct(ohmPrice, backing);
   const thresholdPct = minimumPremium * 100;
   const premiumProgress = thresholdPct > 0 ? (currentPremium / thresholdPct) * 100 : 0;
-  const emissionTriggerPrice = backing * (1 + minimumPremium);
+  const emissionTriggerPrice = state?.triggerPrice ?? 0;
 
   return (
     <Card className="p-5">
