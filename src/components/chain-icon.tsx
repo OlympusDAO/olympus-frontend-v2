@@ -39,7 +39,6 @@ type ChainIconProps = {
 
 export function ChainIcon({ chainId, size = 20, rounded = false }: ChainIconProps) {
   const meta = CHAIN_META[chainId];
-  const shapeClass = rounded ? "rounded-full" : "";
 
   if (!meta) {
     return (
@@ -65,7 +64,7 @@ export function ChainIcon({ chainId, size = 20, rounded = false }: ChainIconProp
       <span
         role="img"
         aria-label={label}
-        className={cn("inline-flex shrink-0 overflow-hidden", shapeClass)}
+        className={cn("inline-flex shrink-0 overflow-hidden", rounded && "rounded-full")}
         style={{ width: size, height: size }}
       >
         <Icon width={size} height={size} />

@@ -1,22 +1,9 @@
-import type React from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 const TOTAL_CELLS = 10;
 
-/**
- * Segmented progress bar split into 10 equal-width cells with a 1px gap at the
- * threshold position. Cells fill left-to-right: green for "For", red for
- * "Against", with the remainder rendered in the surface-a10 tint.
- */
-export function ApprovalQuorumBar({
-  label,
-  icon,
-  percentage,
-  threshold,
-  forPercent,
-  againstPercent,
-  className,
-}: {
+type ApprovalQuorumBarProps = {
   label?: string;
   icon?: React.ReactNode;
   percentage: number;
@@ -24,7 +11,22 @@ export function ApprovalQuorumBar({
   forPercent: number;
   againstPercent: number;
   className?: string;
-}) {
+};
+
+/**
+ * Segmented progress bar split into 10 equal-width cells with a 1px gap at the
+ * threshold position. Cells fill left-to-right: green for "For", red for
+ * "Against", with the remainder rendered in the surface-a10 tint.
+ */
+export const ApprovalQuorumBar = React.memo(function ApprovalQuorumBar({
+  label,
+  icon,
+  percentage,
+  threshold,
+  forPercent,
+  againstPercent,
+  className,
+}: ApprovalQuorumBarProps) {
   const clampedThreshold = Math.min(Math.max(threshold, 0), 100);
 
   const leftCount = Math.min(Math.max(Math.round(clampedThreshold / 10), 0), TOTAL_CELLS);
@@ -75,7 +77,7 @@ export function ApprovalQuorumBar({
       </div>
     </div>
   );
-}
+});
 
 function CellGroup({
   cells,

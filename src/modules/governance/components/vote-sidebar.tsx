@@ -290,10 +290,13 @@ type TimelineItemData = {
   icon: React.ComponentType<{ className?: string }>;
   date: Date | undefined;
   txHash?: string;
-  isCompleted: boolean;
-  isFuture: boolean;
   state: TimelineState;
   showRelativeTime: boolean;
+};
+
+type RawTimelineItem = Omit<TimelineItemData, "state" | "showRelativeTime"> & {
+  isCompleted: boolean;
+  isFuture: boolean;
 };
 
 function buildTimelineItems({
@@ -307,7 +310,7 @@ function buildTimelineItems({
   status: ProposalStatus;
   now: Date;
 }): TimelineItemData[] {
-  const raw: Omit<TimelineItemData, "state" | "showRelativeTime">[] = [
+  const raw: RawTimelineItem[] = [
     {
       label: "Published onchain",
       icon: RiLinksFill,
@@ -398,12 +401,12 @@ function buildTimelineItems({
     if (item.isCompleted) activeIdx = i;
   });
 
-  return raw.map((item, i) => {
+  return raw.map(({ isCompleted: _c, isFuture, ...item }, i) => {
     let state: TimelineState;
     if (i < activeIdx) state = "completed";
     else if (i === activeIdx) state = "active";
     else state = "inactive";
-    const showRelativeTime = i === activeIdx + 1 && item.isFuture;
+    const showRelativeTime = i === activeIdx + 1 && isFuture;
     return { ...item, state, showRelativeTime };
   });
 }

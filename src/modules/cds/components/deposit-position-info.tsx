@@ -27,6 +27,43 @@ function getConversionExpiryDate(termMonths: number): string {
   });
 }
 
+function PriceRow({
+  isLoading,
+  ohmOut,
+  depositAmount,
+  tickPrice,
+}: {
+  isLoading: boolean;
+  ohmOut: bigint | undefined;
+  depositAmount: string;
+  tickPrice: bigint | undefined;
+}) {
+  if (isLoading) {
+    return <span className="text-xs font-semibold">Loading...</span>;
+  }
+
+  const parsedAmount = parseFloat(depositAmount);
+  const priceValue =
+    ohmOut && depositAmount && parsedAmount > 0
+      ? (parsedAmount / (Number(ohmOut) / 1e9)).toFixed(2)
+      : tickPrice
+        ? formatTickPrice(tickPrice)
+        : null;
+
+  if (!priceValue) {
+    return <span className="text-xs font-semibold">--</span>;
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Icon name="USDSColorTokenIcon" className="size-4" />
+      <span className="text-xs font-semibold">{priceValue} USDS/</span>
+      <Icon name="OHMTokenIcon" className="size-4" />
+      <span className="text-xs font-semibold">OHM</span>
+    </div>
+  );
+}
+
 export function DepositPositionInfo({
   depositAmount,
   selectedTermMonths,
@@ -94,29 +131,12 @@ export function DepositPositionInfo({
 
         <div className="flex items-center justify-between border-b border-a3-b py-2">
           <span className="text-xs text-secondary-t">Price</span>
-          {(() => {
-            const priceValue = isLoadingPreview
-              ? null
-              : ohmOut && depositAmount && parseFloat(depositAmount) > 0
-                ? (parseFloat(depositAmount) / (Number(ohmOut) / 1e9)).toFixed(2)
-                : tickData?.price
-                  ? formatTickPrice(tickData.price)
-                  : null;
-            if (isLoadingPreview) {
-              return <span className="text-xs font-semibold">Loading...</span>;
-            }
-            if (!priceValue) {
-              return <span className="text-xs font-semibold">--</span>;
-            }
-            return (
-              <div className="flex items-center gap-1">
-                <Icon name="USDSColorTokenIcon" className="size-4" />
-                <span className="text-xs font-semibold">{priceValue} USDS/</span>
-                <Icon name="OHMTokenIcon" className="size-4" />
-                <span className="text-xs font-semibold">OHM</span>
-              </div>
-            );
-          })()}
+          <PriceRow
+            isLoading={isLoadingPreview}
+            ohmOut={ohmOut}
+            depositAmount={depositAmount}
+            tickPrice={tickData?.price}
+          />
         </div>
 
         <div className="flex items-center justify-between pt-2">

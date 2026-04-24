@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { formatEther } from "viem";
 import { RiThumbUpFill, RiThumbDownFill, RiEyeCloseFill } from "@remixicon/react";
+import type { RemixiconComponentType } from "@remixicon/react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProposalStatusBadge } from "@/modules/governance/components/proposal-status-badge";
@@ -20,6 +21,26 @@ const createdAtFormatter = new Intl.DateTimeFormat("en-US", {
 const voteFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 2,
 });
+
+const SUPPORT_DISPLAY: Record<
+  number,
+  { Icon: RemixiconComponentType; iconClass: string; textClass: string }
+> = {
+  0: { Icon: RiThumbDownFill, iconClass: "text-red", textClass: "text-red-400" },
+  1: { Icon: RiThumbUpFill, iconClass: "text-green", textClass: "text-green-400" },
+  2: { Icon: RiEyeCloseFill, iconClass: "text-tertiary-t", textClass: "text-tertiary-t" },
+};
+
+function UserVoteBadge({ support, label }: { support: number; label: string }) {
+  const display = SUPPORT_DISPLAY[support] ?? SUPPORT_DISPLAY[2];
+  const { Icon, iconClass, textClass } = display;
+  return (
+    <div className="flex items-center gap-1 text-xs/4">
+      <Icon className={`size-3 ${iconClass}`} />
+      <span className={textClass}>{label}</span>
+    </div>
+  );
+}
 
 /**
  * A table row representing a single governance proposal.
@@ -120,24 +141,7 @@ export function ProposalRow({
         {receiptData?.hasVoted ? (
           <div className="flex flex-col gap-1 items-end">
             <span className="text-sm/5 font-semibold text-primary-t">{userVotesLabel} gOHM</span>
-            <div className="flex items-center gap-1 text-xs/4">
-              {receiptData.support === 1 ? (
-                <>
-                  <RiThumbUpFill className="size-3 text-green" />
-                  <span className="text-green-400">{userVotesLabel}</span>
-                </>
-              ) : receiptData.support === 0 ? (
-                <>
-                  <RiThumbDownFill className="size-3 text-red" />
-                  <span className="text-red-400">{userVotesLabel}</span>
-                </>
-              ) : (
-                <>
-                  <RiEyeCloseFill className="size-3 text-tertiary-t" />
-                  <span className="text-tertiary-t">{userVotesLabel}</span>
-                </>
-              )}
-            </div>
+            <UserVoteBadge support={receiptData.support} label={userVotesLabel} />
           </div>
         ) : (
           <span className="text-sm/5 text-tertiary-t">—</span>
@@ -151,7 +155,7 @@ export function ProposalRow({
         ) : (
           <div className="flex flex-col gap-1 items-end">
             <span className="text-sm/5 font-semibold text-primary-t">
-              {totalVotes.toLocaleString(undefined, { maximumFractionDigits: 2 })} gOHM
+              {voteFormatter.format(totalVotes)} gOHM
             </span>
             {voterCount != null && (
               <span className="text-xs/4 font-normal text-secondary-t">
