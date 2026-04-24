@@ -12,9 +12,6 @@ export function initializeAnalytics(): void {
   const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
   const posthogIngestHost = import.meta.env.VITE_PUBLIC_POSTHOG_INGEST_HOST ?? posthogHost;
 
-  console.log("posthogIngestHost", posthogIngestHost);
-  console.log("posthogHost", posthogHost);
-  console.log("posthogKey", posthogKey);
   if (posthogKey) {
     posthog.init(posthogKey, {
       api_host: posthogIngestHost,
