@@ -43,7 +43,7 @@ export function ProtocolEmissionManager() {
   const premiumProgress = thresholdPct > 0 ? Math.max(0, (currentPremium / thresholdPct) * 100) : 0;
   const premiumExceedsThreshold = currentPremium >= thresholdPct;
 
-  const emissionTriggerPrice = state.backing * (1 + state.minimumPremium);
+  const emissionTriggerPrice = state.triggerPrice;
 
   return (
     <Card className="p-5 flex flex-col">

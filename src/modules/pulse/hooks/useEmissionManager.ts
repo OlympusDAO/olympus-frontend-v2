@@ -7,6 +7,7 @@ export interface EmissionManagerState {
   baseEmissionRate: number;
   minimumPremium: number;
   backing: number;
+  triggerPrice: number;
   beatCounter: number;
   activeMarketId: string;
   vestingPeriod: number;
@@ -77,12 +78,15 @@ export function useEmissionManager() {
 
       const cs = data.contractStates?.[0];
       if (!cs) throw new Error("No contract state found");
+      const backing = parseFloat(cs.backingDecimal) || 0;
+      const minimumPremium = parseFloat(cs.minimumPremiumDecimal) || 0;
       const state: EmissionManagerState = {
         isActive: cs.isActive,
         isEnabled: cs.isEnabled,
         baseEmissionRate: parseFloat(cs.baseEmissionRateDecimal) || 0,
-        minimumPremium: parseFloat(cs.minimumPremiumDecimal) || 0,
-        backing: parseFloat(cs.backingDecimal) || 0,
+        minimumPremium,
+        backing,
+        triggerPrice: backing * (1 + minimumPremium),
         beatCounter: cs.beatCounter,
         activeMarketId: cs.activeMarketId,
         vestingPeriod: cs.vestingPeriod,
