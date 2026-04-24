@@ -1,4 +1,13 @@
-import { mainnet, arbitrum, polygon, optimism, avalanche, fantom, base } from "@/lib/chains.ts";
+import {
+  mainnet,
+  arbitrum,
+  polygon,
+  optimism,
+  avalanche,
+  fantom,
+  base,
+  berachain,
+} from "@/lib/chains.ts";
 import type { IconName } from "@/components/icon.tsx";
 
 // ─── DefiLlama API types ──────────────────────────────────────────────────────
@@ -61,6 +70,7 @@ export const CHAIN_NAME_TO_ID: Record<string, number> = {
   Avalanche: avalanche.id,
   Fantom: fantom.id,
   Base: base.id,
+  Berachain: berachain.id,
   BSC: 56,
 };
 

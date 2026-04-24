@@ -1,23 +1,27 @@
 import { useTheme } from "@/components/theme-provider";
-import engageLoaderDark from "@/assets/videos/engage-loader-dark.mp4";
-import engageLoaderLight from "@/assets/videos/engage-loader-light.mp4";
+import darkWebm from "@/assets/videos/engage-loader-dark.webm";
+import darkMp4 from "@/assets/videos/engage-loader-dark-safari.mp4";
+import lightWebm from "@/assets/videos/engage-loader-light.webm";
+import lightMp4 from "@/assets/videos/engage-loader-light-safari.mp4";
 
 export function ComingSoon() {
   const { resolvedTheme } = useTheme();
-  const videoSrc = resolvedTheme === "dark" ? engageLoaderDark : engageLoaderLight;
+  const isDark = resolvedTheme === "dark";
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">
       <div className="relative size-[320px]">
         <video
           key={resolvedTheme}
-          src={videoSrc}
           autoPlay
           loop
           muted
           playsInline
           className="w-full h-full object-cover"
-        />
+        >
+          <source src={isDark ? darkWebm : lightWebm} type="video/webm" />
+          <source src={isDark ? darkMp4 : lightMp4} type="video/mp4" />
+        </video>
       </div>
 
       <p className="mt-4 text-[18px]/6 font-normal text-secondary-t text-center">

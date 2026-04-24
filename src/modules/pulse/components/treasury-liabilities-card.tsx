@@ -90,6 +90,8 @@ export function TreasuryLiabilitiesCard() {
   const burnRatePct = ohmTotalSupply > 0 ? (annualBurns / ohmTotalSupply) * 100 : 0;
 
   const emBacking = em?.state.backing ?? 0;
+  const emMinimumPremium = em?.state.minimumPremium ?? 0;
+  const emTriggerPrice = em?.state.triggerPrice ?? 0;
 
   return (
     <Card className="flex flex-col gap-4 p-5">
@@ -156,18 +158,22 @@ export function TreasuryLiabilitiesCard() {
           title={
             <>
               New supply only emitted when OHM price &gt;{" "}
-              <NumberFlow value={emBacking} format={PRECISE_USD} />
+              <NumberFlow value={emTriggerPrice} format={PRECISE_USD} /> (backing{" "}
+              <NumberFlow value={emBacking} format={PRECISE_USD} /> × (1 +{" "}
+              {(emMinimumPremium * 100).toFixed(0)}% minimum premium))
             </>
           }
         >
           <p className="text-primary-t text-sm font-semibold">EM Trigger Price</p>
         </TooltipInfo>
         <p className="text-sm font-semibold shrink-0 [--number-flow-char-height:20px]">
-          <NumberFlow value={emBacking} format={PRECISE_USD} suffix="/OHM" />
+          <NumberFlow value={emTriggerPrice} format={PRECISE_USD} suffix="/OHM" />
         </p>
       </div>
 
-      <ProtocolDataSource sources={["gOHM contract", "CD Subgraph", "YRF Subgraph"]} />
+      <ProtocolDataSource
+        sources={["gOHM contract", "CD Subgraph", "YRF Subgraph", "Emission Manager Subgraph"]}
+      />
     </Card>
   );
 }

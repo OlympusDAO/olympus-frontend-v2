@@ -1,5 +1,5 @@
-import { useId } from "react";
-import { AreaChart, Area, ResponsiveContainer, Tooltip, YAxis } from "recharts";
+import { useId, useRef, useEffect, useLayoutEffect, useState } from "react";
+import { AreaChart, Area, Tooltip, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import type { Format } from "@number-flow/react";
 import { cn } from "@/lib/utils";
@@ -92,20 +92,46 @@ export function SparklineChart({
 }: SparklineChartProps) {
   const id = useId();
   const gradientId = `spark-grad-${id}`;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
-  if (data.length <= 1) return null;
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    if (width > 0 && height > 0) setSize({ width, height });
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect && rect.width > 0 && rect.height > 0) {
+        setSize({ width: rect.width, height: rect.height });
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const color = isPositive ? "var(--green)" : "var(--red)";
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         "w-55 h-14 max-xs:w-full max-xs:h-10 shrink-0 [&_*:focus]:outline-none [&_*]:outline-none",
         className,
       )}
     >
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+      {size && data.length > 1 && (
+        <AreaChart
+          width={size.width}
+          height={size.height}
+          data={data}
+          margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+        >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.3} />
@@ -129,7 +155,7 @@ export function SparklineChart({
             isAnimationActive={false}
           />
         </AreaChart>
-      </ResponsiveContainer>
+      )}
     </div>
   );
 }

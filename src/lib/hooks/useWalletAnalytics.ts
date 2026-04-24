@@ -13,8 +13,7 @@ export function useWalletAnalytics(): void {
 
   useEffect(() => {
     if (isConnected && address && !prevConnectedRef.current) {
-      trackWalletConnect(address);
-      identifyWallet(address);
+      identifyWallet(address).then(() => trackWalletConnect(address));
     }
 
     if (!isConnected && prevConnectedRef.current) {

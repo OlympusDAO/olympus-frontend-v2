@@ -3,6 +3,7 @@ import { RiBrushLine } from "@remixicon/react";
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator.tsx";
+import { trackSwitchToClassic, trackDismissClassicBanner } from "@/lib/analytics";
 
 const COOKIE_KEY = "olympus-classic-view-banner-dismissed";
 
@@ -27,11 +28,13 @@ export function ClassicViewBanner({ deadline = "June 1" }: ClassicViewBannerProp
   const handleDismiss = () => {
     setBannerCookie(false);
     setDismissed(true);
+    trackDismissClassicBanner();
   };
 
   const handleSwitch = () => {
     setBannerCookie(true);
     setDismissed(true);
+    trackSwitchToClassic();
   };
 
   return (
