@@ -80,7 +80,7 @@ const COLUMNS = [
   }),
   columnHelper.accessor("ohmPct", {
     header: "OHM %",
-    cell: () => <NumberFlow value={0.5} format={PERCENT_FORMAT} />,
+    cell: (info) => <NumberFlow value={info.getValue()} format={PERCENT_FORMAT} />,
   }),
   columnHelper.accessor("ohmDepth", {
     header: "OHM Depth",
