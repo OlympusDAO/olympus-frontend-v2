@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { useRevenueCounter } from "@/modules/pulse/hooks/useRevenueCounter";
+import { getWeekStartUTC } from "@/lib/liveness/epoch.ts";
 import marbleBgLightDesktop from "@/assets/treasury-revenue-light-desktop.png";
 import marbleBgDarkDesktop from "@/assets/treasury-revenue-dark-desktop.png";
 import marbleBgLightTablet from "@/assets/treasury-revenue-light-tablet.png";
@@ -74,6 +75,15 @@ export function ProtocolTreasuryRevenue() {
   const perSecond = weeklyTotal / (7 * 24 * 60 * 60);
   const perHour = weeklyTotal / (7 * 24);
 
+  const weekStartLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "shortOffset",
+  }).format(getWeekStartUTC());
+
   return (
     <Card
       className="p-8 flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-6 bg-surface-bg-l2"
@@ -86,9 +96,7 @@ export function ProtocolTreasuryRevenue() {
       <div>
         <p className="mb-1 text-[15px]/[20px] font-semibold">Treasury Revenue</p>
         <NumberFlow value={displayValue} className="text-[32px]/[40px] font-semibold" />
-        <p className="text-xs text-secondary-t mt-0.5">
-          Estimated yield since Mar 2, 1:00 AM GMT+1
-        </p>
+        <p className="text-xs text-secondary-t mt-0.5">Estimated yield since {weekStartLabel}</p>
       </div>
       <div className="flex items-center gap-3 max-md:grid max-md:grid-cols-2 max-md:w-full">
         <div className="border border-a5-b bg-surface-a3 px-4 py-3 rounded-[12px]">

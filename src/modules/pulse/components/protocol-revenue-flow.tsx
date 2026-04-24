@@ -14,6 +14,7 @@ interface RevenueFlowProps {
   totalRevenue: number;
   weeklyBurns: number;
   weeklyBurnsFormatted: string;
+  buybackSubtitle: string;
   backingValue: string;
   deflationRate: string;
 }
@@ -92,6 +93,7 @@ export function RevenueFlowDiagram({
   sources,
   totalRevenue,
   weeklyBurnsFormatted,
+  buybackSubtitle,
   backingValue,
   deflationRate,
 }: RevenueFlowProps) {
@@ -347,9 +349,7 @@ export function RevenueFlowDiagram({
               <p className="tabular-nums text-xl font-bold tracking-tight">
                 {weeklyBurnsFormatted} OHM
               </p>
-              <p className="mt-0.5 text-xs text-secondary-t">
-                {formatUsd(totalRevenue, true)} weekly spend
-              </p>
+              <p className="mt-0.5 text-xs text-secondary-t">{buybackSubtitle}</p>
             </div>
 
             <div
@@ -468,6 +468,7 @@ export function RevenueFlowDiagram({
             Buyback & Burn
           </p>
           <p className="mt-1 tabular-nums text-lg font-bold">{weeklyBurnsFormatted} OHM</p>
+          <p className="text-[10px] text-tertiary-t">{buybackSubtitle}</p>
         </div>
 
         {/* Arrow down */}
