@@ -91,7 +91,8 @@
   --color-sidebar-bg: var(--sidebar-bg);
   --color-sidebar-tab-fill-top: var(--sidebar-tab-fill-top);
   --color-sidebar-tab-fill-bottom: var(--sidebar-tab-fill-bottom);
-  --color-sidebar-tab-border: var(--sidebar-tab-border);
+  --color-sidebar-tab-border-top: var(--sidebar-tab-border-top);
+  --color-sidebar-tab-border-bottom: var(--sidebar-tab-border-bottom);
 
   /*shadow*/
   --shadow-cds:
@@ -258,4 +259,21 @@
 
   --table-row-height: 64px;
   --table-row-height-condensed: 40px;
+}
+
+/*
+ * Active tab in the icon sidebar: semi-transparent gradient fill only.
+ * The gradient ring is rendered by an inline <svg><circle/></svg> overlay in
+ * the component — NOT a CSS mask. Mask-composite promotes the masked element
+ * (and in practice its parent) to a compositor layer, which rasterizes the
+ * Lottie icon inside and produces visible pixelation on small glyphs.
+ */
+@utility sidebar-tab-active {
+  position: relative;
+  border: 0.5px solid transparent;
+  background-image: linear-gradient(
+    to bottom,
+    var(--sidebar-tab-fill-top),
+    var(--sidebar-tab-fill-bottom)
+  );
 }

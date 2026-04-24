@@ -42,15 +42,37 @@ function IconNavItem({
     >
       <div
         className={cn(
-          "flex items-center justify-center size-10 transition-all",
+          "flex items-center justify-center size-10 rounded-full transition-all",
           isActive
-            ? "rounded-full bg-gradient-to-b from-sidebar-tab-fill-top to-sidebar-tab-fill-bottom border-[0.5px] border-sidebar-tab-border"
-            : "rounded-full border-[0.5px] border-transparent group-hover:bg-surface-a5 group-hover:border-a3-b",
+            ? "sidebar-tab-active"
+            : "border-[0.5px] border-transparent group-hover:bg-surface-a5 group-hover:border-a3-b",
         )}
       >
+        {isActive && (
+          <svg
+            className="absolute inset-0 size-full pointer-events-none"
+            viewBox="0 0 40 40"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="sidebar-tab-ring" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: "var(--sidebar-tab-border-top)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--sidebar-tab-border-bottom)" }} />
+              </linearGradient>
+            </defs>
+            <circle
+              cx="20"
+              cy="20"
+              r="19.75"
+              fill="none"
+              stroke="url(#sidebar-tab-ring)"
+              strokeWidth="0.5"
+            />
+          </svg>
+        )}
         <span
           className={cn(
-            "[&>svg]:size-6 [&>svg]:transition-colors",
+            "relative [&>svg]:size-6 [&>svg]:transition-colors",
             isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
         >

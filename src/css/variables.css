@@ -89,7 +89,8 @@
   --sidebar-bg: --alpha(var(--white) / 0.4);
   --sidebar-tab-fill-top: rgba(248, 204, 130, 0.4);
   --sidebar-tab-fill-bottom: rgba(248, 204, 130, 0.8);
-  --sidebar-tab-border: --alpha(var(--slate) / 0.05);
+  --sidebar-tab-border-top: --alpha(var(--slate) / 0.05);
+  --sidebar-tab-border-bottom: --alpha(var(--slate) / 0.1);
 }
 
 .dark {
@@ -153,5 +154,6 @@
   --sidebar-bg: --alpha(var(--white) / 0.03);
   --sidebar-tab-fill-top: rgba(248, 204, 130, 0.4);
   --sidebar-tab-fill-bottom: rgba(248, 204, 130, 0.1);
-  --sidebar-tab-border: var(--brand-sand-1000);
+  --sidebar-tab-border-top: var(--brand-sand-1000);
+  --sidebar-tab-border-bottom: --alpha(var(--brand-sand-1000) / 0.2);
 }
