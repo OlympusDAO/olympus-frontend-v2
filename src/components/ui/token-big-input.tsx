@@ -156,14 +156,21 @@ function TokenBigInput({
 
         {tokenSelector ? (
           <DropdownMenu>
-            <DropdownMenuTrigger className="bg-surface-a5 hover:bg-surface-a10 inline-flex shrink-0 cursor-pointer items-center gap-[8px] rounded-full px-[12px] py-[8px] text-sm font-medium whitespace-nowrap transition-colors">
+            <DropdownMenuTrigger className="group/token-selector bg-surface-a3 hover:bg-surface-a5 border border-a3-b inline-flex shrink-0 cursor-pointer items-center gap-[8px] rounded-full px-[12px] py-[10px] text-sm/5 font-semibold text-primary-t whitespace-nowrap transition-colors">
               <Icon name={tokenSelector.selectedToken.icon} className="size-[20px] !rotate-0" />
               <span>{tokenSelector.selectedToken.symbol}</span>
               <ChevronDownIcon className="text-secondary-t size-[16px]" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center">
+            <DropdownMenuContent
+              align="center"
+              className="bg-surface-dropdown border border-a10-b rounded-3xl p-1 shadow-drop-100 w-(--anchor-width) min-w-0"
+            >
               {tokenSelector.tokens.map((t) => (
-                <DropdownMenuItem key={t.address} onClick={() => tokenSelector.onTokenChange(t)}>
+                <DropdownMenuItem
+                  key={t.address}
+                  onClick={() => tokenSelector.onTokenChange(t)}
+                  className="flex items-center gap-[8px] rounded-full px-[12px] py-[10px] text-sm/5 font-semibold text-primary-t cursor-pointer"
+                >
                   <Icon name={t.icon} className="size-[20px] !rotate-0" />
                   {t.symbol}
                 </DropdownMenuItem>

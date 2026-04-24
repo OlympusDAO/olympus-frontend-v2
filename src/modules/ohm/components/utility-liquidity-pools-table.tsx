@@ -147,7 +147,7 @@ export function UtilityLiquidityPoolsSection() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Liquidity Pools">
-            <h2 className="text-xl font-semibold text-primary-t">Liquidity Pools</h2>
+            <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Liquidity Pools</h2>
           </TooltipInfo>
         </div>
         <div className="flex items-center gap-4">
@@ -177,7 +177,7 @@ export function UtilityLiquidityPoolsSection() {
       <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="bg-surface-a5">
+            <TableRow key={headerGroup.id} className="bg-surface-a3">
               {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
@@ -201,7 +201,10 @@ export function UtilityLiquidityPoolsSection() {
             ))
           ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-secondary-t">
+              <TableCell
+                colSpan={6}
+                className="h-24 text-center text-sm/5 font-semibold text-secondary-t"
+              >
                 No pools found
               </TableCell>
             </TableRow>

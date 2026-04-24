@@ -68,7 +68,7 @@ export function DelegateDetailPage() {
     return (
       <div className="mx-auto max-w-7xl">
         <Card className="p-12">
-          <div className="flex items-center justify-center text-secondary-t">
+          <div className="flex flex-col items-center justify-center min-h-[200px] text-sm/5 font-semibold text-secondary-t">
             Loading delegate...
           </div>
         </Card>
@@ -141,7 +141,10 @@ export function DelegateDetailPage() {
               <tbody>
                 {!delegate?.votesCasted || delegate.votesCasted.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-12 text-center text-secondary-t text-sm">
+                    <td
+                      colSpan={3}
+                      className="h-40 px-4 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+                    >
                       No votes cast yet
                     </td>
                   </tr>

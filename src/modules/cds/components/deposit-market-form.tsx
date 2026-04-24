@@ -176,7 +176,7 @@ export function DepositMarketForm({
                   <TabsTrigger
                     key={period.months}
                     value={period.displayName}
-                    className="w-full rounded-full focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
+                    className="w-full rounded-full !text-sm/5 !font-semibold focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
                   >
                     {period.displayName}
                   </TabsTrigger>

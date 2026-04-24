@@ -368,7 +368,7 @@ export function RepayForm({ loan }: RepayFormProps) {
       <BorrowCoolerApprovalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={getActionLabel()}
+        title={validationState.label}
         steps={modalSteps}
         currentStep={modalCurrentStep}
         totalSteps={modalSteps.length}

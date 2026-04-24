@@ -266,11 +266,11 @@ export const BorrowActiveLoans = () => {
       {isLoading ? (
         <Table>
           <TableBody>
-            <TableRow>
-              <TableCell className="py-12 text-center text-sm text-tertiary-t">
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <Spinner className="size-8" />
-                  <p className="text-secondary-t text-sm">Loading loans</p>
+                  <p className="text-sm/5 font-semibold text-secondary-t">Loading loans</p>
                 </div>
               </TableCell>
             </TableRow>
@@ -279,8 +279,8 @@ export const BorrowActiveLoans = () => {
       ) : loansWithData.length === 0 ? (
         <Table>
           <TableBody>
-            <TableRow>
-              <TableCell className="py-12 text-center text-sm text-tertiary-t">
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
                 No active loans
               </TableCell>
             </TableRow>

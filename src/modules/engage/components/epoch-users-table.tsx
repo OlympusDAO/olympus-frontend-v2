@@ -120,7 +120,10 @@ export function EpochUsersTable({ users, rewardAssetDecimals = 9 }: EpochUsersTa
       <TableBody>
         {table.getRowModel().rows.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="py-12 text-center text-secondary-t">
+            <TableCell
+              colSpan={5}
+              className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+            >
               No user data for this epoch.
             </TableCell>
           </TableRow>

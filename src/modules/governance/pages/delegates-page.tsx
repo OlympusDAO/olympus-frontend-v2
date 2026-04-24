@@ -15,8 +15,7 @@ import { DelegationCards } from "@/modules/governance/components/delegation-card
 import { DelegateRow } from "@/modules/governance/components/delegate-row";
 import { DelegateVotingModal } from "@/modules/governance/components/delegate-voting-modal";
 import { CoolerDelegationModal } from "@/modules/governance/components/cooler-delegation-modal";
-import { Users } from "lucide-react";
-import { RiSearch2Line } from "@remixicon/react";
+import { RiSearch2Line, RiExchangeFundsLine } from "@remixicon/react";
 
 /**
  * Delegates listing page at /dao/delegate.
@@ -73,16 +72,19 @@ export function DelegatesPage() {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-12 text-center text-secondary-t">
+              <TableCell
+                colSpan={4}
+                className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+              >
                 Loading delegates...
               </TableCell>
             </TableRow>
           ) : filteredDelegates.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4}>
-                <div className="flex flex-col items-center justify-center py-12 text-secondary-t">
-                  <Users className="h-10 w-10 mb-3 opacity-40" />
-                  <p className="text-sm">No delegates found</p>
+              <TableCell colSpan={4} className="h-40 align-middle">
+                <div className="flex flex-col items-center justify-center gap-4 py-12 min-h-[200px]">
+                  <RiExchangeFundsLine className="size-10 text-a10-b" />
+                  <p className="text-sm/5 font-semibold text-secondary-t">No delegates found</p>
                 </div>
               </TableCell>
             </TableRow>

@@ -1,8 +1,6 @@
 import { useTheme } from "@/components/theme-provider";
 import darkWebm from "@/assets/videos/engage-loader-dark.webm";
-import darkMp4 from "@/assets/videos/engage-loader-dark-safari.mp4";
 import lightWebm from "@/assets/videos/engage-loader-light.webm";
-import lightMp4 from "@/assets/videos/engage-loader-light-safari.mp4";
 
 export function ComingSoon() {
   const { resolvedTheme } = useTheme();
@@ -20,7 +18,6 @@ export function ComingSoon() {
           className="w-full h-full object-cover"
         >
           <source src={isDark ? darkWebm : lightWebm} type="video/webm" />
-          <source src={isDark ? darkMp4 : lightMp4} type="video/mp4" />
         </video>
       </div>
 

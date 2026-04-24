@@ -39,9 +39,9 @@ export function BridgeSettingsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full sm:max-w-sm mx-auto">
+      <DialogContent className="w-full sm:max-w-sm mx-auto !rounded-3xl !p-6">
         <DialogHeader>
-          <DialogTitle>Bridge Settings</DialogTitle>
+          <DialogTitle className="text-[20px]/[24px] font-semibold">Bridge Settings</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -57,7 +57,7 @@ export function BridgeSettingsModal({
               setError("");
             }}
             placeholder="0x..."
-            className="w-full rounded-xl bg-surface-a3 border border-a3-b px-4 py-3 text-sm text-primary-t placeholder:text-disabled-t outline-none focus:border-a10-b transition-colors"
+            className="w-full rounded-xl bg-surface-a3 border border-a3-b px-4 py-3 text-sm text-primary-t placeholder:text-disabled-t outline-none focus:border-a10-b hover:border-a10-b transition-colors"
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
           <p className="text-xs text-tertiary-t">

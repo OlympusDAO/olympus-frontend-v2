@@ -35,8 +35,10 @@ export function SubNav() {
   return (
     <aside className="w-60 h-full flex flex-col shrink-0 bg-surface-bg-l1 relative after:absolute after:right-0 after:top-2 after:bottom-0 after:w-px after:bg-[linear-gradient(180deg,transparent_0%,var(--surface-a10)_10%,var(--surface-a10)_90%,transparent_100%)]">
       {/* Section title */}
-      <div className="px-7 pt-5 pb-5 mt-1.5">
-        <h2 className="text-xl/6 font-semibold text-primary-t">{activeSection.sidebarTitle}</h2>
+      <div className="pl-7 pr-[18px] pt-5 pb-5 mt-1.5">
+        <h2 className="text-xl/6 font-semibold text-primary-t whitespace-nowrap">
+          {activeSection.sidebarTitle}
+        </h2>
       </div>
 
       {/* Sub-nav items */}

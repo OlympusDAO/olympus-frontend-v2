@@ -132,7 +132,10 @@ export function TreasuryPolTable() {
       <TableBody>
         {table.getRowModel().rows.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={8} className="py-12 text-center text-sm text-tertiary-t">
+            <TableCell
+              colSpan={8}
+              className="py-12 text-center text-sm/5 font-semibold text-secondary-t"
+            >
               No LP positions found
             </TableCell>
           </TableRow>

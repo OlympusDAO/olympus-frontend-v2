@@ -54,11 +54,11 @@ export function DepositPositionInfo({
   const displayTokenName = tokenName || `Receipt-${selectedTermMonths}m`;
 
   return (
-    <div className="bg-surface-a3 rounded-2xl px-4 pb-4 pt-6 flex flex-col gap-4 border border-a3-b h-full">
+    <div className="bg-surface-a3 rounded-2xl p-4 flex flex-col gap-4 border border-a3-b h-full">
       <h3 className="text-sm font-semibold">Position Info</h3>
 
       <div className="flex flex-col">
-        <div className="flex items-center justify-between border-b border-a3-b py-2">
+        <div className="flex items-center justify-between border-b border-a3-b pb-2">
           <TooltipInfo
             className="text-xs font-normal text-secondary-t"
             title="The receipt tokens issued for your deposit. They prove your position and are required to redeem your USDS or exercise your Conversion Right at expiry."
@@ -94,15 +94,29 @@ export function DepositPositionInfo({
 
         <div className="flex items-center justify-between border-b border-a3-b py-2">
           <span className="text-xs text-secondary-t">Price</span>
-          <span className="text-xs font-semibold">
-            {isLoadingPreview
-              ? "Loading..."
+          {(() => {
+            const priceValue = isLoadingPreview
+              ? null
               : ohmOut && depositAmount && parseFloat(depositAmount) > 0
-                ? `${(parseFloat(depositAmount) / (Number(ohmOut) / 1e9)).toFixed(2)} USDS/OHM`
+                ? (parseFloat(depositAmount) / (Number(ohmOut) / 1e9)).toFixed(2)
                 : tickData?.price
-                  ? `${formatTickPrice(tickData.price)} USDS/OHM`
-                  : "--"}
-          </span>
+                  ? formatTickPrice(tickData.price)
+                  : null;
+            if (isLoadingPreview) {
+              return <span className="text-xs font-semibold">Loading...</span>;
+            }
+            if (!priceValue) {
+              return <span className="text-xs font-semibold">--</span>;
+            }
+            return (
+              <div className="flex items-center gap-1">
+                <Icon name="USDSColorTokenIcon" className="size-4" />
+                <span className="text-xs font-semibold">{priceValue} USDS/</span>
+                <Icon name="OHMTokenIcon" className="size-4" />
+                <span className="text-xs font-semibold">OHM</span>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="flex items-center justify-between pt-2">

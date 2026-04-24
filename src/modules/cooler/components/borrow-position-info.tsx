@@ -49,16 +49,16 @@ export function BorrowPositionInfo({
   return (
     <div
       data-slot="position-info"
-      className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4"
+      className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4 flex flex-col h-full"
     >
       <h3 className="mb-4 text-sm font-semibold">
         {isRepayMode ? "Projected Position" : "Position Overview"}
       </h3>
 
       {!hasPosition ? (
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <p className="text-secondary-t text-sm">No position</p>
-          <p className="text-tertiary-t mt-1 text-xs">
+        <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+          <p className="text-sm/5 font-semibold text-secondary-t">No position</p>
+          <p className="text-xs/4 font-normal text-secondary-t mt-1">
             Add collateral and borrow to open a position.
           </p>
         </div>

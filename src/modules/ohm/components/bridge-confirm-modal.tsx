@@ -204,10 +204,12 @@ export function BridgeConfirmModal({
   // Steps view
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-center">
-          <DialogTitle className="text-xl">Bridge OHM</DialogTitle>
-          <p className="text-sm text-secondary-t font-light">
+      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+        <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
+          <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+            Bridge OHM
+          </DialogTitle>
+          <p className="text-xs/4 font-normal text-secondary-t">
             Transaction {currentStep}/2. Proceed with your wallet.
           </p>
         </DialogHeader>
@@ -228,24 +230,24 @@ export function BridgeConfirmModal({
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                      className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                         step.isCompleted
-                          ? "text-green"
+                          ? "text-green border-green"
                           : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                            ? "text-primary-t border-primary-t"
+                            : "text-secondary-t border-a10-b"
                       }`}
                     >
                       {step.isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-3 w-3 animate-spin" />
                       ) : step.isCompleted ? (
-                        <CheckIcon className="h-4 w-4" />
+                        <CheckIcon className="h-3 w-3" />
                       ) : (
                         step.number
                       )}
                     </div>
                     <div>
-                      <div className="font-medium text-sm">{step.title}</div>
+                      <div className="text-sm/5 font-semibold text-primary-t">{step.title}</div>
                       {step.badges && (
                         <div className="flex gap-1 mt-1">
                           {step.badges.map((badge) => (

@@ -150,7 +150,7 @@ export function TreasuryAssetsCard() {
           <tbody>
             {slices.map((s) => (
               <tr key={s.name}>
-                <td className=" pr-4">
+                <td className="py-1 pr-4">
                   <div className="flex items-center gap-1">
                     <span
                       className="size-3 shrink-0 rounded-full"
@@ -159,14 +159,14 @@ export function TreasuryAssetsCard() {
                     <span className="whitespace-nowrap font-semibold text-xs">{s.name}</span>
                   </div>
                 </td>
-                <td className="py-2 pr-4 text-right text-xs font-semibold ">
+                <td className="py-1 pr-4 text-right text-xs font-semibold ">
                   {s.apy !== null ? (
                     <NumberFlow value={s.apy} format={PERCENT_FORMAT} suffix="%" />
                   ) : (
                     "–"
                   )}
                 </td>
-                <td className="py-2 text-right text-xs font-semibold">
+                <td className="py-1 text-right text-xs font-semibold">
                   <NumberFlow value={s.value} />
                 </td>
               </tr>

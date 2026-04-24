@@ -159,7 +159,7 @@ export function UtilityLendingMarketsSection() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Lending Markets">
-            <h2 className="text-xl font-semibold text-primary-t">Lending Markets</h2>
+            <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Lending Markets</h2>
           </TooltipInfo>
         </div>
         <Segmented
@@ -173,7 +173,7 @@ export function UtilityLendingMarketsSection() {
       <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="bg-surface-a5">
+            <TableRow key={headerGroup.id} className="bg-surface-a3">
               {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
@@ -197,7 +197,10 @@ export function UtilityLendingMarketsSection() {
             ))
           ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="h-24 text-center text-secondary-t">
+              <TableCell
+                colSpan={9}
+                className="h-24 text-center text-sm/5 font-semibold text-secondary-t"
+              >
                 No markets found
               </TableCell>
             </TableRow>

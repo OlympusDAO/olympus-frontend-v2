@@ -115,7 +115,10 @@ export function FeedPage() {
             <TableBody>
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-sm text-tertiary-t">
+                  <TableCell
+                    colSpan={4}
+                    className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+                  >
                     No activity
                   </TableCell>
                 </TableRow>

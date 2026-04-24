@@ -110,7 +110,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
             />
             <div className="text-xs/4 text-secondary-t font-normal flex items-center gap-1">
               {!nextTickInfo ? (
-                <span>--</span>
+                <span>-</span>
               ) : nextTickInfo.timeUntilTick === "Min Price Reached" ? (
                 <span>{nextTickInfo.timeUntilTick}</span>
               ) : (
@@ -199,7 +199,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               </TooltipInfo>
             </p>
             <span className="text-xs/4 text-secondary-t font-normal shrink-0">
-              {dailyPercentage !== "--" ? `${dailyPercentage} / 100%` : "--"}
+              {dailyPercentage !== "--" ? `${dailyPercentage} / 100%` : "-"}
             </span>
           </div>
           <Progress
@@ -209,10 +209,9 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
           <div className="text-xs/4 text-secondary-t font-normal flex justify-between gap-2">
             <span>
               <span className="font-semibold text-primary-t">
-                {dayState ? formatTickCapacity(dayState.convertible) : "--"}
+                {dayState ? formatTickCapacity(dayState.convertible) : "-"}
               </span>{" "}
-              / {auctionParameters?.target ? formatTickCapacity(auctionParameters.target) : "--"}{" "}
-              OHM
+              / {auctionParameters?.target ? formatTickCapacity(auctionParameters.target) : "-"} OHM
             </span>
             {resetInfo && (
               <span className="flex items-center gap-1 shrink-0">

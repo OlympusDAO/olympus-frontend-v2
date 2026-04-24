@@ -260,9 +260,9 @@ export const BorrowPage = () => {
       <div className="p-6 rounded-3xl bg-surface-bg-l2 shadow-surface-bg-l2 border border-a5-b">
         {/* Empty / disabled state */}
         {!isLoadingRedemptions && (availableRedemptions.length === 0 || !isGlobalBorrowEnabled) && (
-          <div className="flex flex-col items-center justify-center gap-4 py-12">
+          <div className="flex flex-col items-center justify-center gap-4 py-12 min-h-[200px]">
             <RiExchangeFundsLine className="size-10 text-a10-b" />
-            <p className="text-sm/5 font-semibold text-primary-t text-center">
+            <p className="text-sm/5 font-semibold text-secondary-t text-center">
               {!isGlobalBorrowEnabled
                 ? "Borrowing is currently disabled."
                 : !redemptionStatus.hasRedemptions

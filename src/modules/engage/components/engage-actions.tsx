@@ -4,12 +4,12 @@ import { buttonVariants } from "@/components/ui/button.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 
-import engageDepositDark from "@/assets/engage-deposit.png";
-import engageDepositLight from "@/assets/engage-deposit-light.png";
-import engageBorrowDark from "@/assets/engage-borrow.png";
-import engageBorrowLight from "@/assets/engage-borrow-light.png";
-import engageConvertDark from "@/assets/engage-convert.png";
-import engageConvertLight from "@/assets/engage-convert-light.png";
+import engageDepositDark from "@/assets/engage-deposit.webp";
+import engageDepositLight from "@/assets/engage-deposit-light.webp";
+import engageBorrowDark from "@/assets/engage-borrow.webp";
+import engageBorrowLight from "@/assets/engage-borrow-light.webp";
+import engageConvertDark from "@/assets/engage-convert.webp";
+import engageConvertLight from "@/assets/engage-convert-light.webp";
 
 interface ActionItem {
   srcDark: string;

@@ -186,10 +186,12 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-center">
-          <DialogTitle className="text-xl">Create Limit Order</DialogTitle>
-          <p className="text-sm text-secondary-t font-light">
+      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+        <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
+          <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+            Create Limit Order
+          </DialogTitle>
+          <p className="text-xs/4 font-normal text-secondary-t">
             Step {currentStep === "approve" ? "1" : "2"}/2. Proceed with your wallet.
           </p>
         </DialogHeader>
@@ -200,24 +202,24 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                     isApproved
-                      ? "text-green"
+                      ? "text-green border-green"
                       : currentStep === "approve"
-                        ? "text-primary-t"
-                        : "text-secondary-t ring-a10-b"
+                        ? "text-primary-t border-primary-t"
+                        : "text-secondary-t border-a10-b"
                   }`}
                 >
                   {isApprovePending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : isApproved ? (
-                    <CheckIcon className="h-4 w-4" />
+                    <CheckIcon className="h-3 w-3" />
                   ) : (
                     "1"
                   )}
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Approve USDS</div>
+                  <div className="text-sm/5 font-semibold text-primary-t">Approve USDS</div>
                   {isApproved && approveHash && (
                     <a
                       href={`${blockExplorerTxBaseUrl}/${approveHash}`}
@@ -239,24 +241,24 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                     isCreateSuccess
-                      ? "text-green"
+                      ? "text-green border-green"
                       : currentStep === "create"
-                        ? "text-primary-t"
-                        : "text-secondary-t ring-a10-b"
+                        ? "text-primary-t border-primary-t"
+                        : "text-secondary-t border-a10-b"
                   }`}
                 >
                   {isCreatePending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : isCreateSuccess ? (
-                    <CheckIcon className="h-4 w-4" />
+                    <CheckIcon className="h-3 w-3" />
                   ) : (
                     "2"
                   )}
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Create Limit Order</div>
+                  <div className="text-sm/5 font-semibold text-primary-t">Create Limit Order</div>
                   <div className="text-xs text-secondary-t rounded-full border px-2 py-1 text-center border-a10-b mt-1">
                     {depositAmount} USDS at {maxPrice} USDS/OHM
                   </div>

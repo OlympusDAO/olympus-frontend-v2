@@ -46,11 +46,17 @@ export const CDPage = () => {
           {(() => {
             const orderTypeTabs = isLimitOrdersEnabled ? (
               <Tabs value={orderType} onValueChange={(v) => setOrderType(v as "market" | "limit")}>
-                <TabsList className="rounded-full w-full [&>*]:flex-1">
-                  <TabsTrigger value="market" className="w-full rounded-full">
+                <TabsList className="rounded-full w-full [&>*]:flex-1 !p-1 !gap-0.5">
+                  <TabsTrigger
+                    value="market"
+                    className="w-full rounded-full !text-sm/5 !font-semibold"
+                  >
                     Market
                   </TabsTrigger>
-                  <TabsTrigger value="limit" className="w-full rounded-full">
+                  <TabsTrigger
+                    value="limit"
+                    className="w-full rounded-full !text-sm/5 !font-semibold"
+                  >
                     Limit
                   </TabsTrigger>
                 </TabsList>

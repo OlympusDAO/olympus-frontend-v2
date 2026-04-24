@@ -22,12 +22,12 @@ export function BridgeChainSelectorModal({
 }: ChainSelectorModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full sm:max-w-sm mx-auto">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="w-full sm:max-w-sm mx-auto !rounded-3xl !p-0 !gap-0">
+        <DialogHeader className="py-5 px-6">
+          <DialogTitle className="text-[20px]/[24px] font-semibold">{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1 px-2 pb-2">
           {chains.map((chain) => {
             const isSelected = chain.chainId === selectedChainId;
             return (

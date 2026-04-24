@@ -201,8 +201,8 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   if (showSteps) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-center">
+        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+          <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
             {isWrapSuccess ? (
               <div className="w-full mx-auto items-center justify-center">
                 <div className="flex items-center justify-center mx-auto mb-4">
@@ -217,8 +217,10 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">Wrap Receipt Tokens</DialogTitle>
-                <p className="text-sm text-secondary-t font-light">
+                <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+                  Wrap Receipt Tokens
+                </DialogTitle>
+                <p className="text-xs/4 font-normal text-secondary-t">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
               </>
@@ -234,36 +236,26 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                     {/* Left side - Step number and title */}
                     <div className="flex items-center gap-3 flex-1">
                       {step.isCompleted ? (
-                        <div className="w-6 h-6 rounded-full bg-green flex items-center justify-center flex-shrink-0">
-                          <CheckCircle2 className="h-4 w-4 text-white" />
+                        <div className="w-5 h-5 rounded-full border border-green flex items-center justify-center flex-shrink-0 text-green">
+                          <CheckCircle2 className="h-3 w-3" />
                         </div>
                       ) : step.isLoading ? (
-                        <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary-t" />
                         </div>
                       ) : (
                         <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 text-xs font-medium ${
                             step.isActive
-                              ? "bg-primary text-white"
-                              : "bg-surface-a10 text-secondary-t"
+                              ? "border-primary-t text-primary-t"
+                              : "border-a10-b text-secondary-t"
                           }`}
                         >
-                          <span className="text-sm font-medium">{step.number}</span>
+                          <span>{step.number}</span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm font-medium ${
-                            step.isActive
-                              ? "text-primary-t"
-                              : step.isCompleted
-                                ? "text-primary-t"
-                                : "text-secondary-t"
-                          }`}
-                        >
-                          {step.title}
-                        </p>
+                        <p className="text-sm/5 font-semibold text-primary-t">{step.title}</p>
                         {step.detail && (
                           <p className="text-xs text-secondary-t mt-0.5 truncate">{step.detail}</p>
                         )}

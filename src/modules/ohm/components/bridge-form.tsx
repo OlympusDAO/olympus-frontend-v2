@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { ChevronDownIcon, ArrowUpDown, Settings } from "lucide-react";
+import { ChevronDownIcon, Settings } from "lucide-react";
 import { RiInformationLine } from "@remixicon/react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
@@ -190,9 +190,12 @@ export function BridgeForm({
               type="button"
               onClick={onSwapChains}
               disabled={!canSwap}
-              className="size-10 rounded-full bg-surface-tooltip border border-a5-b flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group size-10 rounded-full bg-surface-tooltip border border-a5-b flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowUpDown className="size-3 text-secondary-t" />
+              <Icon
+                name="swapIcon"
+                className="size-4 text-secondary-t transition-transform group-hover:not-disabled:scale-110"
+              />
             </button>
           </div>
 
@@ -300,7 +303,7 @@ function ChainInputSection({
       </button>
 
       {/* Amount + Token Section */}
-      <div className="p-4 space-y-3 bg-surface-a3 border border-a3-b rounded-b-2xl">
+      <div className="group/bridgeinput p-4 space-y-3 bg-surface-a3 border border-a3-b rounded-b-2xl transition-colors hover:border-a10-b focus-within:bg-transparent focus-within:border-a20-b">
         <div className="flex items-center justify-between gap-3">
           {isInput ? (
             <input

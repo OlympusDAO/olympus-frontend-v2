@@ -409,7 +409,7 @@ export const DepositActivePositions = () => {
         <Table>
           <TableBody>
             <TableRow>
-              <TableCell className="py-12 text-center text-sm text-tertiary-t">
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
                 {isLoadingPositions
                   ? "Loading positions..."
                   : positionsError
