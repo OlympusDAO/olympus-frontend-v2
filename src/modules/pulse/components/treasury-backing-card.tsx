@@ -133,7 +133,7 @@ export function TreasuryBackingCard() {
   const backingPerOhm = metrics?.treasuryLiquidBackingPerOhmBacked ?? 0;
 
   const chartData: ChartEntry[] = historyPoints ?? [];
-  const lastChartDate = chartData.at(-1)?.date;
+  const lastChartDate = chartData.length > 0 ? chartData[chartData.length - 1].date : undefined;
   const freshnessNote =
     lastChartDate && lagging && lagging.length > 0
       ? {
