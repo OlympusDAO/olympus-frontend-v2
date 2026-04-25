@@ -46,13 +46,14 @@ function Progress({
           <ProgressPrimitive.Indicator
             data-slot="progress-indicator"
             className={cn(
-              "h-full w-full flex-1 bg-green transition-all shadow-[var(--shadow-button-secondary)]",
+              "h-full bg-green transition-all shadow-(--shadow-button-secondary)",
               indicatorClassName,
             )}
-            style={{
-              transform: `translateX(-${100 - clampedValue}%)`,
-              ...(!indicatorClassName && indicatorColor ? { backgroundColor: indicatorColor } : {}),
-            }}
+            style={
+              !indicatorClassName && indicatorColor
+                ? { backgroundColor: indicatorColor }
+                : undefined
+            }
           />
         )}
       </ProgressPrimitive.Track>
