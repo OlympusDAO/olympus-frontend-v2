@@ -10,6 +10,7 @@ import { useOhmPriceHistory } from "@/modules/pulse/hooks/useOhmPriceHistory.ts"
 import { useGohmPriceHistory } from "@/modules/pulse/hooks/useGohmPriceHistory.ts";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 import { TokenName } from "@/lib/tokens.ts";
+import { getReferenceSnapshot } from "@/lib/utils.ts";
 
 export function WrapInfoCards() {
   const GOHMToken = useToken(TokenName.GOHM);
@@ -18,8 +19,16 @@ export function WrapInfoCards() {
   const { data: ohmPriceHistory } = useOhmPriceHistory();
   const { data: gohmPriceHistory } = useGohmPriceHistory();
 
-  const ohmChange24h = ohmPriceHistory?.change24h ?? 0;
-  const gohmChange24h = gohmPriceHistory?.change24h ?? 0;
+  const ohmRef24h = getReferenceSnapshot(ohmPriceHistory?.dataPoints ?? [], 24);
+  const gohmRef24h = getReferenceSnapshot(gohmPriceHistory?.dataPoints ?? [], 24);
+  const ohmChange24h =
+    ohmRef24h && OHMToken.price > 0
+      ? ((OHMToken.price - ohmRef24h.price) / ohmRef24h.price) * 100
+      : null;
+  const gohmChange24h =
+    gohmRef24h && GOHMToken.price > 0
+      ? ((GOHMToken.price - gohmRef24h.price) / gohmRef24h.price) * 100
+      : null;
 
   const [inverted, setInverted] = useState(false);
 
@@ -38,7 +47,7 @@ export function WrapInfoCards() {
           ) : (
             <NumberFlow className="text-[20px]/[24px] font-semibold" value={OHMToken.price} />
           )}
-          {ohmPriceHistory && <PriceChange percentage={ohmChange24h} timeframe="24h" />}
+          {ohmChange24h !== null && <PriceChange percentage={ohmChange24h} timeframe="24h" />}
         </div>
       </Card>
 
@@ -50,7 +59,7 @@ export function WrapInfoCards() {
           ) : (
             <NumberFlow className="text-[20px]/[24px] font-semibold" value={GOHMToken.price} />
           )}
-          {gohmPriceHistory && <PriceChange percentage={gohmChange24h} timeframe="24h" />}
+          {gohmChange24h !== null && <PriceChange percentage={gohmChange24h} timeframe="24h" />}
         </div>
       </Card>
 
