@@ -22,7 +22,8 @@ export function OverviewEmissionManager() {
   const minimumPremium = state?.minimumPremium ?? 0;
   const currentPremium = calcOhmPremiumPct(ohmPrice, backing);
   const thresholdPct = minimumPremium * 100;
-  const premiumProgress = thresholdPct > 0 ? (currentPremium / thresholdPct) * 100 : 0;
+  const premiumProgress = thresholdPct > 0 ? Math.max(0, (currentPremium / thresholdPct) * 100) : 0;
+  const premiumExceedsThreshold = currentPremium >= thresholdPct;
   const emissionTriggerPrice = state?.triggerPrice ?? 0;
 
   return (
@@ -48,7 +49,12 @@ export function OverviewEmissionManager() {
             <p className="text-sm/5 text-secondary-t font-normal">Premium to Threshold</p>
           </TooltipInfo>
           <div className="flex items-center gap-2 mt-1">
-            <CircleProgress strokeWidth={4} size={28} value={premiumProgress} />
+            <CircleProgress
+              strokeWidth={4}
+              size={28}
+              value={Math.min(premiumProgress, 100)}
+              type={premiumExceedsThreshold ? "success" : "warning"}
+            />
             <NumberFlow
               value={currentPremium / 100}
               format={{ style: "percent", notation: "standard" }}
