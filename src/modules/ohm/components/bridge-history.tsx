@@ -21,6 +21,7 @@ import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Spinner } from "@/components/spinner.tsx";
 import {
   Table,
   TableHeader,
@@ -85,8 +86,8 @@ const columns = [
       const date = new Date(ts);
       return (
         <div>
-          <p className="text-sm font-semibold">{format(date, "dd.MM.yyyy")}</p>
-          <p className="text-xs text-tertiary-t font-normal">
+          <p className="text-xs/4 font-semibold text-primary-t">{format(date, "dd.MM.yyyy")}</p>
+          <p className="text-xs/4 text-secondary-t font-normal">
             {format(date, "HH:mm")} GMT{format(date, "xxx")}
           </p>
         </div>
@@ -97,9 +98,9 @@ const columns = [
     header: "Amount",
     cell: ({ getValue }) => (
       <div className="flex items-center gap-x-1">
-        <Icon name="OHMColorTokenIcon" size={20} />
+        <Icon name="OHMTokenIcon" size={20} />
         <NumberFlow
-          className="text-xs font-semibold"
+          className="text-xs/4 font-semibold text-primary-t"
           value={Number(getValue())}
           format={{ style: "decimal" }}
           suffix="OHM"
@@ -115,23 +116,31 @@ const columns = [
       if (!hash) return null;
       return (
         <ExplorerLink chainId={chainId} href={`/tx/${hash}`}>
-          <div className="flex items-center gap-x-1">
-            {shortenAddress(hash as Address, 3)} <RiExternalLinkLine size={16} />
+          <div className="group flex items-center gap-x-1 text-xs/4 font-semibold text-primary-t">
+            {shortenAddress(hash as Address, 3)}{" "}
+            <RiExternalLinkLine
+              size={16}
+              className="text-tertiary-t group-hover:text-secondary-t transition-colors"
+            />
           </div>
         </ExplorerLink>
       );
     },
   }),
   columnHelper.accessor("status", {
-    header: "Status",
+    header: () => <div className="text-right w-full">Status</div>,
     cell: ({ getValue }) => {
-      const isDelivered = getValue() === "DELIVERED";
-      const isInflight = getValue() === "INFLIGHT";
+      const value = getValue();
+      const isDelivered = value === "DELIVERED";
+      const isInflight = value === "INFLIGHT";
+      const label = isDelivered ? "Delivered" : isInflight ? "In Flight" : "Failed";
 
       return (
-        <Badge variant="filled" color={isDelivered ? "green" : isInflight ? "blue" : "red"}>
-          {isDelivered ? "Delivered" : isInflight ? "In Flight" : getValue()}
-        </Badge>
+        <div className="flex justify-end">
+          <Badge variant="filled" color={isDelivered ? "green" : isInflight ? "blue" : "red"}>
+            {label}
+          </Badge>
+        </div>
       );
     },
   }),
@@ -162,13 +171,13 @@ export function BridgeHistory() {
 
   if (!address) {
     return (
-      <Card className="flex items-center justify-center">
+      <Card className="flex items-center justify-center min-h-[240px]">
         <div className="flex flex-col items-center justify-center text-center py-16 px-8">
           <RiWalletFill className="text-surface-a10 mb-4" size={40} />
-          <p className="text-sm font-medium text-primary-t mb-1">
+          <p className="text-sm/5 font-semibold text-secondary-t mb-1">
             Connect your wallet to view bridging history.
           </p>
-          <p className="text-xs text-tertiary-t">
+          <p className="text-xs/4 font-normal text-secondary-t">
             Your OHM transfers between networks will appear here once completed.
           </p>
         </div>
@@ -178,9 +187,10 @@ export function BridgeHistory() {
 
   if (isLoading) {
     return (
-      <Card className="flex items-center justify-center">
-        <div className="flex items-center justify-center py-16">
-          <p className="text-sm text-secondary-t">Loading bridge history...</p>
+      <Card className="flex items-center justify-center min-h-[240px]">
+        <div className="flex flex-col items-center justify-center gap-2 py-16">
+          <Spinner className="size-8" />
+          <p className="text-sm/5 font-semibold text-secondary-t">Loading bridge history</p>
         </div>
       </Card>
     );
@@ -188,11 +198,11 @@ export function BridgeHistory() {
 
   if (data.length === 0) {
     return (
-      <Card className="flex items-center justify-center">
+      <Card className="flex items-center justify-center min-h-[240px]">
         <div className="flex flex-col items-center justify-center text-center py-16 px-8">
           <RiExchangeFill className="text-surface-a10 mb-4 rotate-90" size={40} />
-          <p className="text-sm font-medium text-primary-t mb-1">No bridging activity yet.</p>
-          <p className="text-xs text-tertiary-t">
+          <p className="text-sm/5 font-semibold text-secondary-t mb-1">No bridging activity yet.</p>
+          <p className="text-xs/4 font-normal text-secondary-t">
             Your OHM transfers between networks will appear here once completed.
           </p>
         </div>

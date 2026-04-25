@@ -95,7 +95,8 @@
       "socket.io-parser": "4.2.6",
       "vite": "7.3.2",
       "axios": ">=1.15.0",
-      "yaml": "2.8.3"
+      "yaml": "2.8.3",
+      "postcss": "^8.5.10"
     }
   },
   "packageManager": "pnpm@10.33.0",

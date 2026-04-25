@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { RiArrowRightUpLine } from "@remixicon/react";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/lib/navigation";
 
@@ -22,7 +22,7 @@ export function SubNavItem({
         className="flex items-center justify-between pl-4 pr-3 py-2.5 rounded-full text-sm font-semibold leading-5 transition-colors text-secondary-t hover:bg-surface-a3 hover:text-primary-t"
       >
         <span>{item.label}</span>
-        <ExternalLink className="size-3.5 text-tertiary-t" />
+        <RiArrowRightUpLine className="size-5 text-tertiary-t" />
       </a>
     );
   }

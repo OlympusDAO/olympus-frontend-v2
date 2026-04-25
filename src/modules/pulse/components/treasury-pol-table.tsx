@@ -58,7 +58,7 @@ const COLUMNS = [
   }),
   columnHelper.accessor("chainId", {
     header: "Chain",
-    cell: (info) => <ChainIcon chainId={info.getValue()} size={20} />,
+    cell: (info) => <ChainIcon chainId={info.getValue()} size={16} />,
   }),
   columnHelper.accessor("tvl", {
     header: "TVL",
@@ -103,7 +103,7 @@ export function TreasuryPolTable() {
   });
 
   return isLoading ? (
-    <Table>
+    <Table variant="condensed">
       <TableBody>
         {Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
@@ -117,7 +117,7 @@ export function TreasuryPolTable() {
       </TableBody>
     </Table>
   ) : (
-    <Table>
+    <Table variant="condensed">
       <TableHeader>
         {table.getHeaderGroups().map((hg) => (
           <TableRow key={hg.id}>
@@ -132,7 +132,10 @@ export function TreasuryPolTable() {
       <TableBody>
         {table.getRowModel().rows.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={8} className="py-12 text-center text-sm text-tertiary-t">
+            <TableCell
+              colSpan={8}
+              className="py-12 text-center text-sm/5 font-semibold text-secondary-t"
+            >
               No LP positions found
             </TableCell>
           </TableRow>

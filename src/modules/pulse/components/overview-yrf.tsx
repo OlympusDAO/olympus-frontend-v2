@@ -50,7 +50,7 @@ export function OverviewYrf() {
             <p className="text-sm/5 text-secondary-t font-normal">Lifetime OHM Repurchased</p>
           </TooltipInfo>
           <div className="flex items-center gap-x-2 mt-1">
-            <Icon className="size-7" name="OHMColorTokenIcon" />
+            <Icon className="size-7" name="OHMTokenIcon" />
             <NumberFlow
               value={totalOhmBurned}
               format={{ style: "decimal", notation: "standard" }}

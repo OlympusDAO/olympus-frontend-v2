@@ -15,37 +15,37 @@ const markdownComponents: Components = {
     </a>
   ),
   h1: ({ children, ...props }) => (
-    <h1 className="text-2xl font-bold text-primary-t mt-6 mb-3" {...props}>
+    <h1 className="text-2xl font-semibold text-primary-t mt-6 mb-2 first:mt-0" {...props}>
       {children}
     </h1>
   ),
   h2: ({ children, ...props }) => (
-    <h2 className="text-xl font-semibold text-primary-t mt-5 mb-2" {...props}>
+    <h2 className="text-xl font-semibold text-primary-t mt-6 mb-2 first:mt-0" {...props}>
       {children}
     </h2>
   ),
   h3: ({ children, ...props }) => (
-    <h3 className="text-lg font-semibold text-primary-t mt-4 mb-2" {...props}>
+    <h3 className="text-lg font-semibold text-primary-t mt-6 mb-2 first:mt-0" {...props}>
       {children}
     </h3>
   ),
   h4: ({ children, ...props }) => (
-    <h4 className="text-base font-semibold text-primary-t mt-3 mb-1" {...props}>
+    <h4 className="text-base font-semibold text-primary-t mt-6 mb-2 first:mt-0" {...props}>
       {children}
     </h4>
   ),
   p: ({ children, ...props }) => (
-    <p className="text-[15px]/[22px] text-secondary-t mb-3" {...props}>
+    <p className="text-[15px]/[22px] text-secondary-t mb-6 last:mb-0" {...props}>
       {children}
     </p>
   ),
   ul: ({ children, ...props }) => (
-    <ul className="list-disc pl-6 mb-3 text-secondary-t space-y-1" {...props}>
+    <ul className="list-disc pl-6 mb-6 last:mb-0 text-secondary-t space-y-1" {...props}>
       {children}
     </ul>
   ),
   ol: ({ children, ...props }) => (
-    <ol className="list-decimal pl-6 mb-3 text-secondary-t space-y-1" {...props}>
+    <ol className="list-decimal pl-6 mb-6 last:mb-0 text-secondary-t space-y-1" {...props}>
       {children}
     </ol>
   ),

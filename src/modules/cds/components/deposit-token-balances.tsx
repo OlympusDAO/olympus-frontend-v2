@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Icon } from "@/components/icon";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   useReceiptTokenBalances,
   formatTokenBalance,
 } from "@/lib/hooks/cds/useReceiptTokenBalances";
@@ -50,7 +58,7 @@ const TokenPill = ({ name, amount }: { name: string; amount: string }) => (
       <span className="text-xs font-semibold">
         {amount} {name}
       </span>
-      <span className="text-xs text-secondary-t">${amount}</span>
+      <span className="text-xs font-normal text-secondary-t">${amount}</span>
     </div>
   </div>
 );
@@ -139,25 +147,26 @@ export const DepositTokenBalances: React.FC = () => {
     return (
       <>
         <h2 className="text-xl font-semibold mb-3">Token Balances</h2>
-        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
-          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
-            <span className="text-xs text-secondary-t font-normal">Token Balances</span>
-          </div>
-          <div className="p-8 text-center text-secondary-t text-sm">
-            {isLoadingBalances || isLoadingRedemptions ? (
-              "Loading balances..."
-            ) : totalPositionCount > 0 ? (
-              <>
-                No receipt tokens
-                <p className="text-xs mt-1 text-tertiary-t">
-                  You have {totalPositionCount} position(s) but no receipt tokens
-                </p>
-              </>
-            ) : (
-              "No token balances"
-            )}
-          </div>
-        </div>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="py-12 text-center text-sm text-tertiary-t">
+                {isLoadingBalances || isLoadingRedemptions ? (
+                  "Loading balances..."
+                ) : totalPositionCount > 0 ? (
+                  <>
+                    No receipt tokens
+                    <p className="text-xs mt-1 text-tertiary-t">
+                      You have {totalPositionCount} position(s) but no receipt tokens
+                    </p>
+                  </>
+                ) : (
+                  "No token balances"
+                )}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </>
     );
   }
@@ -167,38 +176,31 @@ export const DepositTokenBalances: React.FC = () => {
       <h2 className="text-xl font-semibold mb-3">Token Balances</h2>
 
       {/* Desktop table */}
-      <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-surface-a3 border-b border-a5-b">
-              <th className="px-3 py-3 text-xs text-secondary-t font-normal text-left">Balance</th>
-              <th className="px-3 py-3 text-xs text-secondary-t font-normal text-left w-[140px]">
-                Status
-              </th>
-              <th className="px-3 py-3 text-xs text-secondary-t font-normal text-right w-[220px]">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Balance</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {/* Unwrapped balances */}
             {unwrappedBalances.map((balance) => (
-              <tr
-                key={`${balance.asset}-${balance.periodMonths}`}
-                className="border-b border-a5-b last:border-0 h-16"
-              >
-                <td className="px-3 py-3">
+              <TableRow key={`${balance.asset}-${balance.periodMonths}`}>
+                <TableCell>
                   <TokenPill
                     name={balance.displayName}
                     amount={formatTokenBalance(balance.totalBalance)}
                   />
-                </td>
-                <td className="px-3 py-3 w-[140px]">
+                </TableCell>
+                <TableCell>
                   <Badge variant="filled" color="green" size="sm">
                     Active
                   </Badge>
-                </td>
-                <td className="px-3 py-3 w-[220px]">
+                </TableCell>
+                <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
                     <Button
                       size="sm"
@@ -220,28 +222,25 @@ export const DepositTokenBalances: React.FC = () => {
                       Wrap
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
 
             {/* Wrapped balances */}
             {wrappedBalances.map((balance) => (
-              <tr
-                key={`wrapped-${balance.tokenId}`}
-                className="border-b border-a5-b last:border-0 h-16"
-              >
-                <td className="px-3 py-3">
+              <TableRow key={`wrapped-${balance.tokenId}`}>
+                <TableCell>
                   <TokenPill
                     name={balance.displayName}
                     amount={formatTokenBalance(balance.wrappedBalance ?? 0n)}
                   />
-                </td>
-                <td className="px-3 py-3 w-[140px]">
+                </TableCell>
+                <TableCell>
                   <Badge variant="filled" color="blue" size="sm">
                     Wrapped
                   </Badge>
-                </td>
-                <td className="px-3 py-3 w-[220px]">
+                </TableCell>
+                <TableCell className="text-right">
                   <div className="flex justify-end">
                     <Button
                       size="sm"
@@ -254,39 +253,39 @@ export const DepositTokenBalances: React.FC = () => {
                       Unwrap
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
 
             {/* Pending redemptions */}
             {pendingRedemptions.map((redemption, index) => {
               const isRedeemable = isRedemptionRedeemable(redemption.redeemableAt);
               return (
-                <tr
-                  key={`pending-${redemption.redemptionId}`}
-                  className="border-b border-a5-b last:border-0 h-16"
-                >
-                  <td className="px-3 py-3">
+                <TableRow key={`pending-${redemption.redemptionId}`}>
+                  <TableCell>
                     <TokenPill
                       name={redemption.displayName}
                       amount={formatPendingAmount(redemption.amount)}
                     />
-                  </td>
-                  <td className="px-3 py-3 w-[140px]">
-                    <div className="flex flex-col gap-1.5">
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex w-fit flex-col gap-1.5">
                       <Badge variant="filled" color={isRedeemable ? "green" : "orange"} size="sm">
                         {formatRedemptionStatus(redemption.redeemableAt)}
                       </Badge>
-                      <Progress
-                        value={calculateRedemptionProgress(
-                          redemption.redeemableAt,
-                          redemption.periodMonths,
-                        )}
-                        className="h-1 w-24"
-                      />
+                      {!isRedeemable && (
+                        <Progress
+                          value={calculateRedemptionProgress(
+                            redemption.redeemableAt,
+                            redemption.periodMonths,
+                          )}
+                          className="h-1 w-full"
+                          indicatorClassName="bg-orange"
+                        />
+                      )}
                     </div>
-                  </td>
-                  <td className="px-3 py-3 w-[220px]">
+                  </TableCell>
+                  <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       {isRedeemable ? (
                         <Button
@@ -318,12 +317,12 @@ export const DepositTokenBalances: React.FC = () => {
                         </Link>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Mobile cards */}
@@ -409,13 +408,16 @@ export const DepositTokenBalances: React.FC = () => {
                 <Badge variant="filled" color={isRedeemable ? "green" : "orange"} size="sm">
                   {formatRedemptionStatus(redemption.redeemableAt)}
                 </Badge>
-                <Progress
-                  value={calculateRedemptionProgress(
-                    redemption.redeemableAt,
-                    redemption.periodMonths,
-                  )}
-                  className="h-1"
-                />
+                {!isRedeemable && (
+                  <Progress
+                    value={calculateRedemptionProgress(
+                      redemption.redeemableAt,
+                      redemption.periodMonths,
+                    )}
+                    className="h-1"
+                    indicatorClassName="bg-orange"
+                  />
+                )}
               </div>
               <div className="flex gap-2 pt-1">
                 {isRedeemable ? (

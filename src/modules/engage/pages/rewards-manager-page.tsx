@@ -58,7 +58,9 @@ function RewardsManagerContent() {
   );
 
   if (!isEpochsLoading && epochs.length === 0) {
-    return <p className="py-12 text-center text-secondary-t">No epochs found.</p>;
+    return (
+      <p className="py-12 text-center text-sm/5 font-semibold text-secondary-t">No epochs found.</p>
+    );
   }
 
   return (

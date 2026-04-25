@@ -205,7 +205,7 @@ export function ActivityV1DefaultedLoansTable() {
             <TableRow className="border-b-0">
               <TableCell
                 colSpan={columns.length}
-                className="h-24 text-center text-secondary-t py-4"
+                className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
               >
                 No defaulted loans found
               </TableCell>

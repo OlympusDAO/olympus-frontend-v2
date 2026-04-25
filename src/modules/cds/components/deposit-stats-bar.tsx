@@ -11,12 +11,12 @@ import { useCurrentTick } from "@/lib/hooks/cds/useCurrentTick";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
 import { useDayState } from "@/lib/hooks/cds/useDayState";
 import { useCurrentTickSize } from "@/lib/hooks/cds/useCurrentTickSize";
-import cdDeposit1b from "@/assets/cd-deposit-1b.png";
-import cdDeposit1l from "@/assets/cd-deposit-1l.png";
-import cdDeposit2b from "@/assets/cd-deposit-2b.png";
-import cdDeposit2l from "@/assets/cd-deposit-2l.png";
-import cdDeposit3b from "@/assets/cd-deposit-3b.png";
-import cdDeposit3l from "@/assets/cd-deposit-3l.png";
+import cdDeposit1b from "@/assets/cd-deposit-1b.webp";
+import cdDeposit1l from "@/assets/cd-deposit-1l.webp";
+import cdDeposit2b from "@/assets/cd-deposit-2b.webp";
+import cdDeposit2l from "@/assets/cd-deposit-2l.webp";
+import cdDeposit3b from "@/assets/cd-deposit-3b.webp";
+import cdDeposit3l from "@/assets/cd-deposit-3l.webp";
 import trendingDownIcon from "@/assets/trending-down.svg";
 
 interface DepositStatsBarProps {
@@ -93,27 +93,30 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
           className="size-12 rounded-full shadow-card dark:shadow-none"
         />
         <div className="flex flex-col gap-1 min-w-0">
-          <p className="text-sm text-secondary-t">
-            <TooltipInfo title="The fixed price at which your deposit can be converted into OHM before maturity. If OHM's market price is above this level, your Conversion Right is valuable and you can acquire OHM at a discount. If not, you can redeem your stablecoins 1:1 instead.">
+          <p className="text-sm/5 font-normal text-secondary-t">
+            <TooltipInfo
+              className="text-sm/5 font-normal text-secondary-t"
+              title="The fixed price at which your deposit can be converted into OHM before maturity. If OHM's market price is above this level, your Conversion Right is valuable and you can acquire OHM at a discount. If not, you can redeem your stablecoins 1:1 instead."
+            >
               Conversion Price
             </TooltipInfo>
           </p>
           <div className="flex flex-col gap-0.5">
             <NumberFlow
-              className="text-xl/[24px] font-semibold tracking-[0.2px]"
+              className="text-xl/[24px] font-semibold tracking-[0.2px] text-primary-t"
               value={isLoadingTick ? "-" : conversionPrice}
               format={{ style: "decimal", minimumFractionDigits: 4, maximumFractionDigits: 4 }}
               suffix="USDS/OHM"
             />
-            <div className="text-xs text-secondary-t flex items-center gap-1">
+            <div className="text-xs/4 text-secondary-t font-normal flex items-center gap-1">
               {!nextTickInfo ? (
-                <span>--</span>
+                <span>-</span>
               ) : nextTickInfo.timeUntilTick === "Min Price Reached" ? (
                 <span>{nextTickInfo.timeUntilTick}</span>
               ) : (
                 <>
                   <img src={trendingDownIcon} alt="trending down" className="w-4 h-4 shrink-0" />
-                  <span className="font-semibold">{nextTickInfo.nextPrice}</span>
+                  <span className="font-semibold text-primary-t">{nextTickInfo.nextPrice}</span>
                   <span>in {nextTickInfo.timeUntilTick}</span>
                   <TooltipInfo title="Time until the next price decay tick.">
                     <span className="sr-only">Info</span>
@@ -134,14 +137,17 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
           className="size-12 rounded-full shadow-card dark:shadow-none"
         />
         <div className="flex flex-col gap-1 min-w-0">
-          <p className="text-sm text-secondary-t">
-            <TooltipInfo title="The amount of OHM available at the current price.">
+          <p className="text-sm/5 font-normal text-secondary-t">
+            <TooltipInfo
+              className="text-sm/5 font-normal text-secondary-t"
+              title="The amount of OHM available at the current price."
+            >
               Available at Current Price
             </TooltipInfo>
           </p>
           <div className="flex flex-col gap-0.5">
             <NumberFlow
-              className={`text-xl/[24px] font-semibold tracking-[0.2px] transition-all duration-300 origin-left ${
+              className={`text-xl/[24px] font-semibold tracking-[0.2px] text-primary-t transition-all duration-300 origin-left ${
                 capacityChanged
                   ? capacityIncreased
                     ? "text-green scale-110"
@@ -152,7 +158,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               format={{ style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
               suffix="OHM"
             />
-            <div className="text-xs text-secondary-t flex items-center gap-1.5">
+            <div className="text-xs/4 text-secondary-t font-normal flex items-center gap-1.5">
               <CircularProgress
                 value={capacityPercent}
                 size={16}
@@ -163,7 +169,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               <span>
                 out of{" "}
                 <NumberFlow
-                  className="inline"
+                  className="inline font-semibold text-primary-t"
                   value={tickSizeNum}
                   format={{ style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
                 />{" "}
@@ -184,26 +190,28 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
         />
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm text-secondary-t">
-              <TooltipInfo title="The target amount of OHM available for conversion.">
+            <p className="text-sm/5 font-normal text-secondary-t">
+              <TooltipInfo
+                className="text-sm/5 font-normal text-secondary-t"
+                title="The target amount of OHM available for conversion."
+              >
                 Daily Target
               </TooltipInfo>
             </p>
-            <span className="text-xs text-secondary-t shrink-0">
-              {dailyPercentage !== "--" ? `${dailyPercentage} / 100%` : "--"}
+            <span className="text-xs/4 text-secondary-t font-normal shrink-0">
+              {dailyPercentage !== "--" ? `${dailyPercentage} / 100%` : "-"}
             </span>
           </div>
           <Progress
             value={dailyOverflowPercent !== undefined ? 100 : dailyProgressValue}
             overflowPercent={dailyOverflowPercent}
           />
-          <div className="text-xs text-secondary-t flex justify-between gap-2">
+          <div className="text-xs/4 text-secondary-t font-normal flex justify-between gap-2">
             <span>
               <span className="font-semibold text-primary-t">
-                {dayState ? formatTickCapacity(dayState.convertible) : "--"}
+                {dayState ? formatTickCapacity(dayState.convertible) : "-"}
               </span>{" "}
-              / {auctionParameters?.target ? formatTickCapacity(auctionParameters.target) : "--"}{" "}
-              OHM
+              / {auctionParameters?.target ? formatTickCapacity(auctionParameters.target) : "-"} OHM
             </span>
             {resetInfo && (
               <span className="flex items-center gap-1 shrink-0">

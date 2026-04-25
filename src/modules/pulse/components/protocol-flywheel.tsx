@@ -19,8 +19,8 @@ export function ProtocolFlywheel() {
   if (isLoading) {
     return (
       <div>
-        <p className="mb-4 text-xs font-medium uppercase tracking-widest">Protocol Flywheel</p>
-        <Card className="p-6">
+        <p className="mb-4 text-sm font-semibold">Protocol Flywheel</p>
+        <Card className="p-5">
           <Skeleton className="h-50 w-full rounded-xl" />
         </Card>
       </div>
@@ -57,10 +57,8 @@ export function ProtocolFlywheel() {
   }));
 
   return (
-    <Card className="p-5">
-      <p className="mb-4 text-[15px]/[20px] font-semibold uppercase tracking-widest">
-        Protocol Flywheel
-      </p>
+    <Card className="p-5 flex flex-col">
+      <p className="mb-4 text-sm font-semibold">Protocol Flywheel</p>
       <RevenueFlowDiagram
         sources={flowSources}
         totalRevenue={revenue.totalWeekly}
@@ -70,11 +68,9 @@ export function ProtocolFlywheel() {
         backingValue={formatUsd(backing)}
         deflationRate={supplyReduction.toFixed(2)}
       />
-      <div className="mt-4">
-        <ProtocolDataSource
-          sources={["YRF Subgraph", "Bond Subgraph", "Treasury API", "DefiLlama"]}
-        />
-      </div>
+      <ProtocolDataSource
+        sources={["YRF Subgraph", "Bond Subgraph", "Treasury API", "DefiLlama"]}
+      />
     </Card>
   );
 }

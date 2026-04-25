@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import { Card } from "@/components/ui/card";
+import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { useAccount } from "wagmi";
 import { useProposals } from "@/modules/governance/hooks/useProposals";
 import { VotingPowerCards } from "@/modules/governance/components/voting-power-cards";
@@ -86,7 +87,7 @@ export function ProposalsPage() {
         <>
           {/* Open Proposals */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Open Proposals</h2>
+            <h2 className="text-xl/6 font-semibold text-primary-t mb-3">Open Proposals</h2>
             {openProposals.length === 0 ? (
               <Card className="flex flex-col items-center justify-center py-10">
                 <MessageSquare className="h-8 w-8 mb-3 text-tertiary-t opacity-50" />
@@ -99,7 +100,7 @@ export function ProposalsPage() {
 
           {/* Past Proposals */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Past Proposals</h2>
+            <h2 className="text-xl/6 font-semibold text-primary-t mb-3">Past Proposals</h2>
             {pastProposals.length > 0 && (
               <ProposalTable proposals={pastProposals} params={contractParams} />
             )}
@@ -118,30 +119,27 @@ function ProposalTable({
   params: ReturnType<typeof useContractParameters>["data"];
 }) {
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-a5-b text-left text-sm text-secondary-t">
-              <th className="px-4 py-3 font-medium">Proposal</th>
-              <th className="px-4 py-3 font-medium">Approval</th>
-              <th className="px-4 py-3 font-medium">Quorum</th>
-              <th className="px-4 py-3 font-medium text-right">Total Votes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {proposals.map((proposal) => (
-              <ProposalRow
-                key={proposal.details.id}
-                proposalId={proposal.details.id}
-                title={proposal.title}
-                createdAt={proposal.createdAtBlock}
-                params={params}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+    <Table className="table-fixed">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-auto">Proposal</TableHead>
+          <TableHead className="w-[140px]">Approval</TableHead>
+          <TableHead className="w-[140px]">Quorum</TableHead>
+          <TableHead className="w-[160px] text-right">Your Votes</TableHead>
+          <TableHead className="w-[180px] text-right">Total Votes</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {proposals.map((proposal) => (
+          <ProposalRow
+            key={proposal.details.id}
+            proposalId={proposal.details.id}
+            title={proposal.title}
+            createdAt={proposal.createdAtBlock}
+            params={params}
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 }

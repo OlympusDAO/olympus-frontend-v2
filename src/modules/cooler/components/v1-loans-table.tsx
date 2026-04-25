@@ -2,6 +2,7 @@ import { formatUnits } from "viem";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NumberFlow } from "@/components/ui/number-flow";
+import { Spinner } from "@/components/spinner";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import { formatDate } from "../utils/format";
 
@@ -17,7 +18,10 @@ export function V1LoansTable({ loans, onRepay, onExtend, isLoading }: V1LoansTab
     return (
       <Card data-slot="v1-loans-table" className="px-6 py-5">
         <h3 className="mb-4 text-lg font-semibold">My Loans</h3>
-        <p className="text-secondary-t text-sm">Loading loans...</p>
+        <div className="flex flex-col items-center justify-center gap-2 py-8 min-h-[200px]">
+          <Spinner className="size-8" />
+          <p className="text-sm/5 font-semibold text-secondary-t">Loading loans</p>
+        </div>
       </Card>
     );
   }
@@ -26,7 +30,9 @@ export function V1LoansTable({ loans, onRepay, onExtend, isLoading }: V1LoansTab
     return (
       <Card data-slot="v1-loans-table" className="px-6 py-5">
         <h3 className="mb-4 text-lg font-semibold">My Loans</h3>
-        <p className="text-secondary-t text-sm">No loans found</p>
+        <div className="flex flex-col items-center justify-center min-h-[200px]">
+          <p className="text-sm/5 font-semibold text-secondary-t">No loans found</p>
+        </div>
       </Card>
     );
   }

@@ -2,6 +2,7 @@ import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { Icon } from "@/components/icon";
+import { ChainIcon } from "@/components/chain-icon";
 
 function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -50,28 +51,15 @@ export function ConnectButton() {
                 );
               }
               return (
-                <div className="flex gap-[3px]">
+                <div className="flex gap-2">
                   <Button
                     variant="secondary"
                     onClick={openChainModal}
                     type="button"
-                    className="flex items-center"
+                    aria-label={chain.name ?? "Switch network"}
+                    className="flex items-center p-2.5"
                   >
-                    {chain.hasIcon && (
-                      <div
-                        className="size-3 rounded-full overflow-hidden mr-1"
-                        style={{ background: chain.iconBackground }}
-                      >
-                        {chain.iconUrl && (
-                          <img
-                            alt={chain.name ?? "Chain icon"}
-                            src={chain.iconUrl}
-                            className="size-full"
-                          />
-                        )}
-                      </div>
-                    )}
-                    {chain.name}
+                    {chain.hasIcon && <ChainIcon chainId={chain.id} size={20} rounded />}
                   </Button>
                   <Button
                     variant="secondary"

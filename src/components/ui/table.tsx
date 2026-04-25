@@ -1,15 +1,27 @@
-import type * as React from "react";
+import * as React from "react";
+import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+type TableVariant = "default" | "condensed";
+
+const TableVariantContext = React.createContext<TableVariant>("default");
+
+function Table({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"table"> & { variant?: TableVariant }) {
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto border-a5-b bg-surface-bg-l2 text-secondary-t shadow-surface-level-2 rounded-3xl "
-    >
-      <table data-slot="table" className={cn("w-full caption-bottom  ", className)} {...props} />
-    </div>
+    <TableVariantContext.Provider value={variant}>
+      <div
+        data-slot="table-container"
+        data-variant={variant}
+        className="relative w-full overflow-x-auto border-a5-b bg-surface-bg-l2 text-secondary-t shadow-surface-level-2 rounded-3xl "
+      >
+        <table data-slot="table" className={cn("w-full caption-bottom  ", className)} {...props} />
+      </div>
+    </TableVariantContext.Provider>
   );
 }
 
@@ -60,11 +72,14 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+  const variant = React.useContext(TableVariantContext);
+  const heightClass = variant === "condensed" ? "h-[var(--table-row-height-condensed)]" : "h-10";
   return (
     <th
       data-slot="table-head"
       className={cn(
-        "text-xs text-secondary-t h-10 p-3 first:pl-6 last:pr-6 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
+        "text-xs text-secondary-t p-3 first:pl-6 last:pr-6 text-left align-middle font-normal whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
+        heightClass,
         className,
       )}
       {...props}
@@ -72,14 +87,25 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
+const tableCellVariants = cva(
+  "px-3 text-primary-t first:pl-6 last:pr-6 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
+  {
+    variants: {
+      variant: {
+        default: "h-[var(--table-row-height)] py-3 text-[15px]/[20px]",
+        condensed: "h-[var(--table-row-height-condensed)] py-0 text-xs font-normal [&_svg]:size-4",
+      },
+    },
+    defaultVariants: { variant: "default" },
+  },
+);
+
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+  const variant = React.useContext(TableVariantContext);
   return (
     <td
       data-slot="table-cell"
-      className={cn(
-        "p-3 h-16 text-[15px]/[20px] text-primary-t first:pl-6 last:pr-6 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
-        className,
-      )}
+      className={cn(tableCellVariants({ variant }), className)}
       {...props}
     />
   );

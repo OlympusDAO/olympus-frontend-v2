@@ -13,8 +13,8 @@ export function TreasuryPage() {
       <div className="mt-8 flex items-center justify-between">
         <p className="text-xl/6 font-semibold">Assets and Liabilities</p>
         <div className="flex items-center gap-x-1.5">
-          <PulseDot variant="green" />
           <p className="text-secondary-t text-xs/4 font-normal">Last updated 5 mins ago</p>
+          <PulseDot variant="green" />
         </div>
       </div>
 
@@ -30,8 +30,8 @@ export function TreasuryPage() {
       <div className="mt-8 flex items-center justify-between">
         <p className="text-xl/6 font-semibold">Protocol-Owned Liquidity</p>
         <div className="flex items-center gap-x-1.5">
-          <PulseDot variant="green" />
           <p className="text-secondary-t text-xs/4 font-normal">Last updated 5 mins ago</p>
+          <PulseDot variant="green" />
         </div>
       </div>
 

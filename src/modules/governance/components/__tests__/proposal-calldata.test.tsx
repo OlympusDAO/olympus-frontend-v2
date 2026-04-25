@@ -63,7 +63,7 @@ describe("ProposalCalldata", () => {
       expect(screen.getByText(SIGNATURE)).toBeInTheDocument();
     });
 
-    it("shows 'Unable to decode' when decode returns null", async () => {
+    it("shows the raw calldata fallback when decode returns null", async () => {
       render(
         <ProposalCalldata
           targets={[TARGET]}
@@ -73,8 +73,9 @@ describe("ProposalCalldata", () => {
         />,
       );
       await waitFor(() => {
-        expect(screen.getByText("Unable to decode calldata")).toBeInTheDocument();
+        expect(screen.getByText("Raw calldata")).toBeInTheDocument();
       });
+      expect(screen.getByText(CALLDATA)).toBeInTheDocument();
     });
 
     it("does not show ETH value when value is 0", () => {

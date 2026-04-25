@@ -11,18 +11,35 @@ import {
 } from "viem/chains";
 import { berachain } from "viem/chains";
 import { http, type Transport } from "viem";
+import ethereumIcon from "@/icons/chains/ethereum.svg";
+import arbitrumIcon from "@/icons/chains/arbitrum.svg";
+import baseIcon from "@/icons/chains/base.svg";
+import berachainIcon from "@/icons/chains/berachain.svg";
+import sepoliaIcon from "@/icons/chains/sepolia.svg";
+
+const withIcon = <T extends { id: number }>(chain: T, iconUrl: string) => ({
+  ...chain,
+  iconUrl,
+  iconBackground: "transparent",
+});
+
+const mainnetWithIcon = withIcon(mainnet, ethereumIcon);
+const arbitrumWithIcon = withIcon(arbitrum, arbitrumIcon);
+const baseWithIcon = withIcon(base, baseIcon);
+const berachainWithIcon = withIcon(berachain, berachainIcon);
+const sepoliaWithIcon = withIcon(sepolia, sepoliaIcon);
 
 /**
  * Chains available in the wallet network selector.
  * Multi-chain balance lookups and bridging handle other chains independently.
  */
-export const PRODUCTION_CHAINS = [mainnet] as const;
+export const PRODUCTION_CHAINS = [mainnetWithIcon] as const;
 
 /**
  * Additional chains needed for bridge chain switching.
  * Not shown in the default wallet network selector UI.
  */
-export const BRIDGE_EXTRA_CHAINS = [arbitrum, base, berachain] as const;
+export const BRIDGE_EXTRA_CHAINS = [arbitrumWithIcon, baseWithIcon, berachainWithIcon] as const;
 
 /**
  * Whether testnet mode is enabled via environment variable.
@@ -34,14 +51,14 @@ export const isTestnetMode = Boolean(import.meta.env.VITE_TESTNET_MODE);
  * In testnet mode, Sepolia is added alongside production chains rather than replacing them.
  */
 export const activeChains = isTestnetMode
-  ? ([...PRODUCTION_CHAINS, sepolia] as const)
+  ? ([...PRODUCTION_CHAINS, sepoliaWithIcon] as const)
   : PRODUCTION_CHAINS;
 
 /**
  * All chains for the wagmi config (includes bridge chains for useSwitchChain).
  */
 export const allChains = isTestnetMode
-  ? ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS, sepolia] as const)
+  ? ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS, sepoliaWithIcon] as const)
   : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**

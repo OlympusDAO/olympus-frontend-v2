@@ -26,13 +26,18 @@ export function OverviewLiquidBacking() {
         <div className="flex gap-x-2">
           <NumberFlow
             value={treasuryMetrics?.treasuryLiquidBackingPerOhmBacked ?? 0}
-            className="tabular-nums text-xl/6 font-semibold tracking-tight"
+            className="text-xl/6 font-semibold tracking-tight"
           />
           {dataPoints.length >= 2 && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>
       </div>
 
-      <SparklineChart data={dataPoints} dataKey="backing" isPositive={isPositive} />
+      <SparklineChart
+        data={dataPoints}
+        dataKey="backing"
+        isPositive={isPositive}
+        valueLabel="Liquid Backing"
+      />
     </Card>
   );
 }

@@ -139,18 +139,18 @@ export function TreasuryAssetsCard() {
           </PieChart>
         </div>
 
-        <table className="flex-1 text-sm min-w-0">
+        <table className="flex-1 text-sm min-w-0 w-full">
           <thead>
             <tr className="border-b border-a10-b">
               <th className="pb-2 text-left text-xs font-normal text-secondary-t">Asset</th>
-              <th className="pb-2 text-right text-xs font-normal text-secondary-t">APY</th>
+              <th className="pb-2 pr-4 text-right text-xs font-normal text-secondary-t">APY</th>
               <th className="pb-2 text-right text-xs font-normal text-secondary-t">Value</th>
             </tr>
           </thead>
           <tbody>
             {slices.map((s) => (
               <tr key={s.name}>
-                <td className=" pr-4">
+                <td className="py-1 pr-4">
                   <div className="flex items-center gap-1">
                     <span
                       className="size-3 shrink-0 rounded-full"
@@ -159,14 +159,14 @@ export function TreasuryAssetsCard() {
                     <span className="whitespace-nowrap font-semibold text-xs">{s.name}</span>
                   </div>
                 </td>
-                <td className="py-2 pr-4 text-right text-xs font-semibold ">
+                <td className="py-1 pr-4 text-right text-xs font-semibold ">
                   {s.apy !== null ? (
                     <NumberFlow value={s.apy} format={PERCENT_FORMAT} suffix="%" />
                   ) : (
                     "–"
                   )}
                 </td>
-                <td className="py-2 text-right text-xs font-semibold">
+                <td className="py-1 text-right text-xs font-semibold">
                   <NumberFlow value={s.value} />
                 </td>
               </tr>

@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useActivityFeed } from "@/lib/hooks/liveness/useActivityFeed";
+import { cn } from "@/lib/utils";
 import {
   ACTIVITY_COLUMNS,
   TYPE_CONFIG,
@@ -57,18 +58,22 @@ export function FeedPage() {
           value={protocol}
           onValueChange={(v) => setProtocol(v as ProtocolFilter)}
           options={PROTOCOL_OPTIONS}
-          size="md"
+          size="sm"
         />
         <div className="flex items-center gap-x-2">
+          <Label
+            htmlFor="auto-refresh"
+            className="text-xs leading-4 font-semibold text-primary-t cursor-pointer"
+          >
+            Auto-refresh
+          </Label>
           <Switch
             id="auto-refresh"
             checked={autoRefresh}
             onCheckedChange={setAutoRefresh}
-            size="sm"
+            size="md"
+            className="cursor-pointer"
           />
-          <Label htmlFor="auto-refresh" className="text-xs text-secondary-t cursor-pointer">
-            Auto-refresh
-          </Label>
         </div>
       </div>
 
@@ -104,13 +109,16 @@ export function FeedPage() {
                 <TableHead>Protocol</TableHead>
                 <TableHead>Action</TableHead>
                 <TableHead className="w-full">Details</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead className="text-right">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-sm text-tertiary-t">
+                  <TableCell
+                    colSpan={4}
+                    className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+                  >
                     No activity
                   </TableCell>
                 </TableRow>
@@ -120,7 +128,10 @@ export function FeedPage() {
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={cell.column.id === "description" ? "w-full" : ""}
+                        className={cn(
+                          cell.column.id === "description" && "w-full",
+                          cell.column.id === "time" && "text-right",
+                        )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

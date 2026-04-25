@@ -9,6 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -126,7 +134,7 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
             periodMonths={position.data.periodMonths}
             amount={amount}
           />
-          <span className="text-xs text-secondary-t">${amount}</span>
+          <span className="text-xs font-normal text-secondary-t">${amount}</span>
         </div>
       </div>
 
@@ -134,10 +142,10 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
 
       {/* OHM pill */}
       <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
-        <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+        <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
           <span className="text-xs font-semibold">{ohmReceived} OHM</span>
-          {ohmPrice && <span className="text-xs text-secondary-t">{ohmPrice}</span>}
+          {ohmPrice && <span className="text-xs font-normal text-secondary-t">{ohmPrice}</span>}
         </div>
       </div>
     </div>
@@ -162,11 +170,13 @@ const StatusCell = ({ position }: { position: Position }) => {
 
 const PriceCell = ({ position }: { position: Position }) => {
   if (!position.data) return null;
-  const price = parseFloat(formatEther(position.data.conversionPrice)).toFixed();
+  const priceNum = parseFloat(formatEther(position.data.conversionPrice));
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-semibold whitespace-nowrap">{price} USDS/OHM</span>
-      <span className="text-xs text-secondary-t">${price}</span>
+      <span className="text-xs font-semibold whitespace-nowrap">
+        {priceNum.toFixed(2)} USDS/OHM
+      </span>
+      <span className="text-xs font-normal text-secondary-t">${priceNum.toFixed(2)}</span>
     </div>
   );
 };
@@ -178,7 +188,7 @@ const ExpiryCell = ({ position }: { position: Position }) => {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-semibold whitespace-nowrap">{expiryDate}</span>
-      <span className="text-xs text-secondary-t">
+      <span className="text-xs font-normal text-secondary-t">
         {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
       </span>
     </div>
@@ -193,6 +203,7 @@ const ActionsCell = ({
   meta: ReturnType<typeof useReactTable<Position>>["options"]["meta"];
 }) => {
   if (!position.data || !meta) return null;
+  const { periodMonths, wrapped } = position.data;
 
   return (
     <div className="flex items-center gap-2 justify-end">
@@ -200,7 +211,7 @@ const ActionsCell = ({
         Convert
       </Button>
 
-      {!position.data.wrapped ? (
+      {!wrapped ? (
         <Button size="sm" variant="secondary" onClick={() => meta.onWrap?.(position)}>
           Wrap
         </Button>
@@ -215,7 +226,7 @@ const ActionsCell = ({
             <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                const displayName = `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`;
+                const displayName = `cdUSDS-${formatTermSuffix(periodMonths)}`;
                 meta.onTransfer?.(position, displayName);
               }}
             >
@@ -394,27 +405,27 @@ export const DepositActivePositions = () => {
 
   return (
     <>
-      <h2 className="text-xl font-semibold mb-3">Active Positions</h2>
-
       {isLoadingPositions || positionsError || positions.length === 0 ? (
-        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
-          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
-            <span className="text-xs text-secondary-t font-normal">Active Positions</span>
-          </div>
-          <div className="p-8 text-center text-secondary-t text-sm">
-            {isLoadingPositions
-              ? "Loading positions..."
-              : positionsError
-                ? "Error loading positions"
-                : "No active positions"}
-          </div>
-        </div>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
+                {isLoadingPositions
+                  ? "Loading positions..."
+                  : positionsError
+                    ? "Error loading positions"
+                    : "No active positions"}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       ) : (
         <>
           {/* Mobile cards */}
           <div className="block md:hidden space-y-4">
             {positions.map((position) => {
               if (!position.data) return null;
+              const { periodMonths } = position.data;
               const amount = formatPositionAmountLocal(position.data.remainingDeposit);
               const expiryDate = formatExpiryDate(position.data.expiry);
               const daysLeft = getDaysUntilExpiry(position.data.expiry);
@@ -440,7 +451,7 @@ export const DepositActivePositions = () => {
                       <div className="text-xs text-secondary-t">${amount}</div>
                     </div>
                     <RiArrowRightSLine className="size-4 text-secondary-t mx-1" />
-                    <Icon name="OHMColorTokenIcon" size={32} className="text-a10-b" />
+                    <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
                     <div>
                       <div className="text-sm font-semibold">{ohmReceived} OHM</div>
                     </div>
@@ -499,10 +510,7 @@ export const DepositActivePositions = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleTransfer(
-                                position,
-                                `cdUSDS-${formatTermSuffix(position.data!.periodMonths)}`,
-                              )
+                              handleTransfer(position, `cdUSDS-${formatTermSuffix(periodMonths)}`)
                             }
                           >
                             Transfer
@@ -520,55 +528,37 @@ export const DepositActivePositions = () => {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
-            <table className="w-full">
-              <thead>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="bg-surface-a3 border-b border-a5-b">
+                  <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
+                      <TableHead
                         key={header.id}
-                        className={[
-                          "px-3 py-3 text-xs text-secondary-t font-normal text-left whitespace-nowrap",
-                          header.id === "convertible" && "w-[360px]",
-                          header.id === "status" && "w-[136px]",
-                          header.id === "price" && "w-[168px]",
-                          header.id === "expiry" && "w-[128px]",
-                          header.id === "actions" && "w-[184px] text-right",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={header.id === "actions" ? "text-right" : ""}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </thead>
-              <tbody>
+              </TableHeader>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b border-a5-b last:border-0 h-16">
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <td
+                      <TableCell
                         key={cell.id}
-                        className={[
-                          "px-3 py-3",
-                          cell.column.id === "convertible" && "w-[360px]",
-                          cell.column.id === "status" && "w-[136px]",
-                          cell.column.id === "price" && "w-[168px]",
-                          cell.column.id === "expiry" && "w-[128px]",
-                          cell.column.id === "actions" && "w-[184px]",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={cell.column.id === "actions" ? "text-right" : ""}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                      </TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

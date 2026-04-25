@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,21 +10,22 @@ import { useVoteReceipt } from "@/modules/governance/hooks/useVoteReceipt";
 import { useAccount } from "wagmi";
 import type { ProposalStatus } from "@/modules/governance/helpers/proposal-status";
 import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react";
 import {
-  ExternalLink,
-  CheckCircle,
-  XCircle,
-  ThumbsUp,
-  ThumbsDown,
-  MinusCircle,
-} from "lucide-react";
+  RiCheckboxCircleLine,
+  RiCloseCircleLine,
+  RiThumbUpFill,
+  RiThumbDownFill,
+  RiEyeCloseFill,
+  RiLinksFill,
+  RiMessage2Fill,
+  RiChatCheckFill,
+  RiSurveyFill,
+  RiFlashlightFill,
+} from "@remixicon/react";
 import { formatDistanceToNow } from "date-fns";
-
-function abbreviateNumber(num: number): string {
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
-  return num.toLocaleString(undefined, { maximumFractionDigits: 1 });
-}
+import { badgeVariants } from "@/modules/governance/components/proposal-status-badge";
+import { abbreviateNumber } from "@/modules/governance/helpers/format";
 
 function formatTimelineDate(date: Date | undefined): string {
   if (!date) return "";
@@ -43,60 +45,61 @@ function formatTimelineDate(date: Date | undefined): string {
   );
 }
 
+type TimelineState = "completed" | "active" | "inactive";
+
 function TimelineItem({
   label,
   date,
   txHash,
-  isCompleted,
-  isFuture,
+  icon: Icon,
+  state,
+  showRelativeTime,
 }: {
   label: string;
   date: Date | undefined;
   txHash?: string;
-  isCompleted: boolean;
-  isFuture: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  state: TimelineState;
+  showRelativeTime: boolean;
 }) {
-  const relativeTime = date && isFuture ? formatDistanceToNow(date, { addSuffix: true }) : null;
+  const relativeTime =
+    date && showRelativeTime ? formatDistanceToNow(date, { addSuffix: true }) : null;
   const formattedDate = formatTimelineDate(date);
 
   return (
-    <div className="flex items-start gap-3 relative">
-      {/* Icon */}
-      <div className="flex flex-col items-center shrink-0 mt-0.5">
-        {isCompleted ? (
-          <div className="size-5 rounded-full bg-primary-t flex items-center justify-center">
-            <CheckCircle className="size-3 text-surface-bg-l1" />
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "size-5 rounded-full border-2 flex items-center justify-center",
-              date ? "border-secondary-t/40" : "border-surface-a5",
-            )}
-          >
-            <div
-              className={cn("size-1.5 rounded-full", date ? "bg-secondary-t/40" : "bg-surface-a5")}
-            />
-          </div>
+    <div className="flex items-center gap-3 relative first:[&>[data-line=top]]:hidden last:[&>[data-line=bottom]]:hidden">
+      <div
+        data-line="top"
+        className="pointer-events-none absolute left-4 -translate-x-1/2 w-px bg-surface-a10 top-[-6px] h-[calc(50%-10px)]"
+      />
+      <div
+        data-line="bottom"
+        className="pointer-events-none absolute left-4 -translate-x-1/2 w-px bg-surface-a10 bottom-[-6px] h-[calc(50%-10px)]"
+      />
+      <div
+        className={cn(
+          "size-8 rounded-full border flex items-center justify-center shrink-0",
+          state === "completed" && "border-primary-t text-primary-t",
+          state === "active" && "bg-primary-t border-primary-t text-inverted-primary-t",
+          state === "inactive" && "border-a10-b text-disabled-t",
         )}
+      >
+        <Icon className="size-4" />
       </div>
 
-      {/* Content */}
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <span className="text-[11px] text-tertiary-t">{formattedDate}</span>
+        <span className="text-xs/4 font-normal text-tertiary-t">{formattedDate}</span>
         <div className="flex items-center gap-2">
           <span
             className={cn(
-              "text-xs font-medium",
-              isCompleted ? "text-primary-t" : "text-secondary-t",
+              "text-sm/5 font-semibold",
+              state === "completed" || state === "active" ? "text-primary-t" : "text-secondary-t",
             )}
           >
             {label}
           </span>
-          {isFuture && relativeTime && (
-            <span className="text-[10px] bg-green-500/20 text-green-400 rounded px-1.5 py-0.5">
-              {relativeTime}
-            </span>
+          {relativeTime && (
+            <span className={cn(badgeVariants({ color: "yellow" }))}>{relativeTime}</span>
           )}
           {txHash && (
             <a
@@ -161,90 +164,88 @@ export function VoteSidebar({
 
   const totalVotes = details ? details.forCount + details.againstCount + details.abstainCount : 0;
 
-  const now = new Date();
+  const timelineItems = useMemo(
+    () => buildTimelineItems({ details, timeline, status, now: new Date() }),
+    [details, timeline, status],
+  );
 
   return (
-    <div data-slot="vote-sidebar" className="flex flex-col gap-4">
+    <div data-slot="vote-sidebar" className="flex flex-col gap-6">
       {/* Voting Progress */}
-      <Card className="p-5">
-        <div className="flex flex-col gap-4">
+      <Card className="p-6">
+        <div className="flex flex-col gap-6">
           {detailsLoading ? (
-            <div className="flex flex-col gap-3">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+            <div className="flex flex-col gap-6">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
           ) : (
             <>
-              {/* Quorum bar */}
-              <div className="flex items-center gap-2">
-                {aboveQuorum ? (
-                  <CheckCircle className="size-4 text-green-400 shrink-0" />
-                ) : (
-                  <XCircle className="size-4 text-red-400 shrink-0" />
-                )}
-                <div className="flex-1">
-                  <ApprovalQuorumBar
-                    label="Quorum"
-                    percentage={quorumActual}
-                    threshold={quorumThreshold}
-                    forPercent={aboveQuorum ? quorumActual : 0}
-                    againstPercent={aboveQuorum ? 0 : quorumActual}
-                    thresholdMet={aboveQuorum}
-                  />
-                </div>
-              </div>
+              <ApprovalQuorumBar
+                label="Quorum"
+                icon={
+                  aboveQuorum ? (
+                    <RiCheckboxCircleLine className="size-5 text-green shrink-0" />
+                  ) : (
+                    <RiCloseCircleLine className="size-5 text-red shrink-0" />
+                  )
+                }
+                percentage={quorumActual}
+                threshold={quorumThreshold}
+                forPercent={aboveQuorum ? quorumActual : 0}
+                againstPercent={aboveQuorum ? 0 : quorumActual}
+              />
 
-              {/* Approval bar */}
-              <div className="flex items-center gap-2">
-                {aboveApproval ? (
-                  <CheckCircle className="size-4 text-green-400 shrink-0" />
-                ) : (
-                  <XCircle className="size-4 text-red-400 shrink-0" />
-                )}
-                <div className="flex-1">
-                  <ApprovalQuorumBar
-                    label="Approval"
-                    percentage={approvalPercent}
-                    threshold={approvalThreshold}
-                    forPercent={aboveApproval ? approvalPercent : 0}
-                    againstPercent={aboveApproval ? 0 : approvalPercent}
-                    thresholdMet={aboveApproval}
-                  />
-                </div>
-              </div>
+              <ApprovalQuorumBar
+                label="Approval"
+                icon={
+                  aboveApproval ? (
+                    <RiCheckboxCircleLine className="size-5 text-green shrink-0" />
+                  ) : (
+                    <RiCloseCircleLine className="size-5 text-red shrink-0" />
+                  )
+                }
+                percentage={approvalPercent}
+                threshold={approvalThreshold}
+                forPercent={aboveApproval ? approvalPercent : 0}
+                againstPercent={aboveApproval ? 0 : approvalPercent}
+              />
 
-              {/* Vote counts */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-a5-b">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <ThumbsUp className="size-3 text-green-400" />
-                    <span className="text-secondary-t">For</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RiThumbUpFill className="size-4 text-green" />
+                    <span className="text-sm/5 font-semibold text-green">For</span>
                   </div>
-                  <span className="text-primary-t">{abbreviateNumber(details?.forCount ?? 0)}</span>
+                  <span className="text-sm/5 font-semibold text-primary-t">
+                    {abbreviateNumber(details?.forCount ?? 0)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <ThumbsDown className="size-3 text-red-400" />
-                    <span className="text-secondary-t">Against</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RiThumbDownFill className="size-4 text-red" />
+                    <span className="text-sm/5 font-semibold text-red">Against</span>
                   </div>
-                  <span className="text-primary-t">
+                  <span className="text-sm/5 font-semibold text-primary-t">
                     {abbreviateNumber(details?.againstCount ?? 0)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <MinusCircle className="size-3 text-tertiary-t" />
-                    <span className="text-secondary-t">Abstain</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RiEyeCloseFill className="size-4 text-tertiary-t" />
+                    <span className="text-sm/5 font-semibold text-tertiary-t">Abstain</span>
                   </div>
-                  <span className="text-primary-t">
+                  <span className="text-sm/5 font-semibold text-primary-t">
                     {abbreviateNumber(details?.abstainCount ?? 0)}
                   </span>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-a5-b">
-                  <span className="text-secondary-t font-medium">Total Votes</span>
-                  <span className="text-primary-t font-medium">{abbreviateNumber(totalVotes)}</span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm/5 font-semibold text-primary-t">Total Votes</span>
+                <span className="text-sm/5 font-semibold text-primary-t">
+                  {abbreviateNumber(totalVotes)}
+                </span>
               </div>
             </>
           )}
@@ -262,88 +263,150 @@ export function VoteSidebar({
       </Card>
 
       {/* Timeline */}
-      <Card className="p-5">
-        <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-primary-t">Timeline</h3>
-
-          <div className="flex flex-col gap-3 relative">
-            {/* Vertical connecting line */}
-            <div className="absolute left-[9px] top-3 bottom-3 w-px bg-surface-a5" />
-
-            <TimelineItem
-              label="Published onchain"
-              date={details?.startDate ? new Date(details.startDate.getTime()) : undefined}
-              isCompleted={true}
-              isFuture={false}
-            />
-            <TimelineItem
-              label="Voting period started"
-              date={details?.startDate}
-              isCompleted={status !== "Pending"}
-              isFuture={details?.startDate ? details.startDate > now : false}
-            />
-            <TimelineItem
-              label="End voting period"
-              date={details?.endDate}
-              isCompleted={status !== "Pending" && status !== "Active"}
-              isFuture={details?.endDate ? details.endDate > now : false}
-            />
-            {(timeline?.queued.date || status === "Queued" || status === "Executed") && (
+      <div className="flex flex-col gap-3">
+        <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Timeline</h2>
+        <Card className="p-6">
+          <div className="flex flex-col gap-3">
+            {timelineItems.map((item) => (
               <TimelineItem
-                label="Queue proposal"
-                date={timeline?.queued.date ?? details?.endDate}
-                txHash={timeline?.queued.txHash}
-                isCompleted={!!timeline?.queued.date}
-                isFuture={false}
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                date={item.date}
+                txHash={item.txHash}
+                state={item.state}
+                showRelativeTime={item.showRelativeTime}
               />
-            )}
-            {(timeline?.executed.date || status === "Executed") && (
-              <TimelineItem
-                label="Execute proposal"
-                date={timeline?.executed.date}
-                txHash={timeline?.executed.txHash}
-                isCompleted={!!timeline?.executed.date}
-                isFuture={false}
-              />
-            )}
-            {/* Always show Queue/Execute placeholders for active/succeeded proposals */}
-            {!timeline?.queued.date && status !== "Queued" && status !== "Executed" && (
-              <>
-                <TimelineItem
-                  label="Queue proposal"
-                  date={details?.endDate}
-                  isCompleted={false}
-                  isFuture={true}
-                />
-                <TimelineItem
-                  label="Execute proposal"
-                  date={details?.endDate}
-                  isCompleted={false}
-                  isFuture={true}
-                />
-              </>
-            )}
-            {timeline?.canceled.date && (
-              <TimelineItem
-                label="Canceled"
-                date={timeline.canceled.date}
-                txHash={timeline.canceled.txHash}
-                isCompleted={true}
-                isFuture={false}
-              />
-            )}
-            {timeline?.vetoed.date && (
-              <TimelineItem
-                label="Vetoed"
-                date={timeline.vetoed.date}
-                txHash={timeline.vetoed.txHash}
-                isCompleted={true}
-                isFuture={false}
-              />
-            )}
+            ))}
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
+}
+
+type TimelineItemData = {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  date: Date | undefined;
+  txHash?: string;
+  state: TimelineState;
+  showRelativeTime: boolean;
+};
+
+type RawTimelineItem = Omit<TimelineItemData, "state" | "showRelativeTime"> & {
+  isCompleted: boolean;
+  isFuture: boolean;
+};
+
+function buildTimelineItems({
+  details,
+  timeline,
+  status,
+  now,
+}: {
+  details: ReturnType<typeof useProposalDetails>["data"];
+  timeline: ReturnType<typeof useProposalTimeline>["data"];
+  status: ProposalStatus;
+  now: Date;
+}): TimelineItemData[] {
+  const raw: RawTimelineItem[] = [
+    {
+      label: "Published onchain",
+      icon: RiLinksFill,
+      date: details?.startDate ? new Date(details.startDate.getTime()) : undefined,
+      isCompleted: true,
+      isFuture: false,
+    },
+    {
+      label: "Voting period started",
+      icon: RiMessage2Fill,
+      date: details?.startDate,
+      isCompleted: status !== "Pending",
+      isFuture: details?.startDate ? details.startDate > now : false,
+    },
+    {
+      label: "End voting period",
+      icon: RiChatCheckFill,
+      date: details?.endDate,
+      isCompleted: status !== "Pending" && status !== "Active",
+      isFuture: details?.endDate ? details.endDate > now : false,
+    },
+  ];
+
+  if (timeline?.queued.date || status === "Queued" || status === "Executed") {
+    raw.push({
+      label: "Queue proposal",
+      icon: RiSurveyFill,
+      date: timeline?.queued.date ?? details?.endDate,
+      txHash: timeline?.queued.txHash,
+      isCompleted: !!timeline?.queued.date,
+      isFuture: false,
+    });
+  }
+  if (timeline?.executed.date || status === "Executed") {
+    raw.push({
+      label: "Execute proposal",
+      icon: RiFlashlightFill,
+      date: timeline?.executed.date,
+      txHash: timeline?.executed.txHash,
+      isCompleted: !!timeline?.executed.date,
+      isFuture: false,
+    });
+  }
+  if (!timeline?.queued.date && status !== "Queued" && status !== "Executed") {
+    raw.push(
+      {
+        label: "Queue proposal",
+        icon: RiSurveyFill,
+        date: details?.endDate,
+        isCompleted: false,
+        isFuture: true,
+      },
+      {
+        label: "Execute proposal",
+        icon: RiFlashlightFill,
+        date: details?.endDate,
+        isCompleted: false,
+        isFuture: true,
+      },
+    );
+  }
+  if (timeline?.canceled.date) {
+    raw.push({
+      label: "Canceled",
+      icon: RiCloseCircleLine,
+      date: timeline.canceled.date,
+      txHash: timeline.canceled.txHash,
+      isCompleted: true,
+      isFuture: false,
+    });
+  }
+  if (timeline?.vetoed.date) {
+    raw.push({
+      label: "Vetoed",
+      icon: RiCloseCircleLine,
+      date: timeline.vetoed.date,
+      txHash: timeline.vetoed.txHash,
+      isCompleted: true,
+      isFuture: false,
+    });
+  }
+
+  // The most recent completed step represents the current period (active).
+  // Earlier completed steps stay "completed"; everything after is "inactive".
+  // The "in N days" tag attaches to the next upcoming step only.
+  let activeIdx = -1;
+  raw.forEach((item, i) => {
+    if (item.isCompleted) activeIdx = i;
+  });
+
+  return raw.map(({ isCompleted: _c, isFuture, ...item }, i) => {
+    let state: TimelineState;
+    if (i < activeIdx) state = "completed";
+    else if (i === activeIdx) state = "active";
+    else state = "inactive";
+    const showRelativeTime = i === activeIdx + 1 && isFuture;
+    return { ...item, state, showRelativeTime };
+  });
 }

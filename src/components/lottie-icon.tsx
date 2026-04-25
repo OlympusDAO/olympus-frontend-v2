@@ -85,13 +85,24 @@ export function LottieIcon({
       onComplete={() => {
         lottieRef.current?.goToAndStop(0);
       }}
-      // viewBoxOnly strips the width/height attrs and the inline
-      // `transform: translate3d(0,0,0)` that lottie-web otherwise injects on
-      // the <svg>. That transform promotes the SVG to its own compositor
-      // layer, which loses subpixel anti-aliasing on non-retina screens.
-      rendererSettings={{ viewBoxOnly: true }}
+      // Canvas renderer rasterizes the animation once at the canvas' native
+      // devicePixelRatio-aware pixel size. The SVG renderer emitted visibly
+      // pixelated output at 24×24 because each layer transform (scale ~33×)
+      // composed with the SVG viewport scale (1/33×) caused some browsers to
+      // rasterize intermediate shapes at the authored sub-pixel size. Canvas
+      // avoids the per-shape raster pipeline entirely.
+      // Cast: lottie-react's <Lottie> component doesn't expose its renderer
+      // generic, so the prop type is locked to "svg" even though the runtime
+      // accepts "canvas". useLottie<"canvas"> would type cleanly but requires
+      // a larger refactor.
+      renderer={"canvas" as "svg"}
+      rendererSettings={{
+        // Keep pixel-perfect output on HiDPI displays; canvas renderer honors
+        // devicePixelRatio when this is not overridden.
+        preserveAspectRatio: "xMidYMid meet",
+      }}
       className={cn(
-        "size-6 transition-opacity [&>svg]:size-full",
+        "size-6 transition-opacity [&>canvas]:size-full [&>svg]:size-full",
         isActive || isHovered ? "opacity-100" : "opacity-60",
       )}
     />

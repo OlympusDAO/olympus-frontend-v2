@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem } from "@/components/ui/form";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import USDSIcon from "@/assets/USDS.png";
+import { Icon, type IconName } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { usePositionRedemption } from "@/lib/hooks/cds/usePositionRedemption";
 import { useAccount, useChainId } from "wagmi";
@@ -201,7 +201,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
       number: 2,
       title: "Position Redemption",
       detail: `${redeemAmount} ${displayTokenName} → ${calculatedReceive} USDS`,
-      icon: USDSIcon,
+      icon: "USDSColorTokenIcon" as IconName,
       isActive: currentStep === 2,
       isCompleted: isRedemptionSuccess,
       isLoading: currentStep === 2 && isRedemptionPending,
@@ -221,8 +221,8 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   if (showSteps) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-center">
+        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+          <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
             {isRedemptionSuccess ? (
               <div className="w-full mx-auto items-center justify-center">
                 <div className="flex items-center justify-center mx-auto mb-4">
@@ -235,8 +235,10 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">Position Redemption</DialogTitle>
-                <p className="text-sm text-secondary-t font-light">
+                <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+                  Position Redemption
+                </DialogTitle>
+                <p className="text-xs/4 font-normal text-secondary-t">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
               </>
@@ -251,24 +253,24 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                   <div className={`flex items-center justify-between p-4`}>
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                           step.isCompleted
-                            ? "text-green"
+                            ? "text-green border-green"
                             : step.isActive
-                              ? "text-primary-t"
-                              : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t border-primary-t"
+                              : "text-secondary-t border-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : step.isCompleted ? (
-                          <CheckIcon className="h-4 w-4" />
+                          <CheckIcon className="h-3 w-3" />
                         ) : (
                           step.number
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{step.title}</div>
+                        <div className="text-sm/5 font-semibold text-primary-t">{step.title}</div>
                         {step.detail && (
                           <div className="text-xs text-secondary-t rounded-full border px-2 py-1 text-center border-a10-b">
                             {step.detail}
@@ -288,7 +290,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && <img src={step.icon} alt="" className="w-5 h-5" />}
+                      {step.icon && <Icon name={step.icon} size={20} />}
                     </div>
                   </div>
                   {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
@@ -422,7 +424,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">You Receive</p>
                     <div className="flex items-center gap-2">
-                      <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
+                      <Icon name="USDSColorTokenIcon" size={20} />
                       <span>{calculatedReceive} USDS</span>
                     </div>
                   </div>

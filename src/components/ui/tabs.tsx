@@ -9,7 +9,7 @@ const tabsVariants = cva("flex flex-col gap-2", {
     variant: {
       segments: "",
       underline: "",
-      primary: "",
+      primary: "gap-3",
     },
   },
   defaultVariants: {
@@ -77,7 +77,7 @@ const tabsTriggerVariants = cva(
         underline:
           "py-[18px] px-[20px] text-secondary-t text-sm hover:text-primary-t hover:bg-surface-a3 relative after:content-[''] after:absolute after:transition-colors after:left-0 after:right-0 after:bottom-0 after:w-full after:h-[3px] group-data-[active]/tabs-trigger:after:bg-primary-t",
         primary:
-          "text-tertiary-t text-[20px]/[24px] font-semibold hover:text-secondary-t group-data-[active]/tabs-trigger:text-primary-t transition-colors px-0",
+          "text-tertiary-t text-[20px]/[24px] font-semibold hover:text-secondary-t group-data-[active]/tabs-trigger:text-primary-t transition-colors p-0",
       },
       size: {
         lg: "",

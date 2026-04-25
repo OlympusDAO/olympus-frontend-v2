@@ -159,7 +159,10 @@ function V2AccountsView() {
             ))
           ) : (
             <TableRow className="border-b-0">
-              <TableCell colSpan={3} className="h-24 text-center text-secondary-t py-4">
+              <TableCell
+                colSpan={3}
+                className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+              >
                 {searchQuery ? "No matching accounts" : "No accounts found"}
               </TableCell>
             </TableRow>
@@ -360,7 +363,7 @@ function V1BorrowersView() {
             <TableRow className="border-b-0">
               <TableCell
                 colSpan={v1Columns.length}
-                className="h-24 text-center text-secondary-t py-4"
+                className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
               >
                 {globalFilter ? "No matching borrowers" : "No borrowers found"}
               </TableCell>

@@ -136,9 +136,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({ depositPeriod, className
   if (isLoading) {
     return (
       <div className={className}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-semibold">Price History</h2>
-          <div className="w-48 h-9 bg-surface-a3 rounded-lg animate-pulse" />
+        <div className="flex justify-between items-center mt-8 mb-4">
+          <h2 className="text-xl/6 font-semibold">Price History</h2>
+          <div className="w-48 h-8 bg-surface-a3 rounded-lg animate-pulse" />
         </div>
         <Card className="p-6">
           <div className="w-full h-[300px] bg-surface-a3 rounded-xl animate-pulse" />
@@ -151,18 +151,26 @@ export const PriceChart: React.FC<PriceChartProps> = ({ depositPeriod, className
 
   return (
     <div className={className}>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
-        <h2 className="text-xl font-semibold">Price History</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-8 mb-4">
+        <h2 className="text-xl/6 font-semibold">Price History</h2>
         <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
-          <TabsList>
-            <TabsTrigger value="1d">1D</TabsTrigger>
-            <TabsTrigger value="7d">7D</TabsTrigger>
-            <TabsTrigger value="30d">30D</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
+          <TabsList size="sm">
+            <TabsTrigger size="sm" value="1d">
+              1D
+            </TabsTrigger>
+            <TabsTrigger size="sm" value="7d">
+              7D
+            </TabsTrigger>
+            <TabsTrigger size="sm" value="30d">
+              30D
+            </TabsTrigger>
+            <TabsTrigger size="sm" value="all">
+              All
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
-      <Card className="p-6">
+      <Card className="p-6 [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none [&_.recharts-wrapper]:focus-visible:outline-none [&_.recharts-surface]:focus-visible:outline-none">
         {!hasData ? (
           <div className="w-full h-[300px] flex items-center justify-center text-secondary-t">
             No price data available for this period

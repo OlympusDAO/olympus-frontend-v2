@@ -9,6 +9,7 @@ import { useConsolidateCooler } from "@/lib/hooks/cooler/useConsolidateCooler";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { getContractAddress, ContractName } from "@/lib/contracts";
+import { Spinner } from "@/components/spinner";
 import { formatAmount } from "../utils/format";
 
 interface MigrateModalProps {
@@ -192,7 +193,10 @@ export function V1MigrateModal({
                 </div>
               </div>
             ) : (
-              <p className="text-secondary-t text-sm">Loading preview...</p>
+              <div className="flex items-center gap-2">
+                <Spinner className="size-4" />
+                <p className="text-secondary-t text-sm">Loading preview</p>
+              </div>
             )}
           </div>
 

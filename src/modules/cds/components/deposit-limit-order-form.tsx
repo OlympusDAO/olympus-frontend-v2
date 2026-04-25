@@ -7,6 +7,8 @@ import { TooltipInfo } from "@/components/ui/tooltip";
 import { Form, FormField, FormItem } from "@/components/ui/form";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { CreateLimitOrderModal } from "@/components/create-limit-order-modal";
+import { Icon } from "@/components/icon";
+import { Spinner } from "@/components/spinner";
 import { DepositLimitOrderInfo } from "./deposit-limit-order-info";
 import { useDepositPeriods } from "@/lib/hooks/cds/useDepositPeriods";
 import { useLimitOrderDepositPeriods } from "@/lib/hooks/cds/useLimitOrderDepositPeriods";
@@ -28,11 +30,13 @@ import { TokenName } from "@/lib/tokens.ts";
 interface LimitOrderFormProps {
   selectedTerm: string;
   onSelectedTermChange: (term: string) => void;
+  orderTypeTabs?: React.ReactNode;
 }
 
 export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
   selectedTerm,
   onSelectedTermChange,
+  orderTypeTabs,
 }) => {
   const { address: userAddress } = useAccount();
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -157,17 +161,21 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
+          {orderTypeTabs}
           {/* Deposit Terms Tabs */}
-          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange}>
+          <Tabs value={selectedTerm} onValueChange={onSelectedTermChange} className="gap-2">
             <TooltipInfo
-              className="text-sm font-light"
+              className="text-sm/5 font-semibold text-primary-t"
               title="The length of time your deposit remains locked before redemption is available."
             >
               Deposit Terms
             </TooltipInfo>
-            <TabsList className="rounded-full w-full">
+            <TabsList className="rounded-full w-full [&>*]:flex-1">
               {isLoadingPeriods ? (
-                <div className="text-sm text-secondary-t">Loading terms...</div>
+                <div className="flex items-center gap-2 text-sm text-secondary-t">
+                  <Spinner className="size-4" />
+                  Loading terms
+                </div>
               ) : enabledPeriods.length === 0 ? (
                 <div className="text-sm text-secondary-t">No terms available</div>
               ) : (
@@ -175,7 +183,7 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
                   <TabsTrigger
                     key={period.months}
                     value={period.displayName}
-                    className="rounded-full focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
+                    className="w-full rounded-full !text-sm/5 !font-semibold focus-visible:outline-none focus-visible:border-0 focus-visible:ring-0"
                   >
                     {period.displayName}
                   </TabsTrigger>
@@ -185,10 +193,10 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
           </Tabs>
 
           {/* Max Price Input */}
-          <div className="bg-surface-a3 rounded-3xl p-6 border border-a3-b">
+          <div className="group/maxprice bg-surface-a3 rounded-3xl p-4 border border-a3-b transition-colors hover:border-a10-b focus-within:bg-transparent focus-within:border-a20-b">
             <div className="flex items-center justify-between mb-2">
               <TooltipInfo
-                className="text-sm font-medium"
+                className="text-sm/5 font-semibold text-primary-t"
                 title="Maximum price you're willing to pay per OHM. Your order will only fill when the market price is at or below this level."
               >
                 Max Price (USDS/OHM)
@@ -204,29 +212,32 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
                 step="0.0001"
                 onScroll={(e) => e.currentTarget.blur()}
                 onWheel={(e) => e.currentTarget.blur()}
-                className="md:text-2xl h-12 border-0 shadow-none pl-0"
+                className="!text-[32px]/[40px] font-semibold text-primary-t placeholder:text-disabled-t h-auto border-0 shadow-none pl-0 bg-transparent !p-0 focus-visible:ring-0 focus-visible:border-0"
               />
             </div>
 
             {/* Quick Adjustment Buttons and Current Price */}
             <div className="flex items-center justify-between gap-2 mt-3">
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 {[-1, -3, -5, -10].map((pct) => (
                   <Button
                     key={pct}
                     variant="secondary"
-                    size="sm"
+                    size="xs"
                     onClick={() => handlePriceAdjustment(pct)}
                     disabled={!currentMarketPrice || currentMarketPrice === 0n}
                     className="rounded-full"
                   >
-                    {pct}%
+                    {`${pct}%`}
                   </Button>
                 ))}
               </div>
               {currentMarketPrice > 0n && (
-                <div className="text-sm text-secondary-t">
-                  Current: {formatTickPrice(currentMarketPrice)}
+                <div className="text-xs/4 font-normal text-secondary-t">
+                  Current:{" "}
+                  <span className="text-xs/4 font-semibold text-primary-t">
+                    {formatTickPrice(currentMarketPrice)}
+                  </span>
                 </div>
               )}
             </div>
@@ -257,18 +268,18 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
                       onChange={(val) => field.onChange(val)}
                     />
                     {/* Advanced Settings below TokenBigInput */}
-                    <div className="mt-2 pt-3 border-t border-a5-b space-y-2 px-1">
-                      <div className="text-xs text-secondary-t font-medium">Advanced</div>
+                    <div className="mt-4 space-y-2">
+                      <div className="text-sm/5 font-semibold text-primary-t">Advanced</div>
 
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center text-sm">
+                      <div className="bg-surface-a3 border border-a3-b rounded-2xl px-4">
+                        <div className="flex justify-between items-center py-2">
                           <TooltipInfo
-                            className="text-xs text-secondary-t"
+                            className="text-xs/4 font-semibold text-primary-t"
                             title="Optional USDS amount to incentivize MEV bots to fill your order quickly. This is paid in addition to your deposit amount."
                           >
                             MEV Incentive
                           </TooltipInfo>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 bg-surface-a5 border border-a3-b rounded-full h-8 pr-3 pl-1">
                             <Input
                               type="number"
                               value={incentiveBudget}
@@ -278,40 +289,42 @@ export const DepositLimitOrderForm: React.FC<LimitOrderFormProps> = ({
                               step="0.01"
                               onScroll={(e) => e.currentTarget.blur()}
                               onWheel={(e) => e.currentTarget.blur()}
-                              className="h-7 text-xs w-20 text-right"
+                              className="h-8 text-sm w-24 border-0 shadow-none bg-transparent px-2 focus-visible:ring-0"
                             />
-                            <span className="text-xs text-secondary-t w-10">USDS</span>
+                            <Icon name="USDSColorTokenIcon" className="size-5" />
+                            <span className="text-xs/4 font-semibold text-primary-t">USDS</span>
                           </div>
                         </div>
-                        {(!incentiveBudget || incentiveBudget === "0") && (
-                          <div className="text-xs text-yellow-500">
-                            ⚠️ A zero budget is unlikely to result in your order being filled.
+                        <div className="border-t border-a5-b my-0" />
+                        <div className="flex justify-between items-center py-2">
+                          <TooltipInfo
+                            className="text-xs/4 font-semibold text-primary-t"
+                            title="Minimum amount of USDS per fill (except for the final fill). Leave blank to accept any fill size above the auctioneer minimum."
+                          >
+                            Min Fill Size
+                          </TooltipInfo>
+                          <div className="flex items-center gap-2 bg-surface-a5 border border-a3-b rounded-full h-8 pr-3 pl-1">
+                            <Input
+                              type="number"
+                              value={minFillSize}
+                              onChange={(e) => setMinFillSize(e.target.value)}
+                              placeholder={formattedMinBid}
+                              min={formattedMinBid}
+                              step="1"
+                              onScroll={(e) => e.currentTarget.blur()}
+                              onWheel={(e) => e.currentTarget.blur()}
+                              className="h-8 text-sm w-24 border-0 shadow-none bg-transparent px-2 focus-visible:ring-0"
+                            />
+                            <Icon name="USDSColorTokenIcon" className="size-5" />
+                            <span className="text-xs/4 font-semibold text-primary-t">USDS</span>
                           </div>
-                        )}
-                      </div>
-
-                      <div className="flex justify-between items-center text-sm">
-                        <TooltipInfo
-                          className="text-xs text-secondary-t"
-                          title="Minimum amount of USDS per fill (except for the final fill). Leave blank to accept any fill size above the auctioneer minimum."
-                        >
-                          Min Fill Size
-                        </TooltipInfo>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={minFillSize}
-                            onChange={(e) => setMinFillSize(e.target.value)}
-                            placeholder={formattedMinBid}
-                            min={formattedMinBid}
-                            step="1"
-                            onScroll={(e) => e.currentTarget.blur()}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            className="h-7 text-xs w-20 text-right"
-                          />
-                          <span className="text-xs text-secondary-t w-10">USDS</span>
                         </div>
                       </div>
+                      {(!incentiveBudget || incentiveBudget === "0") && (
+                        <div className="text-xs text-yellow-500">
+                          ⚠️ A zero budget is unlikely to result in your order being filled.
+                        </div>
+                      )}
                     </div>
                   </FormItem>
                 )}

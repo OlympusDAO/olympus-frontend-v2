@@ -51,7 +51,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "OHM",
     decimals: 9,
-    icon: "OHMColorTokenIcon",
+    icon: "OHMTokenIcon",
   },
   SOHM: {
     addresses: {
@@ -60,7 +60,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "sOHM",
     decimals: 9,
-    icon: "OHMColorTokenIcon",
+    icon: "OHMTokenIcon",
   },
   GOHM: {
     addresses: {
@@ -75,7 +75,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "gOHM",
     decimals: 18,
-    icon: "GOHMColorTokenIcon",
+    icon: "GOHMTokenIcon",
   },
   WSOHM: {
     addresses: {
@@ -85,7 +85,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "wsOHM",
     decimals: 18,
-    icon: "GOHMColorTokenIcon",
+    icon: "GOHMTokenIcon",
   },
   V1_OHM: {
     addresses: {
@@ -93,7 +93,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "OHM v1",
     decimals: 9,
-    icon: "OHMColorTokenIcon",
+    icon: "OHMTokenIcon",
   },
   V1_SOHM: {
     addresses: {
@@ -101,7 +101,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
     },
     symbol: "sOHM v1",
     decimals: 9,
-    icon: "OHMColorTokenIcon",
+    icon: "OHMTokenIcon",
   },
 };
 

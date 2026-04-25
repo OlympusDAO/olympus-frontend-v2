@@ -198,7 +198,10 @@ export function ClaimTable() {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={columns.length} className="py-12 text-center text-secondary-t">
+            <TableCell
+              colSpan={columns.length}
+              className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+            >
               No epochs yet. Start earning Drachmas by depositing in Convertible Deposits.
             </TableCell>
           </TableRow>

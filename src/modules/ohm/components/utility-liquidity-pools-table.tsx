@@ -32,8 +32,13 @@ function TokenPairIcon({
 }) {
   return (
     <div className="flex items-center">
-      <TokenIcon symbol={tokenA.symbol} iconName={tokenA.iconName} className="z-10" />
-      <TokenIcon symbol={tokenB.symbol} iconName={tokenB.iconName} className="-ml-2" />
+      <TokenIcon
+        symbol={tokenA.symbol}
+        iconName={tokenA.iconName}
+        size={20}
+        className="relative z-10"
+      />
+      <TokenIcon symbol={tokenB.symbol} iconName={tokenB.iconName} size={20} className="-ml-2" />
     </div>
   );
 }
@@ -55,15 +60,14 @@ const columns: ColumnDef<LiquidityPool>[] = [
   },
   {
     id: "network",
-    header: "Network",
-    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} />,
+    header: "Chain",
+    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} size={16} />,
   },
   {
     accessorKey: "tvl",
     header: "TVL",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.tvl}
         format={{
           style: "currency",
@@ -79,7 +83,6 @@ const columns: ColumnDef<LiquidityPool>[] = [
     header: "APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.apy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -88,7 +91,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
   {
     accessorKey: "project",
     header: "Project",
-    cell: ({ row }) => <p className="text-[15px]/[20px] font-semibold">{row.original.project}</p>,
+    cell: ({ row }) => <p>{row.original.project}</p>,
   },
   {
     id: "actions",
@@ -97,7 +100,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
       <div className="flex justify-end">
         <Button
           variant="secondary"
-          size="md"
+          size="xs"
           render={
             <a
               href={row.original.depositUrl}
@@ -107,7 +110,7 @@ const columns: ColumnDef<LiquidityPool>[] = [
             />
           }
         >
-          Deposit <RiArrowRightUpLine size={20} />
+          Deposit <RiArrowRightUpLine size={12} />
         </Button>
       </div>
     ),
@@ -141,15 +144,16 @@ export function UtilityLiquidityPoolsSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Liquidity Pools">
-            <h2 className="text-xl font-semibold text-primary-t">Liquidity Pools</h2>
+            <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Liquidity Pools</h2>
           </TooltipInfo>
         </div>
         <div className="flex items-center gap-4">
           <Button
             variant="tertiary"
+            size="xs"
             render={
               <a
                 href="https://defillama.com/yields?token=GOHM&token=OHM"
@@ -159,7 +163,7 @@ export function UtilityLiquidityPoolsSection() {
               />
             }
           >
-            Explore More on DefiLlama <RiArrowRightUpLine size={16} />
+            Explore More on DefiLlama <RiArrowRightUpLine size={12} />
           </Button>
           <Segmented
             value={filter}
@@ -170,10 +174,10 @@ export function UtilityLiquidityPoolsSection() {
         </div>
       </div>
 
-      <Table>
+      <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="bg-surface-a5">
+            <TableRow key={headerGroup.id} className="bg-surface-a3">
               {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
@@ -197,7 +201,10 @@ export function UtilityLiquidityPoolsSection() {
             ))
           ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-secondary-t">
+              <TableCell
+                colSpan={6}
+                className="h-24 text-center text-sm/5 font-semibold text-secondary-t"
+              >
                 No pools found
               </TableCell>
             </TableRow>

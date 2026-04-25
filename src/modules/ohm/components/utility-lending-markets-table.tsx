@@ -27,7 +27,7 @@ type MarketFilter = "all" | "ohm" | "gohm";
 function TokenCell({ token }: { token: { symbol: string; iconName: IconName | null } }) {
   return (
     <div className="flex items-center gap-2">
-      <TokenIcon symbol={token.symbol} iconName={token.iconName} />
+      <TokenIcon symbol={token.symbol} iconName={token.iconName} size={20} />
       <span className="font-medium">{token.symbol}</span>
     </div>
   );
@@ -48,15 +48,14 @@ const columns: ColumnDef<LendingMarket>[] = [
   },
   {
     id: "network",
-    header: "Network",
-    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} />,
+    header: "Chain",
+    cell: ({ row }) => <ChainIcon chainId={row.original.chainId} size={16} />,
   },
   {
     accessorKey: "tvl",
     header: "TVL",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.tvl}
         format={{
           style: "currency",
@@ -72,7 +71,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Supply APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.supplyApy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -83,7 +81,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Borrow APY",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.borrowApy}
         format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
       />
@@ -94,7 +91,6 @@ const columns: ColumnDef<LendingMarket>[] = [
     header: "Available",
     cell: ({ row }) => (
       <NumberFlow
-        className="text-[15px]/[20px] font-semibold"
         value={row.original.available}
         format={{
           style: "currency",
@@ -108,7 +104,7 @@ const columns: ColumnDef<LendingMarket>[] = [
   {
     accessorKey: "project",
     header: "Project",
-    cell: ({ row }) => <p className="text-[15px]/[20px] font-semibold">{row.original.project}</p>,
+    cell: ({ row }) => <p>{row.original.project}</p>,
   },
   {
     id: "actions",
@@ -117,7 +113,7 @@ const columns: ColumnDef<LendingMarket>[] = [
       <div className="flex justify-end">
         <Button
           variant="secondary"
-          size="md"
+          size="xs"
           render={
             <a
               href={row.original.depositUrl}
@@ -127,7 +123,7 @@ const columns: ColumnDef<LendingMarket>[] = [
             />
           }
         >
-          Deposit <RiArrowRightUpLine size={20} />
+          Deposit <RiArrowRightUpLine size={12} />
         </Button>
       </div>
     ),
@@ -160,10 +156,10 @@ export function UtilityLendingMarketsSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TooltipInfo title="Lending Markets">
-            <h2 className="text-xl font-semibold text-primary-t">Lending Markets</h2>
+            <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Lending Markets</h2>
           </TooltipInfo>
         </div>
         <Segmented
@@ -174,10 +170,10 @@ export function UtilityLendingMarketsSection() {
         />
       </div>
 
-      <Table>
+      <Table variant="condensed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="bg-surface-a5">
+            <TableRow key={headerGroup.id} className="bg-surface-a3">
               {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
@@ -201,7 +197,10 @@ export function UtilityLendingMarketsSection() {
             ))
           ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="h-24 text-center text-secondary-t">
+              <TableCell
+                colSpan={9}
+                className="h-24 text-center text-sm/5 font-semibold text-secondary-t"
+              >
                 No markets found
               </TableCell>
             </TableRow>

@@ -33,7 +33,7 @@ function OhmValue({
 }) {
   return (
     <div className="flex items-center gap-1.5 shrink-0">
-      <Icon name="OHMColorTokenIcon" className="size-5" />
+      <Icon name="OHMTokenIcon" className="size-5" />
       <NumberFlow
         value={value}
         format={compact ? COMPACT_FORMAT : DECIMAL_FORMAT}
@@ -48,7 +48,7 @@ function OhmValue({
 function OhmValueSm({ value, prefix }: { value: number; prefix?: string }) {
   return (
     <div className="flex items-center gap-1 shrink-0">
-      <Icon name="OHMColorTokenIcon" className="size-3.5" />
+      <Icon name="OHMTokenIcon" className="size-3.5" />
       <NumberFlow
         value={value}
         format={COMPACT_FORMAT}

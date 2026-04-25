@@ -32,7 +32,7 @@ describe("V1LoansTable", () => {
   it("shows loading state", () => {
     render(<V1LoansTable loans={[]} onRepay={vi.fn()} onExtend={vi.fn()} isLoading={true} />);
 
-    expect(screen.getByText("Loading loans...")).toBeDefined();
+    expect(screen.getByText("Loading loans")).toBeDefined();
   });
 
   it("shows empty state when no loans", () => {

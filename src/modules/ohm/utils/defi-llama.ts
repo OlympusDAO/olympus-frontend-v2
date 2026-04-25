@@ -57,8 +57,8 @@ export type LiquidityPool = {
 // ─── Lookup tables ────────────────────────────────────────────────────────────
 
 export const TOKEN_ICON_MAP: Partial<Record<string, IconName>> = {
-  OHM: "OHMColorTokenIcon",
-  GOHM: "GOHMColorTokenIcon",
+  OHM: "OHMTokenIcon",
+  GOHM: "GOHMTokenIcon",
   USDS: "USDSColorTokenIcon",
 };
 

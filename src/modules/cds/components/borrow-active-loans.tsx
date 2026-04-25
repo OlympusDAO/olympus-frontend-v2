@@ -8,6 +8,14 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { CircularProgress } from "@/components/ui/circular-progress.tsx";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,6 +29,7 @@ import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault.ts";
 import { getContractAddress, ContractName } from "@/lib/contracts.ts";
 import { formatEther } from "viem";
 import { formatTermSuffix } from "@/lib/utils.ts";
+import { Spinner } from "@/components/spinner.tsx";
 import { BorrowRepayLoanModal } from "./borrow-repay-loan-modal.tsx";
 import { BorrowExtendLoanModal } from "./borrow-extend-loan-modal.tsx";
 
@@ -62,7 +71,7 @@ const DebtCell = ({ loan }: { loan: LoanWithRedemption }) => (
     <Icon name="USDSColorTokenIcon" size={32} />
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-semibold whitespace-nowrap">{loan.debt} USDS</span>
-      <span className="text-xs text-secondary-t">${loan.debtUSD}</span>
+      <span className="text-xs font-normal text-secondary-t">${loan.debtUSD}</span>
     </div>
   </div>
 );
@@ -74,7 +83,7 @@ const CollateralCell = ({ loan }: { loan: LoanWithRedemption }) => (
       <span className="text-xs font-semibold whitespace-nowrap">
         {loan.collateral} {loan.collateralToken}
       </span>
-      <span className="text-xs text-secondary-t">${loan.collateralUSD}</span>
+      <span className="text-xs font-normal text-secondary-t">${loan.collateralUSD}</span>
     </div>
   </div>
 );
@@ -255,19 +264,28 @@ export const BorrowActiveLoans = () => {
       <h2 className="text-[20px]/[24px] font-semibold mb-3">Active Loans</h2>
 
       {isLoading ? (
-        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
-          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
-            <span className="text-xs text-secondary-t font-normal">Active Loans</span>
-          </div>
-          <div className="p-8 text-center text-secondary-t text-sm">Loading loans...</div>
-        </div>
+        <Table>
+          <TableBody>
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Spinner className="size-8" />
+                  <p className="text-sm/5 font-semibold text-secondary-t">Loading loans</p>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       ) : loansWithData.length === 0 ? (
-        <div className="rounded-3xl overflow-hidden shadow-surface-level-2">
-          <div className="bg-surface-a3 px-3 py-3 border-b border-a5-b">
-            <span className="text-xs text-secondary-t font-normal">Active Loans</span>
-          </div>
-          <div className="p-8 text-center text-secondary-t text-sm">No active loans</div>
-        </div>
+        <Table>
+          <TableBody>
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="h-40 py-12 text-center align-middle text-sm/5 font-semibold text-secondary-t">
+                No active loans
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       ) : (
         <>
           {/* Mobile cards */}
@@ -279,7 +297,7 @@ export const BorrowActiveLoans = () => {
                     <Icon name="USDSColorTokenIcon" size={32} />
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-semibold">{loan.debt} USDS</span>
-                      <span className="text-xs text-secondary-t">${loan.debtUSD}</span>
+                      <span className="text-xs font-normal text-secondary-t">${loan.debtUSD}</span>
                     </div>
                   </div>
                   <span className="text-xs text-secondary-t">Debt</span>
@@ -292,7 +310,9 @@ export const BorrowActiveLoans = () => {
                       <span className="text-xs font-semibold">
                         {loan.collateral} {loan.collateralToken}
                       </span>
-                      <span className="text-xs text-secondary-t">${loan.collateralUSD}</span>
+                      <span className="text-xs font-normal text-secondary-t">
+                        ${loan.collateralUSD}
+                      </span>
                     </div>
                   </div>
                   <span className="text-xs text-secondary-t">Collateral</span>
@@ -325,53 +345,37 @@ export const BorrowActiveLoans = () => {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block rounded-3xl overflow-hidden shadow-surface-level-2">
-            <table className="w-full">
-              <thead>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="bg-surface-a3 border-b border-a5-b">
+                  <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
+                      <TableHead
                         key={header.id}
-                        className={[
-                          "px-3 py-3 text-xs text-secondary-t font-normal text-left whitespace-nowrap",
-                          header.id === "debt" && "w-[240px]",
-                          header.id === "ltv" && "w-[200px]",
-                          header.id === "borrowAPY" && "w-[168px]",
-                          header.id === "actions" && "w-[120px] text-right",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={header.id === "actions" ? "text-right" : ""}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </thead>
-              <tbody>
+              </TableHeader>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b border-a5-b last:border-0 h-16">
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <td
+                      <TableCell
                         key={cell.id}
-                        className={[
-                          "px-3 py-3",
-                          cell.column.id === "debt" && "w-[240px]",
-                          cell.column.id === "ltv" && "w-[200px]",
-                          cell.column.id === "borrowAPY" && "w-[168px]",
-                          cell.column.id === "actions" && "w-[120px]",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={cell.column.id === "actions" ? "text-right" : ""}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                      </TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

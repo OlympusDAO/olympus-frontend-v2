@@ -13,8 +13,8 @@ import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ProtocolDataSource } from "./protocol-data-source";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
-import iconDark from "@/assets/protocol-4-l.png";
-import iconLight from "@/assets/protocol-4-b.png";
+import iconDark from "@/assets/protocol-4-l.webp";
+import iconLight from "@/assets/protocol-4-b.webp";
 
 export function ProtocolConvertibleDeposits() {
   const { data: cd, isLoading: cdLoading } = useCdStatistics();
@@ -79,10 +79,10 @@ export function ProtocolConvertibleDeposits() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <TooltipInfo title="Convertible Deposits allow users to deposit stablecoins and lock in an OHM conversion price.">
-          <p className="text-[15px]/[20px] font-semibold text-primary-t">Convertible Deposits</p>
+          <p className="text-sm font-semibold text-primary-t">Convertible Deposits</p>
         </TooltipInfo>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-secondary-t ">
+          <span className="text-xs text-secondary-t">
             {cd.isMarketActive ? "Active" : "Paused"}
           </span>
           <PulseDot variant={cd.isMarketActive ? "green" : "yellow"} />
@@ -92,15 +92,15 @@ export function ProtocolConvertibleDeposits() {
         <ColorModeImage
           srcDark={iconDark}
           srcLight={iconLight}
-          alt="Emission manager"
+          alt="Convertible Deposits"
           className="min-w-18 h-18"
         />
 
         <div>
-          <p className="text-[15px]/[20px] font-semibold mb-1">
+          <p className="text-sm font-semibold mb-1">
             New capital enters through Convertible Deposits
           </p>
-          <p className="text-secondary-t text-xs">
+          <p className="text-secondary-t text-xs font-normal">
             Users deposit stablecoins to lock in an OHM conversion price. If they convert, the
             treasury grows. If not, deposits are returned — the protocol earns yield either way.
           </p>
@@ -111,7 +111,7 @@ export function ProtocolConvertibleDeposits() {
       {/* Hero: TVL + Deposit button */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-[15px]/[20px] text-secondary-t">Total Value Locked</p>
+          <p className="text-sm font-normal text-secondary-t">Total Value Locked</p>
           <NumberFlow
             value={cd.totalDepositsUsd}
             format={{
@@ -120,11 +120,11 @@ export function ProtocolConvertibleDeposits() {
               notation: "compact",
               maximumFractionDigits: 1,
             }}
-            className="text-[32px]/[40px] font-semibold"
+            className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
           />
-          <p className="mt-0.5 text-xs text-secondary-t tabular-nums">
-            {cd.activeBidsCount} recent bids ·{" "}
-            {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"} premium
+          <p className="mt-0.5 text-xs font-normal text-secondary-t">
+            {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
+            premium
           </p>
         </div>
         <Button
@@ -141,9 +141,9 @@ export function ProtocolConvertibleDeposits() {
       <Separator className="my-4" />
 
       {/* Key metrics */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2">
         <div>
-          <p className="text-xs text-secondary-t">Latest Tick Price</p>
+          <p className="text-xs font-normal text-secondary-t">Latest Tick Price</p>
           <NumberFlow
             value={latestTickPrice}
             format={{
@@ -152,11 +152,11 @@ export function ProtocolConvertibleDeposits() {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }}
-            className="text-[15px]/[20px] font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
         <div>
-          <p className="text-xs text-secondary-t">Backing Per OHM</p>
+          <p className="text-xs font-normal text-secondary-t">Backing Per OHM</p>
           <NumberFlow
             value={backing}
             format={{
@@ -165,7 +165,7 @@ export function ProtocolConvertibleDeposits() {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }}
-            className="text-[15px]/[20px] font-semibold tabular-nums"
+            className="text-sm font-semibold"
           />
         </div>
       </div>
@@ -176,23 +176,25 @@ export function ProtocolConvertibleDeposits() {
       <div>
         <div className="mb-3">
           <TooltipInfo title="Projected impact if all outstanding convertible deposits convert to OHM at their locked conversion prices.">
-            <p className="text-xs font-bold uppercase tracking-widest">If All CDs Convert</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary-t">
+              If All CDs Convert
+            </p>
           </TooltipInfo>
         </div>
         {/* Labels row */}
-        <div className="flex items-center justify-between mb-0.5">
-          <p className="text-xs text-secondary-t">Supply</p>
-          <p className="text-xs text-secondary-t">Treasury</p>
+        <div className="grid grid-cols-2 mb-0.5">
+          <p className="text-xs font-normal text-secondary-t">Supply</p>
+          <p className="text-xs font-normal text-secondary-t">Treasury</p>
         </div>
-        {/* Values row — all inline */}
-        <div className="flex items-center justify-between gap-x-2">
-          <p className="text-[15px]/[20px] font-semibold tabular-nums flex items-center gap-x-1 flex-wrap">
+        {/* Values row */}
+        <div className="grid grid-cols-2 items-center">
+          <p className="text-sm font-semibold flex items-center gap-x-1 flex-wrap">
             <NumberFlow
               prefix="+"
               suffix=" OHM"
               value={Math.round(supplyGrowthOhm)}
               format={{ style: "decimal", notation: "standard" }}
-              className="text-[15px]/[20px] font-semibold"
+              className="text-sm font-semibold"
             />
             <span className="font-normal">
               (
@@ -214,7 +216,7 @@ export function ProtocolConvertibleDeposits() {
               maximumFractionDigits: 1,
             }}
             prefix="+"
-            className="text-[15px]/[20px] font-semibold tabular-nums shrink-0"
+            className="text-sm font-semibold"
           />
         </div>
       </div>

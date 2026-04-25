@@ -19,15 +19,17 @@ export function OverviewOhmPrice() {
       <div className="min-w-0">
         <p className="mb-1 text-sm/5 font-semibold">OHM Price</p>
         <div className="flex gap-x-2">
-          <NumberFlow
-            value={OHMToken.price}
-            className="tabular-nums text-xl/6 font-semibold tracking-tight"
-          />
+          <NumberFlow value={OHMToken.price} className="text-xl/6 font-semibold tracking-tight" />
           {history && <PriceChange percentage={change24h} timeframe="24h" />}
         </div>
       </div>
 
-      <SparklineChart data={dataPoints} dataKey="price" isPositive={isPositive} />
+      <SparklineChart
+        data={dataPoints}
+        dataKey="price"
+        isPositive={isPositive}
+        valueLabel="OHM Price"
+      />
     </Card>
   );
 }

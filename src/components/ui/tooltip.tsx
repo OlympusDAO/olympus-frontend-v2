@@ -65,43 +65,60 @@ function Tooltip({
   triggerProps,
   classNameContent,
   contentProps,
-  ...props
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  ...rootProps
 }: ITooltipProps) {
   const { isMobile } = useIsMobile();
-  const [open, setOpen] = React.useState(false);
+  const isControlled = openProp !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const open = isControlled ? (openProp as boolean) : uncontrolledOpen;
 
-  const mobileProps = isMobile
-    ? {
-        open,
-        onOpenChange: (nextOpen: boolean) => setOpen(nextOpen),
-        ...props,
-      }
-    : props;
+  const setOpen = React.useCallback<NonNullable<TooltipPrimitive.Root.Props["onOpenChange"]>>(
+    (next, eventDetails) => {
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChangeProp?.(next, eventDetails);
+    },
+    [isControlled, onOpenChangeProp],
+  );
 
-  const mobileTriggerProps = isMobile
-    ? {
-        onClick: (e: React.MouseEvent) => {
-          e.preventDefault();
-          setOpen(!open);
-        },
-        ...triggerProps,
-      }
-    : triggerProps;
+  // Pass the consumer's element directly as the Trigger's render target so
+  // Base UI treats it as the actual trigger. This makes closeOnClick work
+  // natively (clicking the button dismisses the tooltip). If children isn't
+  // a valid element, fall back to wrapping in a span.
+  const triggerRender = React.isValidElement(children) ? (
+    (children as React.ReactElement)
+  ) : (
+    <span className="inline-flex">{children}</span>
+  );
+
+  // On mobile there's no hover, so we make tap toggle the tooltip and disable
+  // Base UI's closeOnClick so the tap doesn't immediately dismiss what it opened.
+  // We toggle local state directly here (rather than going through `setOpen`)
+  // because Base UI's onOpenChange contract requires an eventDetails object we
+  // don't have — controlled consumers should drive open state themselves.
+  const { onClick: userOnClick, ...restTriggerProps } = triggerProps ?? {};
+  const mobileClick: NonNullable<TooltipPrimitive.Trigger.Props["onClick"]> = (e) => {
+    e.preventDefault();
+    if (!isControlled) setUncontrolledOpen((prev) => !prev);
+    userOnClick?.(e);
+  };
 
   return (
-    <TooltipProvider delay={100}>
-      <TooltipCore {...mobileProps}>
-        <TooltipTrigger render={<span className="inline-flex" />} {...mobileTriggerProps}>
-          {children}
-        </TooltipTrigger>
-        <TooltipContent
-          className={cn("font-normal max-w-[250px] text-center", classNameContent)}
-          {...contentProps}
-        >
-          {title}
-        </TooltipContent>
-      </TooltipCore>
-    </TooltipProvider>
+    <TooltipCore open={open} onOpenChange={setOpen} {...rootProps}>
+      <TooltipTrigger
+        render={triggerRender}
+        closeOnClick={!isMobile}
+        {...restTriggerProps}
+        onClick={isMobile ? mobileClick : userOnClick}
+      />
+      <TooltipContent
+        className={cn("font-normal max-w-[250px] text-center", classNameContent)}
+        {...contentProps}
+      >
+        {title}
+      </TooltipContent>
+    </TooltipCore>
   );
 }
 
@@ -116,7 +133,7 @@ function TooltipInfo({
 }: ITooltipProps) {
   return (
     <div className="flex items-center gap-x-1">
-      <span className={cn(className, "text-secondary-t font-semibold")}>{children}</span>
+      <span className={cn("text-secondary-t font-semibold", className)}>{children}</span>
       <Tooltip
         classNameContent={classNameContent}
         triggerProps={triggerProps}
