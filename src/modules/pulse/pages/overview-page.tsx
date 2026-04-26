@@ -3,7 +3,6 @@ import { OverviewOhmPrice } from "../components/overview-ohm-price";
 import { OverviewLiquidBacking } from "../components/overview-liquid-backing";
 import { OverviewOhmPremium } from "../components/overview-ohm-premium";
 import { OverviewYrf } from "../components/overview-yrf";
-import { OverviewEmissionManager } from "../components/overview-emission-manager";
 import { OverviewCoolerLoans } from "../components/overview-cooler-loans";
 import { OverviewConvertibleDeposits } from "../components/overview-convertible-deposits";
 import { OverviewLastActions } from "../components/overview-last-actions";
@@ -21,11 +20,8 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* Row 2: YRF + Emission Manager */}
-      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
-        <OverviewYrf />
-        <OverviewEmissionManager />
-      </div>
+      {/* Row 2: YRF (full-width) */}
+      <OverviewYrf />
 
       {/* Row 3: Cooler Loans + Convertible Deposits */}
       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
