@@ -146,8 +146,10 @@ export function useReceiptTokenBalances(userAddress?: string) {
       const wrappedBalance = wrappedBalanceResults?.[index]?.result as bigint | undefined;
 
       const metadataIndex = index * 5;
-      const name = (metadataResults[metadataIndex]?.result as string) || "";
-      const symbol = (metadataResults[metadataIndex + 1]?.result as string) || "";
+      const rawName = (metadataResults[metadataIndex]?.result as string) || "";
+      const rawSymbol = (metadataResults[metadataIndex + 1]?.result as string) || "";
+      const name = rawName.replace(/\0/g, "").trim();
+      const symbol = rawSymbol.replace(/\0/g, "").trim();
       const decimals = (metadataResults[metadataIndex + 2]?.result as number) || 18;
       const asset = (metadataResults[metadataIndex + 3]?.result as string) || "";
       const periodMonths = (metadataResults[metadataIndex + 4]?.result as number) || 0;
