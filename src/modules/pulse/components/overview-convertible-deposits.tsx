@@ -42,31 +42,36 @@ export function OverviewConvertibleDeposits() {
 
       <Separator className="w-full my-4" />
       {/* Body */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+      <div>
+        <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+        <NumberFlow
+          value={totalDepositsUsd}
+          className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+        />
+        <div className="mt-0.5 flex items-center gap-x-0.5">
           <NumberFlow
-            value={totalDepositsUsd}
-            className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+            suffix="recent bids ·"
+            format={{ style: "decimal" }}
+            value={activeBidsCount}
+            className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
           />
-          <div className="mt-0.5 flex items-center gap-x-0.5">
-            <NumberFlow
-              suffix="recent bids ·"
-              format={{ style: "decimal" }}
-              value={activeBidsCount}
-              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
-            />
-            <NumberFlow
-              suffix="premium"
-              prefix="+"
-              format={{ style: "percent", maximumFractionDigits: 0 }}
-              value={premiumPct / 100}
-              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
-            />
-          </div>
+          <NumberFlow
+            suffix="premium"
+            prefix="+"
+            format={{ style: "percent", maximumFractionDigits: 0 }}
+            value={premiumPct / 100}
+            className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
+          />
         </div>
+      </div>
 
-        <Button variant="secondary" size="md" render={<Link to="/cds/deposit" />}>
+      <div className="mt-4">
+        <Button
+          variant="secondary"
+          size="md"
+          className="w-full"
+          render={<Link to="/cds/deposit" />}
+        >
           Deposit
           <RiArrowRightSLine />
         </Button>

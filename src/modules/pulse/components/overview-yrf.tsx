@@ -28,7 +28,7 @@ export function OverviewYrf() {
   const isActive = totalYieldDeployed > 0;
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 flex flex-col">
       {/* Header */}
       <div className=" flex items-center justify-between">
         <TooltipInfo title="The Yield Repurchase Facility converts protocol revenue into OHM buybacks, creating continuous buy pressure.">
@@ -43,47 +43,42 @@ export function OverviewYrf() {
       </div>
       <Separator className="w-full my-4" />
       {/* Body */}
-      <div className="flex items-end justify-between gap-4">
-        {/* Left: Lifetime OHM Repurchased */}
-        <div>
-          <TooltipInfo title="Total OHM repurchased via YRF bond markets since inception.">
-            <p className="text-sm/5 text-secondary-t font-normal">Lifetime OHM Repurchased</p>
-          </TooltipInfo>
-          <div className="flex items-center gap-x-2 mt-1">
-            <Icon className="size-7" name="OHMTokenIcon" />
-            <NumberFlow
-              value={totalOhmBurned}
-              format={{ style: "decimal", notation: "standard" }}
-              className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
-            />
-          </div>
+      <div>
+        <TooltipInfo title="Total OHM repurchased via YRF bond markets since inception.">
+          <p className="text-sm/5 text-secondary-t font-normal">Lifetime OHM Repurchased</p>
+        </TooltipInfo>
+        <div className="flex items-center gap-x-2 mt-1">
+          <Icon className="size-7" name="OHMTokenIcon" />
+          <NumberFlow
+            value={totalOhmBurned}
+            format={{ style: "decimal", notation: "standard" }}
+            className="text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+          />
         </div>
+      </div>
 
-        {/* Right: Annual Supply Impact */}
-        <div className="text-right">
-          <div className="flex justify-end">
-            <TooltipInfo
-              title={`At the current YRF buyback rate, annualized supply change is ${formatNumber(Math.round(annualBurns))} OHM/yr.`}
-            >
-              <p className="text-xs/4 text-secondary-t font-normal">Annual Supply Impact</p>
-            </TooltipInfo>
-          </div>
-          <div className="flex items-center justify-end gap-x-1 mt-1">
-            <NumberFlow
-              value={supplyDeflationRate / 100}
-              format={{ style: "percent", notation: "standard" }}
-              className="text-sm/5 font-semibold [--number-flow-char-height:1.4286em]"
-            />
-            <NumberFlow
-              suffix="OHM/yr"
-              value={annualBurns}
-              format={{
-                style: "decimal",
-                notation: window.innerWidth <= 639 ? "compact" : "standard",
-              }}
-              className="text-sm/5 text-secondary-t font-normal [--number-flow-char-height:1.4286em]"
-            />
-          </div>
+      {/* Annual Supply Impact row */}
+      <div className="mt-auto pt-4">
+        <TooltipInfo
+          title={`At the current YRF buyback rate, annualized supply change is ${formatNumber(Math.round(annualBurns))} OHM/yr.`}
+        >
+          <p className="text-xs/4 text-secondary-t font-normal">Annual Supply Impact</p>
+        </TooltipInfo>
+        <div className="flex items-center gap-x-1 mt-1">
+          <NumberFlow
+            value={supplyDeflationRate / 100}
+            format={{ style: "percent", notation: "standard" }}
+            className="text-sm/5 font-semibold [--number-flow-char-height:1.4286em]"
+          />
+          <NumberFlow
+            suffix="OHM/yr"
+            value={annualBurns}
+            format={{
+              style: "decimal",
+              notation: window.innerWidth <= 639 ? "compact" : "standard",
+            }}
+            className="text-sm/5 text-secondary-t font-normal [--number-flow-char-height:1.4286em]"
+          />
         </div>
       </div>
     </Card>

@@ -9,9 +9,11 @@ export function ProtocolPage() {
     <div className="mx-auto max-w-7xl space-y-4">
       <ProtocolTreasuryRevenue />
       <ProtocolFlywheel />
-      <ProtocolConvertibleDeposits />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ProtocolCoolerLoans />
+        <ProtocolConvertibleDeposits />
+      </div>
       <ProtocolYrf />
-      <ProtocolCoolerLoans />
     </div>
   );
 }
