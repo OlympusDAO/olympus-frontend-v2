@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckIcon, AlertTriangleIcon } from "lucide-react";
 import { useCancelRedemption } from "@/lib/hooks/cds/useCancelRedemption";
+import { trackCancelRedemption } from "@/lib/analytics";
 
 interface PendingRedemption {
   redemptionId: number;
@@ -24,6 +26,10 @@ export const CancelRedemptionModal: React.FC<CancelRedemptionModalProps> = ({
   pendingRedemption,
 }) => {
   const { cancelRedemption, isPending: isCancelling, isSuccess, hash } = useCancelRedemption();
+
+  useEffect(() => {
+    if (isSuccess) trackCancelRedemption({ txHash: hash });
+  }, [isSuccess, hash]);
 
   // Get the period text for display
   const periodText =
