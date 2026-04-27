@@ -16,7 +16,10 @@ export function initializeAnalytics(): void {
     posthog.init(posthogKey, {
       api_host: posthogIngestHost,
       ui_host: posthogHost,
-      capture_pageview: "history_change",
+      // Hash-router-aware: PostHog's "history_change" diffs window.location.pathname,
+      // which never changes under createHashRouter. We capture $pageview manually from
+      // a useLocation listener instead.
+      capture_pageview: false,
       person_profiles: "identified_only",
       capture_pageleave: true,
       ip: false,
@@ -142,7 +145,10 @@ export function resetIdentity(): void {
 
 export function trackPageView(path: string): void {
   if (GA_MEASUREMENT_ID) ReactGA.send({ hitType: "pageview", page: path });
-  posthog.capture("$pageview", { $current_url: path });
+  posthog.capture("$pageview", {
+    $current_url: window.location.href,
+    $pathname: path,
+  });
 }
 
 // ─── Wallet ───────────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { Providers } from "@/components/providers";
 import { IconSidebar } from "@/layouts/IconSidebar";
@@ -8,11 +9,21 @@ import { ToasterProvider } from "@/components/ui/sonner";
 import { Footer } from "@/layouts/footer.tsx";
 import { FeatureTour } from "@/components/feature-tour";
 import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
+import { trackPageView } from "@/lib/analytics";
+
+function PageviewTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
+}
 
 export default function AppLayout() {
   return (
     <NuqsAdapter>
       <Providers>
+        <PageviewTracker />
         <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
           {/* Desktop icon sidebar — hidden on mobile */}
           <div className="hidden md:flex">
