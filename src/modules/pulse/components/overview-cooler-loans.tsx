@@ -31,22 +31,27 @@ export function OverviewCoolerLoans() {
       <Separator className="w-full my-4" />
 
       {/* Body */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm/5 text-secondary-t font-normal">Total Borrowed</p>
-          <NumberFlow
-            value={totalBorrowed}
-            className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
-          />
-          <NumberFlow
-            suffix="gOHM collateral locked"
-            value={totalCollateral}
-            format={{ style: "decimal", notation: "standard" }}
-            className="mt-0.5 block text-xs/4 text-secondary-t font-normal [--number-flow-char-height:1.3333em]"
-          />
-        </div>
+      <div>
+        <p className="text-sm/5 text-secondary-t font-normal">Total Borrowed</p>
+        <NumberFlow
+          value={totalBorrowed}
+          className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+        />
+        <NumberFlow
+          suffix="gOHM collateral locked"
+          value={totalCollateral}
+          format={{ style: "decimal", notation: "standard" }}
+          className="mt-0.5 block text-xs/4 text-secondary-t font-normal [--number-flow-char-height:1.3333em]"
+        />
+      </div>
 
-        <Button variant="secondary" size="md" render={<Link to="/cooler/borrow" />}>
+      <div className="mt-4">
+        <Button
+          variant="secondary"
+          size="md"
+          className="w-full"
+          render={<Link to="/cooler/borrow" />}
+        >
           Borrow
           <RiArrowRightSLine />
         </Button>

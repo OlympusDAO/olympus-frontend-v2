@@ -20,13 +20,11 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* Row 2: YRF (full-width) */}
-      <OverviewYrf />
-
-      {/* Row 3: Cooler Loans + Convertible Deposits */}
-      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
+      {/* Row 2: Cooler Loans + Convertible Deposits + YRF */}
+      <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4">
         <OverviewCoolerLoans />
         <OverviewConvertibleDeposits />
+        <OverviewYrf />
       </div>
 
       {/* Row 4: Last Protocol Actions */}
