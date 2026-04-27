@@ -95,7 +95,7 @@ export const MetricsConversionStats: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="p-4">
             <div className="w-40 h-4 bg-surface-a5 rounded animate-pulse mb-3" />
@@ -107,7 +107,7 @@ export const MetricsConversionStats: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <StatCard
         title="Backing Growth on Conversion"
         value={`+${backingGrowthPercent.toFixed(2)}%`}
