@@ -376,10 +376,12 @@ export function trackConvertDrachmas(params: { amount: string; txHash?: string }
 
 // ─── Onboarding (feature tour) ───────────────────────────────────────────────
 
-// Person-property mutations on anonymous events are unreliable under
-// `person_profiles: 'identified_only'`. We persist onboarding state to
-// localStorage as the user moves through the flow and apply it via
-// `identifyWallet` once the user actually identifies (wallet connect).
+// Onboarding mostly happens before wallet connect, when the user is anonymous.
+// Under `person_profiles: 'identified_only'`, anonymous `$set` mutations do not
+// create a person profile, so to be safe we persist outcome to localStorage and
+// replay via `identifyWallet`. We also include `$set` on terminal events so
+// already-identified users (who complete the tour AFTER connecting) get their
+// person record updated immediately, without waiting for a chain/wallet switch.
 
 const ONBOARDING_TOUR_KEY = "olympus-feature-tour"; // shared with useFeatureTour
 const ONBOARDING_FIRST_SEEN_KEY = "olympus-onboarding-first-seen";
@@ -435,7 +437,10 @@ export function trackOnboardingModalShown(viewportWidth: number): void {
 }
 
 export function trackOnboardingModalSkipped(method: "skip_button" | "backdrop"): void {
-  track("onboarding_modal_skipped", { dismissal_method: method });
+  track("onboarding_modal_skipped", {
+    dismissal_method: method,
+    $set: { onboarding_outcome: "skipped_modal" satisfies OnboardingOutcome },
+  });
 }
 
 export function trackOnboardingTourStarted(): void {
@@ -465,6 +470,10 @@ export function trackOnboardingTourSkipped(stepIndex: number, stepName: string):
   track("onboarding_tour_skipped", {
     step_index: stepIndex,
     step_name: stepName,
+    $set: {
+      onboarding_outcome: "skipped_tour" satisfies OnboardingOutcome,
+      onboarding_last_step: stepIndex,
+    },
   });
 }
 
@@ -472,6 +481,7 @@ export function trackOnboardingTourCompleted(durationMs: number, totalSteps: num
   track("onboarding_tour_completed", {
     total_steps: totalSteps,
     duration_ms: durationMs,
+    $set: { onboarding_outcome: "completed" satisfies OnboardingOutcome },
   });
 }
 
