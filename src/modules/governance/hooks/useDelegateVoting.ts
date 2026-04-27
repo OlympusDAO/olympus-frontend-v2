@@ -6,7 +6,7 @@ import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import type { Address } from "viem";
-import { trackDelegate } from "@/lib/analytics";
+import { trackDelegate, trackTransactionFailed } from "@/lib/analytics";
 
 /**
  * Mutation hook for delegating gOHM voting power to another address.
@@ -42,6 +42,14 @@ export function useDelegateVoting() {
       queryClient.invalidateQueries({ queryKey: ["governance", "votingWeight"] });
     }
   }, [isConfirmed, queryClient]);
+
+  const error = writeError || confirmError;
+  useEffect(() => {
+    if (error) {
+      const reason = error.message?.includes("User rejected") ? "user_rejected" : "error";
+      trackTransactionFailed("dao", "delegate", { reason });
+    }
+  }, [error]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {

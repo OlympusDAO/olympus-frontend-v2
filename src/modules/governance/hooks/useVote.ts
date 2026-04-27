@@ -5,7 +5,7 @@ import { olympusGovernorBravoAbi } from "@/abis/OlympusGovernorBravo";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
-import { trackCastVote } from "@/lib/analytics";
+import { trackCastVote, trackTransactionFailed } from "@/lib/analytics";
 
 /**
  * Mutation hook for casting a vote on a governance proposal.
@@ -51,6 +51,14 @@ export function useVote() {
       voteRef.current = undefined;
     }
   }, [isConfirmed, queryClient]);
+
+  const error = writeError || confirmError;
+  useEffect(() => {
+    if (error) {
+      const reason = error.message?.includes("User rejected") ? "user_rejected" : "error";
+      trackTransactionFailed("dao", "vote", { reason });
+    }
+  }, [error]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {

@@ -5,7 +5,7 @@ import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits } from "viem";
 import type { Address } from "viem";
 import { useAccount } from "wagmi";
-import { trackBridgeOhm } from "@/lib/analytics.ts";
+import { trackBridgeOhm, trackTransactionFailed } from "@/lib/analytics.ts";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
@@ -67,6 +67,7 @@ export function BridgeConfirmModal({
     bridge,
     isPending: isBridging,
     isSuccess: bridgeSuccess,
+    error: bridgeError,
     hash: bridgeHash,
   } = useBridgeOhm();
 
@@ -79,6 +80,12 @@ export function BridgeConfirmModal({
       txHash: bridgeHash,
     });
   }, [bridgeSuccess]);
+
+  useEffect(() => {
+    if (!bridgeError) return;
+    const reason = bridgeError.message?.includes("User rejected") ? "user_rejected" : "error";
+    trackTransactionFailed("ohm", "bridge", { reason });
+  }, [bridgeError]);
 
   const getCurrentStep = () => {
     if (bridgeSuccess) return 2;

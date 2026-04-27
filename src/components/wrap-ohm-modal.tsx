@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
-import { trackWrapOhm, trackUnwrapGohm } from "@/lib/analytics";
+import { trackWrapOhm, trackUnwrapGohm, trackTransactionFailed } from "@/lib/analytics";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useWrapOhm } from "@/lib/hooks/useWrapOhm";
@@ -61,13 +61,20 @@ export function WrapOhmModal({
   } = useTokenApproval();
 
   // Wrap hook
-  const { wrap, isPending: isWrapping, isSuccess: wrapSuccess, hash: wrapHash } = useWrapOhm();
+  const {
+    wrap,
+    isPending: isWrapping,
+    isSuccess: wrapSuccess,
+    error: wrapError,
+    hash: wrapHash,
+  } = useWrapOhm();
 
   // Unwrap hook
   const {
     unwrap,
     isPending: isUnwrapping,
     isSuccess: unwrapSuccess,
+    error: unwrapError,
     hash: unwrapHash,
   } = useUnwrapGohm();
 
@@ -83,6 +90,13 @@ export function WrapOhmModal({
       trackUnwrapGohm({ amount: inputAmount, txHash: executeHash });
     }
   }, [executeSuccess]);
+
+  const executeError = mode === "wrap" ? wrapError : unwrapError;
+  useEffect(() => {
+    if (!executeError) return;
+    const reason = executeError.message?.includes("User rejected") ? "user_rejected" : "error";
+    trackTransactionFailed("ohm", mode === "wrap" ? "wrap" : "unwrap", { reason });
+  }, [executeError]);
 
   // Step logic
   const getCurrentStep = () => {
