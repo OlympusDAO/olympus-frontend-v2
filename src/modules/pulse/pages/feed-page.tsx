@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -79,69 +78,65 @@ export function FeedPage() {
 
       {/* Table */}
       {isLoading ? (
-        <Card className="overflow-hidden">
-          <Table>
-            <TableBody>
-              {Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-6 w-14 rounded-md" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="size-8 rounded-full" />
-                  </TableCell>
-                  <TableCell className="w-full">
-                    <Skeleton className="h-4 w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-14" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      ) : (
-        <Card className="overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Protocol</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead className="w-full">Details</TableHead>
-                <TableHead className="text-right">Time</TableHead>
+        <Table>
+          <TableBody>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-6 w-14 rounded-md" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="size-8 rounded-full" />
+                </TableCell>
+                <TableCell className="w-full">
+                  <Skeleton className="h-4 w-48" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-14" />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
-                  >
-                    No activity
-                  </TableCell>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Protocol</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead className="w-full">Details</TableHead>
+              <TableHead className="text-right">Time</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="h-40 py-16 text-center align-middle text-sm/5 font-semibold text-secondary-t"
+                >
+                  No activity
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        cell.column.id === "description" && "w-full",
+                        cell.column.id === "time" && "text-right",
+                      )}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          cell.column.id === "description" && "w-full",
-                          cell.column.id === "time" && "text-right",
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
       )}
     </div>
   );
