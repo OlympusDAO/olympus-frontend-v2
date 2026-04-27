@@ -3,14 +3,27 @@ import { driver, type DriveStep } from "driver.js";
 import { useFeatureTour } from "@/lib/hooks/useFeatureTour";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { FeatureTourWelcomeModal } from "@/components/feature-tour-welcome-modal";
+import {
+  trackOnboardingModalShown,
+  trackOnboardingModalSkipped,
+  trackOnboardingTourStarted,
+  trackOnboardingStepViewed,
+  trackOnboardingStepAdvanced,
+  trackOnboardingTourSkipped,
+  trackOnboardingTourCompleted,
+  trackOnboardingSuppressedMobile,
+} from "@/lib/analytics";
 
 const DESKTOP_BREAKPOINT = 1023.5;
 const TIGHT_POPOVER_CLASS = "olympus-tour-popover olympus-tour-popover-tight";
 const NEW_BADGE = `<span class="px-1.25 pt-px mx-[3px] rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase inline-flex items-center justify-center align-middle relative -top-px">NEW</span>`;
 
-function buildSteps(): DriveStep[] {
+type OlympusStep = DriveStep & { name: string };
+
+function buildSteps(): OlympusStep[] {
   return [
     {
+      name: "sidebar_overview",
       element: '[data-tour="sidebar-nav"]',
       popover: {
         title: "Everything starts here",
@@ -29,6 +42,7 @@ function buildSteps(): DriveStep[] {
       },
     },
     {
+      name: "pulse",
       element: '[data-tour="nav-pulse"]',
       popover: {
         title: "Pulse – the protocol, live",
@@ -47,6 +61,7 @@ function buildSteps(): DriveStep[] {
       },
     },
     {
+      name: "cds",
       element: '[data-tour="nav-cds"]',
       popover: {
         title: "Convertible Deposits – now built in",
@@ -58,6 +73,7 @@ function buildSteps(): DriveStep[] {
       },
     },
     {
+      name: "engage",
       element: '[data-tour="nav-engage"]',
       popover: {
         title: "Engage – Coming Soon",
@@ -148,11 +164,25 @@ export function FeatureTour() {
     () => shouldShowModal && window.innerWidth > DESKTOP_BREAKPOINT,
   );
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
+  const tourStartTimeRef = useRef<number | null>(null);
+  const trackedStepsRef = useRef<Set<number>>(new Set());
+  const onboardingFiredRef = useRef(false);
 
   const completeTourRef = useRef(completeTour);
   const saveStepRef = useRef(saveStep);
   completeTourRef.current = completeTour;
   saveStepRef.current = saveStep;
+
+  // Fire modal_shown / suppressed_mobile exactly once on first eligible mount.
+  useEffect(() => {
+    if (!shouldShowModal || onboardingFiredRef.current) return;
+    onboardingFiredRef.current = true;
+    if (window.innerWidth > DESKTOP_BREAKPOINT) {
+      trackOnboardingModalShown(window.innerWidth);
+    } else {
+      trackOnboardingSuppressedMobile(window.innerWidth);
+    }
+  }, [shouldShowModal]);
 
   useEffect(() => {
     const steps = buildSteps();
@@ -171,19 +201,28 @@ export function FeatureTour() {
         const index = opts.state.activeIndex ?? 0;
         const isLast = index === steps.length - 1;
 
+        if (!trackedStepsRef.current.has(index)) {
+          trackedStepsRef.current.add(index);
+          trackOnboardingStepViewed(index, steps[index].name, steps.length);
+        }
+
         injectFooter(
           popover,
           index,
           steps.length,
           () => {
+            trackOnboardingTourSkipped(index, steps[index].name);
             saveStepRef.current(index);
             driverInstance.destroy();
           },
           () => {
             if (isLast) {
+              const startedAt = tourStartTimeRef.current ?? Date.now();
+              trackOnboardingTourCompleted(Date.now() - startedAt, steps.length);
               completeTourRef.current();
               driverInstance.destroy();
             } else {
+              trackOnboardingStepAdvanced(index);
               driverInstance.moveNext();
             }
           },
@@ -226,15 +265,20 @@ export function FeatureTour() {
   return (
     <FeatureTourWelcomeModal
       open={modalOpen && isDesktop}
-      onSkip={() => {
+      onSkip={(method) => {
+        trackOnboardingModalSkipped(method);
         setModalOpen(false);
         skipTour();
       }}
       onStart={() => {
         if (!isDesktop) return;
         setModalOpen(false);
+        trackOnboardingTourStarted();
         startTour();
-        setTimeout(() => driverRef.current?.drive(), 150);
+        setTimeout(() => {
+          tourStartTimeRef.current = Date.now();
+          driverRef.current?.drive();
+        }, 150);
       }}
     />
   );

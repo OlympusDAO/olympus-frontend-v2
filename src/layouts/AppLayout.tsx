@@ -1,4 +1,5 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { Providers } from "@/components/providers";
 import { IconSidebar } from "@/layouts/IconSidebar";
@@ -8,11 +9,33 @@ import { ToasterProvider } from "@/components/ui/sonner";
 import { Footer } from "@/layouts/footer.tsx";
 import { FeatureTour } from "@/components/feature-tour";
 import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
+import { trackPageView } from "@/lib/analytics";
+import { useWalletAnalytics } from "@/lib/hooks/useWalletAnalytics";
+
+function PageviewTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    // Defer to a macrotask so synchronous `<Navigate replace />` redirects
+    // (e.g. `/` → `/pulse/overview`) supersede the source pageview.
+    const id = setTimeout(() => {
+      trackPageView({ pathname: location.pathname, search: location.search });
+    }, 0);
+    return () => clearTimeout(id);
+  }, [location.pathname, location.search]);
+  return null;
+}
+
+function WalletAnalytics() {
+  useWalletAnalytics();
+  return null;
+}
 
 export default function AppLayout() {
   return (
     <NuqsAdapter>
       <Providers>
+        <PageviewTracker />
+        <WalletAnalytics />
         <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
           {/* Desktop icon sidebar — hidden on mobile */}
           <div className="hidden md:flex">

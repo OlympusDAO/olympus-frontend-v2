@@ -16,11 +16,17 @@ export function initializeAnalytics(): void {
     posthog.init(posthogKey, {
       api_host: posthogIngestHost,
       ui_host: posthogHost,
-      capture_pageview: "history_change",
+      // Hash-router-aware: PostHog's "history_change" diffs window.location.pathname,
+      // which never changes under createHashRouter. We capture $pageview manually from
+      // a useLocation listener instead.
+      capture_pageview: false,
       person_profiles: "identified_only",
       capture_pageleave: true,
       ip: false,
       cross_subdomain_cookie: true,
+      // Minimum recording duration (5s) is configured server-side under
+      // PostHog → Project Settings → Session Replay (this version of
+      // posthog-js does not expose minimumDurationMilliseconds at init).
       session_recording: {
         maskAllInputs: true,
         maskTextSelector: "*",
@@ -120,18 +126,29 @@ async function hashAddress(address: string): Promise<string> {
     .join("");
 }
 
-export async function identifyWallet(address: string): Promise<void> {
+export async function identifyWallet(
+  address: string,
+  context: { walletType?: string; chainId?: number } = {},
+): Promise<void> {
   const hashedAddress = await hashAddress(address);
   const firstTouch = getFirstTouch();
-  posthog.identify(hashedAddress, {
-    $set_once: {
+  const onboarding = getOnboardingPersonProperties();
+  posthog.identify(
+    hashedAddress,
+    {
+      wallet_type: context.walletType,
+      connected_chain_id: context.chainId,
+      ...onboarding.set,
+    },
+    {
       first_connect_date: new Date().toISOString(),
       first_touch_source: firstTouch?.source,
       first_touch_utm_campaign: firstTouch?.utm_campaign,
       first_touch_utm_medium: firstTouch?.utm_medium,
       first_touch_landing_page: firstTouch?.landing_page,
+      ...onboarding.setOnce,
     },
-  });
+  );
 }
 
 export function resetIdentity(): void {
@@ -140,21 +157,25 @@ export function resetIdentity(): void {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
-export function trackPageView(path: string): void {
-  if (GA_MEASUREMENT_ID) ReactGA.send({ hitType: "pageview", page: path });
-  posthog.capture("$pageview", { $current_url: path });
+export function trackPageView({ pathname, search }: { pathname: string; search: string }): void {
+  if (GA_MEASUREMENT_ID) ReactGA.send({ hitType: "pageview", page: pathname + search });
+  posthog.capture("$pageview", {
+    $current_url: window.location.href,
+    $pathname: pathname,
+  });
 }
 
 // ─── Wallet ───────────────────────────────────────────────────────────────────
 
-export function trackWalletConnect(address: string): void {
+export function trackWalletConnect(params: { walletType?: string; chainId?: number }): void {
   track("wallet_connected", {
-    wallet_address: `${address.slice(0, 6)}...${address.slice(-4)}`,
+    wallet_type: params.walletType,
+    chain_id: params.chainId,
   });
 }
 
 export function trackWalletDisconnect(): void {
-  track("wallet_disconnect");
+  track("wallet_disconnected");
 }
 
 // ─── OHM ─────────────────────────────────────────────────────────────────────
@@ -310,6 +331,7 @@ export function trackCoolerRepay(params: { repayAmount: string; txHash?: string 
   trackTransaction("cooler", "repay", { repay_amount: params.repayAmount, tx_hash: params.txHash });
 }
 
+// Reserved for the eventual Cooler V2 extend feature; V1 uses its own UI/product.
 export function trackCoolerExtend(params: { newExpiry: string; txHash?: string }): void {
   trackTransaction("cooler", "extend", { new_expiry: params.newExpiry, tx_hash: params.txHash });
 }
@@ -350,4 +372,120 @@ export function trackClaimDrachmas(params: { amount: string; txHash?: string }):
 
 export function trackConvertDrachmas(params: { amount: string; txHash?: string }): void {
   trackTransaction("engage", "convert", { amount: params.amount, tx_hash: params.txHash });
+}
+
+// ─── Onboarding (feature tour) ───────────────────────────────────────────────
+
+// Onboarding mostly happens before wallet connect, when the user is anonymous.
+// Under `person_profiles: 'identified_only'`, anonymous `$set` mutations do not
+// create a person profile, so to be safe we persist outcome to localStorage and
+// replay via `identifyWallet`. We also include `$set` on terminal events so
+// already-identified users (who complete the tour AFTER connecting) get their
+// person record updated immediately, without waiting for a chain/wallet switch.
+
+const ONBOARDING_TOUR_KEY = "olympus-feature-tour"; // shared with useFeatureTour
+const ONBOARDING_FIRST_SEEN_KEY = "olympus-onboarding-first-seen";
+
+type OnboardingOutcome = "skipped_modal" | "skipped_tour" | "completed";
+
+export function recordOnboardingFirstSeen(): void {
+  try {
+    if (!localStorage.getItem(ONBOARDING_FIRST_SEEN_KEY)) {
+      localStorage.setItem(ONBOARDING_FIRST_SEEN_KEY, new Date().toISOString());
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function getOnboardingPersonProperties(): {
+  set: Record<string, unknown>;
+  setOnce: Record<string, unknown>;
+} {
+  const set: Record<string, unknown> = {};
+  const setOnce: Record<string, unknown> = {};
+
+  try {
+    const firstSeen = localStorage.getItem(ONBOARDING_FIRST_SEEN_KEY);
+    if (firstSeen) setOnce.onboarding_first_seen_at = firstSeen;
+
+    const tourState = localStorage.getItem(ONBOARDING_TOUR_KEY);
+    if (tourState === "completed") {
+      set.onboarding_outcome = "completed" satisfies OnboardingOutcome;
+    } else if (tourState === "skipped") {
+      set.onboarding_outcome = "skipped_modal" satisfies OnboardingOutcome;
+    } else if (tourState !== null) {
+      const step = Number(tourState);
+      if (!Number.isNaN(step)) {
+        set.onboarding_outcome = "skipped_tour" satisfies OnboardingOutcome;
+        set.onboarding_last_step = step;
+      }
+    }
+  } catch {
+    // ignore storage failures
+  }
+
+  return { set, setOnce };
+}
+
+export function trackOnboardingModalShown(viewportWidth: number): void {
+  recordOnboardingFirstSeen();
+  track("onboarding_modal_shown", {
+    device_type: "desktop",
+    viewport_width: viewportWidth,
+  });
+}
+
+export function trackOnboardingModalSkipped(method: "skip_button" | "backdrop"): void {
+  track("onboarding_modal_skipped", {
+    dismissal_method: method,
+    $set: { onboarding_outcome: "skipped_modal" satisfies OnboardingOutcome },
+  });
+}
+
+export function trackOnboardingTourStarted(): void {
+  track("onboarding_tour_started");
+}
+
+export function trackOnboardingStepViewed(
+  stepIndex: number,
+  stepName: string,
+  totalSteps: number,
+): void {
+  track("onboarding_step_viewed", {
+    step_index: stepIndex,
+    step_name: stepName,
+    total_steps: totalSteps,
+  });
+}
+
+export function trackOnboardingStepAdvanced(fromStep: number): void {
+  track("onboarding_step_advanced", {
+    from_step: fromStep,
+    to_step: fromStep + 1,
+  });
+}
+
+export function trackOnboardingTourSkipped(stepIndex: number, stepName: string): void {
+  track("onboarding_tour_skipped", {
+    step_index: stepIndex,
+    step_name: stepName,
+    $set: {
+      onboarding_outcome: "skipped_tour" satisfies OnboardingOutcome,
+      onboarding_last_step: stepIndex,
+    },
+  });
+}
+
+export function trackOnboardingTourCompleted(durationMs: number, totalSteps: number): void {
+  track("onboarding_tour_completed", {
+    total_steps: totalSteps,
+    duration_ms: durationMs,
+    $set: { onboarding_outcome: "completed" satisfies OnboardingOutcome },
+  });
+}
+
+export function trackOnboardingSuppressedMobile(viewportWidth: number): void {
+  recordOnboardingFirstSeen();
+  track("onboarding_suppressed_mobile", { viewport_width: viewportWidth });
 }
