@@ -1,14 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/tabs.tsx";
 import { NumberFlow } from "@/components/ui/number-flow";
-import { useRevenueCounter } from "@/modules/pulse/hooks/useRevenueCounter.ts";
+import { useRevenueCounter, type TimeWindow } from "@/modules/pulse/hooks/useRevenueCounter.ts";
 import marbleBgLight from "@/assets/bgProtocolLight.webp";
 import marbleBgDark from "@/assets/bgProtocolDark.webp";
 import goldenTexture from "@/assets/golden-texture.webp";
 import { useTheme } from "@/components/theme-provider.tsx";
 import { PulseDot } from "@/components/pulse-dot.tsx";
-
-type TimeWindow = "daily" | "weekly" | "annualized";
 
 const TIME_WINDOWS: { value: TimeWindow; label: string }[] = [
   { value: "daily", label: "24h" },
@@ -23,8 +21,16 @@ const perSecondFormat = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-export function OverviewProtocolRevenue() {
-  const { displayValue, timeWindow, setTimeWindow, weeklyTotal } = useRevenueCounter();
+interface OverviewProtocolRevenueProps {
+  timeWindow: TimeWindow;
+  setTimeWindow: (v: TimeWindow) => void;
+}
+
+export function OverviewProtocolRevenue({
+  timeWindow,
+  setTimeWindow,
+}: OverviewProtocolRevenueProps) {
+  const { displayValue, weeklyTotal } = useRevenueCounter({ timeWindow, setTimeWindow });
   const perSecond = weeklyTotal / (7 * 24 * 60 * 60);
   const perSecondLabel = `+${perSecondFormat.format(perSecond)} /s`;
   const { resolvedTheme } = useTheme();

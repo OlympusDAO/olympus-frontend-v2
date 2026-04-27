@@ -2,12 +2,17 @@ import { useState, useEffect, useCallback } from "react";
 import { useWeeklyRevenue } from "./useWeeklyRevenue.ts";
 import { getWeekStartUTC } from "@/lib/liveness/epoch.ts";
 
-type TimeWindow = "daily" | "weekly" | "annualized";
+export type TimeWindow = "daily" | "weekly" | "annualized";
 
-export function useRevenueCounter() {
+export function useRevenueCounter(controlled?: {
+  timeWindow: TimeWindow;
+  setTimeWindow: (v: TimeWindow) => void;
+}) {
   const revenue = useWeeklyRevenue();
   const [displayValue, setDisplayValue] = useState(0);
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>("weekly");
+  const [internalTimeWindow, setInternalTimeWindow] = useState<TimeWindow>("weekly");
+  const timeWindow = controlled?.timeWindow ?? internalTimeWindow;
+  const setTimeWindow = controlled?.setTimeWindow ?? setInternalTimeWindow;
 
   const getDisplayValue = useCallback(() => {
     if (!revenue) return 0;
