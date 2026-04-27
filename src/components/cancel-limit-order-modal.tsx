@@ -1,12 +1,9 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 import { useCancelLimitOrder } from "@/lib/hooks/cds/useCancelLimitOrder";
+import { trackCancelLimitOrder } from "@/lib/analytics";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { formatEther } from "viem";
 import { formatMaxPrice } from "@/lib/utils/priceCalculations";
@@ -34,17 +31,17 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
   // const _chainId = useChainId();
 
   // Cancel order hook
-  const {
-    cancelOrder,
-    isPending,
-    isSuccess,
-    hash,
-  } = useCancelLimitOrder();
+  const { cancelOrder, isPending, isSuccess, hash } = useCancelLimitOrder();
 
   // Calculate remaining amounts
   const remainingDeposit = orderData.depositBudget - orderData.depositSpent;
   const remainingIncentive = orderData.incentiveBudget - orderData.incentiveSpent;
   const totalRemaining = remainingDeposit + remainingIncentive;
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    trackCancelLimitOrder({ orderId: orderId.toString(), txHash: hash });
+  }, [isSuccess]);
 
   const handleCancel = () => {
     cancelOrder({ orderId });
@@ -74,12 +71,10 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
                   <AlertTriangle className="h-5 w-5 text-yellow" />
                 </div>
                 <div className="space-y-2">
-                  <div className="font-medium text-sm">
-                    Cancel Order
-                  </div>
+                  <div className="font-medium text-sm">Cancel Order</div>
                   <div className="text-sm text-secondary-t leading-relaxed font-light">
-                    This will cancel your limit order and return your remaining USDS.
-                    Any partially filled portions will remain as positions.
+                    This will cancel your limit order and return your remaining USDS. Any partially
+                    filled portions will remain as positions.
                   </div>
                 </div>
               </div>
@@ -121,11 +116,7 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
             </div>
 
             {/* Action Button */}
-            <Button
-              onClick={handleCancel}
-              disabled={isPending}
-              className="w-full"
-            >
+            <Button onClick={handleCancel} disabled={isPending} className="w-full">
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -157,7 +148,8 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold">Congrats, all done!</h3>
               <p className="text-sm text-secondary-t mt-2">
-                Your limit order has been cancelled successfully. {formatAmount(totalRemaining)} USDS has been returned to your wallet.
+                Your limit order has been cancelled successfully. {formatAmount(totalRemaining)}{" "}
+                USDS has been returned to your wallet.
               </p>
             </div>
 
@@ -165,9 +157,7 @@ export const CancelLimitOrderModal: React.FC<CancelLimitOrderModalProps> = ({
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CheckIcon className="h-4 w-4 text-green" />
-                  <span className="text-sm font-medium">
-                    Cancel Limit Order
-                  </span>
+                  <span className="text-sm font-medium">Cancel Limit Order</span>
                 </div>
                 <a
                   href={`${blockExplorerTxBaseUrl}/${hash}`}

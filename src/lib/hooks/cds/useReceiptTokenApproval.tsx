@@ -1,8 +1,4 @@
-import {
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import type { Address } from "viem";
 import { useReceiptTokenManager } from "./useReceiptTokenManager";
 import { getContractAddress, ContractName } from "@/lib/contracts";
@@ -10,21 +6,15 @@ import { useChainId } from "wagmi";
 import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDepositManager } from "./useDepositManager";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 
 export function useReceiptTokenAllowance(
   tokenId: bigint | undefined,
-  ownerAddress: Address | undefined
+  ownerAddress: Address | undefined,
 ) {
   const chainId = useChainId();
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   const { depositManagerAddress } = useDepositManager(facilityAddress);
 
@@ -63,10 +53,7 @@ export function useApproveReceiptToken() {
   const queryClient = useQueryClient();
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
   const chainId = useChainId();
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
   const { depositManagerAddress } = useDepositManager(facilityAddress);
 
   const {
@@ -98,8 +85,7 @@ export function useApproveReceiptToken() {
     },
     error: {
       title: "Approval failed",
-      description:
-        "There was an error approving the receipt tokens. Please try again.",
+      description: "There was an error approving the receipt tokens. Please try again.",
       userRejected: {
         title: "Approval cancelled",
         description: "You cancelled the approval request.",
@@ -121,13 +107,7 @@ export function useApproveReceiptToken() {
     config: toastConfig,
   });
 
-  const approveReceiptToken = ({
-    tokenId,
-    amount,
-  }: {
-    tokenId: bigint;
-    amount: bigint;
-  }) => {
+  const approveReceiptToken = ({ tokenId, amount }: { tokenId: bigint; amount: bigint }) => {
     if (!receiptTokenManagerAddress || !depositManagerAddress) {
       throw new Error("Contract addresses not available");
     }
@@ -156,7 +136,7 @@ export function useApproveReceiptToken() {
             ],
           });
         },
-      }
+      },
     );
   };
 

@@ -1,17 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import ConvertibleDepositPositionManagerABI from "@/abis/ConvertibleDepositPositionManager";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 
 export function useUnwrapPosition() {
   const queryClient = useQueryClient();
@@ -43,13 +35,11 @@ export function useUnwrapPosition() {
     },
     success: {
       title: "Position unwrapped successfully!",
-      description:
-        "NFT burned and position reactivated. Your position is no longer transferable.",
+      description: "NFT burned and position reactivated. Your position is no longer transferable.",
     },
     error: {
       title: "Unwrap failed",
-      description:
-        "There was an error unwrapping your position. Please try again.",
+      description: "There was an error unwrapping your position. Please try again.",
       userRejected: {
         title: "Unwrap cancelled",
         description: "You cancelled the transaction.",
@@ -76,7 +66,7 @@ export function useUnwrapPosition() {
     if (isConfirmed && address && chainId) {
       const positionManagerAddress = getContractAddress(
         ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-        chainId
+        chainId,
       );
 
       if (positionManagerAddress) {
@@ -128,7 +118,7 @@ export function useUnwrapPosition() {
   }) => {
     const positionManagerAddress = getContractAddress(
       ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-      chainId
+      chainId,
     );
 
     if (!positionManagerAddress) {
@@ -152,7 +142,7 @@ export function useUnwrapPosition() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

@@ -7,17 +7,20 @@ interface ReceiptTokenBalanceParams {
   enabled?: boolean;
 }
 
-export const useReceiptTokenBalance = ({ 
-  receiptTokenAddress, 
-  enabled = true 
+export const useReceiptTokenBalance = ({
+  receiptTokenAddress,
+  enabled = true,
 }: ReceiptTokenBalanceParams) => {
   const { address } = useAccount();
 
-  const shouldExecute = enabled && 
-    !!address && 
-    !!receiptTokenAddress;
+  const shouldExecute = enabled && !!address && !!receiptTokenAddress;
 
-  const { data: balance, isLoading, error, refetch } = useReadContract({
+  const {
+    data: balance,
+    isLoading,
+    error,
+    refetch,
+  } = useReadContract({
     address: receiptTokenAddress,
     abi: erc20Abi,
     functionName: "balanceOf",

@@ -1,9 +1,6 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { trackCreateLimitOrder } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink } from "lucide-react";
 import { parseEther } from "viem";
@@ -12,7 +9,7 @@ import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useCreateLimitOrder } from "@/lib/hooks/cds/useCreateLimitOrder";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { parseMaxPrice } from "@/lib/utils/priceCalculations";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
@@ -40,11 +37,8 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   const chainId = useChainId();
 
   // Get contract and token addresses for current network
-  const tokenAddress = getTokenAddress("USDS", chainId);
-  const limitOrdersAddress = getContractAddress(
-    ContractName.LIMIT_ORDERS,
-    chainId
-  );
+  const tokenAddress = getTokenAddress(TokenName.USDS, chainId);
+  const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
   // Get auction parameters for minimum bid
   const { minimumBid } = useAuctionParameters();
@@ -58,7 +52,7 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
     if (term.includes("3 months")) return 3;
     if (term.includes("6 months")) return 6;
     const match = term.match(/(\d+)\s*months?/);
-    return match ? parseInt(match[1]) : 1;
+    return match ? parseInt(match[1], 10) : 1;
   };
 
   const periodMonths = getMonthsFromTerm(selectedTerm);
@@ -67,24 +61,20 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   const maxPriceBigInt = parseMaxPrice(maxPrice);
 
   // Parse min fill size (use auctioneer minimum if not provided)
-  const minFillSizeBigInt = minFillSize && minFillSize !== "0"
-    ? parseEther(minFillSize)
-    : (minimumBid || 1000000000000000000n);
+  const minFillSizeBigInt =
+    minFillSize && minFillSize !== "0"
+      ? parseEther(minFillSize)
+      : minimumBid || 1000000000000000000n;
 
   // Parse incentive budget
-  const incentiveBudgetBigInt = incentiveBudget && incentiveBudget !== "0"
-    ? parseEther(incentiveBudget)
-    : 0n;
+  const incentiveBudgetBigInt =
+    incentiveBudget && incentiveBudget !== "0" ? parseEther(incentiveBudget) : 0n;
 
   // Total amount needed for approval = deposit + incentive
   const totalApprovalAmount = depositAmountBigInt + incentiveBudgetBigInt;
 
   // Check current allowance (approval needs to go to LimitOrders contract)
-  const { allowance, queryKey } = useTokenAllowance(
-    tokenAddress!,
-    address,
-    limitOrdersAddress
-  );
+  const { allowance, queryKey } = useTokenAllowance(tokenAddress!, address, limitOrdersAddress);
 
   // Approval hook
   const {
@@ -126,6 +116,16 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
     });
   };
 
+  useEffect(() => {
+    if (!isCreateSuccess) return;
+    trackCreateLimitOrder({
+      amount: depositAmount,
+      term: selectedTerm ?? "",
+      price: maxPrice,
+      txHash: createHash,
+    });
+  }, [isCreateSuccess]);
+
   // Determine current step
   const getCurrentStep = () => {
     if (isCreateSuccess) return "success";
@@ -152,7 +152,8 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
               <div>
                 <h3 className="text-xl font-semibold">Congrats, all done!</h3>
                 <p className="text-sm text-secondary-t mt-2">
-                  Your limit order has been created successfully. It will fill when the market price reaches or goes below your max price.
+                  Your limit order has been created successfully. It will fill when the market price
+                  reaches or goes below your max price.
                 </p>
               </div>
 
@@ -160,9 +161,7 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-green" />
-                    <span className="text-sm font-medium">
-                      Create Limit Order
-                    </span>
+                    <span className="text-sm font-medium">Create Limit Order</span>
                   </div>
                   <a
                     href={`${blockExplorerTxBaseUrl}/${createHash}`}
@@ -187,10 +186,12 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-center">
-          <DialogTitle className="text-xl">Create Limit Order</DialogTitle>
-          <p className="text-sm text-secondary-t font-light">
+      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+        <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
+          <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+            Create Limit Order
+          </DialogTitle>
+          <p className="text-xs/4 font-normal text-secondary-t">
             Step {currentStep === "approve" ? "1" : "2"}/2. Proceed with your wallet.
           </p>
         </DialogHeader>
@@ -201,24 +202,24 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                     isApproved
-                      ? "text-green"
+                      ? "text-green border-green"
                       : currentStep === "approve"
-                      ? "text-primary-t"
-                      : "text-secondary-t ring-a10-b"
+                        ? "text-primary-t border-primary-t"
+                        : "text-secondary-t border-a10-b"
                   }`}
                 >
                   {isApprovePending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : isApproved ? (
-                    <CheckIcon className="h-4 w-4" />
+                    <CheckIcon className="h-3 w-3" />
                   ) : (
                     "1"
                   )}
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Approve USDS</div>
+                  <div className="text-sm/5 font-semibold text-primary-t">Approve USDS</div>
                   {isApproved && approveHash && (
                     <a
                       href={`${blockExplorerTxBaseUrl}/${approveHash}`}
@@ -240,24 +241,24 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                     isCreateSuccess
-                      ? "text-green"
+                      ? "text-green border-green"
                       : currentStep === "create"
-                      ? "text-primary-t"
-                      : "text-secondary-t ring-a10-b"
+                        ? "text-primary-t border-primary-t"
+                        : "text-secondary-t border-a10-b"
                   }`}
                 >
                   {isCreatePending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : isCreateSuccess ? (
-                    <CheckIcon className="h-4 w-4" />
+                    <CheckIcon className="h-3 w-3" />
                   ) : (
                     "2"
                   )}
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Create Limit Order</div>
+                  <div className="text-sm/5 font-semibold text-primary-t">Create Limit Order</div>
                   <div className="text-xs text-secondary-t rounded-full border px-2 py-1 text-center border-a10-b mt-1">
                     {depositAmount} USDS at {maxPrice} USDS/OHM
                   </div>

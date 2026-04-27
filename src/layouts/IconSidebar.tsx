@@ -1,60 +1,101 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ArrowUpRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { MoreMenu } from "@/components/more-menu";
+import { Tooltip } from "@/components/ui/tooltip";
 import {
   NAV_SECTIONS,
   BOTTOM_NAV,
   getActiveSectionFromPath,
   getDefaultPathForSection,
+  isAnimatedIcon,
   type NavSection,
 } from "@/lib/navigation";
 
 function IconNavItem({
   section,
   isActive,
+  isNew,
+  "data-tour": dataTour,
 }: {
   section: NavSection;
   isActive: boolean;
+  isNew?: boolean;
+  "data-tour"?: string;
 }) {
-  const Icon = section.icon;
   const to = getDefaultPathForSection(section);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Link
       to={to}
-      className="group flex flex-col items-center gap-1 pb-3 w-16"
+      data-tour={dataTour}
+      className={cn(
+        "group flex flex-col items-center gap-1  w-13.5 rounded-[40px] px-1.25 pb-2.5",
+        // Extend bounding box 5px above for the feature-tour highlight on Pulse
+        // without shifting its visual content.
+        section.id === "pulse" && "pt-[5px] -mt-[5px]",
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div
         className={cn(
-          "flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent",
-          !isActive &&
-            "group-hover:bg-surface-a5 group-hover:border-a3-b"
-        )}
-        style={
+          "flex items-center justify-center size-10 rounded-full transition-all",
           isActive
-            ? {
-                background:
-                  "linear-gradient(180deg, rgba(248, 204, 130, 0.4) 0%, rgba(248, 204, 130, 0.1) 100%)",
-              }
-            : undefined
-        }
+            ? "sidebar-tab-active"
+            : "border-[0.5px] border-transparent group-hover:bg-surface-a5 group-hover:border-a3-b",
+        )}
       >
-        <Icon
+        {isActive && (
+          <svg
+            className="absolute inset-0 size-full pointer-events-none"
+            viewBox="0 0 40 40"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="sidebar-tab-ring" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: "var(--sidebar-tab-border-top)" }} />
+                <stop offset="100%" style={{ stopColor: "var(--sidebar-tab-border-bottom)" }} />
+              </linearGradient>
+            </defs>
+            <circle
+              cx="20"
+              cy="20"
+              r="19.75"
+              fill="none"
+              stroke="url(#sidebar-tab-ring)"
+              strokeWidth="0.5"
+            />
+          </svg>
+        )}
+        <span
           className={cn(
-            "size-6 transition-colors",
-            isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
+            "relative [&>svg]:size-6 [&>svg]:transition-colors",
+            isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
           )}
-        />
+        >
+          {isAnimatedIcon(section.icon) ? (
+            <section.icon isHovered={isHovered} isActive={isActive} />
+          ) : (
+            section.icon
+          )}
+        </span>
       </div>
       <span
         className={cn(
-          "text-xs font-semibold leading-[12px] transition-colors",
-          isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t"
+          "text-xs font-medium leading-3 transition-colors",
+          isActive ? "text-primary-t" : "text-secondary-t group-hover:text-primary-t",
         )}
       >
         {section.label}
       </span>
+      {isNew && (
+        <div className="px-1.25 pt-px rounded-full bg-green/20 text-[8px] font-semibold text-green uppercase flex items-center justify-center">
+          new
+        </div>
+      )}
     </Link>
   );
 }
@@ -63,22 +104,16 @@ export function IconSidebar() {
   const location = useLocation();
   const activeSection = getActiveSectionFromPath(location.pathname);
 
-  // Separate the docs link from the "more" menu item
-  const docsItem = BOTTOM_NAV.find((item) => item.id === "docs");
-
   return (
-    <aside className="shrink-0 flex items-center py-3 px-3">
+    <aside className="shrink-0 flex items-center p-1.5">
       <div
-        className="w-[72px] h-full flex flex-col rounded-[100px] bg-surface-a3"
-        style={{
-          boxShadow:
-            "0px 4px 16px rgba(20, 23, 34, 0.05), 0px 0px 0px 0.5px rgba(255, 255, 255, 0.2), inset 1px 1px 2px rgba(255, 255, 255, 0.05)",
-        }}
+        className="w-16 h-full flex flex-col items-center pb-3 rounded-[100px] bg-sidebar-bg shadow-surface-level-2"
+        data-tour="sidebar-nav"
       >
         {/* Logo */}
-        <div className="flex items-center justify-center pt-6 pb-4">
+        <div className="flex items-center justify-center p-4">
           <Link to="/">
-            <OlympusLogo className="size-7" />
+            <OlympusLogo className="size-8" />
           </Link>
         </div>
 
@@ -89,23 +124,35 @@ export function IconSidebar() {
               key={section.id}
               section={section}
               isActive={activeSection?.id === section.id}
+              data-tour={`nav-${section.id}`}
+              isNew={section.isNew}
             />
           ))}
         </nav>
 
         {/* Bottom items */}
-        <div className="flex flex-col items-center gap-1 pb-6">
-          {docsItem && (
-            <a
-              href={docsItem.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center size-10 rounded-full transition-all border-[0.5px] border-transparent hover:bg-surface-a5 hover:border-a3-b"
+        <div className="flex flex-col items-start gap-1">
+          {BOTTOM_NAV.map((item) => (
+            <Tooltip
+              key={item.id}
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  {item.label}
+                  <ArrowUpRightIcon className="size-4 text-secondary-t" />
+                </span>
+              }
+              contentProps={{ side: "right", sideOffset: 8 }}
             >
-              <docsItem.icon className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
-            </a>
-          )}
-          <MoreMenu />
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center p-2 rounded-full transition-all hover:bg-surface-a5"
+              >
+                <item.icon className="size-6 text-secondary-t group-hover:text-primary-t transition-colors" />
+              </a>
+            </Tooltip>
+          ))}
         </div>
       </div>
     </aside>

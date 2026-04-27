@@ -396,9 +396,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
@@ -407,9 +405,7 @@ export default [
   {
     inputs: [],
     name: "configureDependencies",
-    outputs: [
-      { internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" },
-    ],
+    outputs: [{ internalType: "Keycode[]", name: "dependencies", type: "bytes5[]" }],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -559,8 +555,7 @@ export default [
           { internalType: "uint8", name: "depositPeriod", type: "uint8" },
           { internalType: "bool", name: "enable", type: "bool" },
         ],
-        internalType:
-          "struct ConvertibleDepositAuctioneer.PendingDepositPeriodChange[]",
+        internalType: "struct ConvertibleDepositAuctioneer.PendingDepositPeriodChange[]",
         name: "",
         type: "tuple[]",
       },

@@ -1,15 +1,17 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
-import {
-  RainbowKitProvider,
-  darkTheme,
-  lightTheme,
-} from "@rainbow-me/rainbowkit";
+import { useMemo } from "react";
+import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { hashFn } from "@wagmi/core/query";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { config } from "@/lib/wagmi-config";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { DevMockProvider } from "@/lib/mock/provider";
+import { DevToolbar } from "@/components/dev-toolbar";
+import { isTestnetMode } from "@/lib/chains";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,8 +23,7 @@ const queryClient = new QueryClient({
         }
         return false;
       },
-      retryDelay: (attemptIndex) =>
-        Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
       retry: false,
@@ -34,22 +35,34 @@ const queryClient = new QueryClient({
  * Syncs the RainbowKit modal theme with the app's dark/light mode.
  */
 function ThemedRainbowKit({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const resolvedDark = resolvedTheme === "dark";
 
-  const resolvedDark =
-    theme === "dark" ||
-    (theme === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  const themeFactory = resolvedDark ? darkTheme : lightTheme;
-  const rkTheme = themeFactory({
-    borderRadius: "medium",
-    fontStack: "system",
-    accentColor: "#FFFFFF",
-    accentColorForeground: "#1A1A1A",
-  });
+  const rkTheme = useMemo(() => {
+    const themeFactory = resolvedDark ? darkTheme : lightTheme;
+    const theme = themeFactory({
+      borderRadius: "medium",
+      fontStack: "system",
+      accentColor: resolvedDark ? "#FFFFFF" : "#000000",
+      accentColorForeground: resolvedDark ? "#1A1A1A" : "#FFFFFF",
+    });
+    theme.shadows.selectedOption = "none";
+    return theme;
+  }, [resolvedDark]);
 
   return <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>;
+}
+
+function DevProvider({ children }: { children: React.ReactNode }) {
+  if (import.meta.env.DEV || isTestnetMode) {
+    return (
+      <DevMockProvider>
+        {children}
+        <DevToolbar />
+      </DevMockProvider>
+    );
+  }
+  return <>{children}</>;
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -57,8 +70,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="olympus-theme">
-          <ThemedRainbowKit>{children}</ThemedRainbowKit>
+          <TooltipProvider delay={100}>
+            <ThemedRainbowKit>
+              <DevProvider>{children}</DevProvider>
+            </ThemedRainbowKit>
+          </TooltipProvider>
         </ThemeProvider>
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       </QueryClientProvider>
     </WagmiProvider>
   );

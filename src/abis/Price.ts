@@ -159,18 +159,14 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "uint256", name: "minimumTargetPrice_", type: "uint256" },
-    ],
+    inputs: [{ internalType: "uint256", name: "minimumTargetPrice_", type: "uint256" }],
     name: "changeMinimumTargetPrice",
     outputs: [],
     stateMutability: "nonpayable",
@@ -190,9 +186,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "uint48", name: "observationFrequency_", type: "uint48" },
-    ],
+    inputs: [{ internalType: "uint48", name: "observationFrequency_", type: "uint48" }],
     name: "changeObservationFrequency",
     outputs: [],
     stateMutability: "nonpayable",

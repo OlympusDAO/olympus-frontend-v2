@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import NumberFlowLib, { Format, NumberFlowElement } from "@number-flow/react";
+import NumberFlowLib, { type Format, type NumberFlowElement } from "@number-flow/react";
 
 export interface NumberProps extends React.HTMLAttributes<NumberFlowElement> {
   value?: number | string | null; // Allow value to be number, string, or null
@@ -20,10 +20,22 @@ const intlFormat: Format = {
 };
 
 const NumberFlow = React.forwardRef<NumberFlowElement, NumberProps>(
-  ({ className, value, format = {}, prefix, suffix, suffixNoSpace = false, locales = "en-US", ...props }, ref) => {
-    const parsedValue = value ? (isNaN(+value) ? 0 : +value) : 0;
+  (
+    {
+      className,
+      value,
+      format = {},
+      prefix,
+      suffix,
+      suffixNoSpace = false,
+      locales = "en-US",
+      ...props
+    },
+    ref,
+  ) => {
+    const parsedValue = value ? (Number.isNaN(+value) ? 0 : +value) : 0;
 
-    return value !== '-' ? (
+    return value !== "-" ? (
       <NumberFlowLib
         ref={ref}
         className={className}
@@ -34,7 +46,9 @@ const NumberFlow = React.forwardRef<NumberFlowElement, NumberProps>(
         locales={locales}
         {...props}
       />
-    ) : <p  className={className}>-</p>;
+    ) : (
+      <p className={className}>-</p>
+    );
   },
 );
 

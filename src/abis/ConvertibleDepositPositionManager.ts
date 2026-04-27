@@ -329,9 +329,7 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "contract Kernel", name: "newKernel_", type: "address" },
-    ],
+    inputs: [{ internalType: "contract Kernel", name: "newKernel_", type: "address" }],
     name: "changeKernel",
     outputs: [],
     stateMutability: "nonpayable",
@@ -543,9 +541,7 @@ export default [
       { internalType: "bool", name: "wrap_", type: "bool" },
     ],
     name: "split",
-    outputs: [
-      { internalType: "uint256", name: "newPositionId", type: "uint256" },
-    ],
+    outputs: [{ internalType: "uint256", name: "newPositionId", type: "uint256" }],
     stateMutability: "nonpayable",
     type: "function",
   },

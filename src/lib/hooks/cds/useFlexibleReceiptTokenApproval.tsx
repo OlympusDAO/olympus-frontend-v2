@@ -8,17 +8,14 @@ import {
   useChainId,
 } from "wagmi";
 import type { Address } from "viem";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { useReceiptTokenManager } from "./useReceiptTokenManager";
 import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
 
 export function useFlexibleReceiptTokenAllowance(
   tokenId: bigint | undefined,
   ownerAddress: Address | undefined,
-  targetContractAddress: Address | undefined
+  targetContractAddress: Address | undefined,
 ) {
   const { receiptTokenManagerAddress } = useReceiptTokenManager();
 
@@ -53,9 +50,7 @@ export function useFlexibleReceiptTokenAllowance(
   };
 }
 
-export function useFlexibleApproveReceiptToken(
-  targetContractAddress: Address | undefined
-) {
+export function useFlexibleApproveReceiptToken(targetContractAddress: Address | undefined) {
   const { address } = useAccount();
   const chainId = useChainId();
   const queryClient = useQueryClient();
@@ -90,8 +85,7 @@ export function useFlexibleApproveReceiptToken(
     },
     error: {
       title: "Approval failed",
-      description:
-        "There was an error approving your receipt tokens. Please try again.",
+      description: "There was an error approving your receipt tokens. Please try again.",
       userRejected: {
         title: "Approval cancelled",
         description: "You cancelled the transaction.",
@@ -129,13 +123,7 @@ export function useFlexibleApproveReceiptToken(
     }
   }, [isConfirmed, address, chainId, receiptTokenManagerAddress, queryClient]);
 
-  const approveReceiptToken = ({
-    tokenId,
-    amount,
-  }: {
-    tokenId: bigint;
-    amount: bigint;
-  }) => {
+  const approveReceiptToken = ({ tokenId, amount }: { tokenId: bigint; amount: bigint }) => {
     if (!receiptTokenManagerAddress || !targetContractAddress) {
       throw new Error("Contract addresses not available");
     }

@@ -1,33 +1,98 @@
-import * as React from "react"
-import { useRender } from "@base-ui/react/use-render"
-import { cva, type VariantProps } from "class-variance-authority"
+import type * as React from "react";
+import { useRender } from "@base-ui/react/use-render";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-4 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
-  {
-    variants: {
-      variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-      },
+const badgeVariants = cva("inline-flex items-center justify-center w-full", {
+  variants: {
+    variant: {
+      filled: "rounded-full font-semibold w-max  text-center",
+      ghost: "border text-[10px]/[14px] font-medium rounded-full  w-max",
     },
-    defaultVariants: {
-      variant: "default",
+    color: {
+      orange: "",
+      blue: "",
+      green: "",
+      red: "",
+      gray: "",
+      purple: "",
     },
-  }
-)
+    size: {
+      sm: "h-5 py-[3px] px-[6px] text-[10px]/[14px]",
+      md: "h-5 py-[2px] px-[8px] text-[12px]/[16px]",
+      lg: "h-6 py-[2px] px-[8px] text-[15px]/[20px]",
+    },
+  },
+  defaultVariants: {
+    variant: "filled",
+    color: "orange",
+    size: "sm",
+  },
+  compoundVariants: [
+    {
+      variant: "filled",
+      color: "orange",
+      className: "bg-yellow/20 text-yellow",
+    },
+    {
+      variant: "filled",
+      color: "blue",
+      className: "bg-blue/20 text-blue",
+    },
+    {
+      variant: "filled",
+      color: "green",
+      className: "bg-green/20 text-green",
+    },
+    {
+      variant: "filled",
+      color: "red",
+      className: "bg-red/20 text-red",
+    },
+    {
+      variant: "filled",
+      color: "purple",
+      className: "bg-purple/20 text-purple",
+    },
+    {
+      variant: "filled",
+      color: "gray",
+      className: "bg-surface-a5 text-secondary-t",
+    },
+    {
+      variant: "ghost",
+      color: "orange",
+      className: "border-orange/20 text-orange",
+    },
+    {
+      variant: "ghost",
+      color: "blue",
+      className: "border-blue/20 text-blue",
+    },
+    {
+      variant: "ghost",
+      color: "green",
+      className: "border-green/20 text-green",
+    },
+    {
+      variant: "ghost",
+      color: "red",
+      className: "border-red/20 text-red",
+    },
+    {
+      variant: "ghost",
+      color: "gray",
+      className: "border-surface-a10 text-secondary-t",
+    },
+  ],
+});
 
 function Badge({
   className,
   variant,
+  color,
+  size,
   render,
   ...props
 }: React.ComponentProps<"span"> &
@@ -37,10 +102,10 @@ function Badge({
     render,
     props: {
       "data-slot": "badge",
-      className: cn(badgeVariants({ variant }), className),
+      className: cn(badgeVariants({ variant, color, size }), className),
       ...props,
     },
-  })
+  });
 }
 
-export { Badge, badgeVariants }
+export { Badge, badgeVariants };

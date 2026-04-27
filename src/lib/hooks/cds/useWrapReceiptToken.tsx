@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { useReceiptTokenManager } from "./useReceiptTokenManager";
 import ReceiptTokenManagerABI from "@/abis/ReceiptTokenManager";
 
@@ -46,8 +38,7 @@ export const useWrapReceiptToken = () => {
   const toastConfig: TransactionToastConfig = {
     pending: {
       title: "Wrapping receipt tokens...",
-      description:
-        "Please wait while your tokens are being wrapped.",
+      description: "Please wait while your tokens are being wrapped.",
     },
     success: {
       title: "Tokens wrapped successfully!",
@@ -55,8 +46,7 @@ export const useWrapReceiptToken = () => {
     },
     error: {
       title: "Wrap failed",
-      description:
-        "There was an error wrapping your tokens. Please try again.",
+      description: "There was an error wrapping your tokens. Please try again.",
       userRejected: {
         title: "Wrap cancelled",
         description: "You cancelled the transaction.",
@@ -147,7 +137,7 @@ export const useWrapReceiptToken = () => {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

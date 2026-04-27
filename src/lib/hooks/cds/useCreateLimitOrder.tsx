@@ -1,25 +1,13 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
 import type { ContractFunctionArgs } from "viem";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import LimitOrdersABI from "@/abis/LimitOrders";
 
-type CreateOrderArgs = ContractFunctionArgs<
-  typeof LimitOrdersABI,
-  "nonpayable",
-  "createOrder"
->;
+type CreateOrderArgs = ContractFunctionArgs<typeof LimitOrdersABI, "nonpayable", "createOrder">;
 
 export function useCreateLimitOrder() {
   const queryClient = useQueryClient();
@@ -55,8 +43,7 @@ export function useCreateLimitOrder() {
     },
     error: {
       title: "Order creation failed",
-      description:
-        "There was an error creating your limit order. Please try again.",
+      description: "There was an error creating your limit order. Please try again.",
       userRejected: {
         title: "Order creation cancelled",
         description: "You cancelled the transaction.",
@@ -81,10 +68,7 @@ export function useCreateLimitOrder() {
   // Invalidate relevant queries when order creation succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const limitOrdersAddress = getContractAddress(
-        ContractName.LIMIT_ORDERS,
-        chainId
-      );
+      const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
       if (limitOrdersAddress) {
         // Invalidate user's limit orders query
@@ -115,7 +99,7 @@ export function useCreateLimitOrder() {
         });
 
         // Invalidate USDS token balance
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [
@@ -136,7 +120,7 @@ export function useCreateLimitOrder() {
         // Invalidate getCurrentTick queries (capacity may have changed)
         const auctioneerAddress = getContractAddress(
           ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER,
-          chainId
+          chainId,
         );
 
         if (auctioneerAddress) {
@@ -173,15 +157,10 @@ export function useCreateLimitOrder() {
     minFillSize: CreateOrderArgs[4];
     queryKey?: readonly unknown[];
   }) => {
-    const limitOrdersAddress = getContractAddress(
-      ContractName.LIMIT_ORDERS,
-      chainId
-    );
+    const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
     if (!limitOrdersAddress) {
-      console.error(
-        `Limit Orders contract not found on chain ${chainId}`
-      );
+      console.error(`Limit Orders contract not found on chain ${chainId}`);
       return;
     }
 
@@ -194,13 +173,7 @@ export function useCreateLimitOrder() {
         address: limitOrdersAddress,
         abi: LimitOrdersABI,
         functionName: "createOrder",
-        args: [
-          depositPeriod,
-          depositBudget,
-          incentiveBudget,
-          maxPrice,
-          minFillSize,
-        ],
+        args: [depositPeriod, depositBudget, incentiveBudget, maxPrice, minFillSize],
       },
       {
         onSuccess: () => {
@@ -208,7 +181,7 @@ export function useCreateLimitOrder() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

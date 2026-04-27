@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import ConvertibleDepositPositionManagerAbi from "@/abis/ConvertibleDepositPositionManager";
 
@@ -53,8 +45,7 @@ export function useTransferPosition() {
     },
     error: {
       title: "Transfer failed",
-      description:
-        "There was an error transferring your position. Please try again.",
+      description: "There was an error transferring your position. Please try again.",
       userRejected: {
         title: "Transfer cancelled",
         description: "You cancelled the transaction.",
@@ -81,7 +72,7 @@ export function useTransferPosition() {
     if (isConfirmed && address && chainId) {
       const positionManagerAddress = getContractAddress(
         ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-        chainId
+        chainId,
       );
 
       if (positionManagerAddress) {
@@ -129,17 +120,13 @@ export function useTransferPosition() {
     }
   }, [isConfirmed, address, chainId, queryClient]);
 
-  const transferPosition = ({
-    positionId,
-    to,
-    queryKey,
-  }: UseTransferPositionParams) => {
+  const transferPosition = ({ positionId, to, queryKey }: UseTransferPositionParams) => {
     if (!chainId) throw new Error("No chain connected");
     if (!address) throw new Error("No user address connected");
 
     const contractAddress = getContractAddress(
       ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-      chainId
+      chainId,
     );
 
     if (!contractAddress) {
@@ -167,7 +154,7 @@ export function useTransferPosition() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

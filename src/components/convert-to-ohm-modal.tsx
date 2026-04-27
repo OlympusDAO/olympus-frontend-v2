@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Form, FormField, FormItem } from "@/components/ui/form";
+import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
-import OHMIcon from "@/assets/OHM.png";
+import { Icon } from "@/components/icon";
 import { usePreviewConvert } from "@/lib/hooks/cds/usePreviewConvert";
 import { useConvertPosition } from "@/lib/hooks/cds/useConvertPosition";
 
@@ -25,6 +22,7 @@ import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { formatTermSuffix } from "@/lib/utils";
 import { trackConvertToOhm } from "@/lib/analytics";
 import { InsufficientReceiptTokens } from "./insufficent-receipt-tokens";
+import type { TokenWithBalance } from "@/lib/hooks/useToken";
 
 interface Position {
   id: bigint;
@@ -48,33 +46,29 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   onClose,
   position,
 }) => {
-  const [convertAmount, setConvertAmount] = useState("");
   const [showSteps, setShowSteps] = useState(false);
   const { address: userAddress } = useAccount();
 
+  const form = useForm<{ convertAmount: string }>({
+    defaultValues: { convertAmount: "" },
+  });
+  const convertAmount = form.watch("convertAmount");
+
   // Convert hooks
-  const {
-    convert,
-    isPending: isConverting,
-    isSuccess,
-    hash: convertHash,
-  } = useConvertPosition();
+  const { convert, isPending: isConverting, isSuccess, hash: convertHash } = useConvertPosition();
 
   // Receipt token balance check
   const { balance: receiptTokenBalance, tokenId } = useReceiptTokenBalance(
     position?.data.asset,
     position?.data.periodMonths,
-    userAddress
+    userAddress,
   );
 
   // Get the token name dynamically
   const { tokenName } = useReceiptTokenName(tokenId);
 
   // Receipt token allowance check
-  const { allowance, refetch: refetchAllowance } = useReceiptTokenAllowance(
-    tokenId,
-    userAddress
-  );
+  const { allowance, refetch: refetchAllowance } = useReceiptTokenAllowance(tokenId, userAddress);
 
   // Receipt token approval
   const {
@@ -86,19 +80,12 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   } = useApproveReceiptToken();
 
   // Helper functions
-  const formatAmount = (amount: bigint) => {
-    return parseFloat(formatEther(amount)).toFixed(2);
-  };
-
-
   const formatConversionPrice = (price: bigint) => {
     return parseFloat(formatEther(price)).toFixed(4);
   };
 
   // Position data
-  const term = position
-    ? formatTermSuffix(position.data.periodMonths)
-    : "3m";
+  const term = position ? formatTermSuffix(position.data.periodMonths) : "3m";
 
   // Use dynamic token name with fallback (no loading state to avoid jerkiness)
   const displayTokenName = tokenName || `Receipt-${term}`;
@@ -120,12 +107,10 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   const calculatedReceive = previewData
     ? (Number(previewData.convertedTokenOut) / 1e9).toFixed(2) // OHM has 9 decimals
     : convertAmount && position
-    ? (
-        (Number(convertAmountBigInt) * 1e9) /
-        Number(position.data.conversionPrice) /
-        1e9
-      ).toFixed(2)
-    : "0";
+      ? ((Number(convertAmountBigInt) * 1e9) / Number(position.data.conversionPrice) / 1e9).toFixed(
+          2,
+        )
+      : "0";
 
   // Calculate the maximum convertible amount (minimum of receipt balance and remaining deposit)
   const maxConvertibleAmount =
@@ -141,12 +126,32 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    convertAmountBigInt > 0n &&
-    allowance < convertAmountBigInt;
+    allowance !== undefined && convertAmountBigInt > 0n && allowance < convertAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
+
+  // Receipt token object for TokenBigInput
+  const receiptToken: TokenWithBalance = useMemo(
+    () => ({
+      addresses: {},
+      icon: "cdUSDSIcon",
+      symbol: displayTokenName,
+      decimals: 18,
+      balance: maxConvertibleAmount,
+      formattedBalance: formatEther(maxConvertibleAmount),
+      price: 0,
+    }),
+    [displayTokenName, maxConvertibleAmount],
+  );
+
+  const buttonState = useMemo(() => {
+    if (!convertAmount || convertAmount === "0") return { disabled: true, label: "Enter Amount" };
+    if (hasInsufficientReceiptTokens)
+      return { disabled: true, label: "Insufficient Receipt Tokens" };
+    if (!position) return { disabled: true, label: "Enter Amount" };
+    return { disabled: false, label: "Convert to OHM" };
+  }, [convertAmount, hasInsufficientReceiptTokens, position]);
 
   // Determine current step based on allowance and conversion success
   const getCurrentStep = () => {
@@ -163,15 +168,8 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
     return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
   };
 
-  const handleMaxClick = () => {
-    const amount = formatEther(maxConvertibleAmount);
-    setConvertAmount(amount);
-  };
-
   const handleStartConversion = () => {
-    if (!hasInsufficientReceiptTokens && convertAmountBigInt > 0n) {
-      setShowSteps(true);
-    }
+    setShowSteps(true);
   };
 
   const handleApprove = () => {
@@ -214,7 +212,7 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
       number: 2,
       title: `Convert to OHM`,
       detail: `${convertAmount} USDS-${term} → ${calculatedReceive} OHM`,
-      icon: OHMIcon,
+      icon: <Icon name="OHMTokenIcon" className="size-5" />,
       isActive: currentStep === 2,
       isCompleted: isSuccess,
       isLoading: currentStep === 2 && isConverting,
@@ -243,24 +241,24 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
   if (showSteps) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-center">
+        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+          <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
             {isSuccess ? (
               <div className="w-full mx-auto items-center justify-center">
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your transactions have been executed.
                 </p>
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">Convert to OHM</DialogTitle>
-                <p className="text-sm text-secondary-t font-light">
+                <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
+                  Convert to OHM
+                </DialogTitle>
+                <p className="text-xs/4 font-normal text-secondary-t">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
               </>
@@ -275,24 +273,24 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                   <div className={`flex items-center justify-between p-4`}>
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                           step.isCompleted
-                            ? "text-green"
+                            ? "text-green border-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t border-primary-t"
+                              : "text-secondary-t border-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : step.isCompleted ? (
-                          <CheckIcon className="h-4 w-4" />
+                          <CheckIcon className="h-3 w-3" />
                         ) : (
                           step.number
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{step.title}</div>
+                        <div className="text-sm/5 font-semibold text-primary-t">{step.title}</div>
                         {step.detail && (
                           <div className="text-xs text-secondary-t rounded-full border px-2 py-1 text-center border-a10-b">
                             {step.detail}
@@ -311,15 +309,9 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {step.icon && (
-                        <img src={step.icon} alt="" className="w-5 h-5" />
-                      )}
-                    </div>
+                    <div className="flex items-center gap-2">{step.icon}</div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -390,90 +382,59 @@ export const ConvertToOHMModal: React.FC<ConvertToOHMModalProps> = ({
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-6">
-          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-            {/* Amount Section */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Amount</label>
-              </div>
-              <div className="flex items-center justify-between">
-                <Input
-                  type="number"
-                  value={convertAmount}
-                  onChange={(e) => setConvertAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="md:text-4xl h-14 placeholder:text-disabled-t border-0 shadow-none pl-0 w-[60%]"
-                />
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-surface-a3 rounded-full px-3 py-2 border border-a3-b">
-                    <img src={cdUSDSIcon} alt="Receipt Token" className="w-5 h-5" />
-                    <span className="font-medium text-sm">{displayTokenName}</span>
+          <Form {...form}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleStartConversion();
+              }}
+              className="space-y-6"
+            >
+              <FormField
+                control={form.control}
+                name="convertAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <TokenBigInput
+                      label="Amount"
+                      token={receiptToken}
+                      value={field.value}
+                      onChange={(val) => field.onChange(val)}
+                    />
+                  </FormItem>
+                )}
+              />
+
+              <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
+                {/* You Receive Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">You Receive</p>
+                    <div className="flex items-center gap-2">
+                      <Icon name="OHMTokenIcon" className="size-5" />
+                      <span>{calculatedReceive} OHM</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-secondary-t font-light">Conversion Price</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs">{conversionRate}</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm text-secondary-t">
-                <span></span>
-                <div className="flex items-center gap-2">
-                  <span>Available: {formatAmount(maxConvertibleAmount)}</span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleMaxClick}
-                    className="h-6 px-2 text-xs"
-                  >
-                    Max
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-            {/* You Receive Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">You Receive</label>
-                <div className="flex items-center gap-2">
-                  <img src={OHMIcon} alt="OHM" className="w-5 h-5" />
-                  <span>{calculatedReceive} OHM</span>
-                </div>
-              </div>
+              {/* Receipt Token Info */}
+              {hasInsufficientReceiptTokens && <InsufficientReceiptTokens tokenName={term} />}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-secondary-t font-light">
-                    Conversion Price
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs">{conversionRate}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Receipt Token Info */}
-          {hasInsufficientReceiptTokens && (
-            <InsufficientReceiptTokens tokenName={term} />
-          )}
-
-          <Button
-            onClick={handleStartConversion}
-            disabled={
-              !convertAmount ||
-              convertAmount === "0" ||
-              !position ||
-              hasInsufficientReceiptTokens
-            }
-            className="w-full"
-            size="lg"
-          >
-            {hasInsufficientReceiptTokens
-              ? "Insufficient Receipt Tokens"
-              : !convertAmount || convertAmount === "0"
-              ? "Enter Amount"
-              : "Convert to OHM"}
-          </Button>
+              <Button type="submit" disabled={buttonState.disabled} className="w-full" size="lg">
+                {buttonState.label}
+              </Button>
+            </form>
+          </Form>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,11 +1,8 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useForm } from "react-hook-form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { InfoIcon, CheckCircle, ExternalLink, Loader2 } from "lucide-react";
 import { useWrapPosition } from "@/lib/hooks/cds/useWrapPosition";
 import { useUnwrapPosition } from "@/lib/hooks/cds/useUnwrapPosition";
@@ -39,6 +36,8 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
   queryKey,
   mode,
 }) => {
+  const form = useForm<Record<string, never>>({});
+
   const {
     wrap,
     isPending: isWrapPending,
@@ -90,7 +89,6 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
     return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
   };
 
-
   const formatConversionPrice = (price: bigint) => {
     return parseFloat(formatEther(price)).toFixed(2);
   };
@@ -117,29 +115,21 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
                 <div className="text-white space-y-2">
                   <div className="text-xs opacity-75">
                     {position
-                      ? `${formatTermSuffix(
-                          position.data.periodMonths
-                        )} Call Convertible Deposit`
+                      ? `${formatTermSuffix(position.data.periodMonths)} Call Convertible Deposit`
                       : "Convertible Deposit"}
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <div className="opacity-75">Amount</div>
                       <div>
-                        {position
-                          ? `${formatAmount(
-                              position.data.remainingDeposit
-                            )} USDS`
-                          : "--"}
+                        {position ? `${formatAmount(position.data.remainingDeposit)} USDS` : "--"}
                       </div>
                     </div>
                     <div>
                       <div className="opacity-75">Conversion Rate</div>
                       <div>
                         {position
-                          ? `${formatConversionPrice(
-                              position.data.conversionPrice
-                            )} USDS/OHM`
+                          ? `${formatConversionPrice(position.data.conversionPrice)} USDS/OHM`
                           : "--"}
                       </div>
                     </div>
@@ -151,9 +141,7 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
             {/* Success Message */}
             <div className="space-y-2 mb-6">
               <h3 className="text-xl font-semibold">Congrats, all done!</h3>
-              <p className="text-sm text-secondary-t">
-                Your transaction has been executed.
-              </p>
+              <p className="text-sm text-secondary-t">Your transaction has been executed.</p>
             </div>
 
             {/* Transaction Link */}
@@ -162,9 +150,7 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green" />
                   <span className="text-sm font-medium">
-                    {mode === "wrap"
-                      ? "Wrap Position Into NFT"
-                      : "Unwrap Position"}
+                    {mode === "wrap" ? "Wrap Position Into NFT" : "Unwrap Position"}
                   </span>
                 </div>
                 {transactionHash && (
@@ -173,9 +159,7 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
                     to={`${blockExplorerTxBaseUrl}/${transactionHash}`}
                     className="flex items-center gap-1 text-blue-500 hover:text-blue-700"
                   >
-                    <span className="text-sm font-mono">
-                      {formatTxHash(transactionHash)}
-                    </span>
+                    <span className="text-sm font-mono">{formatTxHash(transactionHash)}</span>
                     <ExternalLink className="h-4 w-4" />
                   </Link>
                 )}
@@ -205,7 +189,7 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
         <div className="px-6 pb-6">
           <div className="bg-blue/10 rounded-3xl p-4 border border-blue/5">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
+              <div className="shrink-0 mt-0.5">
                 <InfoIcon className="h-4 w-4 text-blue-500" />
               </div>
               <div className="space-y-2">
@@ -213,15 +197,14 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
                 <div className="text-xs text-secondary-t font-light leading-relaxed">
                   {mode === "wrap" ? (
                     <>
-                      Wrapping mints an NFT that represents a holder, the right
-                      to convert a fixed number of cdUSDS tokens into OHM. The
-                      NFT is transferable but conversion requires that the
-                      holder also have cdUSDS tokens.
+                      Wrapping mints an NFT that represents a holder, the right to convert a fixed
+                      number of cdUSDS tokens into OHM. The NFT is transferable but conversion
+                      requires that the holder also have cdUSDS tokens.
                     </>
                   ) : (
                     <>
-                      Unwrapping burns the NFT and reactivates your position
-                      without the right to transfer it.
+                      Unwrapping burns the NFT and reactivates your position without the right to
+                      transfer it.
                     </>
                   )}
                 </div>
@@ -230,23 +213,27 @@ export const WrapPositionModal: React.FC<WrapPositionModalProps> = ({
           </div>
 
           <div className="mt-6">
-            <Button
-              onClick={handleAction}
-              disabled={isPending || !position}
-              className="w-full"
-              size="lg"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === "wrap" ? "Wrapping..." : "Unwrapping..."}
-                </>
-              ) : mode === "wrap" ? (
-                "Wrap into NFT"
-              ) : (
-                "Unwrap Position"
-              )}
-            </Button>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAction)}>
+                <Button
+                  type="submit"
+                  disabled={isPending || !position}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {mode === "wrap" ? "Wrapping..." : "Unwrapping..."}
+                    </>
+                  ) : mode === "wrap" ? (
+                    "Wrap into NFT"
+                  ) : (
+                    "Unwrap Position"
+                  )}
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </DialogContent>

@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import ConvertibleDepositFacilityABI from "@/abis/ConvertibleDepositFacility";
 
@@ -25,10 +17,7 @@ export const useConvertPosition = () => {
   const chainId = useChainId();
   const queryClient = useQueryClient();
 
-  const facilityAddress = getContractAddress(
-    ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-    chainId
-  );
+  const facilityAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   const {
     data: hash,
@@ -52,7 +41,7 @@ export const useConvertPosition = () => {
     if (isConfirmed && address && chainId) {
       const positionManagerAddress = getContractAddress(
         ContractName.CONVERTIBLE_DEPOSIT_POSITION_MANAGER,
-        chainId
+        chainId,
       );
 
       if (positionManagerAddress) {
@@ -103,13 +92,11 @@ export const useConvertPosition = () => {
     },
     success: {
       title: "Position converted successfully!",
-      description:
-        "Your position has been converted to OHM at the locked-in price.",
+      description: "Your position has been converted to OHM at the locked-in price.",
     },
     error: {
       title: "Conversion failed",
-      description:
-        "There was an error converting your position. Please try again.",
+      description: "There was an error converting your position. Please try again.",
       userRejected: {
         title: "Conversion cancelled",
         description: "You cancelled the conversion request.",
@@ -131,12 +118,7 @@ export const useConvertPosition = () => {
     config: toastConfig,
   });
 
-  const convert = ({
-    positionIds,
-    amounts,
-    wrappedReceipt,
-    queryKey,
-  }: ConvertPositionParams) => {
+  const convert = ({ positionIds, amounts, wrappedReceipt, queryKey }: ConvertPositionParams) => {
     if (!facilityAddress) {
       throw new Error("Facility address not found");
     }
@@ -158,7 +140,7 @@ export const useConvertPosition = () => {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 

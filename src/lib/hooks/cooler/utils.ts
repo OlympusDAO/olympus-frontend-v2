@@ -64,7 +64,6 @@ export function getRemainingPrincipal(loan: {
     return loan.principal;
   }
 
-  const latestRepayment =
-    loan.repaymentEvents[loan.repaymentEvents.length - 1];
+  const latestRepayment = loan.repaymentEvents[loan.repaymentEvents.length - 1];
   return latestRepayment.principalPayable;
 }

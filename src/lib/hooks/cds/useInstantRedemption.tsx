@@ -7,10 +7,7 @@ import {
   useAccount,
   useChainId,
 } from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import ConvertibleDepositFacilityAbi from "@/abis/ConvertibleDepositFacility";
 import { ContractName, requireContractAddress } from "@/lib/contracts";
 
@@ -68,8 +65,7 @@ export function useInstantRedemption() {
     },
     error: {
       title: "Redemption failed",
-      description:
-        "There was an error processing your redemption. Please try again.",
+      description: "There was an error processing your redemption. Please try again.",
       userRejected: {
         title: "Redemption cancelled",
         description: "You cancelled the transaction.",
@@ -114,7 +110,7 @@ export function useInstantRedemption() {
 
     const contractAddress = requireContractAddress(
       ContractName.CONVERTIBLE_DEPOSIT_FACILITY,
-      chainId
+      chainId,
     );
 
     // Reset both Wagmi state and toast state for new transaction
@@ -126,11 +122,7 @@ export function useInstantRedemption() {
         address: contractAddress,
         abi: ConvertibleDepositFacilityAbi,
         functionName: "reclaim",
-        args: [
-          depositToken as `0x${string}`,
-          depositPeriod as unknown as number,
-          amount,
-        ],
+        args: [depositToken as `0x${string}`, depositPeriod as unknown as number, amount],
       },
       {
         onSuccess: () => {
@@ -138,7 +130,7 @@ export function useInstantRedemption() {
             queryClient.invalidateQueries({ queryKey });
           }
         },
-      }
+      },
     );
   };
 
@@ -182,22 +174,14 @@ export function usePreviewReclaim({
     address: contractAddress,
     abi: ConvertibleDepositFacilityAbi,
     functionName: "previewReclaim",
-    args: [
-      depositToken as `0x${string}`,
-      depositPeriod as unknown as number,
-      amount,
-    ],
+    args: [depositToken as `0x${string}`, depositPeriod as unknown as number, amount],
     query: {
       enabled: enabled && !!contractAddress && amount > 0n,
     },
   });
 }
 
-export function useReclaimRate({
-  asset,
-  depositPeriod,
-  enabled = true,
-}: UseReclaimRateParams) {
+export function useReclaimRate({ asset, depositPeriod, enabled = true }: UseReclaimRateParams) {
   const { chainId } = useAccount();
 
   const contractAddress = chainId

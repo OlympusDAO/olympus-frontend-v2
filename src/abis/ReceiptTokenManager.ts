@@ -42,9 +42,7 @@ export default [
     type: "error",
   },
   {
-    inputs: [
-      { internalType: "address", name: "erc20Implementation", type: "address" },
-    ],
+    inputs: [{ internalType: "address", name: "erc20Implementation", type: "address" }],
     name: "ERC6909Wrappable_InvalidERC20Implementation",
     type: "error",
   },
@@ -433,9 +431,7 @@ export default [
   {
     inputs: [{ internalType: "uint256", name: "tokenId_", type: "uint256" }],
     name: "getWrappedToken",
-    outputs: [
-      { internalType: "address", name: "wrappedToken", type: "address" },
-    ],
+    outputs: [{ internalType: "address", name: "wrappedToken", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -545,9 +541,7 @@ export default [
       { internalType: "uint256", name: "amount_", type: "uint256" },
     ],
     name: "wrap",
-    outputs: [
-      { internalType: "address", name: "wrappedToken", type: "address" },
-    ],
+    outputs: [{ internalType: "address", name: "wrappedToken", type: "address" }],
     stateMutability: "nonpayable",
     type: "function",
   },

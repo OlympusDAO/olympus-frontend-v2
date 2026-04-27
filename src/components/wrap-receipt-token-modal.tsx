@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { trackWrapReceiptToken } from "@/lib/analytics";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CheckCircle2, ExternalLink } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
+import { Icon } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
@@ -58,7 +55,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   const { allowance } = useFlexibleReceiptTokenAllowance(
     unwrappedBalance?.tokenId,
     userAddress,
-    receiptTokenManagerAddress
+    receiptTokenManagerAddress,
   );
 
   const {
@@ -81,14 +78,14 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
     // For very small or very large numbers, use compact notation
     if (num < 0.01 || num > 999999) {
       return num.toLocaleString(undefined, {
-        notation: 'compact',
-        maximumFractionDigits: 2
+        notation: "compact",
+        maximumFractionDigits: 2,
       });
     }
     // Otherwise use standard notation with 2 decimals
     return num.toLocaleString(undefined, {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     });
   };
 
@@ -110,9 +107,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    wrapAmountBigInt > 0n &&
-    allowance < wrapAmountBigInt;
+    allowance !== undefined && wrapAmountBigInt > 0n && allowance < wrapAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
@@ -143,12 +138,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   };
 
   const handleApprove = async () => {
-    if (
-      !unwrappedBalance ||
-      !receiptTokenManagerAddress ||
-      wrapAmountBigInt === 0n
-    )
-      return;
+    if (!unwrappedBalance || !receiptTokenManagerAddress || wrapAmountBigInt === 0n) return;
 
     try {
       await approveReceiptToken({
@@ -194,6 +184,11 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
     },
   ];
 
+  useEffect(() => {
+    if (!isWrapSuccess) return;
+    trackWrapReceiptToken({ amount: wrapAmount, txHash: wrapHash });
+  }, [isWrapSuccess]);
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -206,8 +201,8 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
   if (showSteps) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-center">
+        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+          <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
             {isWrapSuccess ? (
               <div className="w-full mx-auto items-center justify-center">
                 <div className="flex items-center justify-center mx-auto mb-4">
@@ -217,16 +212,15 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                   Tokens wrapped successfully!
                 </p>
                 <p className="text-sm text-secondary-t text-center">
-                  Your ERC-6909 tokens have been converted to wrapped ERC-20
-                  tokens.
+                  Your ERC-6909 tokens have been converted to wrapped ERC-20 tokens.
                 </p>
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">
+                <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
                   Wrap Receipt Tokens
                 </DialogTitle>
-                <p className="text-sm text-secondary-t font-light">
+                <p className="text-xs/4 font-normal text-secondary-t">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
               </>
@@ -242,42 +236,28 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                     {/* Left side - Step number and title */}
                     <div className="flex items-center gap-3 flex-1">
                       {step.isCompleted ? (
-                        <div className="w-6 h-6 rounded-full bg-green flex items-center justify-center flex-shrink-0">
-                          <CheckCircle2 className="h-4 w-4 text-white" />
+                        <div className="w-5 h-5 rounded-full border border-green flex items-center justify-center flex-shrink-0 text-green">
+                          <CheckCircle2 className="h-3 w-3" />
                         </div>
                       ) : step.isLoading ? (
-                        <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary-t" />
                         </div>
                       ) : (
                         <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 text-xs font-medium ${
                             step.isActive
-                              ? "bg-primary text-white"
-                              : "bg-surface-a10 text-secondary-t"
+                              ? "border-primary-t text-primary-t"
+                              : "border-a10-b text-secondary-t"
                           }`}
                         >
-                          <span className="text-sm font-medium">
-                            {step.number}
-                          </span>
+                          <span>{step.number}</span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm font-medium ${
-                            step.isActive
-                              ? "text-primary-t"
-                              : step.isCompleted
-                              ? "text-primary-t"
-                              : "text-secondary-t"
-                          }`}
-                        >
-                          {step.title}
-                        </p>
+                        <p className="text-sm/5 font-semibold text-primary-t">{step.title}</p>
                         {step.detail && (
-                          <p className="text-xs text-secondary-t mt-0.5 truncate">
-                            {step.detail}
-                          </p>
+                          <p className="text-xs text-secondary-t mt-0.5 truncate">{step.detail}</p>
                         )}
                         {step.hash && (
                           <a
@@ -293,9 +273,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a3-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a3-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -362,8 +340,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
           {/* Info box */}
           <div className="bg-blue/10 border border-blue/20 rounded-lg p-4">
             <p className="text-sm text-primary-t">
-              Wrapping converts your ERC-6909 receipt tokens to standard ERC-20
-              tokens.
+              Wrapping converts your ERC-6909 receipt tokens to standard ERC-20 tokens.
             </p>
           </div>
 
@@ -385,7 +362,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
                 className="pr-20 text-lg"
               />
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={handleMaxClick}
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2 text-xs"
@@ -394,9 +371,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
               </Button>
             </div>
 
-            {hasInsufficientBalance && (
-              <p className="text-xs text-red-500">Insufficient balance</p>
-            )}
+            {hasInsufficientBalance && <p className="text-xs text-red-500">Insufficient balance</p>}
           </div>
 
           {/* You Receive section */}
@@ -404,7 +379,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-secondary-t">You Receive</span>
               <div className="flex items-center gap-2">
-                <img src={cdUSDSIcon} alt="Receipt Token" className="w-5 h-5" />
+                <Icon name="cdUSDSIcon" size={20} />
                 <span className="text-sm font-medium">
                   {wrapAmount || "0.00"} {displayTokenName} (Wrapped)
                 </span>
@@ -415,11 +390,7 @@ export const WrapReceiptTokenModal: React.FC<WrapReceiptTokenModalProps> = ({
           {/* Action button */}
           <Button
             onClick={handleStartWrap}
-            disabled={
-              !wrapAmount ||
-              parseFloat(wrapAmount) === 0 ||
-              !!hasInsufficientBalance
-            }
+            disabled={!wrapAmount || parseFloat(wrapAmount) === 0 || !!hasInsufficientBalance}
             className="w-full"
           >
             Wrap Tokens

@@ -1,17 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 
 export function useExtendLoan() {
@@ -48,8 +40,7 @@ export function useExtendLoan() {
     },
     error: {
       title: "Extension failed",
-      description:
-        "There was an error extending your loan. Please try again.",
+      description: "There was an error extending your loan. Please try again.",
       userRejected: {
         title: "Extension cancelled",
         description: "You cancelled the transaction.",
@@ -74,10 +65,7 @@ export function useExtendLoan() {
   // Invalidate queries when extension succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const vaultAddress = getContractAddress(
-        ContractName.DEPOSIT_REDEMPTION_VAULT,
-        chainId
-      );
+      const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
       if (vaultAddress) {
         // Invalidate user redemptions
@@ -104,7 +92,7 @@ export function useExtendLoan() {
         });
 
         // Invalidate USDS token balance (user spent USDS for interest)
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [
@@ -125,17 +113,8 @@ export function useExtendLoan() {
     }
   }, [isConfirmed, address, chainId, queryClient]);
 
-  const extendLoan = ({
-    redemptionId,
-    months,
-  }: {
-    redemptionId: number;
-    months: number;
-  }) => {
-    const vaultAddress = getContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+  const extendLoan = ({ redemptionId, months }: { redemptionId: number; months: number }) => {
+    const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
     if (!vaultAddress) {
       console.error("Vault address not found for chain", chainId);

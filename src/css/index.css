@@ -1,25 +1,38 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "driver.js/dist/driver.css";
+@import "./feature-tour.css";
 
 /* fonts */
-@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";
+/*@import "../assets/fonts/neue-haas-grotesk-display-pro/index.css";*/
 
 @import "./variables.css";
 @import "./theme.css";
+
+/*
+ * Render chain icons in the RainbowKit "Switch Networks" modal as rectangles (native SVG shape).
+ * RainbowKit prefixes all testIds with `rk-`, so each AsyncImage wrapper ends up as
+ * `data-testid="rk-chain-option-<id>-icon"`. The wrapper has `overflow: hidden` and a full
+ * border-radius (vanilla-extract class) that clips the icon into a circle.
+ * Placed at the root (outside @layer) so it wins over RainbowKit's unlayered styles.
+ */
+[data-testid^="rk-chain-option-"][data-testid$="-icon"],
+[data-testid^="rk-chain-option-"][data-testid$="-icon"] img {
+  /* biome-ignore lint: needed to override library styles */
+  border-radius: 0 !important;
+}
 
 @layer base {
   /* Remove default focus states */
   *:focus,
   *:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: inherit !important;
   }
 
   body {
-    @apply font-medium text-primary-t;
-    font-family: "Neue Haas Display", sans-serif;
+    @apply text-primary-t;
+    font-family: 'Inter Tight', sans-serif;
     font-synthesis: none;
+    font-weight: 500;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -34,13 +47,20 @@
 
   /* Override RainbowKit font to match app */
   [data-rk] {
-    font-family: "Neue Haas Display", sans-serif !important;
+    /* biome-ignore lint: needed to override library styles */
+    font-family: 'Inter Tight', sans-serif !important;
   }
 
   /* Hide elements depending on the current theme */
   .dark [data-hide-on-theme="dark"],
   .light [data-hide-on-theme="light"] {
     display: none;
+  }
+
+  /* Hide PostHog conversations launcher — we trigger it from the footer instead */
+  #ph-conversations-widget-container button[aria-label="Open chat"] {
+    /* biome-ignore lint: needed to override PostHog inline styles */
+    display: none !important;
   }
 
   /* Hide number input spinners */
@@ -58,8 +78,15 @@
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
-}
 
-@layer components {
-
+  /*
+   * NumberFlow internally renders <number-flow-react> with a shadow DOM that
+   * applies `padding: round(nearest, calc(var(--number-flow-mask-height, 0.25em) / 2), 1px) ...`
+   * to .number__inner. At default 0.25em this becomes ~4px top/bottom (e.g. 4px at 32px font),
+   * creating visible vertical padding around digits. Zero out the mask-height so the digit
+   * box hugs the glyphs. CSS custom properties inherit through shadow DOM, so this propagates.
+   */
+  number-flow-react {
+    --number-flow-mask-height: 0px;
+  }
 }

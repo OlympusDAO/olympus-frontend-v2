@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Form, FormField, FormItem } from "@/components/ui/form";
+import { TokenBigInput } from "@/components/ui/token-big-input";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
-import cdUSDSIcon from "@/assets/cdUSDS.png";
-import USDSIcon from "@/assets/USDS.png";
+import { Icon, type IconName } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { usePositionRedemption } from "@/lib/hooks/cds/usePositionRedemption";
 import { useAccount, useChainId } from "wagmi";
@@ -22,6 +19,7 @@ import {
 import { formatTermSuffix } from "@/lib/utils";
 import { ContractName, requireContractAddress } from "@/lib/contracts";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
+import type { TokenWithBalance } from "@/lib/hooks/useToken";
 
 type Position = {
   id: bigint;
@@ -51,10 +49,14 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   onClose,
   position,
 }) => {
-  const [redeemAmount, setRedeemAmount] = useState("");
   const [showSteps, setShowSteps] = useState(false);
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
+
+  const form = useForm<{ redeemAmount: string }>({
+    defaultValues: { redeemAmount: "" },
+  });
+  const redeemAmount = form.watch("redeemAmount");
 
   // Position redemption hook
   const {
@@ -65,10 +67,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   } = usePositionRedemption();
 
   // Receipt token ID for approval
-  const { tokenId } = useReceiptTokenId(
-    position?.data?.asset,
-    position?.data?.periodMonths
-  );
+  const { tokenId } = useReceiptTokenId(position?.data?.asset, position?.data?.periodMonths);
 
   // Get the token name dynamically
   const { tokenName } = useReceiptTokenName(tokenId);
@@ -81,7 +80,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   const { allowance } = useFlexibleReceiptTokenAllowance(
     tokenId,
     userAddress,
-    targetContractAddress
+    targetContractAddress,
   );
 
   const {
@@ -92,40 +91,19 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
     reset: resetApproval,
   } = useFlexibleApproveReceiptToken(targetContractAddress);
 
-  // Helper functions
-  const formatAmount = (amount: bigint) => {
-    return parseFloat(formatEther(amount)).toFixed(2);
-  };
-
   // Position data
-  const availableAmount = position?.data
-    ? formatAmount(position.data.remainingDeposit)
-    : "0";
-  const term = position?.data
-    ? formatTermSuffix(position.data.periodMonths)
-    : "3m";
+  const term = position?.data ? formatTermSuffix(position.data.periodMonths) : "3m";
 
   // Calculate redemption timeline based on deposit period and expiry
   const redemptionTimelineDays = position?.data
-    ? Math.max(
-        0,
-        Math.ceil(
-          (position.data.expiry * 1000 - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-      )
+    ? Math.max(0, Math.ceil((position.data.expiry * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
   // Parse redeem amount as bigint
   const redeemAmountBigInt = redeemAmount ? parseEther(redeemAmount) : 0n;
 
   // For position redemption, user gets full amount back after waiting period
-  const calculatedReceive = redeemAmount
-    ? parseFloat(redeemAmount).toFixed(2)
-    : "0.00";
-
-  const dollarValue = redeemAmount
-    ? (parseFloat(redeemAmount) * 1).toFixed(2)
-    : "0.00";
+  const calculatedReceive = redeemAmount ? parseFloat(redeemAmount).toFixed(2) : "0.00";
 
   // Check if user has sufficient balance
   const hasInsufficientBalance =
@@ -135,12 +113,34 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
 
   // Check if approval is needed
   const needsApproval =
-    allowance !== undefined &&
-    redeemAmountBigInt > 0n &&
-    allowance < redeemAmountBigInt;
+    allowance !== undefined && redeemAmountBigInt > 0n && allowance < redeemAmountBigInt;
 
   // Check if we have sufficient allowance
   const hasSufficientAllowance = !needsApproval;
+
+  // Use dynamic token name with fallback (no loading state to avoid jerkiness)
+  const displayTokenName = tokenName || `Receipt-${term}`;
+
+  // Receipt token object for TokenBigInput
+  const receiptToken: TokenWithBalance = useMemo(
+    () => ({
+      addresses: {},
+      icon: "cdUSDSIcon",
+      symbol: displayTokenName,
+      decimals: 18,
+      balance: position?.data?.remainingDeposit ?? 0n,
+      formattedBalance: position?.data ? formatEther(position.data.remainingDeposit) : "0",
+      price: 0,
+    }),
+    [displayTokenName, position?.data?.remainingDeposit, position?.data],
+  );
+
+  const buttonState = useMemo(() => {
+    if (!redeemAmount || redeemAmount === "0") return { disabled: true, label: "Enter Amount" };
+    if (hasInsufficientBalance) return { disabled: true, label: "Insufficient Balance" };
+    if (!position) return { disabled: true, label: "Enter Amount" };
+    return { disabled: false, label: "Start Position Redemption" };
+  }, [redeemAmount, hasInsufficientBalance, position]);
 
   // Determine current step based on allowance and redemption success
   const getCurrentStep = () => {
@@ -157,14 +157,8 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
     return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
   };
 
-  const handleMaxClick = () => {
-    setRedeemAmount(formatEther(position?.data?.remainingDeposit || 0n));
-  };
-
   const handleStartRedemption = () => {
-    if (!hasInsufficientBalance && redeemAmountBigInt > 0n) {
-      setShowSteps(true);
-    }
+    setShowSteps(true);
   };
 
   const handleApprove = async () => {
@@ -194,9 +188,6 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
     }
   };
 
-  // Use dynamic token name with fallback (no loading state to avoid jerkiness)
-  const displayTokenName = tokenName || `Receipt-${term}`;
-
   const steps = [
     {
       number: 1,
@@ -210,7 +201,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
       number: 2,
       title: "Position Redemption",
       detail: `${redeemAmount} ${displayTokenName} → ${calculatedReceive} USDS`,
-      icon: USDSIcon,
+      icon: "USDSColorTokenIcon" as IconName,
       isActive: currentStep === 2,
       isCompleted: isRedemptionSuccess,
       isLoading: currentStep === 2 && isRedemptionPending,
@@ -221,35 +212,33 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setRedeemAmount("");
+      form.reset();
       setShowSteps(false);
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
 
   // Steps view
   if (showSteps) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-center">
+        <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0 !rounded-3xl">
+          <DialogHeader className="px-6 pt-6 pb-2 text-center !gap-6">
             {isRedemptionSuccess ? (
               <div className="w-full mx-auto items-center justify-center">
                 <div className="flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="h-8 w-8 text-green" />
                 </div>
-                <p className="text-xl font-semibold mb-2 text-center">
-                  Congrats, all done!
-                </p>
+                <p className="text-xl font-semibold mb-2 text-center">Congrats, all done!</p>
                 <p className="text-sm text-secondary-t text-center">
                   Your position redemption has been started.
                 </p>
               </div>
             ) : (
               <>
-                <DialogTitle className="text-xl">
+                <DialogTitle className="text-[20px]/[24px] font-semibold text-primary-t">
                   Position Redemption
                 </DialogTitle>
-                <p className="text-sm text-secondary-t font-light">
+                <p className="text-xs/4 font-normal text-secondary-t">
                   Step {currentStep}/2. Proceed with your wallet.
                 </p>
               </>
@@ -264,24 +253,24 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                   <div className={`flex items-center justify-between p-4`}>
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-6 h-6 rounded-full ring-3 flex items-center justify-center text-sm font-medium ${
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-medium ${
                           step.isCompleted
-                            ? "text-green"
+                            ? "text-green border-green"
                             : step.isActive
-                            ? "text-primary-t"
-                            : "text-secondary-t ring-a10-b"
+                              ? "text-primary-t border-primary-t"
+                              : "text-secondary-t border-a10-b"
                         }`}
                       >
                         {step.isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : step.isCompleted ? (
-                          <CheckIcon className="h-4 w-4" />
+                          <CheckIcon className="h-3 w-3" />
                         ) : (
                           step.number
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{step.title}</div>
+                        <div className="text-sm/5 font-semibold text-primary-t">{step.title}</div>
                         {step.detail && (
                           <div className="text-xs text-secondary-t rounded-full border px-2 py-1 text-center border-a10-b">
                             {step.detail}
@@ -301,14 +290,10 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {step.icon && (
-                        <img src={step.icon} alt="" className="w-5 h-5" />
-                      )}
+                      {step.icon && <Icon name={step.icon} size={20} />}
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="border-b border-a5-b mx-4" />
-                  )}
+                  {index < steps.length - 1 && <div className="border-b border-a5-b mx-4" />}
                 </div>
               ))}
             </div>
@@ -375,9 +360,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
       <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">Redeem Position</DialogTitle>
-          <p className="text-sm text-secondary-t">
-            Position #{position?.id.toString()}
-          </p>
+          <p className="text-sm text-secondary-t">Position #{position?.id.toString()}</p>
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-6">
@@ -385,7 +368,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
           <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Position Details</label>
+                <p className="text-sm font-medium">Position Details</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -396,16 +379,12 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
                   <span className="text-xs text-secondary-t">Expiry</span>
                   <span className="text-xs">
                     {position?.data
-                      ? new Date(
-                          position.data.expiry * 1000
-                        ).toLocaleDateString()
+                      ? new Date(position.data.expiry * 1000).toLocaleDateString()
                       : "--"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-secondary-t">
-                    Waiting Period
-                  </span>
+                  <span className="text-xs text-secondary-t">Waiting Period</span>
                   <span className="text-xs">
                     {redemptionTimelineDays > 0
                       ? `${redemptionTimelineDays} days`
@@ -416,94 +395,62 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
             </div>
           </div>
 
-          {/* Amount Section */}
-          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium">Amount to Redeem</label>
-              </div>
-              <div className="flex items-center justify-between">
-                <Input
-                  type="number"
-                  value={redeemAmount}
-                  onChange={(e) => setRedeemAmount(e.target.value)}
-                  min="0"
-                  onScroll={(e) => e.currentTarget.blur()}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  placeholder="0.00"
-                  className="md:text-4xl h-14 placeholder:text-disabled-t border-0 shadow-none pl-0 w-[60%]"
-                />
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-surface-a3 rounded-full px-3 py-2 border border-a3-b">
-                    <img src={cdUSDSIcon} alt="Receipt Token" className="w-5 h-5" />
-                    <span className="font-medium text-sm">{displayTokenName}</span>
+          <Form {...form}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleStartRedemption();
+              }}
+              className="space-y-6"
+            >
+              <FormField
+                control={form.control}
+                name="redeemAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <TokenBigInput
+                      label="Amount to Redeem"
+                      token={receiptToken}
+                      value={field.value}
+                      onChange={(val) => field.onChange(val)}
+                    />
+                  </FormItem>
+                )}
+              />
+
+              {/* You Receive Section */}
+              <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">You Receive</p>
+                    <div className="flex items-center gap-2">
+                      <Icon name="USDSColorTokenIcon" size={20} />
+                      <span>{calculatedReceive} USDS</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-secondary-t">Redemption Fee</div>
+                      <div className="text-xs text-green">0%</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-secondary-t">Processing Time</div>
+                      <div className="text-xs">
+                        {redemptionTimelineDays > 0
+                          ? `${redemptionTimelineDays} days`
+                          : "Immediate"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm text-secondary-t">
-                <span>${dollarValue}</span>
-                <div className="flex items-center gap-2">
-                  <span>Available: {availableAmount}</span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleMaxClick}
-                    className="h-6 px-2 text-xs"
-                  >
-                    Max
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* You Receive Section */}
-          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">You Receive</label>
-                <div className="flex items-center gap-2">
-                  <img src={USDSIcon} alt="USDS" className="w-5 h-5" />
-                  <span>{calculatedReceive} USDS</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-secondary-t">Redemption Fee</div>
-                  <div className="text-xs text-green">0%</div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-secondary-t">
-                    Processing Time
-                  </div>
-                  <div className="text-xs">
-                    {redemptionTimelineDays > 0
-                      ? `${redemptionTimelineDays} days`
-                      : "Immediate"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            onClick={handleStartRedemption}
-            disabled={
-              !redeemAmount ||
-              redeemAmount === "0" ||
-              !position ||
-              hasInsufficientBalance
-            }
-            className="w-full"
-            size="lg"
-          >
-            {hasInsufficientBalance
-              ? "Insufficient Balance"
-              : !redeemAmount || redeemAmount === "0"
-              ? "Enter Amount"
-              : "Start Position Redemption"}
-          </Button>
+              <Button type="submit" disabled={buttonState.disabled} className="w-full" size="lg">
+                {buttonState.label}
+              </Button>
+            </form>
+          </Form>
         </div>
       </DialogContent>
     </Dialog>

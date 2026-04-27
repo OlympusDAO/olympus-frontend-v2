@@ -1,4 +1,4 @@
-import { Component, ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
 import { Icon } from "@/components/icon.tsx";
 
@@ -46,18 +46,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {/* Error Message */}
             <div className="space-y-3">
-              <h1 className="text-2xl font-semibold text-foreground">
-                Oops! Something went wrong
-              </h1>
+              <h1 className="text-2xl font-semibold text-foreground">Oops! Something went wrong</h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                We encountered an unexpected error. Please try again or refresh
-                the page.
+                We encountered an unexpected error. Please try again or refresh the page.
               </p>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <button
+                type="button"
                 onClick={this.handleReset}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors shadow-cds"
               >
@@ -65,6 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Try again
               </button>
               <button
+                type="button"
                 onClick={() => window.location.reload()}
                 className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-brand-sand-800 rounded-lg hover:bg-brand-sand-900 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors shadow-cds"
               >

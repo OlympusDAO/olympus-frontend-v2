@@ -1,17 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useChainId,
-} from "wagmi";
-import {
-  useTransactionToast,
-  TransactionToastConfig,
-} from "@/lib/hooks/useTransactionToast";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
+import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import { getContractAddress, ContractName } from "@/lib/contracts";
-import { getTokenAddress } from "@/lib/tokens";
+import { getTokenAddress, TokenName } from "@/lib/tokens";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 
 export function useRepayLoan() {
@@ -48,8 +40,7 @@ export function useRepayLoan() {
     },
     error: {
       title: "Repayment failed",
-      description:
-        "There was an error submitting your repayment. Please try again.",
+      description: "There was an error submitting your repayment. Please try again.",
       userRejected: {
         title: "Repayment cancelled",
         description: "You cancelled the transaction.",
@@ -74,10 +65,7 @@ export function useRepayLoan() {
   // Invalidate queries when repayment succeeds
   useEffect(() => {
     if (isConfirmed && address && chainId) {
-      const vaultAddress = getContractAddress(
-        ContractName.DEPOSIT_REDEMPTION_VAULT,
-        chainId
-      );
+      const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
       if (vaultAddress) {
         // Invalidate user redemptions
@@ -104,7 +92,7 @@ export function useRepayLoan() {
         });
 
         // Invalidate USDS token balance (user spent USDS)
-        const usdsTokenAddress = getTokenAddress("USDS", chainId);
+        const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
         if (usdsTokenAddress) {
           queryClient.invalidateQueries({
             queryKey: [
@@ -134,10 +122,7 @@ export function useRepayLoan() {
     amount: bigint;
     maxSlippage: bigint;
   }) => {
-    const vaultAddress = getContractAddress(
-      ContractName.DEPOSIT_REDEMPTION_VAULT,
-      chainId
-    );
+    const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
     if (!vaultAddress) {
       console.error("Vault address not found for chain", chainId);

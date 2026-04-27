@@ -34,6 +34,7 @@ export function useTransactionToast({
   writeError,
   confirmError,
   config,
+  onConfirmed,
 }: {
   hash?: `0x${string}`;
   isWritePending: boolean;
@@ -41,6 +42,7 @@ export function useTransactionToast({
   writeError: Error | null;
   confirmError: Error | null;
   config: TransactionToastConfig;
+  onConfirmed?: () => void;
 }) {
   const toastIdRef = useRef<string | number | null>(null);
   const processedHashRef = useRef<string | null>(null);
@@ -53,13 +55,16 @@ export function useTransactionToast({
 
     // Show pending toast when transaction is submitted
     if (hash && isWritePending === false && !toastIdRef.current && !processedHashRef.current) {
-      toastIdRef.current = toast({
-        type: "info",
-        title: config.pending.title,
-        description: config.pending.description,
-      }, {
-        duration: Infinity,
-      });
+      toastIdRef.current = toast(
+        {
+          type: "info",
+          title: config.pending.title,
+          description: config.pending.description,
+        },
+        {
+          duration: Infinity,
+        },
+      );
     }
 
     // Show success toast when confirmed (only if we haven't processed this hash)
@@ -72,12 +77,13 @@ export function useTransactionToast({
       });
       toastIdRef.current = null;
       processedHashRef.current = hash || null;
+      onConfirmed?.();
     }
 
     // Show error toast on failure (only if we haven't processed this hash)
     if ((writeError || confirmError) && toastIdRef.current && !processedHashRef.current) {
       sonnerToast.dismiss(toastIdRef.current);
-      
+
       const error = writeError || confirmError;
       let title = config.error.title;
       let description = config.error.description;
@@ -89,7 +95,9 @@ export function useTransactionToast({
           description = config.error.userRejected?.description || "You cancelled the transaction.";
         } else if (error.shortMessage?.includes("insufficient funds")) {
           title = config.error.insufficientFunds?.title || "Insufficient funds";
-          description = config.error.insufficientFunds?.description || "You don't have enough ETH for gas fees.";
+          description =
+            config.error.insufficientFunds?.description ||
+            "You don't have enough ETH for gas fees.";
         } else if (error.shortMessage) {
           description = error.shortMessage;
         }
@@ -103,7 +111,7 @@ export function useTransactionToast({
       toastIdRef.current = null;
       processedHashRef.current = hash || null;
     }
-  }, [hash, isWritePending, isConfirmed, writeError, confirmError, config]);
+  }, [hash, isWritePending, isConfirmed, writeError, confirmError, config, onConfirmed]);
 
   const reset = () => {
     if (toastIdRef.current) {

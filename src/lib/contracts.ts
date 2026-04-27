@@ -25,12 +25,19 @@ export enum ContractName {
   SOHM = "SOHM",
   GOHM = "GOHM",
   STAKING = "STAKING",
+  WSOHM = "WSOHM",
+  V1_OHM = "V1_OHM",
+  V1_SOHM = "V1_SOHM",
 
   // Cooler
   COOLER_CLEARING_HOUSE_V3 = "COOLER_CLEARING_HOUSE_V3",
   COOLER_V2_MONOCOOLER = "COOLER_V2_MONOCOOLER",
   COOLER_V2_COMPOSITES = "COOLER_V2_COMPOSITES",
   COOLER_V2_MIGRATOR = "COOLER_V2_MIGRATOR",
+  COOLER_CLEARING_HOUSE_V1 = "COOLER_CLEARING_HOUSE_V1",
+  COOLER_CLEARING_HOUSE_V2 = "COOLER_CLEARING_HOUSE_V2",
+  COOLER_FACTORY_V1 = "COOLER_FACTORY_V1",
+  COOLER_FACTORY_V2 = "COOLER_FACTORY_V2",
 
   // Convertible Deposits
   CONVERTIBLE_DEPOSIT_FACILITY = "CONVERTIBLE_DEPOSIT_FACILITY",
@@ -40,6 +47,17 @@ export enum ContractName {
   DEPOSIT_REDEMPTION_VAULT = "DEPOSIT_REDEMPTION_VAULT",
   LIMIT_ORDERS = "LIMIT_ORDERS",
   PRICE = "PRICE",
+
+  // Governance
+  GOVERNOR_BRAVO = "GOVERNOR_BRAVO",
+
+  // Treasury
+  DAO_TREASURY = "DAO_TREASURY",
+  SUSDS = "SUSDS",
+
+  // Bridge
+  CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
+  CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
 }
 
 type ContractAddresses = {
@@ -57,9 +75,11 @@ export const CONTRACTS: ContractAddresses = {
     [arbitrum.id]: "0xf0cb2dc0db5e6c66B9a70Ac27B06b878da017028",
     [base.id]: "0x060cb087a9730E13aa191f31A6d86bFF8DfcdCC0",
     [berachain.id]: "0x18878df23e2a36f81e820e4b47b4a40576d3159c",
+    [sepolia.id]: "0x784cA0C006b8651BAB183829A99fA46BeCe50dBc",
   },
   [ContractName.SOHM]: {
     [mainnet.id]: "0x04906695D6D12CF5459975d7C3C03356E4Ccd460",
+    [sepolia.id]: "0x7aEe38DbB5465a05EE809d00d1C34dB76F8c5B72",
   },
   [ContractName.GOHM]: {
     [mainnet.id]: "0x0ab87046fBb341D058F17CBC4c1133F25a20a52f",
@@ -69,10 +89,22 @@ export const CONTRACTS: ContractAddresses = {
     [fantom.id]: "0x91fa20244fb509e8289ca630e5db3e9166233fdc",
     [optimism.id]: "0x0b5740c6b4a97f90eF2F0220651Cca420B868FfB",
     [boba.id]: "0xd22C0a4Af486C7FA08e282E9eB5f30F9AaA62C95",
-    [sepolia.id]: "0xBA05d48Fb94dC76820EB7ea1B360fd6DfDEabdc5",
+    [sepolia.id]: "0x0f7F33f915B29476ca2b2606C8A3e06A5FC7e896",
   },
   [ContractName.STAKING]: {
     [mainnet.id]: "0xB63cac384247597756545b500253ff8E607a8020",
+    [sepolia.id]: "0xbC2778f2F24864D35D806AA968A1DB445988A5E9",
+  },
+  [ContractName.WSOHM]: {
+    [mainnet.id]: "0xCa76543Cf381ebBB277bE79574059e32108e3E65",
+    [arbitrum.id]: "0x739ca6D71365a08f584c8FC4e1029021FcefBD18",
+    [avalanche.id]: "0x8CD309e14575203535EF120b5b0Ab4DDeD0C2073",
+  },
+  [ContractName.V1_OHM]: {
+    [mainnet.id]: "0x383518188c0c6d7730D91b2c03a03C36BCD12f65",
+  },
+  [ContractName.V1_SOHM]: {
+    [mainnet.id]: "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F",
   },
 
   // ── Cooler ────────────────────────────────────────────
@@ -81,7 +113,7 @@ export const CONTRACTS: ContractAddresses = {
   },
   [ContractName.COOLER_V2_MONOCOOLER]: {
     [mainnet.id]: "0xdb591Ea2e5Db886dA872654D58f6cc584b68e7cC",
-    [sepolia.id]: "0x19b787549A05f7a3f8f20ED55B827A6c49BaEE9c",
+    [sepolia.id]: "0x8bEB701EBaf8CD68B7E8f04BFA4fC7387cF711E0",
   },
   [ContractName.COOLER_V2_COMPOSITES]: {
     [mainnet.id]: "0x6593768feBF9C95aC857Fb7Ef244D5738D1C57Fd",
@@ -90,6 +122,18 @@ export const CONTRACTS: ContractAddresses = {
   [ContractName.COOLER_V2_MIGRATOR]: {
     [mainnet.id]: "0xE045BD0A0d85E980AA152064C06EAe6B6aE358D2",
     [sepolia.id]: "0x70233D8F47042d3A5813026e2157B5181C608cD0",
+  },
+  [ContractName.COOLER_CLEARING_HOUSE_V1]: {
+    [mainnet.id]: "0xD6A6E8d9e82534bD65821142fcCd91ec9cF31880",
+  },
+  [ContractName.COOLER_CLEARING_HOUSE_V2]: {
+    [mainnet.id]: "0xE6343ad0675C9b8D3f32679ae6aDbA0766A2ab4c",
+  },
+  [ContractName.COOLER_FACTORY_V1]: {
+    [mainnet.id]: "0x30Ce56e80aA96EbbA1E1a74bC5c0FEB5B0dB4589",
+  },
+  [ContractName.COOLER_FACTORY_V2]: {
+    [mainnet.id]: "0x2916427F46d33fE2bF68Ee7D3C168CF57f109541",
   },
 
   // ── Convertible Deposits ──────────────────────────────
@@ -121,6 +165,35 @@ export const CONTRACTS: ContractAddresses = {
     [mainnet.id]: "0xd6C4D723fdadCf0D171eF9A2a3Bfa870675b282f",
     [sepolia.id]: "0x3bD25E292dC36b674BBF1EEecaAB4565bf2eF241",
   },
+
+  // ── Governance ───────────────────────────────────────
+  [ContractName.GOVERNOR_BRAVO]: {
+    [mainnet.id]: "0x0941233c964e7d7Efeb05D253176E5E634cEFfcD",
+  },
+
+  // ── Treasury ────────────────────────────────────────
+  [ContractName.DAO_TREASURY]: {
+    [mainnet.id]: "0xa8687A15D4BE32CC8F0a8a7B9704a4C3993D9613",
+    [sepolia.id]: "0xC48abD1431f17212379557397Dd603912174131E",
+  },
+  [ContractName.SUSDS]: {
+    [mainnet.id]: "0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD",
+    [sepolia.id]: "0x74Ca575601aa47a1aa44bD6786F3C0be36afA079",
+  },
+
+  // ── Bridge ──────────────────────────────────────────
+  [ContractName.CROSS_CHAIN_BRIDGE]: {
+    [mainnet.id]: "0x45e563c39cddba8699a90078f42353a57509543a",
+    [arbitrum.id]: "0x20B3834091f038Ce04D8686FAC99CA44A0FB285c",
+    [base.id]: "0x6CA1a916e883c7ce2BFBcF59dc70F2c1EF9dac6e",
+    [berachain.id]: "0xBA42BE149e5260EbA4B82418A6306f55D532eA47",
+  },
+  [ContractName.CROSS_CHAIN_MINTER]: {
+    [mainnet.id]: "0xa90bFe53217da78D900749eb6Ef513ee5b6a491e",
+    [arbitrum.id]: "0x8f6406eDbFA393e327822D4A08BcF15503570D87",
+    [base.id]: "0x623164A9Ee2556D524b08f34F1d2389d7B4e1A1C",
+    [berachain.id]: "0xbC9eE0D911739cBc72cd094ADA26F56E0C49EeAE",
+  },
 };
 
 /**
@@ -136,15 +209,10 @@ export function getContractAddress(
 /**
  * Look up a contract address, throwing if not found.
  */
-export function requireContractAddress(
-  contractName: ContractName,
-  chainId: number,
-): Address {
+export function requireContractAddress(contractName: ContractName, chainId: number): Address {
   const address = getContractAddress(contractName, chainId);
   if (!address) {
-    throw new Error(
-      `Contract ${contractName} not deployed on chain ${chainId}`,
-    );
+    throw new Error(`Contract ${contractName} not deployed on chain ${chainId}`);
   }
   return address;
 }

@@ -27,7 +27,7 @@ export interface TickDataPoint {
 export function calculateDecayPrice(
   tickPrice: bigint,
   tickStep: bigint | number,
-  minPrice: bigint
+  minPrice: bigint,
 ): bigint {
   const decayed = (tickPrice * 10000n) / BigInt(tickStep);
   // Clamp to minimum price
@@ -57,7 +57,7 @@ export function processHistoricalData(
     minPriceDecimal: string;
     tickSize: string;
   }>,
-  tickStep: bigint | number
+  tickStep: bigint | number,
 ): TickDataPoint[] {
   const dataPoints: TickDataPoint[] = [];
 
@@ -178,36 +178,27 @@ const DEC_1_2025_UTC = Date.UTC(2025, 11, 1, 0, 0, 0);
 
 /**
  * Convert historical tick data to chart data points.
- * Filters out data points before the first bid after Dec 1, 2025.
+ * Filters out data points before Dec 1, 2025.
  */
 export function toChartData(historical: TickDataPoint[]): ChartDataPoint[] {
-  // Find the first bid on or after Dec 1, 2025
-  const firstBidAfterDec1 = historical.find(
-    (point) => point.bidPrice !== undefined && point.timestamp >= DEC_1_2025_UTC
-  );
+  const filtered = historical.filter((point) => point.timestamp >= DEC_1_2025_UTC);
 
-  // If no bids found after Dec 1, return empty array
-  if (!firstBidAfterDec1) return [];
+  if (filtered.length === 0) return [];
 
-  // Use the first bid's timestamp as the minimum filter
-  const minTimestamp = firstBidAfterDec1.timestamp;
+  return filtered.map((point) => {
+    const chartPoint: ChartDataPoint = {
+      timestamp: point.timestamp,
+      tickPrice: point.tickPrice,
+      decayPrice: point.decayPrice,
+      minPrice: point.minPrice,
+      bidPrice: point.bidPrice,
+    };
 
-  return historical
-    .filter((point) => point.timestamp >= minTimestamp)
-    .map((point) => {
-      const chartPoint: ChartDataPoint = {
-        timestamp: point.timestamp,
-        tickPrice: point.tickPrice,
-        decayPrice: point.decayPrice,
-        minPrice: point.minPrice,
-        bidPrice: point.bidPrice,
-      };
+    // Add price range for area fill if both values exist
+    if (point.tickPrice && point.decayPrice) {
+      chartPoint.priceRange = [point.decayPrice, point.tickPrice];
+    }
 
-      // Add price range for area fill if both values exist
-      if (point.tickPrice && point.decayPrice) {
-        chartPoint.priceRange = [point.decayPrice, point.tickPrice];
-      }
-
-      return chartPoint;
-    });
+    return chartPoint;
+  });
 }

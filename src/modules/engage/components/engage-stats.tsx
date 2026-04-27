@@ -1,0 +1,108 @@
+import { useChainId } from "wagmi";
+import { Card } from "@/components/ui/card.tsx";
+import { TooltipInfo } from "@/components/ui/tooltip.tsx";
+import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import engageDarkImg from "@/assets/engage-dark.webp";
+import engageLightImg from "@/assets/engage-light.webp";
+import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
+import { Icon } from "@/components/icon.tsx";
+import { useGETEpochsCurrentEpoch, useGETSeasonsCurrent } from "@/generated/olympusUnits";
+import type { LibChainId } from "@/generated/olympusUnits";
+import { useEpochCountdown } from "@/lib/hooks/useEpochCountdown";
+import { Separator } from "@/components/ui/separator.tsx";
+
+export const EngageStats = () => {
+  const chainId = useChainId() as LibChainId;
+
+  const { data: epochData } = useGETEpochsCurrentEpoch({ chainId });
+  const { data: seasonData } = useGETSeasonsCurrent({ chainId });
+
+  const { days, hours, minutes } = useEpochCountdown(epochData?.endTimestamp);
+
+  const totalUnits = parseFloat(seasonData?.season?.currentWeekTotalUnits ?? "0");
+  const epochNumber = epochData?.epochNumber;
+
+  const countdownStr = epochData
+    ? `${days}d : ${String(hours).padStart(2, "0")}h : ${String(minutes).padStart(2, "0")}m`
+    : "—";
+
+  return (
+    <Card className="p-6 h-full flex flex-col">
+      <div className="flex flex-col min-[1020px]:flex-col min-[1200px]:flex-wrap items-start relative">
+        <div>
+          <div className="flex items-center mb-4 gap-x-3">
+            <p className="text-[20px]/[24px] font-semibold">
+              {epochNumber !== undefined ? `Epoch ${epochNumber}` : "Epoch —"}
+            </p>
+            <div className="border rounded-full border-a5-b px-2 py-0.5 bg-surface-a5 flex items-center gap-x-1">
+              <p className="text-secondary-t text-[15px]/[20px] font-normal">Next in</p>
+              <p className=" text-[15px]/[20px]">{countdownStr}</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-[18px]/[24px] font-semibold mb-2">How to Get Started</p>
+            <div className="sm:max-w-73.5 pb-6">
+              <div className="flex items-start gap-x-2 mb-1">
+                <div className=" rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
+                  <p className="text-[9px]/[16px] font-bold">1</p>
+                </div>
+                <p className="text-[15px]/[20px] text-secondary-t font-normal">
+                  Deposit in Convertible Deposits to accumulate Drachmas daily.
+                </p>
+              </div>
+              <div className="flex items-start gap-x-2 mb-1">
+                <div className="px-1.25 rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
+                  <p className="text-[9px]/[16px] font-bold">2</p>
+                </div>
+                <p className="text-[15px]/[20px] text-secondary-t font-normal">
+                  At epoch end, your Drachma share determines your iOHM allocation.
+                </p>
+              </div>
+              <div className="flex items-start gap-x-2 mb-1">
+                <div className="px-1.25 rounded-full border border-disabled-t min-w-4.5 h-5 flex items-center justify-center">
+                  <p className="text-[9px]/[16px] font-bold">3</p>
+                </div>
+                <p className="text-[15px]/[20px] text-secondary-t font-normal">
+                  Claim and convert iOHM anytime during the conversion period.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ColorModeImage
+          className="relative min-[640px]:absolute min-[640px]:-top-10 min-[640px]:-right-10 min-[1020px]:relative min-[1020px]:top-0 min-[1020px]:right-0 min-[1200px]:absolute min-[1200px]:-top-10 min-[1200px]:-right-25 w-105"
+          srcLight={engageLightImg}
+          srcDark={engageDarkImg}
+          alt="engage"
+        />
+      </div>
+      <div className="mt-auto">
+        <Separator className="my-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between relative z-10 gap-4 sm:gap-0">
+          <div className="flex-1">
+            <p className="text-secondary-t text-[15px]/[20px] mb-1 font-semibold">Drachmas</p>
+            <div className="flex items-center gap-x-1.5 mb-2">
+              <Icon name="drachmaTokenIcon" className="size-6" />
+              <NumberFlow
+                value={totalUnits}
+                format={{ style: "decimal", notation: "standard" }}
+                className="text-[18px]/[24px] font-semibold"
+              />
+            </div>
+            <p className="text-secondary-t text-[15px]/[20px] font-normal">By all participants</p>
+          </div>
+          <div className="flex-1">
+            <TooltipInfo title="Drachma Accrual">Drachma Accrual</TooltipInfo>
+            <p className="text-[18px]/[24px] font-semibold mt-1">Daily</p>
+            <p className="text-secondary-t text-[15px]/[20px] font-normal">11:59 PM EST</p>
+          </div>
+          <div className="flex-1">
+            <TooltipInfo title="Distribution">Distribution</TooltipInfo>
+            <p className="text-[18px]/[24px] font-semibold mt-1">Weekly</p>
+            <p className="text-secondary-t text-[15px]/[20px] font-normal">Mon-Wed</p>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};

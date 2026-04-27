@@ -4,20 +4,13 @@ import { useChainId } from "wagmi";
 import LimitOrdersABI from "@/abis/LimitOrders";
 import type { ContractFunctionReturnType } from "viem";
 
-type LimitOrderData = ContractFunctionReturnType<
-  typeof LimitOrdersABI,
-  "view",
-  "getOrder"
->;
+type LimitOrderData = ContractFunctionReturnType<typeof LimitOrdersABI, "view", "getOrder">;
 
 export const useUserLimitOrders = () => {
   const { address } = useAccount();
   const chainId = useChainId();
 
-  const limitOrdersAddress = getContractAddress(
-    ContractName.LIMIT_ORDERS,
-    chainId
-  );
+  const limitOrdersAddress = getContractAddress(ContractName.LIMIT_ORDERS, chainId);
 
   // Get user's order IDs (poll every 10 minutes)
   const {
@@ -53,8 +46,7 @@ export const useUserLimitOrders = () => {
   } = useReadContracts({
     contracts: orderContracts,
     query: {
-      enabled:
-        !!orderIds && orderIds.length > 0 && !!limitOrdersAddress,
+      enabled: !!orderIds && orderIds.length > 0 && !!limitOrdersAddress,
       refetchInterval: 600000, // 10 minutes in milliseconds
     },
   });
@@ -67,7 +59,7 @@ export const useUserLimitOrders = () => {
             id,
             data: ordersData[index]?.result as LimitOrderData | undefined,
           }))
-          .filter((order) => order.data && order.data.active) // Only show active orders
+          .filter((order) => order.data?.active) // Only show active orders
       : [];
 
   const refetch = () => {

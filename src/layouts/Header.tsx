@@ -3,15 +3,10 @@ import { useLocation } from "react-router-dom";
 import { ConnectButton } from "@/components/connect-button";
 import { MobileNav } from "@/layouts/MobileNav";
 import { OlympusLogo } from "@/components/olympus-logo";
-import { useIsMobile } from "@/lib/hooks/use-mobile";
-import {
-  getActiveSectionFromPath,
-  getActiveSubItemFromPath,
-} from "@/lib/navigation";
+import { getActiveSectionFromPath, getActiveSubItemFromPath } from "@/lib/navigation";
 
 export function Header() {
   const location = useLocation();
-  const { isMobile } = useIsMobile();
   const activeSection = getActiveSectionFromPath(location.pathname);
   const activeItem = getActiveSubItemFromPath(location.pathname);
 
@@ -24,22 +19,20 @@ export function Header() {
     document.title = parts.length > 0 ? `${parts.join(" - ")} | Olympus` : "Olympus";
   }, [activeItem, activeSection]);
 
-  if (isMobile) {
-    return (
-      <header className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-3">
+  return (
+    <>
+      <header className="flex md:hidden items-center justify-between px-4 py-4">
+        <OlympusLogo className="size-6" />
+        <div className="flex items-center gap-2">
+          <ConnectButton />
           <MobileNav />
-          <OlympusLogo className="size-6" />
         </div>
+      </header>
+
+      <header className="hidden md:flex items-center justify-between px-4 md:px-8 py-3 mt-1.5 mb-2 w-full max-w-(--max-content-width) mx-auto">
+        <h1 className="text-2xl/8 font-semibold text-primary-t">{title}</h1>
         <ConnectButton />
       </header>
-    );
-  }
-
-  return (
-    <header className="flex items-center justify-between px-8 py-6">
-      <h1 className="text-2xl font-bold text-primary-t">{title}</h1>
-      <ConnectButton />
-    </header>
+    </>
   );
 }

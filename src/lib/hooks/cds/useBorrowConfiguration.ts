@@ -8,15 +8,9 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
  * Returns value in basis points (e.g., 9000 = 90%)
  * If maxBorrowPercentage is 0, borrowing is disabled for this asset/facility combination
  */
-export function useMaxBorrowPercentage(
-  asset?: `0x${string}`,
-  facility?: `0x${string}`
-) {
+export function useMaxBorrowPercentage(asset?: `0x${string}`, facility?: `0x${string}`) {
   const chainId = useChainId();
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { data, isLoading, error } = useReadContract({
     address: vaultAddress,
@@ -47,15 +41,9 @@ export function useMaxBorrowPercentage(
  * Hook to fetch annual interest rate for a given asset and facility
  * Returns value in basis points (e.g., 500 = 5%)
  */
-export function useAnnualInterestRate(
-  asset?: `0x${string}`,
-  facility?: `0x${string}`
-) {
+export function useAnnualInterestRate(asset?: `0x${string}`, facility?: `0x${string}`) {
   const chainId = useChainId();
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { data, isLoading, error } = useReadContract({
     address: vaultAddress,

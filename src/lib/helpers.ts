@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import type { Address } from "viem";
 import * as dn from "dnum";
 import {
   type Duration,
@@ -28,13 +28,13 @@ export const handleInputNumberChange = (value: string) => {
 export function shortenAddress(address: Address, chars = 4) {
   return address.length < chars * 2 + 2
     ? address
-    : address.slice(0, chars + 2) + "\u2026" + address.slice(-chars);
+    : `${address.slice(0, chars + 2)}\u2026${address.slice(-chars)}`;
 }
 
 export const validateInsufficientBalance = (
   value = "0",
   tokenInfo: { decimals: number; balance?: bigint },
-  errorMessage?: string
+  errorMessage?: string,
 ) => {
   try {
     if (tokenInfo.balance) {
@@ -97,3 +97,16 @@ export function formatDistance(start: Date, end: Date, suffix = "ago") {
 }
 
 export const blockExplorerTxBaseUrl = `${config.getClient().chain.blockExplorers?.default.url}/tx/`;
+
+const BLOCK_EXPLORER_URLS: Record<number, string> = {
+  1: "https://etherscan.io",
+  42161: "https://arbiscan.io",
+  8453: "https://basescan.org",
+  80094: "https://berascan.com",
+};
+
+export function getBlockExplorerTxUrl(chainId: number, txHash: string): string {
+  const baseUrl = BLOCK_EXPLORER_URLS[chainId];
+  if (!baseUrl) return "#";
+  return `${baseUrl}/tx/${txHash}`;
+}

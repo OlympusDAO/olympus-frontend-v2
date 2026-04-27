@@ -1,22 +1,18 @@
-import { SVGProps } from 'react'
-import * as AllIcons from '../icons'
+import type { SVGProps } from "react";
+import * as AllIcons from "../icons";
 
-export type IconName = keyof typeof AllIcons
+export type IconName = keyof typeof AllIcons;
 
 interface IconProps extends SVGProps<SVGSVGElement> {
-  name: IconName
-  size?: number | string
-  color?: string
+  name: IconName;
+  size?: number | string;
+  color?: string;
 }
 
 export function Icon(props: IconProps) {
-  const {
-    name,
-    size = 24,
-    color = 'currentColor',
-    ...rest
-  } = props
+  const { name, size = 24, color = "currentColor", ...rest } = props;
 
-  const SvgComponent = AllIcons[name]
-  return <SvgComponent width={size} height={size} fill={color} {...rest} />
+  // biome-ignore lint/performance/noDynamicNamespaceImportAccess: dynamic icon lookup by name prop
+  const SvgComponent = AllIcons[name];
+  return <SvgComponent width={size} height={size} fill={color} {...rest} />;
 }

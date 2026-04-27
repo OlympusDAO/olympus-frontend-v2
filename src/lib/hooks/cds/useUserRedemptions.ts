@@ -5,10 +5,7 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 
 export function useUserRedemptions(userAddress?: `0x${string}`) {
   const chainId = useChainId();
-  const vaultAddress = getContractAddress(
-    ContractName.DEPOSIT_REDEMPTION_VAULT,
-    chainId
-  );
+  const vaultAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { data, isLoading, error, refetch } = useReadContract({
     address: vaultAddress,

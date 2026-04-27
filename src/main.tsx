@@ -3,9 +3,12 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import "@/css/index.css";
 import { router } from "@/routes";
+import { initializeAnalytics } from "@/lib/analytics";
+
+initializeAnalytics();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
-  </StrictMode>
+  </StrictMode>,
 );

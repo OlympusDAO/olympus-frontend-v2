@@ -13,10 +13,7 @@ interface ReserveBalances {
 }
 
 // Map treasury tokenRecord names to identify LP positions
-const LP_TOKEN_MATCHERS = [
-  "liquidity pool",
-  " lp",
-];
+const LP_TOKEN_MATCHERS = ["liquidity pool", " lp"];
 
 function isLpToken(token: string): boolean {
   const lower = token.toLowerCase();
@@ -28,17 +25,15 @@ export function useReserveBalances() {
     queryKey: ["reserveBalances"],
     queryFn: async () => {
       // Query yesterday's tokenRecords (today's may not be indexed yet)
-      const yesterday = new Date(Date.now() - 86_400_000)
-        .toISOString()
-        .split("T")[0];
+      const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate: yesterday,
-        crossChainDataComplete: true,
+        crossChainDataComplete: false,
         ignoreCache: false,
       });
 
       const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/tokenRecords?wg_variables=${encodeURIComponent(params)}`
+        `${TREASURY_API_URL}/operations/paginated/tokenRecords?wg_variables=${encodeURIComponent(params)}`,
       );
 
       if (!response.ok) throw new Error("Failed to fetch reserve balances");
@@ -87,6 +82,7 @@ export function useReserveBalances() {
       return { susdeValue, susdsValue, lpPositions };
     },
     staleTime: 300_000,
-    refetchInterval: 600_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }

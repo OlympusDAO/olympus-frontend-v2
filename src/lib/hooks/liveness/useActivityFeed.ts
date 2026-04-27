@@ -38,7 +38,7 @@ const COOLER_TYPE_MAP: Record<string, ActivityType> = {
   collateralWithdraw: "cooler-withdraw-collateral",
 };
 
-export function useActivityFeed() {
+export function useActivityFeed(options?: { refetchInterval?: number | false }) {
   return useQuery<ActivityItem[]>({
     queryKey: ["activityFeed"],
     queryFn: async () => {
@@ -168,8 +168,7 @@ export function useActivityFeed() {
       if (!response.ok) throw new Error("Failed to fetch activity feed");
 
       const { data, errors } = await response.json();
-      if (errors)
-        throw new Error(errors[0]?.message || "Activity feed error");
+      if (errors) throw new Error(errors[0]?.message || "Activity feed error");
 
       const items: ActivityItem[] = [];
 
@@ -187,8 +186,7 @@ export function useActivityFeed() {
       }
 
       // CD Conversions
-      for (const conv of data?.convertibleDepositFacilityConvertedDeposits
-        ?.items || []) {
+      for (const conv of data?.convertibleDepositFacilityConvertedDeposits?.items || []) {
         items.push({
           id: `conv-${conv.timestamp}-${conv.depositor}`,
           type: "cd-converted",
@@ -201,8 +199,7 @@ export function useActivityFeed() {
       }
 
       // Yield Claims
-      for (const claim of data?.convertibleDepositFacilityClaimedYields
-        ?.items || []) {
+      for (const claim of data?.convertibleDepositFacilityClaimedYields?.items || []) {
         items.push({
           id: `yield-${claim.timestamp}-${claim.txHash}`,
           type: "cd-yield",
@@ -216,8 +213,7 @@ export function useActivityFeed() {
       // CD interest rate (for revenue projections on loans)
       const cdInterestRate =
         parseFloat(
-          data?.depositRedemptionVaultAssetConfigurations?.items?.[0]
-            ?.interestRateDecimal,
+          data?.depositRedemptionVaultAssetConfigurations?.items?.[0]?.interestRateDecimal,
         ) || 0;
 
       // CD Loans (borrows against deposits)
@@ -229,9 +225,10 @@ export function useActivityFeed() {
           type: "cd-loan",
           timestamp: Number(loan.timestamp),
           primaryValue: `$${loanAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
-          secondaryValue: annualRevenue > 0
-            ? `$${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr revenue`
-            : "Borrowed against CD",
+          secondaryValue:
+            annualRevenue > 0
+              ? `$${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr revenue`
+              : "Borrowed against CD",
           address: loan.depositor,
           txHash: loan.txHash || undefined,
         });
@@ -246,9 +243,10 @@ export function useActivityFeed() {
           type: "cd-repay",
           timestamp: Number(repay.timestamp),
           primaryValue: `$${principal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
-          secondaryValue: interest > 0
-            ? `$${interest.toLocaleString("en-US", { maximumFractionDigits: 0 })} interest`
-            : "Loan repaid",
+          secondaryValue:
+            interest > 0
+              ? `$${interest.toLocaleString("en-US", { maximumFractionDigits: 0 })} interest`
+              : "Loan repaid",
           address: repay.depositor,
           txHash: repay.txHash || undefined,
         });
@@ -344,9 +342,7 @@ export function useActivityFeed() {
             //   borrow/repay → DAI amount, collateralAdd/Withdraw → gOHM amount
             // `collateral` and `debt` are TOTAL position values (not deltas)
             const amount = parseFloat(activity.amount) / 1e18;
-            const totalDebt = activity.debt
-              ? parseFloat(activity.debt) / 1e18
-              : 0;
+            const totalDebt = activity.debt ? parseFloat(activity.debt) / 1e18 : 0;
 
             let primaryValue: string;
             let secondaryValue: string;
@@ -357,9 +353,10 @@ export function useActivityFeed() {
               secondaryValue = `$${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr revenue`;
             } else if (activityType === "cooler-repay") {
               primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-              secondaryValue = totalDebt > 0
-                ? `$${totalDebt.toLocaleString("en-US", { maximumFractionDigits: 0 })} remaining`
-                : "DAI repaid";
+              secondaryValue =
+                totalDebt > 0
+                  ? `$${totalDebt.toLocaleString("en-US", { maximumFractionDigits: 0 })} remaining`
+                  : "DAI repaid";
             } else if (activityType === "cooler-add-collateral") {
               primaryValue = `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM`;
               secondaryValue = "Collateral added";
@@ -393,6 +390,6 @@ export function useActivityFeed() {
       return items.slice(0, 100);
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: options?.refetchInterval ?? 60_000,
   });
 }

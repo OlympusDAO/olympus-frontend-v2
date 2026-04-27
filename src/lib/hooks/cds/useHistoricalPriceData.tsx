@@ -38,10 +38,9 @@ interface HistoricalPriceData {
   depositPeriodSnapshots: DepositPeriodSnapshot[];
 }
 
-
 export function useHistoricalPriceData(
   depositPeriod?: number,
-  timeRange: "1d" | "7d" | "30d" | "all" = "7d"
+  timeRange: "1d" | "7d" | "30d" | "all" = "7d",
 ) {
   const chainId = useChainId();
 
@@ -49,7 +48,7 @@ export function useHistoricalPriceData(
     "1d": 86400,
     "7d": 604800,
     "30d": 2592000,
-    "all": 0,
+    all: 0,
   };
 
   const startTimestamp =
@@ -61,9 +60,8 @@ export function useHistoricalPriceData(
     queryKey: ["historicalPriceData", chainId, depositPeriod, timeRange],
     queryFn: async () => {
       // Build the deposit period filter
-      const depositPeriodFilter = depositPeriod !== undefined
-        ? `depositPeriod: ${depositPeriod},`
-        : "";
+      const depositPeriodFilter =
+        depositPeriod !== undefined ? `depositPeriod: ${depositPeriod},` : "";
 
       const query = `
         query GetHistoricalData {
@@ -139,21 +137,19 @@ export function useHistoricalPriceData(
             ...item,
             timestamp: Number(item.timestamp),
             tickPriceDecimal: Number(item.tickPriceDecimal),
-          })
+          }),
         ),
-        snapshots: (data?.auctioneerSnapshots?.items || []).map(
+        snapshots: (data?.auctioneerSnapshots?.items || []).map((item: Record<string, string>) => ({
+          ...item,
+          timestamp: Number(item.timestamp),
+        })),
+        depositPeriodSnapshots: (data?.auctioneerDepositPeriodSnapshots?.items || []).map(
           (item: Record<string, string>) => ({
             ...item,
             timestamp: Number(item.timestamp),
-          })
+            currentTickPriceDecimal: Number(item.currentTickPriceDecimal),
+          }),
         ),
-        depositPeriodSnapshots: (
-          data?.auctioneerDepositPeriodSnapshots?.items || []
-        ).map((item: Record<string, string>) => ({
-          ...item,
-          timestamp: Number(item.timestamp),
-          currentTickPriceDecimal: Number(item.currentTickPriceDecimal),
-        })),
       };
     },
     staleTime: 30000, // 30 seconds

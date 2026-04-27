@@ -4,11 +4,11 @@ export function useGlobalErrorHandler() {
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Unhandled promise rejection:", event.reason);
-      
+
       if (event.reason?.message?.includes("User rejected")) {
         return;
       }
-      
+
       // toast({
       //   type: "error",
       //   title: "Something went wrong",
@@ -18,7 +18,7 @@ export function useGlobalErrorHandler() {
 
     const handleError = (event: ErrorEvent) => {
       console.error("Global error:", event.error);
-      
+
       // toast({
       //   type: "error",
       //   title: "Application Error",
