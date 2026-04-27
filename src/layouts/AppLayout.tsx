@@ -10,12 +10,23 @@ import { Footer } from "@/layouts/footer.tsx";
 import { FeatureTour } from "@/components/feature-tour";
 import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
 import { trackPageView } from "@/lib/analytics";
+import { useWalletAnalytics } from "@/lib/hooks/useWalletAnalytics";
 
 function PageviewTracker() {
   const location = useLocation();
   useEffect(() => {
-    trackPageView(location.pathname + location.search);
+    // Defer to a macrotask so synchronous `<Navigate replace />` redirects
+    // (e.g. `/` → `/pulse/overview`) supersede the source pageview.
+    const id = setTimeout(() => {
+      trackPageView({ pathname: location.pathname, search: location.search });
+    }, 0);
+    return () => clearTimeout(id);
   }, [location.pathname, location.search]);
+  return null;
+}
+
+function WalletAnalytics() {
+  useWalletAnalytics();
   return null;
 }
 
@@ -24,6 +35,7 @@ export default function AppLayout() {
     <NuqsAdapter>
       <Providers>
         <PageviewTracker />
+        <WalletAnalytics />
         <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
           {/* Desktop icon sidebar — hidden on mobile */}
           <div className="hidden md:flex">

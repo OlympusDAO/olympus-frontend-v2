@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,6 +14,7 @@ import {
   useAnnualInterestRate,
 } from "@/lib/hooks/cds/useBorrowConfiguration";
 import { useBorrowAgainstRedemption } from "@/lib/hooks/cds/useBorrowAgainstRedemption";
+import { trackBorrowCreate } from "@/lib/analytics";
 import { useReadContracts } from "wagmi";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 import { getContractAddress, ContractName } from "@/lib/contracts";
@@ -152,7 +153,22 @@ export const BorrowPage = () => {
     selectedRedemption?.facility,
   );
 
-  const { borrowAgainstRedemption, isPending } = useBorrowAgainstRedemption();
+  const { borrowAgainstRedemption, isPending, isSuccess, hash } = useBorrowAgainstRedemption();
+
+  const pendingBorrowRef = useRef<{ collateralAmount: string; borrowAmount: string } | null>(null);
+  const trackedHashRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isSuccess && hash && pendingBorrowRef.current && trackedHashRef.current !== hash) {
+      trackedHashRef.current = hash;
+      trackBorrowCreate({
+        collateralAmount: pendingBorrowRef.current.collateralAmount,
+        borrowAmount: pendingBorrowRef.current.borrowAmount,
+        txHash: hash,
+      });
+      pendingBorrowRef.current = null;
+    }
+  }, [isSuccess, hash]);
 
   const availableCollateral = selectedRedemption ? formatEther(selectedRedemption.amount) : "0";
 
@@ -249,6 +265,7 @@ export const BorrowPage = () => {
     if (isBorrowValid.valid && selectedRedemption) {
       const originalRedemptionId = availableRedemptions[selectedRedemptionIndex]?.originalIndex;
       if (originalRedemptionId !== undefined) {
+        pendingBorrowRef.current = { collateralAmount, borrowAmount };
         borrowAgainstRedemption({ redemptionId: originalRedemptionId });
       }
     }

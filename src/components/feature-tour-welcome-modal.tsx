@@ -4,7 +4,7 @@ import featureTourVideo from "@/assets/feature-tour-video.mp4";
 
 interface FeatureTourWelcomeModalProps {
   open: boolean;
-  onSkip: () => void;
+  onSkip: (method: "skip_button" | "backdrop") => void;
   onStart: () => void;
 }
 
@@ -14,7 +14,7 @@ export function FeatureTourWelcomeModal({ open, onSkip, onStart }: FeatureTourWe
       open={open}
       disablePointerDismissal
       onOpenChange={(isOpen) => {
-        if (!isOpen) onSkip();
+        if (!isOpen) onSkip("backdrop");
       }}
     >
       <DialogContent
@@ -44,7 +44,7 @@ export function FeatureTourWelcomeModal({ open, onSkip, onStart }: FeatureTourWe
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="md" onClick={onSkip}>
+            <Button variant="secondary" size="md" onClick={() => onSkip("skip_button")}>
               Skip
             </Button>
             <Button variant="default" size="md" className="flex-1" onClick={onStart}>
