@@ -6,6 +6,7 @@ import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
+import { trackMonoCoolerDelegation, trackTransactionFailed } from "@/lib/analytics";
 
 export type AccountDelegation = {
   delegate: Address;
@@ -75,10 +76,19 @@ export function useMonoCoolerDelegations() {
 
   useEffect(() => {
     if (isConfirmed) {
+      trackMonoCoolerDelegation({ delegateCount: requestsRef.current.length, txHash: hash });
       queryClient.invalidateQueries({ queryKey: delegationsQueryKey });
       queryClient.invalidateQueries({ queryKey: [{ entity: "readContract" }] });
     }
-  }, [isConfirmed, queryClient, delegationsQueryKey]);
+  }, [isConfirmed, queryClient, delegationsQueryKey, hash]);
+
+  const error = writeError || confirmError;
+  useEffect(() => {
+    if (error) {
+      const reason = error.message?.includes("User rejected") ? "user_rejected" : "error";
+      trackTransactionFailed("cooler", "delegate", { reason });
+    }
+  }, [error]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {

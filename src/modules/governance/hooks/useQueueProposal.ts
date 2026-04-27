@@ -5,6 +5,7 @@ import { olympusGovernorBravoAbi } from "@/abis/OlympusGovernorBravo";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { mainnet } from "@/lib/chains";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
+import { trackQueueProposal, trackTransactionFailed } from "@/lib/analytics";
 
 /**
  * Mutation hook for queuing a succeeded governance proposal.
@@ -34,12 +35,21 @@ export function useQueueProposal() {
 
   useEffect(() => {
     if (isConfirmed && proposalIdRef.current != null) {
+      trackQueueProposal({ proposalId: String(proposalIdRef.current), txHash: hash });
       queryClient.invalidateQueries({
         queryKey: ["governance", "proposalDetails", mainnet.id, proposalIdRef.current],
       });
       proposalIdRef.current = undefined;
     }
-  }, [isConfirmed, queryClient]);
+  }, [isConfirmed, queryClient, hash]);
+
+  const error = writeError || confirmError;
+  useEffect(() => {
+    if (error) {
+      const reason = error.message?.includes("User rejected") ? "user_rejected" : "error";
+      trackTransactionFailed("dao", "queue", { reason });
+    }
+  }, [error]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {

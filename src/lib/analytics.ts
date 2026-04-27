@@ -114,6 +114,14 @@ function trackTransaction(product: string, action: string, props?: Record<string
   posthog.capture(eventName, payload);
 }
 
+export function trackTransactionFailed(
+  product: string,
+  action: string,
+  props?: Record<string, unknown>,
+): void {
+  posthog.capture(`${product}_${action}_failed`, { product, action, phase: "failed", ...props });
+}
+
 // ─── Identity ────────────────────────────────────────────────────────────────
 
 async function hashAddress(address: string): Promise<string> {
@@ -287,6 +295,10 @@ export function trackFinishRedemption(params: { amount: string; txHash?: string 
   trackTransaction("cd", "finish_redemption", { amount: params.amount, tx_hash: params.txHash });
 }
 
+export function trackCancelRedemption(params: { txHash?: string }): void {
+  trackTransaction("cd", "cancel_redemption", { tx_hash: params.txHash });
+}
+
 export function trackTransferPosition(params: { toAddress: string; txHash?: string }): void {
   trackTransaction("cd", "transfer", { to_address: params.toAddress, tx_hash: params.txHash });
 }
@@ -352,6 +364,28 @@ export function trackCastVote(params: {
 
 export function trackDelegate(params: { delegatee: string; txHash?: string }): void {
   trackTransaction("dao", "delegate", { delegatee: params.delegatee, tx_hash: params.txHash });
+}
+
+export function trackExecuteProposal(params: { proposalId: string; txHash?: string }): void {
+  trackTransaction("dao", "execute", { proposal_id: params.proposalId, tx_hash: params.txHash });
+}
+
+export function trackActivateProposal(params: { proposalId: string; txHash?: string }): void {
+  trackTransaction("dao", "activate", { proposal_id: params.proposalId, tx_hash: params.txHash });
+}
+
+export function trackQueueProposal(params: { proposalId: string; txHash?: string }): void {
+  trackTransaction("dao", "queue", { proposal_id: params.proposalId, tx_hash: params.txHash });
+}
+
+export function trackMonoCoolerDelegation(params: {
+  delegateCount: number;
+  txHash?: string;
+}): void {
+  trackTransaction("cooler", "delegate", {
+    delegate_count: params.delegateCount,
+    tx_hash: params.txHash,
+  });
 }
 
 // ─── UI ───────────────────────────────────────────────────────────────────────

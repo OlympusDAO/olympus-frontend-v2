@@ -21,9 +21,9 @@ export function useWalletAnalytics(): void {
     const isFullyConnected = isConnected && !!address && !!walletType;
 
     if (isFullyConnected && !prevConnectedRef.current) {
-      identifyWallet(address, { walletType, chainId }).then(() =>
-        trackWalletConnect({ walletType, chainId }),
-      );
+      identifyWallet(address, { walletType, chainId })
+        .then(() => trackWalletConnect({ walletType, chainId }))
+        .catch(() => trackWalletConnect({ walletType, chainId }));
       prevConnectedRef.current = true;
     } else if (
       isFullyConnected &&

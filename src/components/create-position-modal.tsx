@@ -14,7 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
-import { trackDepositCreate } from "@/lib/analytics";
+import { trackDepositCreate, trackTransactionFailed } from "@/lib/analytics";
 import { useEffect } from "react";
 
 interface CreatePositionModalProps {
@@ -95,7 +95,13 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   } = useTokenApproval();
 
   // Bid hook
-  const { bid, isPending: isBidding, isSuccess: bidSuccess, hash: bidHash } = useBid();
+  const {
+    bid,
+    isPending: isBidding,
+    isSuccess: bidSuccess,
+    error: bidError,
+    hash: bidHash,
+  } = useBid();
 
   useEffect(() => {
     if (bidSuccess) {
@@ -106,6 +112,12 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
       });
     }
   }, [bidSuccess, depositAmount, periodMonths, bidHash]);
+
+  useEffect(() => {
+    if (!bidError) return;
+    const reason = bidError.message?.includes("User rejected") ? "user_rejected" : "error";
+    trackTransactionFailed("cd", "deposit", { reason });
+  }, [bidError]);
 
   // Determine current step based on allowance and bid success
   const getCurrentStep = () => {
