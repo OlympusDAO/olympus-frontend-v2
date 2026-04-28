@@ -102,7 +102,6 @@ function track(eventName: string, props?: Record<string, unknown>): void {
 }
 
 function trackTransaction(product: string, action: string, props?: Record<string, unknown>): void {
-  const eventName = `${product}_${action}_confirmed`;
   const payload = {
     product,
     action,
@@ -110,8 +109,8 @@ function trackTransaction(product: string, action: string, props?: Record<string
     $set_once: { first_product: product },
     ...props,
   };
-  if (GA_MEASUREMENT_ID) ReactGA.event(eventName, props);
-  posthog.capture(eventName, payload);
+  if (GA_MEASUREMENT_ID) ReactGA.event(`${product}_${action}_confirmed`, props);
+  posthog.capture("transaction_confirmed", payload);
 }
 
 export function trackTransactionFailed(
@@ -119,7 +118,7 @@ export function trackTransactionFailed(
   action: string,
   props?: Record<string, unknown>,
 ): void {
-  posthog.capture(`${product}_${action}_failed`, { product, action, phase: "failed", ...props });
+  posthog.capture("transaction_failed", { product, action, phase: "failed", ...props });
 }
 
 // ─── Identity ────────────────────────────────────────────────────────────────
