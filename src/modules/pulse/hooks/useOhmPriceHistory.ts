@@ -5,11 +5,11 @@ export interface OhmPriceHistory {
   dataPoints: Array<{ date: string; price: number }>;
 }
 
-export function useOhmPriceHistory() {
+export function useOhmPriceHistory(days = 30) {
   return useQuery<OhmPriceHistory>({
-    queryKey: ["ohmPriceHistory"],
+    queryKey: ["ohmPriceHistory", days],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
+      const startDate = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
       const params = JSON.stringify({
         startDate,
         ignoreCache: false,
