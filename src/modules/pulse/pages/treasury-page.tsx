@@ -3,7 +3,6 @@ import { TreasuryAssetsCard } from "@/modules/pulse/components/treasury-assets-c
 import { TreasuryLiabilitiesCard } from "@/modules/pulse/components/treasury-liabilities-card";
 import { TreasuryBackingCard } from "@/modules/pulse/components/treasury-backing-card";
 import { TreasuryPolTable } from "@/modules/pulse/components/treasury-pol-table";
-import { PulseDot } from "@/components/pulse-dot.tsx";
 
 export function TreasuryPage() {
   return (
@@ -12,10 +11,6 @@ export function TreasuryPage() {
 
       <div className="mt-8 flex items-center justify-between">
         <p className="text-xl/6 font-semibold">Assets and Liabilities</p>
-        <div className="flex items-center gap-x-1.5">
-          <p className="text-secondary-t text-xs/4 font-normal">Last updated 5 mins ago</p>
-          <PulseDot variant="green" />
-        </div>
       </div>
 
       <div className="mt-3 grid grid-cols-2 max-md:grid-cols-1 gap-4">
@@ -29,10 +24,6 @@ export function TreasuryPage() {
 
       <div className="mt-8 flex items-center justify-between">
         <p className="text-xl/6 font-semibold">Protocol-Owned Liquidity</p>
-        <div className="flex items-center gap-x-1.5">
-          <p className="text-secondary-t text-xs/4 font-normal">Last updated 5 mins ago</p>
-          <PulseDot variant="green" />
-        </div>
       </div>
 
       <div className="mt-3">

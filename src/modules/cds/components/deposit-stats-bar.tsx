@@ -214,12 +214,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               / {auctionParameters?.target ? formatTickCapacity(auctionParameters.target) : "-"} OHM
             </span>
             {resetInfo && (
-              <span className="flex items-center gap-1 shrink-0">
-                {resetInfo.text}
-                <TooltipInfo title="Time until auction tuning">
-                  <span className="sr-only">Info</span>
-                </TooltipInfo>
-              </span>
+              <span className="flex items-center gap-1 shrink-0">{resetInfo.text}</span>
             )}
           </div>
         </div>
