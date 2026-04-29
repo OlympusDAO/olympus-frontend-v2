@@ -28,7 +28,7 @@ const COMPACT_USD = {
   notation: "compact",
   maximumFractionDigits: 1,
 } as const;
-const COMPACT_NUM = { notation: "compact", maximumFractionDigits: 2 } as const;
+const COMPACT_NUM = { style: "decimal", notation: "compact", maximumFractionDigits: 2 } as const;
 
 const DAYS_OPTIONS = [
   { value: "30", label: "30d" },

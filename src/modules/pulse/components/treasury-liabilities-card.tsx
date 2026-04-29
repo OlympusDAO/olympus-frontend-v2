@@ -7,7 +7,6 @@ import { ProtocolDataSource } from "@/modules/pulse/components/protocol-data-sou
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
-import { useEmissionManager } from "@/modules/pulse/hooks/useEmissionManager";
 import { useYrfHistory } from "@/modules/pulse/hooks/useYrfHistory";
 import { useGohmIndex, useGohmTotalSupply } from "@/lib/hooks/useGohmConversion";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
@@ -15,12 +14,6 @@ import { RiCornerDownRightLine } from "@remixicon/react";
 
 const DECIMAL_FORMAT = { style: "decimal", notation: "standard" } as const;
 const COMPACT_FORMAT = { style: "decimal", notation: "compact", maximumFractionDigits: 2 } as const;
-const PRECISE_USD = {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-} as const;
 
 function OhmValue({
   value,
@@ -64,7 +57,6 @@ export function TreasuryLiabilitiesCard() {
   const { data: metrics } = useTreasuryMetrics();
   const { data: cooler } = useCoolerMetrics();
   const { data: cd } = useCdStatistics();
-  const { data: em } = useEmissionManager();
   const { data: yrfHistory } = useYrfHistory();
   const { data: ohmPriceData } = useOhmPrice();
   const { index } = useGohmIndex();
@@ -88,10 +80,6 @@ export function TreasuryLiabilitiesCard() {
   const weeklyBurns = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
   const annualBurns = weeklyBurns * 52;
   const burnRatePct = ohmTotalSupply > 0 ? (annualBurns / ohmTotalSupply) * 100 : 0;
-
-  const emBacking = em?.state.backing ?? 0;
-  const emMinimumPremium = em?.state.minimumPremium ?? 0;
-  const emTriggerPrice = em?.state.triggerPrice ?? 0;
 
   return (
     <Card className="flex flex-col gap-4 p-5">
@@ -153,27 +141,7 @@ export function TreasuryLiabilitiesCard() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <TooltipInfo
-          title={
-            <>
-              New supply only emitted when OHM price &gt;{" "}
-              <NumberFlow value={emTriggerPrice} format={PRECISE_USD} /> (backing{" "}
-              <NumberFlow value={emBacking} format={PRECISE_USD} /> × (1 +{" "}
-              {(emMinimumPremium * 100).toFixed(0)}% minimum premium))
-            </>
-          }
-        >
-          <p className="text-primary-t text-sm font-semibold">EM Trigger Price</p>
-        </TooltipInfo>
-        <p className="text-sm font-semibold shrink-0 [--number-flow-char-height:20px]">
-          <NumberFlow value={emTriggerPrice} format={PRECISE_USD} suffix="/OHM" />
-        </p>
-      </div>
-
-      <ProtocolDataSource
-        sources={["gOHM contract", "CD Subgraph", "YRF Subgraph", "Emission Manager Subgraph"]}
-      />
+      <ProtocolDataSource sources={["gOHM contract", "CD Subgraph", "YRF Subgraph"]} />
     </Card>
   );
 }
