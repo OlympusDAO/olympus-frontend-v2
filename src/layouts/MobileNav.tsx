@@ -13,6 +13,20 @@ import {
   type NavSection,
 } from "@/lib/navigation";
 import { SubNavItem } from "@/layouts/sub-nav-item";
+import { useAccount, useChainId } from "wagmi";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useGETAdminMultisigMembers, type LibChainId } from "@/generated/olympusUnits";
+
+function useMultisigOwnership(enabled: boolean) {
+  const { address } = useAccount();
+  const chainId = useChainId() as LibChainId;
+  const { data } = useGETAdminMultisigMembers(
+    { chainId },
+    { query: { enabled: enabled && !!address } },
+  );
+  if (!address || !data) return false;
+  return data.owners.some((o) => o.toLowerCase() === address.toLowerCase());
+}
 
 function MobileSectionItem({
   section,
@@ -61,6 +75,11 @@ export function MobileNav() {
   const location = useLocation();
   const activeSection = getActiveSectionFromPath(location.pathname);
   const [selectedSection, setSelectedSection] = useState<NavSection | null>(null);
+
+  const hasMultisigItems =
+    (selectedSection ?? activeSection)?.items.some((i) => i.requiresMultisig) ?? false;
+  const { isAuthenticated } = useAuth({ enabled: hasMultisigItems });
+  const isMultisigOwner = useMultisigOwnership(isAuthenticated && hasMultisigItems);
 
   // Use the route-based active section, or the manually selected one
   const displaySection = selectedSection ?? activeSection ?? NAV_SECTIONS[0];
@@ -140,28 +159,34 @@ export function MobileNav() {
               </div>
 
               {/* Sub-nav links */}
-              {displaySection.items.length > 0 ? (
-                <nav className="flex flex-col gap-0.5 px-2">
-                  {displaySection.items.map((item) => (
-                    <SubNavItem
-                      key={item.path}
-                      item={item}
-                      isActive={!item.external && location.pathname === item.path}
+              {(() => {
+                if (displaySection.hideNavIfNotMultisig && !isMultisigOwner) return null;
+                const visibleItems = displaySection.items.filter(
+                  (item) => !item.requiresMultisig || isMultisigOwner,
+                );
+                return visibleItems.length > 0 ? (
+                  <nav className="flex flex-col gap-0.5 px-2">
+                    {visibleItems.map((item) => (
+                      <SubNavItem
+                        key={item.path}
+                        item={item}
+                        isActive={!item.external && location.pathname === item.path}
+                        onClick={handleClose}
+                      />
+                    ))}
+                  </nav>
+                ) : (
+                  <div className="px-4">
+                    <Link
+                      to={getDefaultPathForSection(displaySection)}
                       onClick={handleClose}
-                    />
-                  ))}
-                </nav>
-              ) : (
-                <div className="px-4">
-                  <Link
-                    to={getDefaultPathForSection(displaySection)}
-                    onClick={handleClose}
-                    className="flex items-center pl-4 pr-3 py-2.5 rounded-full text-base leading-5 bg-surface-a5 ring-[0.5px] ring-inset ring-surface-a10 text-primary-t font-medium"
-                  >
-                    {displaySection.sidebarTitle}
-                  </Link>
-                </div>
-              )}
+                      className="flex items-center pl-4 pr-3 py-2.5 rounded-full text-base leading-5 bg-surface-a5 ring-[0.5px] ring-inset ring-surface-a10 text-primary-t font-medium"
+                    >
+                      {displaySection.sidebarTitle}
+                    </Link>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </SheetContent>
