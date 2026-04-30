@@ -58,9 +58,9 @@ export function OverviewLiquidBacking({ timeWindow }: { timeWindow: TimeWindow }
       </div>
 
       {isLoading ? (
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2">
-          <Spinner className="size-8" />
-          <p className="text-secondary-t text-sm">Loading chart data</p>
+        <div className="w-55 h-14 max-xs:w-full max-xs:h-10 shrink-0 flex flex-col items-center justify-center gap-1">
+          <Spinner className="size-6" />
+          <p className="text-secondary-t text-xs">Loading chart data</p>
         </div>
       ) : (
         <SparklineChart
