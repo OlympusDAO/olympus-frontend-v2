@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import posthog from "posthog-js";
 import { RefreshCw } from "lucide-react";
 import { Icon } from "@/components/icon.tsx";
 
@@ -20,8 +21,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error) {
+  public componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("Error caught by boundary:", error);
+    posthog.captureException(error, { componentStack: info.componentStack });
   }
 
   private handleReset = () => {
