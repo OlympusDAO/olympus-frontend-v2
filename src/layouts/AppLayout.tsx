@@ -11,6 +11,7 @@ import { FeatureTour } from "@/components/feature-tour";
 import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
 import { trackPageView } from "@/lib/analytics";
 import { useWalletAnalytics } from "@/lib/hooks/useWalletAnalytics";
+import { useGlobalErrorHandler } from "@/lib/hooks/useGlobalErrorHandler";
 
 function PageviewTracker() {
   const location = useLocation();
@@ -30,12 +31,18 @@ function WalletAnalytics() {
   return null;
 }
 
+function GlobalErrorHandler() {
+  useGlobalErrorHandler();
+  return null;
+}
+
 export default function AppLayout() {
   return (
     <NuqsAdapter>
       <Providers>
         <PageviewTracker />
         <WalletAnalytics />
+        <GlobalErrorHandler />
         <div className="flex h-screen bg-surface-bg-l1 overflow-hidden">
           {/* Desktop icon sidebar — hidden on mobile */}
           <div className="hidden md:flex">

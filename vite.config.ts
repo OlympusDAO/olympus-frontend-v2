@@ -20,6 +20,7 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: "hidden",
     outDir: "./dist",
     emptyOutDir: true,
     reportCompressedSize: true,
