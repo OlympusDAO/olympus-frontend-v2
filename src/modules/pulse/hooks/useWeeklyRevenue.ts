@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useReserveYields } from "@/modules/pulse/hooks/useReserveYields";
 import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
+import { useLpFeesEarned } from "@/modules/pulse/hooks/useLpFeesEarned";
 import { useCdStatistics } from "../../../lib/hooks/liveness/useCdStatistics.ts";
 import { COOLER_APR } from "@/lib/constants.ts";
 
@@ -13,9 +14,9 @@ export interface RevenueSource {
 
 export interface LpBreakdownItem {
   name: string;
-  value: number;
-  apy: number;
   weeklyAmount: number;
+  collectedFeesUsd: number;
+  uncollectedFeesDeltaUsd: number;
 }
 
 export interface WeeklyRevenue {
@@ -29,6 +30,7 @@ export function useWeeklyRevenue() {
   const { data: yields } = useReserveYields();
   const { data: cooler } = useCoolerMetrics();
   const { data: reserves } = useReserveBalances();
+  const { data: lpFees } = useLpFeesEarned();
   const { data: cd } = useCdStatistics();
 
   return useMemo<WeeklyRevenue | undefined>(() => {
@@ -40,23 +42,19 @@ export function useWeeklyRevenue() {
     const coolerWeekly = cooler ? ((cooler.totalBorrowed || 0) * COOLER_APR) / 52 : 0;
     // CD borrow interest: borrowedAmount * annualRate / 52
     const cdBorrowWeekly = cd ? ((cd.borrowedAmount || 0) * (cd.annualInterestRate || 0)) / 52 : 0;
-    // LP fees: sum (position value * DeFiLlama fee APY) for each LP
-    let lpFeesWeekly = 0;
-    const lpBreakdown: LpBreakdownItem[] = [];
-    if (reserves.lpPositions && yields.lpApys) {
-      for (const lp of reserves.lpPositions) {
-        const apy = yields.lpApys[lp.name] || 0;
-        const weekly = ((lp.value || 0) * (apy / 100)) / 52;
-        lpFeesWeekly += weekly;
-        lpBreakdown.push({
-          name: lp.name,
-          value: lp.value,
-          apy,
-          weeklyAmount: weekly,
-        });
-      }
-      lpBreakdown.sort((a, b) => b.weeklyAmount - a.weeklyAmount);
-    }
+    // LP fees are actual 7d position-level earned fees from the treasury API:
+    // collected fees during the window + change in uncollected/claimable fees.
+    // Do not fall back to DeFiLlama pool APRs here; those are benchmark context,
+    // not Olympus-owned position revenue.
+    const lpFeesWeekly = lpFees?.totalFeesEarnedUsd ?? 0;
+    const lpBreakdown: LpBreakdownItem[] = (lpFees?.pools ?? [])
+      .map((pool) => ({
+        name: pool.name,
+        weeklyAmount: pool.feesEarnedUsd,
+        collectedFeesUsd: pool.collectedFeesUsd,
+        uncollectedFeesDeltaUsd: pool.uncollectedFeesDeltaUsd,
+      }))
+      .sort((a, b) => b.weeklyAmount - a.weeklyAmount);
 
     const totalWeekly = susdeWeekly + susdsWeekly + coolerWeekly + cdBorrowWeekly + lpFeesWeekly;
 
@@ -81,11 +79,15 @@ export function useWeeklyRevenue() {
         weeklyAmount: cdBorrowWeekly,
         color: "var(--orange)",
       },
-      {
-        name: "LP Fees",
-        weeklyAmount: lpFeesWeekly,
-        color: "var(--yellow)",
-      },
+      ...(lpFees
+        ? [
+            {
+              name: "7d LP Fees Earned",
+              weeklyAmount: lpFeesWeekly,
+              color: "var(--yellow)",
+            },
+          ]
+        : []),
     ].sort((a, b) => b.weeklyAmount - a.weeklyAmount);
 
     return {
@@ -94,5 +96,5 @@ export function useWeeklyRevenue() {
       sources,
       lpBreakdown,
     };
-  }, [yields, cooler, reserves, cd]);
+  }, [yields, cooler, reserves, lpFees, cd]);
 }

@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { DEFILLAMA_YIELDS_URL, LP_POOL_MAP } from "@/lib/constants";
+import { useMemo } from "react";
 import { CHAIN_NAME_TO_ID } from "@/modules/ohm/utils/defi-llama";
+import { useLpFeesEarned } from "@/modules/pulse/hooks/useLpFeesEarned";
 import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
 
 export interface LpPoolRow {
@@ -9,8 +9,9 @@ export interface LpPoolRow {
   chain: string;
   chainId: number;
   tvl: number;
-  apyBase: number;
-  weeklyFees: number;
+  weeklyFees: number | null;
+  collectedFeesUsd: number | null;
+  uncollectedFeesDeltaUsd: number | null;
   ohmPct: number;
   ohmDepth: number;
 }
@@ -23,60 +24,42 @@ function parseProtocolFromToken(token: string): string {
   return match ? match[1].trim() : token;
 }
 
-// Fetches apyBase for every pool in LP_POOL_MAP via DefiLlama's per-pool chart endpoint.
-// We hit the single-pool endpoint (rather than the full /pools list) to minimize payload.
-async function fetchApyBaseByPoolId(poolIds: string[]): Promise<Map<string, number>> {
-  const results = await Promise.all(
-    poolIds.map(async (id) => {
-      try {
-        const res = await fetch(`${DEFILLAMA_YIELDS_URL}/chart/${id}`);
-        if (!res.ok) return [id, 0] as const;
-        const json = await res.json();
-        const points: Array<{ apyBase: number | null }> = json?.data ?? [];
-        const latest = points[points.length - 1];
-        return [id, latest?.apyBase ?? 0] as const;
-      } catch {
-        return [id, 0] as const;
-      }
-    }),
-  );
-  return new Map(results);
+function poolKey(name: string, blockchain: string): string {
+  return `${name.toLowerCase()}|${blockchain.toLowerCase()}`;
 }
 
 export function useLpPoolsData() {
-  const { data: reserves } = useReserveBalances();
+  const { data: reserves, isLoading: reservesLoading } = useReserveBalances();
+  const { data: fees, isLoading: feesLoading } = useLpFeesEarned();
 
-  return useQuery<LpPoolRow[]>({
-    queryKey: ["lpPoolsData", reserves?.lpPositions?.map((p) => p.name).join(",")],
-    enabled: (reserves?.lpPositions?.length ?? 0) > 0,
-    queryFn: async () => {
-      const lpPositions = reserves?.lpPositions ?? [];
-      const poolIds = lpPositions
-        .map((p) => LP_POOL_MAP[p.name])
-        .filter((id): id is string => Boolean(id));
-      const apyByPoolId = await fetchApyBaseByPoolId(poolIds);
+  const rows = useMemo<LpPoolRow[]>(() => {
+    const feesByPool = new Map(
+      (fees?.pools ?? []).map((pool) => [poolKey(pool.name, pool.blockchain), pool]),
+    );
 
-      return lpPositions.map((pos) => {
-        const chainId = CHAIN_NAME_TO_ID[pos.blockchain] ?? 0;
-        const apyBase = apyByPoolId.get(LP_POOL_MAP[pos.name]) ?? 0;
-        const weeklyFees = (pos.value * (apyBase / 100)) / 52;
-        const ohmDepth = Math.max(pos.value - pos.valueExcludingOhm, 0);
-        const ohmPct = pos.value > 0 ? ohmDepth / pos.value : 0;
+    return (reserves?.lpPositions ?? []).map((pos) => {
+      const chainId = CHAIN_NAME_TO_ID[pos.blockchain] ?? 0;
+      const feeData = feesByPool.get(poolKey(pos.name, pos.blockchain));
+      const ohmDepth = Math.max(pos.value - pos.valueExcludingOhm, 0);
+      const ohmPct = pos.value > 0 ? ohmDepth / pos.value : 0;
 
-        return {
-          name: pos.name,
-          protocol: parseProtocolFromToken(pos.name),
-          chain: pos.blockchain,
-          chainId,
-          tvl: pos.value,
-          apyBase,
-          weeklyFees,
-          ohmPct,
-          ohmDepth,
-        };
-      });
-    },
-    staleTime: 300_000,
-    refetchInterval: 600_000,
-  });
+      return {
+        name: pos.name,
+        protocol: parseProtocolFromToken(pos.name),
+        chain: pos.blockchain,
+        chainId,
+        tvl: pos.value,
+        weeklyFees: feeData?.feesEarnedUsd ?? null,
+        collectedFeesUsd: feeData?.collectedFeesUsd ?? null,
+        uncollectedFeesDeltaUsd: feeData?.uncollectedFeesDeltaUsd ?? null,
+        ohmPct,
+        ohmDepth,
+      };
+    });
+  }, [reserves, fees]);
+
+  return {
+    data: rows,
+    isLoading: reservesLoading || feesLoading,
+  };
 }

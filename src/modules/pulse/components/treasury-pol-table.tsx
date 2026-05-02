@@ -43,6 +43,11 @@ function stripLpSuffix(name: string): string {
   return name.replace(/ Liquidity Pool$/i, "").replace(/ LP$/i, "");
 }
 
+function FeesCell({ value }: { value: number | null }) {
+  if (value == null) return <span className="text-secondary-t">Unavailable</span>;
+  return <NumberFlow value={value} format={COMPACT_USD} />;
+}
+
 const columnHelper = createColumnHelper<LpPoolRow>();
 
 const COLUMNS = [
@@ -65,8 +70,8 @@ const COLUMNS = [
     cell: (info) => <NumberFlow value={info.getValue()} format={COMPACT_USD} />,
   }),
   columnHelper.accessor("weeklyFees", {
-    header: "7d Fees",
-    cell: (info) => <NumberFlow value={info.getValue()} format={COMPACT_USD} />,
+    header: "7d Fees Earned",
+    cell: (info) => <FeesCell value={info.getValue()} />,
   }),
   columnHelper.display({
     id: "polPct",
@@ -92,7 +97,10 @@ export function TreasuryPolTable() {
   const { data: rows, isLoading } = useLpPoolsData();
 
   const totalTvl = useMemo(() => (rows ?? []).reduce((s, r) => s + r.tvl, 0), [rows]);
-  const totalFees = useMemo(() => (rows ?? []).reduce((s, r) => s + r.weeklyFees, 0), [rows]);
+  const totalFees = useMemo(
+    () => (rows ?? []).reduce((s, r) => s + (r.weeklyFees ?? 0), 0),
+    [rows],
+  );
   const totalOhmDepth = useMemo(() => (rows ?? []).reduce((s, r) => s + r.ohmDepth, 0), [rows]);
 
   const table = useReactTable({
@@ -160,7 +168,11 @@ export function TreasuryPolTable() {
             <NumberFlow value={totalTvl} format={COMPACT_USD} />
           </TableCell>
           <TableCell className="text-right font-bold text-primary-t">
-            <NumberFlow value={totalFees} format={COMPACT_USD} />
+            {rows?.some((row) => row.weeklyFees != null) ? (
+              <NumberFlow value={totalFees} format={COMPACT_USD} />
+            ) : (
+              <span className="text-secondary-t">Unavailable</span>
+            )}
           </TableCell>
           <TableCell className="text-right text-secondary-t">—</TableCell>
           <TableCell className="text-right text-secondary-t">—</TableCell>
