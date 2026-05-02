@@ -6,6 +6,7 @@ interface PositionInfoProps {
   projectedCollateral: bigint;
   projectedDebt: bigint;
   liquidationThreshold: bigint;
+  projectedLiquidationDate: Date | null;
   additionalBorrowingAvailable: bigint;
   maxPotentialBorrowAmount: bigint;
   currentDebt: bigint;
@@ -34,10 +35,21 @@ function calculateLtv(debt: bigint, liquidationThreshold: bigint): string {
   return ltv.toFixed(2);
 }
 
+function formatLiquidationDate(date: Date | null): string {
+  if (!date) return "—";
+  if (date.getTime() <= Date.now()) return "Now";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function BorrowPositionInfo({
   projectedCollateral,
   projectedDebt,
   liquidationThreshold,
+  projectedLiquidationDate,
   additionalBorrowingAvailable,
   currentDebt,
   isRepayMode,
@@ -93,6 +105,10 @@ export function BorrowPositionInfo({
 
           <InfoRow label="Buffer to Liquidation">
             <span className="font-medium">{formatUsds(bufferToLiquidation)} USDS</span>
+          </InfoRow>
+
+          <InfoRow label="Est. Liquidation Date">
+            <span className="font-medium">{formatLiquidationDate(projectedLiquidationDate)}</span>
           </InfoRow>
 
           <InfoRow label="Available to Borrow">

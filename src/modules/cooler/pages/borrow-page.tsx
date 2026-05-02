@@ -27,6 +27,7 @@ export function CoolerBorrowPage() {
     projectedCollateral,
     projectedDebt,
     liquidationThreshold,
+    projectedLiquidationDate,
     additionalBorrowingAvailable,
     maxPotentialBorrowAmount,
     currentDebt,
@@ -77,6 +78,7 @@ export function CoolerBorrowPage() {
               projectedCollateral={projectedCollateral}
               projectedDebt={projectedDebt}
               liquidationThreshold={liquidationThreshold}
+              projectedLiquidationDate={projectedLiquidationDate}
               additionalBorrowingAvailable={additionalBorrowingAvailable}
               maxPotentialBorrowAmount={maxPotentialBorrowAmount}
               currentDebt={currentDebt}

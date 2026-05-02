@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
@@ -27,31 +27,28 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     return position.interestRateBps / 10000 / 8760;
   }, [position?.interestRateBps]);
 
+  const annualInterestRate = useMemo(() => {
+    if (!position?.interestRateWad) return 0;
+    return Math.exp(Number(formatUnits(position.interestRateWad, 18))) - 1;
+  }, [position?.interestRateWad]);
+
   const [collateralAmount, setCollateralAmount] = useState(ZERO);
 
   const [borrowAmount, setBorrowAmount] = useState<bigint>(ZERO);
   const [ltvPercentage, setLtvPercentage] = useState(100);
 
-  // Recalculate initial borrowAmount when position data first becomes available
-  const hasInitialized = useRef(false);
   useEffect(() => {
-    if (hasInitialized.current) return;
-    if (!loan || !position?.maxOriginationLtv || hourlyInterestRate === 0) return;
-
-    hasInitialized.current = true;
-
     if (isRepayMode) {
+      setCollateralAmount(ZERO);
+      setBorrowAmount(ZERO);
+      setLtvPercentage(100);
       return;
     }
 
-    const maxBorrow = wmul(loan.collateral, position.maxOriginationLtv);
-    const additionalBorrowing = maxBorrow - loan.debt;
-
-    const oneHourInterestWad = parseUnits(hourlyInterestRate.toFixed(18), 18);
-    const oneHourInterest = wmul(loan.debt, oneHourInterestWad);
-
-    setBorrowAmount(additionalBorrowing > oneHourInterest ? additionalBorrowing : ZERO);
-  }, [loan, position?.maxOriginationLtv, hourlyInterestRate, isRepayMode]);
+    setCollateralAmount(ZERO);
+    setBorrowAmount(ZERO);
+    setLtvPercentage(100);
+  }, [isRepayMode]);
 
   // Current debt
   const currentDebt = useMemo(() => {
@@ -136,6 +133,20 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
   const additionalBorrowingAvailable = useMemo(() => {
     return maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
   }, [maxPotentialBorrowAmount, currentDebt]);
+
+  const projectedLiquidationDate = useMemo(() => {
+    if (projectedDebt === ZERO || liquidationThreshold === ZERO || annualInterestRate <= 0) {
+      return null;
+    }
+
+    const projectedDebtNum = Number(formatUnits(projectedDebt, 18));
+    const liquidationThresholdNum = Number(formatUnits(liquidationThreshold, 18));
+    if (projectedDebtNum >= liquidationThresholdNum) return new Date();
+
+    const yearsToLiquidation =
+      Math.log(liquidationThresholdNum / projectedDebtNum) / annualInterestRate;
+    return new Date(Date.now() + yearsToLiquidation * 365 * 24 * 60 * 60 * 1000);
+  }, [projectedDebt, liquidationThreshold, annualInterestRate]);
 
   // Is projected debt below minimum?
   const isBelowMinDebt = projectedDebt > ZERO && projectedDebt < MIN_DEBT;
@@ -258,6 +269,7 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     oneHourInterest,
     projectedDebt,
     projectedCollateral,
+    projectedLiquidationDate,
     additionalBorrowingAvailable,
     isBelowMinDebt,
 
