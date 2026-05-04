@@ -24,6 +24,7 @@ export function initializeAnalytics(): void {
       capture_pageleave: true,
       ip: false,
       cross_subdomain_cookie: true,
+      capture_exceptions: true,
       // Minimum recording duration (5s) is configured server-side under
       // PostHog → Project Settings → Session Replay (this version of
       // posthog-js does not expose minimumDurationMilliseconds at init).

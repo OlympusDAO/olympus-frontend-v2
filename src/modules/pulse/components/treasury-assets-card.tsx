@@ -39,9 +39,9 @@ function buildSlices(
 
   return [
     { name: "USDS (Cooler Loans)", value: coolerBorrowed, color: "#8979FF", apy: coolerApy },
-    { name: "sUSDe (yield-bearing)", value: susdeValue, color: "#F87171", apy: susdeApy },
+    { name: "sUSDe", value: susdeValue, color: "#F87171", apy: susdeApy },
     { name: "LP positions", value: lpTotal, color: "#22D3EE", apy: null },
-    { name: "sUSDS (yield-bearing)", value: susdsValue, color: "#F59E0B", apy: susdsApy },
+    { name: "sUSDS", value: susdsValue, color: "#F59E0B", apy: susdsApy },
     { name: "Other", value: other, color: "#34D399", apy: null },
   ].filter((s) => s.value > 0);
 }

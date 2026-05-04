@@ -17,7 +17,8 @@
     "prepare": "husky",
     "codegen": "orval",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sourcemap:upload": "posthog-cli sourcemap inject --directory ./dist/assets && posthog-cli sourcemap upload --directory ./dist/assets"
   },
   "engines": {
     "node": ">=24",
@@ -63,6 +64,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.5",
+    "@posthog/cli": "^0.7.11",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@testing-library/jest-dom": "^6.9.1",
