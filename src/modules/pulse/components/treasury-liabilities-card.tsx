@@ -79,7 +79,8 @@ export function TreasuryLiabilitiesCard() {
   const ohmPrice = ohmPriceData?.price ?? 0;
   const weeklyBurns = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
   const annualBurns = weeklyBurns * 52;
-  const burnRatePct = ohmTotalSupply > 0 ? (annualBurns / ohmTotalSupply) * 100 : 0;
+  const ohmCirculatingSupply = metrics?.ohmCirculatingSupply ?? 0;
+  const burnRatePct = ohmCirculatingSupply > 0 ? (annualBurns / ohmCirculatingSupply) * 100 : 0;
 
   return (
     <Card className="flex flex-col gap-4 p-5">
@@ -88,7 +89,9 @@ export function TreasuryLiabilitiesCard() {
       <Separator />
 
       <div className="flex items-start justify-between gap-4">
-        <p className="text-primary-t text-sm font-semibold">Total OHM Supply</p>
+        <TooltipInfo title="Total Supply of OHM">
+          <p className="text-primary-t text-sm font-semibold">Total Supply</p>
+        </TooltipInfo>
         <OhmValue value={ohmTotalSupply} />
       </div>
 
@@ -123,14 +126,16 @@ export function TreasuryLiabilitiesCard() {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <TooltipInfo title="New OHM minted on successful CD conversion">
+        <TooltipInfo title="Net new OHM able to be minted through exercised CDs">
           <p className="text-primary-t text-sm font-semibold">Inflation</p>
         </TooltipInfo>
         <OhmValue value={supplyGrowthOhm} prefix="+" />
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-primary-t text-sm font-semibold">YRF Annual Burn Rate</p>
+        <TooltipInfo title="Annualized OHM repurchases at current YRF spend, shown as a percentage of Circulating Supply">
+          <p className="text-primary-t text-sm font-semibold">YRF Annual Burn Rate</p>
+        </TooltipInfo>
         <p className="text-sm font-semibold [--number-flow-char-height:20px]">
           <NumberFlow
             value={burnRatePct / 100}

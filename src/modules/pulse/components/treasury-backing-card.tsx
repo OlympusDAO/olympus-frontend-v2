@@ -219,7 +219,9 @@ export function TreasuryBackingCard() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="size-2.5 rounded-full" style={{ backgroundColor: PURPLE }} />
-              <span className="text-secondary-t">Backed Supply</span>
+              <InfoTooltip title="Circulating Supply of OHM excluding OHM in Protocol Owned Liquidity">
+                <span className="text-secondary-t">Backed Supply</span>
+              </InfoTooltip>
             </div>
           </div>
           <Segmented size="sm" value={days} onValueChange={setDays} options={DAYS_OPTIONS} />

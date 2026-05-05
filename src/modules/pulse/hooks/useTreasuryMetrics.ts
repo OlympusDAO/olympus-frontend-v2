@@ -3,6 +3,7 @@ import { TREASURY_API_URL } from "@/lib/constants.ts";
 
 interface TreasuryMetrics {
   ohmTotalSupply: number;
+  ohmCirculatingSupply: number;
   ohmBackedSupply: number;
   treasuryMarketValue: number;
   treasuryLiquidBacking: number;
@@ -22,6 +23,7 @@ export function useTreasuryMetrics() {
 
       return {
         ohmTotalSupply: data.ohmTotalSupply || 0,
+        ohmCirculatingSupply: data.ohmCirculatingSupply || 0,
         ohmBackedSupply: data.ohmBackedSupply || 0,
         treasuryMarketValue: data.treasuryMarketValue || 0,
         treasuryLiquidBacking: data.treasuryLiquidBacking || 0,
