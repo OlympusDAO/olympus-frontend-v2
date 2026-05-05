@@ -3,9 +3,42 @@ import posthog from "posthog-js";
 
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
-export function initializeAnalytics(): void {
-  if (GA_MEASUREMENT_ID) {
+export const COOKIE_CONSENT_KEY = "olympus-cookie-consent";
+export type CookieConsent = "accept_all" | "essential_only" | "reject_all";
+
+export function getStoredConsent(): CookieConsent | null {
+  try {
+    return localStorage.getItem(COOKIE_CONSENT_KEY) as CookieConsent | null;
+  } catch {
+    return null;
+  }
+}
+
+let gaInitialized = false;
+
+function initGA(): void {
+  if (GA_MEASUREMENT_ID && !gaInitialized) {
     ReactGA.initialize(GA_MEASUREMENT_ID, { gtagOptions: { anonymize_ip: true } });
+    gaInitialized = true;
+  }
+}
+
+export function applyAnalyticsConsent(choice: CookieConsent): void {
+  try {
+    localStorage.setItem(COOKIE_CONSENT_KEY, choice);
+  } catch {}
+  if (choice === "accept_all") {
+    initGA();
+    posthog.opt_in_capturing();
+  } else {
+    posthog.opt_out_capturing();
+  }
+}
+
+export function initializeAnalytics(): void {
+  const consent = getStoredConsent();
+  if (consent === "accept_all") {
+    initGA();
   }
 
   const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN;
@@ -25,6 +58,7 @@ export function initializeAnalytics(): void {
       ip: false,
       cross_subdomain_cookie: true,
       capture_exceptions: true,
+      opt_out_capturing_by_default: true,
       // Minimum recording duration (5s) is configured server-side under
       // PostHog → Project Settings → Session Replay (this version of
       // posthog-js does not expose minimumDurationMilliseconds at init).
