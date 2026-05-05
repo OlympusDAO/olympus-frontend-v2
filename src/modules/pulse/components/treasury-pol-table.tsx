@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { NumberFlow } from "@/components/ui/number-flow";
+import { TooltipInfo } from "@/components/ui/tooltip";
 import { ChainIcon } from "@/components/chain-icon";
 import { useLpPoolsData, type LpPoolRow } from "@/modules/pulse/hooks/useLpPoolsData";
 
@@ -65,6 +66,11 @@ const SKELETON_CELLS = [
 
 const columnHelper = createColumnHelper<LpPoolRow>();
 
+function EstimatedFeesCell({ value }: { value: number | null }) {
+  if (value == null) return <span className="text-secondary-t">Unavailable</span>;
+  return <NumberFlow value={value} format={COMPACT_USD} />;
+}
+
 const COLUMNS = [
   columnHelper.accessor("name", {
     header: "Pool",
@@ -85,8 +91,12 @@ const COLUMNS = [
     cell: (info) => <NumberFlow value={info.getValue()} format={COMPACT_USD} />,
   }),
   columnHelper.accessor("weeklyFees", {
-    header: "7d Fees",
-    cell: (info) => <NumberFlow value={info.getValue()} format={COMPACT_USD} />,
+    header: () => (
+      <TooltipInfo title="Estimated weekly fee run-rate derived from fee APY and Olympus-owned LP value. This is not observed fees collected by Olympus over the last 7 days.">
+        Est. Weekly Fees
+      </TooltipInfo>
+    ),
+    cell: (info) => <EstimatedFeesCell value={info.getValue()} />,
   }),
   columnHelper.display({
     id: "polPct",
@@ -112,7 +122,10 @@ export function TreasuryPolTable() {
   const { data: rows, isLoading } = useLpPoolsData();
 
   const totalTvl = useMemo(() => (rows ?? []).reduce((s, r) => s + r.tvl, 0), [rows]);
-  const totalFees = useMemo(() => (rows ?? []).reduce((s, r) => s + r.weeklyFees, 0), [rows]);
+  const totalFees = useMemo(
+    () => (rows ?? []).reduce((s, r) => s + (r.weeklyFees ?? 0), 0),
+    [rows],
+  );
   const totalOhmDepth = useMemo(() => (rows ?? []).reduce((s, r) => s + r.ohmDepth, 0), [rows]);
 
   const table = useReactTable({
@@ -128,6 +141,7 @@ export function TreasuryPolTable() {
         <h3 className="text-[18px]/[20px] font-semibold">Protocol-Owned Liquidity</h3>
         <p className="mt-1 text-xs text-secondary-t">
           Dedicated view for Olympus-owned liquidity positions, separated from the balance sheet.
+          Fees are APY-derived run-rate estimates, not observed 7-day collections.
         </p>
       </div>
 
