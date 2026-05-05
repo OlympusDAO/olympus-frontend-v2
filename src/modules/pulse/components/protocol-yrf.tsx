@@ -232,8 +232,8 @@ export function ProtocolYrf() {
                 <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: -30 }}>
                   <defs>
                     <linearGradient id="gradYrfBurn" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--green)" stopOpacity={0.05} />
-                      <stop offset="100%" stopColor="var(--green)" stopOpacity={0.4} />
+                      <stop offset="0%" stopColor="var(--olympus-chart-1)" stopOpacity={0.05} />
+                      <stop offset="100%" stopColor="var(--olympus-chart-1)" stopOpacity={0.4} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -268,7 +268,7 @@ export function ProtocolYrf() {
                           </p>
                           <div className="flex w-full items-center justify-between gap-4">
                             <div className="flex items-center gap-1.5">
-                              <span className="size-2.5 shrink-0 rounded-full bg-green" />
+                              <span className="size-2.5 shrink-0 rounded-full bg-[var(--olympus-chart-1)]" />
                               <span className="text-secondary-t text-xs/4 font-normal whitespace-nowrap">
                                 OHM Burned
                               </span>

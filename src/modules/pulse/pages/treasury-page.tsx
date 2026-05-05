@@ -13,21 +13,14 @@ export function TreasuryPage() {
         <p className="text-xl/6 font-semibold">Assets and Liabilities</p>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 max-md:grid-cols-1 gap-4">
+      <div className="mt-3 flex flex-col gap-4">
         <TreasuryAssetsCard />
+        <TreasuryPolTable />
         <TreasuryLiabilitiesCard />
       </div>
 
       <div className="mt-4">
         <TreasuryBackingCard />
-      </div>
-
-      <div className="mt-8 flex items-center justify-between">
-        <p className="text-xl/6 font-semibold">Protocol-Owned Liquidity</p>
-      </div>
-
-      <div className="mt-3">
-        <TreasuryPolTable />
       </div>
     </div>
   );

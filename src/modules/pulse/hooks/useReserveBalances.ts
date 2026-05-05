@@ -8,10 +8,21 @@ export interface LpPosition {
   valueExcludingOhm: number;
 }
 
+export interface ReserveHolding {
+  token: string;
+  blockchain: string;
+  category: string;
+  balance: number;
+  value: number;
+  isLiquid: boolean;
+  backingContribution: number;
+}
+
 interface ReserveBalances {
   susdeValue: number;
   susdsValue: number;
   lpPositions: LpPosition[];
+  holdings: ReserveHolding[];
 }
 
 // 30 days — cross-chain indexer lag can leave a pool stale for >1 week
@@ -21,6 +32,16 @@ const LOOKBACK_DAYS = 30;
 function isLpToken(token: string): boolean {
   const lower = token.toLowerCase();
   return lower.includes("liquidity pool") || lower.includes(" lp");
+}
+
+function isNewer(date: string, latest?: string): boolean {
+  return !latest || date > latest;
+}
+
+function getDisplayTokenName(token: string): string {
+  if (token === "USDS - Borrowed Through Cooler Loans V2") return "Cooler Loan USDS Receivables";
+  if (token === "DAI - Borrowed Through Cooler Loans") return "Cooler Loan DAI Receivables";
+  return token;
 }
 
 export function useReserveBalances() {
@@ -49,53 +70,85 @@ export function useReserveBalances() {
         balance: string;
         value: string;
         valueExcludingOhm: string;
+        isLiquid: boolean;
         date: string;
         category: string;
+        id: string;
+        sourceAddress: string;
       }> = json.data ?? [];
 
-      let susdeValue = 0;
-      let susdsValue = 0;
-      // Keep the latest record per (token, blockchain) — summing across source wallets on that date.
-      const lpLatestDate = new Map<string, string>();
+      // Use the latest available snapshot per chain before aggregating.
+      // A pure "latest per wallet/token across 30 days" window can preserve positions that
+      // disappeared from newer snapshots, e.g. redeemed receipt tokens.
+      const latestDateByChain = new Map<string, string>();
+      for (const rec of records) {
+        const chain = rec.blockchain || "Unknown";
+        if (isNewer(rec.date, latestDateByChain.get(chain))) {
+          latestDateByChain.set(chain, rec.date);
+        }
+      }
+
+      const latestSnapshotRecords = records.filter(
+        (rec) => rec.date === latestDateByChain.get(rec.blockchain || "Unknown"),
+      );
+
+      const holdingAgg = new Map<string, ReserveHolding>();
       const lpAgg = new Map<string, LpPosition>();
 
-      for (const rec of records) {
-        const tokenLower = (rec.token || "").toLowerCase();
+      for (const rec of latestSnapshotRecords) {
         const value = parseFloat(rec.value) || 0;
+        const balance = parseFloat(rec.balance) || 0;
+        const valueExcludingOhm = parseFloat(rec.valueExcludingOhm) || 0;
+        const backingContribution = rec.isLiquid ? valueExcludingOhm : 0;
+        const token = getDisplayTokenName(rec.token);
+        const holdingKey = `${token}|${rec.blockchain}|${rec.category}`;
+        const existingHolding = holdingAgg.get(holdingKey);
 
-        if (tokenLower === "staked usde" && value > susdeValue) {
-          susdeValue = value;
-        }
-        if (tokenLower === "savings usds" && value > susdsValue) {
-          susdsValue = value;
+        if (existingHolding) {
+          existingHolding.balance += balance;
+          existingHolding.value += value;
+          existingHolding.isLiquid ||= rec.isLiquid;
+          existingHolding.backingContribution += backingContribution;
+        } else {
+          holdingAgg.set(holdingKey, {
+            token,
+            blockchain: rec.blockchain,
+            category: rec.category,
+            balance,
+            value,
+            isLiquid: rec.isLiquid,
+            backingContribution,
+          });
         }
 
         if (isLpToken(rec.token) && rec.category === "Protocol-Owned Liquidity") {
-          const key = `${rec.token}|${rec.blockchain}`;
-          const latest = lpLatestDate.get(key);
-          if (!latest || rec.date > latest) {
-            // New latest date — reset aggregation
-            lpLatestDate.set(key, rec.date);
-            lpAgg.set(key, {
+          const lpKey = `${rec.token}|${rec.blockchain}`;
+          const existingLp = lpAgg.get(lpKey);
+
+          if (existingLp) {
+            existingLp.value += value;
+            existingLp.valueExcludingOhm += valueExcludingOhm;
+          } else {
+            lpAgg.set(lpKey, {
               name: rec.token,
               blockchain: rec.blockchain,
               value,
-              valueExcludingOhm: parseFloat(rec.valueExcludingOhm) || 0,
+              valueExcludingOhm,
             });
-          } else if (rec.date === latest) {
-            // Same date, different source wallet — sum
-            const existing = lpAgg.get(key);
-            if (existing) {
-              existing.value += value;
-              existing.valueExcludingOhm += parseFloat(rec.valueExcludingOhm) || 0;
-            }
           }
         }
       }
 
+      const holdings = Array.from(holdingAgg.values()).filter((h) => h.value > 1);
+      const susdeValue = holdings
+        .filter((h) => h.token.toLowerCase() === "staked usde")
+        .reduce((sum, h) => sum + h.value, 0);
+      const susdsValue = holdings
+        .filter((h) => h.token.toLowerCase() === "savings usds")
+        .reduce((sum, h) => sum + h.value, 0);
       const lpPositions = Array.from(lpAgg.values()).filter((p) => p.value > 1000);
 
-      return { susdeValue, susdsValue, lpPositions };
+      return { susdeValue, susdsValue, lpPositions, holdings };
     },
     staleTime: 30_000,
     refetchInterval: 30_000,

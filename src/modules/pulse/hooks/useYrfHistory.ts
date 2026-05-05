@@ -104,7 +104,7 @@ export function useYrfHistory() {
     queryKey: ["yrfHistory"],
     queryFn: async () => {
       // 1. Fetch yield events and market IDs from YRF subgraph (paginated)
-      const [nextYieldSets, repoMarkets] = await Promise.all([
+      const [nextYieldSets, repoMarkets, latestNextYieldSets] = await Promise.all([
         fetchAllPages<NextYieldSetRow>(
           YRF_SUBGRAPH_URL,
           (idGt, first) => `
@@ -142,6 +142,24 @@ export function useYrfHistory() {
             }
           `,
           (d) => d.repoMarkets as RepoMarketRow[] | undefined,
+        ),
+        fetchAllPages<NextYieldSetRow>(
+          YRF_SUBGRAPH_URL,
+          (_idGt, first) => `
+            {
+              nextYieldSets(
+                first: ${Math.min(first, 25)}
+                orderBy: blockTimestamp
+                orderDirection: desc
+              ) {
+                id
+                nextYieldDecimal
+                blockTimestamp
+                contract { version }
+              }
+            }
+          `,
+          (d) => d.nextYieldSets as NextYieldSetRow[] | undefined,
         ),
       ]);
 
@@ -233,9 +251,13 @@ export function useYrfHistory() {
 
       const totalYieldDeployed = weeklyYields.reduce((sum, w) => sum + w.yieldDeployed, 0);
 
-      // Current weekly yield is the latest deduped week's yield
+      // Current weekly yield is the latest non-zero deduped week's yield. The YRF subgraph can
+      // emit zero-value setter events between funded weeks, which should not collapse forward-run
+      // rate cards to 0.
       const currentWeeklyYield =
-        weeklyYields.length > 0 ? weeklyYields[weeklyYields.length - 1].yieldDeployed : 0;
+        latestNextYieldSets.map((w) => parseFloat(w.nextYieldDecimal) || 0).find((v) => v > 0) ??
+        [...weeklyYields].reverse().find((w) => w.yieldDeployed > 0)?.yieldDeployed ??
+        0;
 
       // Current week spend — look up bond purchases for the actual current calendar week
       const currentMonday = getWeekStartUTC().toISOString().split("T")[0];

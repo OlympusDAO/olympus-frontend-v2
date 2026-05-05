@@ -8,12 +8,12 @@ import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
 import { useYrfHistory } from "@/modules/pulse/hooks/useYrfHistory";
-import { useGohmIndex, useGohmTotalSupply } from "@/lib/hooks/useGohmConversion";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
-import { RiCornerDownRightLine } from "@remixicon/react";
+import type { ReactNode } from "react";
 
 const DECIMAL_FORMAT = { style: "decimal", notation: "standard" } as const;
 const COMPACT_FORMAT = { style: "decimal", notation: "compact", maximumFractionDigits: 2 } as const;
+const COOLER_YRF_USD_PER_GOHM_YEAR = 11.33;
 
 function OhmValue({
   value,
@@ -38,17 +38,45 @@ function OhmValue({
   );
 }
 
-function OhmValueSm({ value, prefix }: { value: number; prefix?: string }) {
+function FullWidthLiabilityRow({
+  label,
+  value,
+  tooltip,
+  subtext,
+}: {
+  label: string;
+  value: ReactNode;
+  tooltip?: string;
+  subtext?: ReactNode;
+}) {
   return (
-    <div className="flex items-center gap-1 shrink-0">
-      <Icon name="OHMTokenIcon" className="size-3.5" />
-      <NumberFlow
-        value={value}
-        format={COMPACT_FORMAT}
-        prefix={prefix}
-        suffix="OHM"
-        className="text-xs font-semibold"
-      />
+    <div className="bg-surface-a3 border border-a3-b flex items-center justify-between gap-4 rounded-xl px-3.5 py-3">
+      <div className="flex flex-col gap-1">
+        {tooltip ? (
+          <TooltipInfo title={tooltip}>
+            <p className="text-primary-t text-sm font-semibold">{label}</p>
+          </TooltipInfo>
+        ) : (
+          <p className="text-primary-t text-sm font-semibold">{label}</p>
+        )}
+        {subtext ? <p className="text-secondary-t text-xs font-normal">{subtext}</p> : null}
+      </div>
+      {value}
+    </div>
+  );
+}
+
+function SupplyRow({ label, value, tooltip }: { label: string; value: number; tooltip?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-3.5 py-3">
+      {tooltip ? (
+        <TooltipInfo title={tooltip}>
+          <p className="text-primary-t text-sm font-semibold">{label}</p>
+        </TooltipInfo>
+      ) : (
+        <p className="text-primary-t text-sm font-semibold">{label}</p>
+      )}
+      <OhmValue value={value} />
     </div>
   );
 }
@@ -59,27 +87,30 @@ export function TreasuryLiabilitiesCard() {
   const { data: cd } = useCdStatistics();
   const { data: yrfHistory } = useYrfHistory();
   const { data: ohmPriceData } = useOhmPrice();
-  const { index } = useGohmIndex();
-  const { totalSupply: gohmTotalSupplyBigint } = useGohmTotalSupply();
 
   const ohmTotalSupply = metrics?.ohmTotalSupply ?? 0;
-
-  const wrappedAsOhm =
-    gohmTotalSupplyBigint !== undefined && index !== undefined
-      ? Number((gohmTotalSupplyBigint * index) / 10n ** 27n)
-      : 0;
-  const wrappedPct = ohmTotalSupply > 0 ? Math.round((wrappedAsOhm / ohmTotalSupply) * 100) : 0;
-
-  const totalCollateralGohm = cooler?.totalCollateralGohm ?? 0;
-  const coolerOhm = index !== undefined ? totalCollateralGohm * (Number(index) / 1e9) : 0;
+  const ohmCirculatingSupply = metrics?.ohmCirculatingSupply ?? 0;
+  const ohmBackedSupply = metrics?.ohmBackedSupply ?? 0;
 
   const supplyGrowthOhm = cd?.supplyGrowthOhm ?? 0;
 
   const weeklyYield = yrfHistory?.currentWeeklyYield ?? 0;
   const ohmPrice = ohmPriceData?.price ?? 0;
-  const weeklyBurns = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
-  const annualBurns = weeklyBurns * 52;
-  const burnRatePct = ohmTotalSupply > 0 ? (annualBurns / ohmTotalSupply) * 100 : 0;
+  const latestActualWeeklyBurns = [...(yrfHistory?.weeklyYields ?? [])]
+    .reverse()
+    .find((w) => w.ohmBurned > 0)?.ohmBurned;
+  const weeklyBurnsFromBudget = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
+  const annualBurnsFromCoolerDrip =
+    ohmPrice > 0
+      ? ((cooler?.totalCollateralGohm ?? 0) * COOLER_YRF_USD_PER_GOHM_YEAR) / ohmPrice
+      : 0;
+  const annualBurns =
+    latestActualWeeklyBurns !== undefined
+      ? latestActualWeeklyBurns * 52
+      : weeklyBurnsFromBudget > 0
+        ? weeklyBurnsFromBudget * 52
+        : annualBurnsFromCoolerDrip;
+  const burnRatePct = ohmCirculatingSupply > 0 ? (annualBurns / ohmCirculatingSupply) * 100 : 0;
 
   return (
     <Card className="flex flex-col gap-4 p-5">
@@ -87,61 +118,43 @@ export function TreasuryLiabilitiesCard() {
 
       <Separator />
 
-      <div className="flex items-start justify-between gap-4">
-        <p className="text-primary-t text-sm font-semibold">Total OHM Supply</p>
-        <OhmValue value={ohmTotalSupply} />
+      <div className="bg-surface-a3 border border-a3-b divide-a3-b flex flex-col divide-y rounded-xl">
+        <SupplyRow label="Total Supply" value={ohmTotalSupply} tooltip="Total Supply of OHM" />
+        <SupplyRow
+          label="Circulating Supply"
+          value={ohmCirculatingSupply}
+          tooltip="Total Supply of OHM excluding Treasury Owned Supply"
+        />
+        <SupplyRow
+          label="Backed Supply"
+          value={ohmBackedSupply}
+          tooltip="Circulating Supply of OHM excluding OHM in Protocol Owned Liquidity"
+        />
       </div>
 
-      <div className="bg-surface-a3 border border-a3-b flex flex-col gap-2 rounded-xl py-3.5 pl-3 pr-3.5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-1.5">
-            <RiCornerDownRightLine className="text-secondary-t size-4 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold">Wrapped as gOHM</p>
-              <p className="text-secondary-t text-xs font-normal">~{wrappedPct}% of supply</p>
-            </div>
-          </div>
-          <OhmValueSm value={wrappedAsOhm} />
-        </div>
+      <FullWidthLiabilityRow
+        label="Inflation"
+        value={<OhmValue value={supplyGrowthOhm} prefix="+" />}
+        tooltip="Net new OHM able to be minted through exercised CDs"
+      />
 
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-1.5">
-            <RiCornerDownRightLine className="text-secondary-t size-4 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold">Deposited in Cooler as collateral</p>
-              <p className="text-secondary-t text-xs font-normal">
-                <NumberFlow
-                  value={totalCollateralGohm}
-                  format={{ style: "decimal", notation: "compact", maximumFractionDigits: 0 }}
-                  suffix=" gOHM"
-                />
-              </p>
-            </div>
-          </div>
-          <OhmValueSm value={coolerOhm} prefix="≈ " />
-        </div>
-      </div>
+      <FullWidthLiabilityRow
+        label="YRF Annual Burn Rate"
+        value={<OhmValue value={annualBurns} prefix="–" />}
+        tooltip="Annualizes the latest actual weekly OHM burned from YRF"
+        subtext={
+          <>
+            <NumberFlow
+              value={burnRatePct / 100}
+              format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+              prefix="–"
+            />
+            /yr of Circulating Supply at current YRF spend
+          </>
+        }
+      />
 
-      <div className="flex items-center justify-between gap-4">
-        <TooltipInfo title="New OHM minted on successful CD conversion">
-          <p className="text-primary-t text-sm font-semibold">Inflation</p>
-        </TooltipInfo>
-        <OhmValue value={supplyGrowthOhm} prefix="+" />
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-primary-t text-sm font-semibold">YRF Annual Burn Rate</p>
-        <p className="text-sm font-semibold [--number-flow-char-height:20px]">
-          <NumberFlow
-            value={burnRatePct / 100}
-            format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
-            prefix="–"
-          />
-          /yr
-        </p>
-      </div>
-
-      <ProtocolDataSource sources={["gOHM contract", "CD Subgraph", "YRF Subgraph"]} />
+      <ProtocolDataSource sources={["Treasury API", "CD Subgraph", "YRF Subgraph"]} />
     </Card>
   );
 }

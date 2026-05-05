@@ -213,8 +213,8 @@ export function RevenueFlowDiagram({
               );
             })}
             <linearGradient id="flow-out" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="var(--green)" stopOpacity={0.2} />
-              <stop offset="100%" stopColor="var(--green)" stopOpacity={0.08} />
+              <stop offset="0%" stopColor="var(--olympus-chart-1)" stopOpacity={0.2} />
+              <stop offset="100%" stopColor="var(--olympus-chart-1)" stopOpacity={0.08} />
             </linearGradient>
           </defs>
 
@@ -248,7 +248,7 @@ export function RevenueFlowDiagram({
           {flowPaths.outflow && (
             <g>
               <path d={flowPaths.outflow.band} fill="url(#flow-out)" />
-              <circle r="3" fill="var(--green)" opacity="0.5">
+              <circle r="3" fill="var(--olympus-chart-1)" opacity="0.5">
                 <animateMotion dur="2s" repeatCount="indefinite" path={flowPaths.outflow.center} />
               </circle>
             </g>
@@ -262,12 +262,12 @@ export function RevenueFlowDiagram({
                 y1={flowPaths.verticalConnector.y1}
                 x2={flowPaths.verticalConnector.x}
                 y2={flowPaths.verticalConnector.y2}
-                stroke="var(--green)"
+                stroke="var(--olympus-chart-1)"
                 strokeWidth="1"
                 strokeDasharray="4 3"
                 opacity={0.3}
               />
-              <circle r="2" fill="var(--green)" opacity="0.5">
+              <circle r="2" fill="var(--olympus-chart-1)" opacity="0.5">
                 <animateMotion
                   dur="1s"
                   repeatCount="indefinite"
@@ -416,7 +416,7 @@ export function RevenueFlowDiagram({
               strokeDasharray="4 3"
             />
             <path d="M12 24 L8 18 L16 18 Z" fill="var(--border-a20)" />
-            <circle r="2.5" fill="var(--green)" opacity="0.7">
+            <circle r="2.5" fill="var(--olympus-chart-1)" opacity="0.7">
               <animateMotion dur="1.5s" repeatCount="indefinite" path="M12,0 L12,24" />
             </circle>
           </svg>
@@ -450,7 +450,7 @@ export function RevenueFlowDiagram({
               strokeDasharray="4 3"
             />
             <path d="M12 24 L8 18 L16 18 Z" fill="var(--border-a20)" />
-            <circle r="2.5" fill="var(--green)" opacity="0.7">
+            <circle r="2.5" fill="var(--olympus-chart-1)" opacity="0.7">
               <animateMotion dur="1.5s" repeatCount="indefinite" path="M12,0 L12,24" />
             </circle>
           </svg>
@@ -480,13 +480,13 @@ export function RevenueFlowDiagram({
               y1="0"
               x2="12"
               y2="18"
-              stroke="var(--green)"
+              stroke="var(--olympus-chart-1)"
               strokeWidth="1"
               strokeDasharray="4 3"
               opacity={0.4}
             />
-            <path d="M12 18 L8 12 L16 12 Z" fill="var(--green)" opacity={0.4} />
-            <circle r="2" fill="var(--green)" opacity="0.5">
+            <path d="M12 18 L8 12 L16 12 Z" fill="var(--olympus-chart-1)" opacity={0.4} />
+            <circle r="2" fill="var(--olympus-chart-1)" opacity="0.5">
               <animateMotion dur="1s" repeatCount="indefinite" path="M12,0 L12,18" />
             </circle>
           </svg>
