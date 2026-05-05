@@ -107,9 +107,11 @@ export function useLpPoolsData() {
 
       return lpPositions.map((pos) => {
         const chainId = CHAIN_NAME_TO_ID[pos.blockchain] ?? 0;
+        const llamaPoolId = LP_POOL_MAP[pos.name];
+        const kodiakVaultId = KODIAK_VAULT_MAP[pos.name]?.toLowerCase();
         const apyBase =
-          feeApyByPoolId.get(LP_POOL_MAP[pos.name]) ??
-          feeApyByKodiakVaultId.get(KODIAK_VAULT_MAP[pos.name]?.toLowerCase()) ??
+          (llamaPoolId ? feeApyByPoolId.get(llamaPoolId) : undefined) ??
+          (kodiakVaultId ? feeApyByKodiakVaultId.get(kodiakVaultId) : undefined) ??
           0;
         const weeklyFees = (pos.value * (apyBase / 100)) / 52;
         const ohmDepth = Math.max(pos.value - pos.valueExcludingOhm, 0);
