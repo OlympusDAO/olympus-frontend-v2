@@ -93,7 +93,7 @@ const COLUMNS = [
   columnHelper.accessor("weeklyFees", {
     header: () => (
       <TooltipInfo title="Estimated weekly fee run-rate derived from fee APY and Olympus-owned LP value. This is not observed fees collected by Olympus over the last 7 days.">
-        Est. Weekly Fees
+        Estimated Fees
       </TooltipInfo>
     ),
     cell: (info) => <EstimatedFeesCell value={info.getValue()} />,
@@ -141,7 +141,7 @@ export function TreasuryPolTable() {
         <h3 className="text-[18px]/[20px] font-semibold">Protocol-Owned Liquidity</h3>
         <p className="mt-1 text-xs text-secondary-t">
           Dedicated view for Olympus-owned liquidity positions, separated from the balance sheet.
-          Fees are APY-derived run-rate estimates, not observed 7-day collections.
+          Fees are APY-derived estimates, not observed collections.
         </p>
       </div>
 
