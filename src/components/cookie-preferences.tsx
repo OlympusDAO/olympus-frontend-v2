@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { applyAnalyticsConsent, getStoredConsent, type CookieConsent } from "@/lib/analytics";
 
+export const COOKIE_PREFERENCES_EVENT = "olympus:open-cookie-preferences";
+
 export function CookiePreferences() {
   const [visible, setVisible] = useState(() => getStoredConsent() === null);
+
+  useEffect(() => {
+    const handler = () => setVisible(true);
+    window.addEventListener(COOKIE_PREFERENCES_EVENT, handler);
+    return () => window.removeEventListener(COOKIE_PREFERENCES_EVENT, handler);
+  }, []);
 
   if (!visible) return null;
 
@@ -23,9 +31,6 @@ export function CookiePreferences() {
         <Button onClick={() => handle("accept_all")}>Accept All</Button>
         <Button variant="secondary" onClick={() => handle("essential_only")}>
           Essential Only
-        </Button>
-        <Button variant="secondary" onClick={() => handle("reject_all")}>
-          Reject All
         </Button>
       </div>
     </div>
