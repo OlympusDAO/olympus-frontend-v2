@@ -206,7 +206,7 @@ export function TreasuryBackingCard() {
         </div>
       </div>
 
-      <div className="flex flex-1 min-w-0 max-md:h-80 flex-col gap-4">
+      <div className="flex md:flex-1 min-w-0 max-md:h-80 flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-4 text-xs/4 font-normal">
             <div className="flex items-center gap-1.5">
@@ -226,114 +226,116 @@ export function TreasuryBackingCard() {
         </div>
 
         {chartData.length > 1 ? (
-          <div className="min-h-0 flex-1 [&_*:focus]:outline-none [&_*]:outline-none">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="gradMarket" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={ORANGE} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={ORANGE} stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="gradLiquid" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={GREEN} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={GREEN} stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="gradBacked" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={PURPLE} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={PURPLE} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
+          <div className="relative min-h-0 flex-1 [&_*:focus]:outline-none [&_*]:outline-none">
+            <div className="absolute inset-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="gradMarket" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={ORANGE} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={ORANGE} stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="gradLiquid" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={GREEN} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={GREEN} stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="gradBacked" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={PURPLE} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={PURPLE} stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
 
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.07} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.07} />
 
-                <XAxis
-                  dataKey="date"
-                  interval={tickInterval}
-                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  height={18}
-                  tickFormatter={(d: string) => format(parseISO(d), "MMM d")}
-                />
-
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={formatCompactUsd}
-                  domain={[
-                    (min: number) => Math.floor(min * 0.97),
-                    (max: number) => Math.ceil(max * 1.03),
-                  ]}
-                  tickCount={5}
-                  width={56}
-                />
-
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={formatCompactNum}
-                  domain={[
-                    (min: number) => Math.floor(min * 0.97),
-                    (max: number) => Math.ceil(max * 1.03),
-                  ]}
-                  tickCount={5}
-                  width={56}
-                />
-
-                <Tooltip content={<BackingTooltip />} />
-
-                {CHART_EVENTS.map((ev) => (
-                  <ReferenceLine
-                    key={ev.date}
-                    x={ev.date}
-                    yAxisId="left"
-                    stroke={ev.color}
-                    strokeDasharray="4 2"
-                    strokeWidth={1}
-                    label={{ value: ev.label, position: "top", fontSize: 10, fill: ev.color }}
+                  <XAxis
+                    dataKey="date"
+                    interval={tickInterval}
+                    tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                    tickLine={false}
+                    axisLine={false}
+                    height={18}
+                    tickFormatter={(d: string) => format(parseISO(d), "MMM d")}
                   />
-                ))}
 
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="marketValue"
-                  stroke={ORANGE}
-                  strokeWidth={1.5}
-                  fill="url(#gradMarket)"
-                  dot={false}
-                  isAnimationActive={false}
-                />
+                  <YAxis
+                    yAxisId="left"
+                    orientation="left"
+                    tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={formatCompactUsd}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
+                    width={56}
+                  />
 
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="liquidBacking"
-                  stroke={GREEN}
-                  strokeWidth={1.5}
-                  fill="url(#gradLiquid)"
-                  dot={false}
-                  isAnimationActive={false}
-                />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={formatCompactNum}
+                    domain={[
+                      (min: number) => Math.floor(min * 0.97),
+                      (max: number) => Math.ceil(max * 1.03),
+                    ]}
+                    tickCount={5}
+                    width={56}
+                  />
 
-                <Area
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="backedSupply"
-                  stroke={PURPLE}
-                  strokeWidth={1.5}
-                  fill="url(#gradBacked)"
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                  <Tooltip content={<BackingTooltip />} />
+
+                  {CHART_EVENTS.map((ev) => (
+                    <ReferenceLine
+                      key={ev.date}
+                      x={ev.date}
+                      yAxisId="left"
+                      stroke={ev.color}
+                      strokeDasharray="4 2"
+                      strokeWidth={1}
+                      label={{ value: ev.label, position: "top", fontSize: 10, fill: ev.color }}
+                    />
+                  ))}
+
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="marketValue"
+                    stroke={ORANGE}
+                    strokeWidth={1.5}
+                    fill="url(#gradMarket)"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="liquidBacking"
+                    stroke={GREEN}
+                    strokeWidth={1.5}
+                    fill="url(#gradLiquid)"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="backedSupply"
+                    stroke={PURPLE}
+                    strokeWidth={1.5}
+                    fill="url(#gradBacked)"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2">
