@@ -49,21 +49,12 @@
   --purple: oklch(0.6281 0.167 306.1);
   --orange: oklch(0.68 0.155 52.5);
 
-  /* Olympus core palette */
-  --olympus-midnight: #141722;
-  --olympus-storm: #3f4552;
-  --olympus-chrysos: #f8cc82;
-  --olympus-asimi: #bbbdc0;
-  --olympus-marble: #efe9e0;
-  --olympus-secondary: #1a1e28;
-  --olympus-tertiary: #232836;
-
-  /* Brand-safe chart series: Olympus core with stronger tonal separation for Pulse visualizations. */
-  --olympus-chart-1: var(--olympus-chrysos);
-  --olympus-chart-2: color-mix(in srgb, var(--olympus-storm) 72%, var(--olympus-asimi));
-  --olympus-chart-3: var(--olympus-marble);
-  --olympus-chart-4: var(--olympus-asimi);
-  --olympus-chart-5: color-mix(in srgb, var(--olympus-chrysos) 56%, var(--olympus-storm));
+  /* Pulse chart series derived from the app palette in this file. */
+  --olympus-chart-1: var(--brand-sand-1000);
+  --olympus-chart-2: var(--brand-sand-900);
+  --olympus-chart-3: var(--greyscale-400);
+  --olympus-chart-4: var(--greyscale-500);
+  --olympus-chart-5: color-mix(in srgb, var(--brand-sand-1000) 48%, var(--greyscale-500));
 
   /*custom variables*/
   --text-primary: var(--slate);
