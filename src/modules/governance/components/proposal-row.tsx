@@ -137,7 +137,7 @@ export function ProposalRow({
           />
         )}
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="hidden md:table-cell text-right">
         {receiptData?.hasVoted ? (
           <div className="flex flex-col gap-1 items-end">
             <span className="text-sm/5 font-semibold text-primary-t">{userVotesLabel} gOHM</span>
@@ -147,7 +147,7 @@ export function ProposalRow({
           <span className="text-sm/5 text-tertiary-t">—</span>
         )}
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="hidden md:table-cell text-right">
         {detailsLoading ? (
           <Skeleton className="h-5 w-16 ml-auto" />
         ) : details?.status === "Pending" ? (
