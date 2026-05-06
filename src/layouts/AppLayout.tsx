@@ -12,6 +12,7 @@ import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
 import { trackPageView } from "@/lib/analytics";
 import { useWalletAnalytics } from "@/lib/hooks/useWalletAnalytics";
 import { useGlobalErrorHandler } from "@/lib/hooks/useGlobalErrorHandler";
+import { CookiePreferences } from "@/components/cookie-preferences.tsx";
 
 function PageviewTracker() {
   const location = useLocation();
@@ -58,8 +59,9 @@ export default function AppLayout() {
               </div>
               <main className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-surface-bg-l1">
                 <Header />
-                <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8 w-full max-w-(--max-content-width) mx-auto">
+                <div className="flex-1 px-4 pb-4 md:px-8 md:pb-8 w-full max-w-(--max-content-width) mx-auto relative">
                   <Outlet />
+                  <CookiePreferences />
                 </div>
               </main>
             </div>

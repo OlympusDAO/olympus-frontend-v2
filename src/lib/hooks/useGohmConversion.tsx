@@ -62,19 +62,24 @@ export function useGohmConversion(mode: "wrap" | "unwrap", inputAmount: string) 
 }
 
 /**
- * Conversion rate for 1 OHM -> gOHM using the gOHM index.
+ * Conversion rates using the gOHM index.
  */
 export function useGohmConversionRate() {
   const { index, isLoading } = useGohmIndex();
 
-  const conversionRate = useMemo(() => {
-    if (!index) return undefined;
+  const rates = useMemo(() => {
+    if (!index) return { ohmPerGohm: undefined, gohmPerOhm: undefined };
+
+    // gOHM index is OHM per 1 gOHM, scaled to 9 decimals.
+    const ohmPerGohm = trimDecimals(formatUnits(index, 9), 3);
     // 1 OHM (1e9) -> gOHM: gOHM = 1e9 * 1e18 / index
     const gohmBigInt = (10n ** 9n * 10n ** 18n) / index;
-    return trimDecimals(formatEther(gohmBigInt), 6);
+    const gohmPerOhm = trimDecimals(formatEther(gohmBigInt), 6);
+
+    return { ohmPerGohm, gohmPerOhm };
   }, [index]);
 
-  return { conversionRate, isLoading };
+  return { ...rates, isLoading };
 }
 
 /** Read the total supply of gOHM from the contract (returns bigint in 18 decimals). */

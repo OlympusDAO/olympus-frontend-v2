@@ -144,16 +144,32 @@ export function UtilityLiquidityPoolsSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 mb-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center justify-between md:justify-start gap-2">
           <TooltipInfo title="Liquidity Pools">
             <h2 className="text-[20px]/[24px] font-semibold text-primary-t">Liquidity Pools</h2>
           </TooltipInfo>
+          <Button
+            variant="tertiary"
+            size="xs"
+            className="md:hidden"
+            render={
+              <a
+                href="https://defillama.com/yields?token=GOHM&token=OHM"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Explore OHM pools on DefiLlama"
+              />
+            }
+          >
+            Explore More on DefiLlama <RiArrowRightUpLine size={12} />
+          </Button>
         </div>
         <div className="flex items-center gap-4">
           <Button
             variant="tertiary"
             size="xs"
+            className="hidden md:flex"
             render={
               <a
                 href="https://defillama.com/yields?token=GOHM&token=OHM"
