@@ -13,6 +13,7 @@ export const EMISSION_MANAGER_SUBGRAPH_URL = graphUrl(
 );
 export const TREASURY_API_URL = "https://olympus-treasury-subgraph-prod.web.app";
 export const DEFILLAMA_YIELDS_URL = "https://yields.llama.fi";
+export const KODIAK_API_URL = "https://backend.kodiak.finance";
 export const ETHERSCAN_BASE_URL = "https://etherscan.io";
 
 // DeFiLlama Pool IDs for yield-bearing reserves
@@ -27,7 +28,11 @@ export const LP_POOL_MAP: Record<string, string> = {
   "Uniswap V3 wETH-OHM Liquidity Pool": "dea7e764-1c6a-4d51-bb35-5f428fc85b57",
   "Uniswap V3 OHM-USDC LP": "56772e92-32e2-47a5-9611-1626eaf92826",
   "Camelot OHM-wETH Liquidity Pool": "d1a3947b-c4c8-4ca3-80d9-c91a5decbc9e",
-  "Beradrome Kodiak OHM-HONEY LP": "a20cd58b-2b22-4adc-874c-75ced1614aae",
+};
+
+// Map treasury tokenRecord LP names → Kodiak vault addresses (for fee APR lookup)
+export const KODIAK_VAULT_MAP: Record<string, string> = {
+  "Beradrome Kodiak OHM-HONEY LP": "0x98bdeede9a45c28d229285d9d6e9139e9f505391",
 };
 
 // Protocol Constants

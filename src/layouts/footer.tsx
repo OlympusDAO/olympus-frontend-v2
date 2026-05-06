@@ -5,6 +5,7 @@ import { CircleProgress } from "@/components/ui/progress.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { cn } from "@/lib/utils";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { RiCookieLine } from "@remixicon/react";
 import {
   RiDiscordFill,
   RiMediumFill,
@@ -18,6 +19,7 @@ import {
 } from "@remixicon/react";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import { type Theme, useTheme } from "@/components/theme-provider.tsx";
+import { COOKIE_PREFERENCES_EVENT } from "@/components/cookie-preferences";
 import { useEpochTimer } from "@/lib/hooks/liveness/useEpochTimer";
 import type * as React from "react";
 import { useToken } from "@/lib/hooks/useToken.tsx";
@@ -65,6 +67,18 @@ function ThemeSwitcher({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme)
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
+}
+
+function CookiePreferencesButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(COOKIE_PREFERENCES_EVENT))}
+      className="flex items-center gap-x-1 text-secondary-t hover:text-primary-t transition-colors hover:pointer"
+    >
+      <RiCookieLine size={16} />
+    </button>
+  );
 }
 
 function SupportButton() {
@@ -159,6 +173,8 @@ export function Footer() {
           <div className="flex items-center gap-x-2">
             <ThemeSwitcher theme={theme} setTheme={setTheme} />
             <Separator orientation="vertical" className="h-5 w-px" />
+            <CookiePreferencesButton />
+            <Separator orientation="vertical" className="h-5 w-px" />
             <SupportButton />
           </div>
         </div>
@@ -219,6 +235,8 @@ export function Footer() {
           </div>
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />
           <ThemeSwitcher theme={theme} setTheme={setTheme} />
+          <Separator orientation="vertical" className="h-5 mx-4 w-px" />
+          <CookiePreferencesButton />
           <Separator orientation="vertical" className="h-5 mx-4 w-px" />
           <SupportButton />
         </div>
