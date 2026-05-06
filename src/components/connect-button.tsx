@@ -56,10 +56,13 @@ export function ConnectButton() {
                     variant="secondary"
                     onClick={openChainModal}
                     type="button"
+                    size={isMobile ? "sm" : "md"}
                     aria-label={chain.name ?? "Switch network"}
-                    className="flex items-center p-2.5"
+                    className={isMobile ? "p-2" : "p-2.5"}
                   >
-                    {chain.hasIcon && <ChainIcon chainId={chain.id} size={20} rounded />}
+                    {chain.hasIcon && (
+                      <ChainIcon chainId={chain.id} size={isMobile ? 16 : 20} rounded />
+                    )}
                   </Button>
                   <Button
                     variant="secondary"
