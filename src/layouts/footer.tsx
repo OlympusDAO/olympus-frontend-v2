@@ -5,6 +5,7 @@ import { CircleProgress } from "@/components/ui/progress.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { cn } from "@/lib/utils";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { RiCookieLine } from "@remixicon/react";
 import {
   RiDiscordFill,
   RiMediumFill,
@@ -73,9 +74,9 @@ function CookiePreferencesButton() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(COOKIE_PREFERENCES_EVENT))}
-      className="flex items-center gap-x-1 text-secondary-t hover:text-primary-t transition-colors"
+      className="flex items-center gap-x-1 text-secondary-t hover:text-primary-t transition-colors hover:pointer"
     >
-      <span className="text-[12px] leading-none">Cookie Preferences</span>
+      <RiCookieLine size={16} />
     </button>
   );
 }
