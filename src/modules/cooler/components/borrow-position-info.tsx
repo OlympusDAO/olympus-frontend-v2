@@ -1,16 +1,15 @@
 import { Icon } from "@/components/icon";
 import { formatUnits } from "viem";
 import { cn } from "@/lib/utils";
+import { TooltipInfo } from "@/components/ui/tooltip";
 
 interface PositionInfoProps {
   projectedCollateral: bigint;
   projectedDebt: bigint;
   liquidationThreshold: bigint;
   projectedLiquidationDate: Date | null;
-  additionalBorrowingAvailable: bigint;
-  maxPotentialBorrowAmount: bigint;
+  availableToBorrow: bigint;
   currentDebt: bigint;
-  isRepayMode: boolean;
 }
 
 function formatGohm(value: bigint): string {
@@ -50,9 +49,8 @@ export function BorrowPositionInfo({
   projectedDebt,
   liquidationThreshold,
   projectedLiquidationDate,
-  additionalBorrowingAvailable,
+  availableToBorrow,
   currentDebt,
-  isRepayMode,
 }: PositionInfoProps) {
   const hasPosition = projectedCollateral > 0n || projectedDebt > 0n || currentDebt > 0n;
   const bufferToLiquidation =
@@ -63,9 +61,7 @@ export function BorrowPositionInfo({
       data-slot="position-info"
       className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4 flex flex-col h-full"
     >
-      <h3 className="mb-4 text-sm font-semibold">
-        {isRepayMode ? "Projected Position" : "Position Overview"}
-      </h3>
+      <h3 className="mb-4 text-sm font-semibold">Projected Position</h3>
 
       {!hasPosition ? (
         <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
@@ -103,16 +99,22 @@ export function BorrowPositionInfo({
             </span>
           </InfoRow>
 
-          <InfoRow label="Buffer to Liquidation">
+          <InfoRow
+            label="Buffer to Liquidation"
+            tooltip="How much your debt can grow — through accruing interest or new borrows — before the position is liquidated."
+          >
             <span className="font-medium">{formatUsds(bufferToLiquidation)} USDS</span>
           </InfoRow>
 
-          <InfoRow label="Est. Liquidation Date">
+          <InfoRow
+            label="Est. Liquidation Date"
+            tooltip='When accruing interest is projected to push your debt to the liquidation threshold, assuming no further actions. "Now" means the position is already past the threshold; "—" means there is no debt or no rate to project from.'
+          >
             <span className="font-medium">{formatLiquidationDate(projectedLiquidationDate)}</span>
           </InfoRow>
 
           <InfoRow label="Available to Borrow">
-            <span className="font-medium">{formatUsds(additionalBorrowingAvailable)} USDS</span>
+            <span className="font-medium">{formatUsds(availableToBorrow)} USDS</span>
           </InfoRow>
         </div>
       )}
@@ -120,10 +122,24 @@ export function BorrowPositionInfo({
   );
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoRow({
+  label,
+  tooltip,
+  children,
+}: {
+  label: string;
+  tooltip?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between border-b border-a3-b py-2 last:border-b-0">
-      <span className="text-xs text-secondary-t">{label}</span>
+      {tooltip ? (
+        <TooltipInfo title={tooltip} className="text-xs font-normal">
+          {label}
+        </TooltipInfo>
+      ) : (
+        <span className="text-xs text-secondary-t">{label}</span>
+      )}
       <div className="text-sm">{children}</div>
     </div>
   );

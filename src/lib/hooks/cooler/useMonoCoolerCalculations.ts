@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { WAD, wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
+import { computeLiquidationDate } from "./cooler-math";
 
 const ZERO = 0n;
 const MIN_DEBT = parseUnits("1000", 18);
@@ -15,143 +16,120 @@ interface UseMonoCoolerCalculationsProps {
   isRepayMode: boolean;
 }
 
+export type MonoCoolerCalculations = ReturnType<typeof useMonoCoolerCalculations>;
+
 export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCalculationsProps) {
   const { position } = useMonoCoolerPosition();
 
   const collateralAddress = position?.collateralAddress;
   const { balance: collateralBalance } = useTokenBalance(collateralAddress, undefined);
 
-  // Hourly interest rate as a number
-  const hourlyInterestRate = useMemo(() => {
-    if (!position?.interestRateBps) return 0;
-    return position.interestRateBps / 10000 / 8760;
-  }, [position?.interestRateBps]);
-
-  const annualInterestRate = useMemo(() => {
-    if (!position?.interestRateWad) return 0;
-    return Math.exp(Number(formatUnits(position.interestRateWad, 18))) - 1;
-  }, [position?.interestRateWad]);
+  const hourlyInterestRate = position?.interestRateBps
+    ? position.interestRateBps / 10000 / 8760
+    : 0;
 
   const [collateralAmount, setCollateralAmount] = useState(ZERO);
-
   const [borrowAmount, setBorrowAmount] = useState<bigint>(ZERO);
   const [ltvPercentage, setLtvPercentage] = useState(100);
 
+  // Reset form state when switching between borrow and repay tabs.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isRepayMode is the reset trigger
   useEffect(() => {
-    if (isRepayMode) {
-      setCollateralAmount(ZERO);
-      setBorrowAmount(ZERO);
-      setLtvPercentage(100);
-      return;
-    }
-
     setCollateralAmount(ZERO);
     setBorrowAmount(ZERO);
     setLtvPercentage(100);
   }, [isRepayMode]);
 
-  // Current debt
-  const currentDebt = useMemo(() => {
-    return loan?.debt ?? ZERO;
-  }, [loan]);
+  const currentDebt = loan?.debt ?? ZERO;
 
   // Max potential borrow amount (includes any new collateral being added)
-  const maxPotentialBorrowAmount = useMemo(() => {
-    if (!position?.maxOriginationLtv) return ZERO;
-
-    if (!loan) {
-      if (!collateralBalance) return ZERO;
-      return wmul(collateralBalance, position.maxOriginationLtv);
+  let maxPotentialBorrowAmount = ZERO;
+  if (position?.maxOriginationLtv) {
+    if (loan) {
+      const totalCollateral = loan.collateral + collateralAmount;
+      maxPotentialBorrowAmount = wmul(totalCollateral, position.maxOriginationLtv);
+    } else if (collateralBalance) {
+      maxPotentialBorrowAmount = wmul(collateralBalance, position.maxOriginationLtv);
     }
+  }
 
-    const totalCollateral = loan.collateral + collateralAmount;
-    return wmul(totalCollateral, position.maxOriginationLtv);
-  }, [position?.maxOriginationLtv, loan, collateralBalance, collateralAmount]);
-
-  // Liquidation threshold
-  const liquidationThreshold = useMemo(() => {
-    if (!position?.liquidationLtv) return ZERO;
-
-    if (isRepayMode && loan) {
-      const existingCollateral = loan.collateral;
-      if (currentDebt === ZERO) return ZERO;
-      const repaymentRatio = wdiv(borrowAmount, currentDebt);
-      const remainingCollateral = existingCollateral - wmul(existingCollateral, repaymentRatio);
-      return wmul(remainingCollateral, position.liquidationLtv);
-    }
-
-    const existingCollateral = loan?.collateral ?? ZERO;
-    const totalCollateral = existingCollateral + collateralAmount;
-    return wmul(totalCollateral, position.liquidationLtv);
-  }, [loan, collateralAmount, position?.liquidationLtv, isRepayMode, borrowAmount, currentDebt]);
-
-  // Collateral to be released (repay mode)
-  const collateralToBeReleased = useMemo(() => {
-    if (!loan || !position?.maxOriginationLtv) return ZERO;
-
+  // Collateral to be released (repay mode only releases proportional to repayment)
+  let collateralToBeReleased = ZERO;
+  if (loan && position?.maxOriginationLtv) {
     if (isRepayMode) {
-      const existingDebt = loan.debt;
-      const repaymentRatio = existingDebt > ZERO ? wdiv(borrowAmount, existingDebt) : WAD;
+      const repaymentRatio = loan.debt > ZERO ? wdiv(borrowAmount, loan.debt) : WAD;
       const maxCollateralToWithdraw = wmul(loan.collateral, repaymentRatio);
-
       const withdrawRatio = pctToWad(ltvPercentage);
-      return wmul(maxCollateralToWithdraw, withdrawRatio);
+      collateralToBeReleased = wmul(maxCollateralToWithdraw, withdrawRatio);
+    } else if (loan.debt === ZERO) {
+      collateralToBeReleased = loan.collateral;
+    } else {
+      const repaymentRatio = wdiv(borrowAmount, loan.debt);
+      collateralToBeReleased = wmul(loan.collateral, repaymentRatio);
     }
+  }
 
-    if (loan.debt === ZERO) return loan.collateral;
-    const repaymentRatio = wdiv(borrowAmount, loan.debt);
-    return wmul(loan.collateral, repaymentRatio);
-  }, [loan, borrowAmount, position?.maxOriginationLtv, isRepayMode, ltvPercentage]);
+  // Liquidation threshold reflects collateral after the pending action.
+  // In repay mode that's the post-withdraw amount (slider-aware), so reducing
+  // debt without withdrawing pushes the liquidation date out.
+  let liquidationThreshold = ZERO;
+  if (position?.liquidationLtv) {
+    if (isRepayMode && loan) {
+      const remainingCollateral = loan.collateral - collateralToBeReleased;
+      liquidationThreshold = wmul(remainingCollateral, position.liquidationLtv);
+    } else {
+      const totalCollateral = (loan?.collateral ?? ZERO) + collateralAmount;
+      liquidationThreshold = wmul(totalCollateral, position.liquidationLtv);
+    }
+  }
 
-  // One hour interest
-  const oneHourInterest = useMemo(() => {
-    if (currentDebt === ZERO || hourlyInterestRate === 0) return ZERO;
+  let oneHourInterest = ZERO;
+  if (currentDebt > ZERO && hourlyInterestRate > 0) {
     const rateWad = parseUnits(hourlyInterestRate.toFixed(18), 18);
-    return wmul(currentDebt, rateWad);
-  }, [hourlyInterestRate, currentDebt]);
+    oneHourInterest = wmul(currentDebt, rateWad);
+  }
 
-  // Projected values
-  const projectedDebt = useMemo(() => {
-    if (isRepayMode) {
-      return currentDebt > borrowAmount ? currentDebt - borrowAmount : ZERO;
-    }
-    if (!loan) return borrowAmount;
-    return currentDebt + borrowAmount;
-  }, [isRepayMode, currentDebt, borrowAmount, loan]);
+  let projectedDebt: bigint;
+  if (isRepayMode) {
+    projectedDebt = currentDebt > borrowAmount ? currentDebt - borrowAmount : ZERO;
+  } else if (!loan) {
+    projectedDebt = borrowAmount;
+  } else {
+    projectedDebt = currentDebt + borrowAmount;
+  }
 
-  const projectedCollateral = useMemo(() => {
-    if (isRepayMode) {
-      if (!loan) return ZERO;
+  let projectedCollateral: bigint;
+  if (isRepayMode) {
+    if (!loan) {
+      projectedCollateral = ZERO;
+    } else {
       const remaining = loan.collateral - collateralToBeReleased;
-      return remaining > ZERO ? remaining : ZERO;
+      projectedCollateral = remaining > ZERO ? remaining : ZERO;
     }
-    if (!loan) return collateralAmount;
-    return loan.collateral + collateralAmount;
-  }, [loan, isRepayMode, collateralAmount, collateralToBeReleased]);
+  } else if (!loan) {
+    projectedCollateral = collateralAmount;
+  } else {
+    projectedCollateral = loan.collateral + collateralAmount;
+  }
 
-  // Additional borrowing available
-  const additionalBorrowingAvailable = useMemo(() => {
-    return maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
-  }, [maxPotentialBorrowAmount, currentDebt]);
+  const additionalBorrowingAvailable =
+    maxPotentialBorrowAmount > currentDebt ? maxPotentialBorrowAmount - currentDebt : ZERO;
 
-  const projectedLiquidationDate = useMemo(() => {
-    if (projectedDebt === ZERO || liquidationThreshold === ZERO || annualInterestRate <= 0) {
-      return null;
-    }
+  // Borrow capacity remaining after the pending action (slider-aware in repay).
+  const projectedMaxBorrow = position?.maxOriginationLtv
+    ? wmul(projectedCollateral, position.maxOriginationLtv)
+    : ZERO;
+  const remainingBorrowingAvailable =
+    projectedMaxBorrow > projectedDebt ? projectedMaxBorrow - projectedDebt : ZERO;
 
-    const projectedDebtNum = Number(formatUnits(projectedDebt, 18));
-    const liquidationThresholdNum = Number(formatUnits(liquidationThreshold, 18));
-    if (projectedDebtNum >= liquidationThresholdNum) return new Date();
+  const projectedLiquidationDate = computeLiquidationDate(
+    projectedDebt,
+    liquidationThreshold,
+    position?.interestRateWad ?? 0n,
+  );
 
-    const yearsToLiquidation =
-      Math.log(liquidationThresholdNum / projectedDebtNum) / annualInterestRate;
-    return new Date(Date.now() + yearsToLiquidation * 365 * 24 * 60 * 60 * 1000);
-  }, [projectedDebt, liquidationThreshold, annualInterestRate]);
-
-  // Is projected debt below minimum?
   const isBelowMinDebt = projectedDebt > ZERO && projectedDebt < MIN_DEBT;
 
-  // Handlers
   const handleLtvChange = (value: number) => {
     if (isRepayMode) {
       handleRepayLtvChange(value);
@@ -226,26 +204,23 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     if (isRepayMode) {
       const maxRepayment = currentDebt;
       setBorrowAmount(value > maxRepayment ? maxRepayment : value);
-    } else {
-      setBorrowAmount(value);
+      return;
+    }
 
-      if (!position?.maxOriginationLtv) return;
-      const maxLtv = position.maxOriginationLtv;
+    setBorrowAmount(value);
 
-      if (loan) {
-        const existingCollateral = loan.collateral;
-        const totalCollateral = existingCollateral + collateralAmount;
-        const totalDebt = currentDebt + value;
-        const newLtvPct =
-          Number(formatUnits(wdiv(totalDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
-        setLtvPercentage(Math.min(newLtvPct, 100));
-      } else {
-        if (collateralAmount > ZERO) {
-          const newLtvPct =
-            Number(formatUnits(wdiv(value, wmul(collateralAmount, maxLtv)), 18)) * 100;
-          setLtvPercentage(Math.min(newLtvPct, 100));
-        }
-      }
+    if (!position?.maxOriginationLtv) return;
+    const maxLtv = position.maxOriginationLtv;
+
+    if (loan) {
+      const totalCollateral = loan.collateral + collateralAmount;
+      const totalDebt = currentDebt + value;
+      const newLtvPct =
+        Number(formatUnits(wdiv(totalDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
+      setLtvPercentage(Math.min(newLtvPct, 100));
+    } else if (collateralAmount > ZERO) {
+      const newLtvPct = Number(formatUnits(wdiv(value, wmul(collateralAmount, maxLtv)), 18)) * 100;
+      setLtvPercentage(Math.min(newLtvPct, 100));
     }
   };
 
@@ -256,12 +231,10 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
   };
 
   return {
-    // State
     collateralAmount,
     borrowAmount,
     ltvPercentage,
 
-    // Calculations
     currentDebt,
     maxPotentialBorrowAmount,
     liquidationThreshold,
@@ -271,9 +244,9 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     projectedCollateral,
     projectedLiquidationDate,
     additionalBorrowingAvailable,
+    remainingBorrowingAvailable,
     isBelowMinDebt,
 
-    // State handlers
     handleLtvChange,
     handleCollateralChange,
     handleDebtChange,

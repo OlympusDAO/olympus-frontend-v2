@@ -10,7 +10,7 @@ import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useMonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
+import type { MonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
 import { useMonoCoolerDebt, calculateRepayAmount } from "@/lib/hooks/cooler/useMonoCoolerDebt";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerAuthorization } from "@/lib/hooks/cooler/useMonoCoolerAuthorization";
@@ -21,10 +21,7 @@ import { TokenName } from "@/lib/tokens";
 const ZERO = 0n;
 
 interface RepayFormProps {
-  loan?: {
-    debt: bigint;
-    collateral: bigint;
-  };
+  calculations: MonoCoolerCalculations;
 }
 
 function formatGohm(value: bigint): string {
@@ -35,7 +32,7 @@ function formatGohm(value: bigint): string {
   });
 }
 
-export function RepayForm({ loan }: RepayFormProps) {
+export function RepayForm({ calculations }: RepayFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
@@ -57,7 +54,7 @@ export function RepayForm({ loan }: RepayFormProps) {
     isBelowMinDebt,
     handleLtvChange,
     handleDebtChange,
-  } = useMonoCoolerCalculations({ loan, isRepayMode: true });
+  } = calculations;
 
   const {
     repay,

@@ -23,15 +23,7 @@ export function CoolerBorrowPage() {
 
   const isRepayMode = activeTab === "repay";
 
-  const {
-    projectedCollateral,
-    projectedDebt,
-    liquidationThreshold,
-    projectedLiquidationDate,
-    additionalBorrowingAvailable,
-    maxPotentialBorrowAmount,
-    currentDebt,
-  } = useMonoCoolerCalculations({ loan, isRepayMode });
+  const calculations = useMonoCoolerCalculations({ loan, isRepayMode });
 
   return (
     <div data-slot="cooler-borrow-page" className="">
@@ -67,22 +59,20 @@ export function CoolerBorrowPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div>
               <TabsContent variant="primary" value="borrow">
-                <BorrowForm loan={loan} />
+                <BorrowForm calculations={calculations} />
               </TabsContent>
               <TabsContent variant="primary" value="repay">
-                <RepayForm loan={loan} />
+                <RepayForm calculations={calculations} />
               </TabsContent>
             </div>
 
             <BorrowPositionInfo
-              projectedCollateral={projectedCollateral}
-              projectedDebt={projectedDebt}
-              liquidationThreshold={liquidationThreshold}
-              projectedLiquidationDate={projectedLiquidationDate}
-              additionalBorrowingAvailable={additionalBorrowingAvailable}
-              maxPotentialBorrowAmount={maxPotentialBorrowAmount}
-              currentDebt={currentDebt}
-              isRepayMode={isRepayMode}
+              projectedCollateral={calculations.projectedCollateral}
+              projectedDebt={calculations.projectedDebt}
+              liquidationThreshold={calculations.liquidationThreshold}
+              projectedLiquidationDate={calculations.projectedLiquidationDate}
+              availableToBorrow={calculations.remainingBorrowingAvailable}
+              currentDebt={calculations.currentDebt}
             />
           </div>
         </Card>

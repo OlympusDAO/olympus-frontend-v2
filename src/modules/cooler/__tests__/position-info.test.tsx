@@ -16,10 +16,8 @@ describe("BorrowPositionInfo", () => {
     projectedDebt: parseUnits("5000", 18),
     liquidationThreshold: parseUnits("8500", 18),
     projectedLiquidationDate: new Date("2027-01-15T00:00:00Z"),
-    additionalBorrowingAvailable: parseUnits("2000", 18),
-    maxPotentialBorrowAmount: parseUnits("7000", 18),
+    availableToBorrow: parseUnits("2000", 18),
     currentDebt: parseUnits("5000", 18),
-    isRepayMode: false,
   };
 
   it("renders all position fields when data exists", () => {
@@ -54,24 +52,16 @@ describe("BorrowPositionInfo", () => {
         projectedDebt={0n}
         liquidationThreshold={0n}
         projectedLiquidationDate={null}
-        additionalBorrowingAvailable={0n}
-        maxPotentialBorrowAmount={0n}
+        availableToBorrow={0n}
         currentDebt={0n}
-        isRepayMode={false}
       />,
     );
 
     expect(screen.getByText("No position")).toBeDefined();
   });
 
-  it("shows 'Position Overview' in borrow mode", () => {
+  it("shows 'Projected Position' heading", () => {
     render(<BorrowPositionInfo {...defaultProps} />);
-
-    expect(screen.getByText("Position Overview")).toBeDefined();
-  });
-
-  it("shows 'Projected Position' in repay mode", () => {
-    render(<BorrowPositionInfo {...defaultProps} isRepayMode={true} />);
 
     expect(screen.getByText("Projected Position")).toBeDefined();
   });

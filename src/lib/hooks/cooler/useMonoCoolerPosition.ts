@@ -1,8 +1,10 @@
 import { useAccount, useChainId, useReadContracts } from "wagmi";
-import { formatUnits, type Address } from "viem";
+import type { Address } from "viem";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
 import CoolerV2CompositesABI from "@/abis/CoolerV2Composites";
+import { wmul } from "@/lib/utils/wad-math";
+import { calculateInterestRateBps, computeLiquidationDate } from "./cooler-math";
 
 export interface MonoCoolerPosition {
   collateral: bigint;
@@ -120,12 +122,10 @@ export function useMonoCoolerPosition() {
     const [maxOriginationLtv, liquidationLtv] = loanToValues;
 
     const interestRateBps = calculateInterestRateBps(interestRateWad);
-    const projectedLiquidationDate = calculateProjectedLiquidationDate(
+    const projectedLiquidationDate = computeLiquidationDate(
       currentDebt,
-      collateral,
+      wmul(collateral, liquidationLtv),
       interestRateWad,
-      currentLtv,
-      liquidationLtv,
     );
 
     position = {
@@ -160,31 +160,4 @@ export function useMonoCoolerPosition() {
     refetch,
     queryKey,
   };
-}
-
-/** Convert WAD interest rate to basis points */
-export function calculateInterestRateBps(interestRateWad: bigint): number {
-  return Math.round((Math.exp(Number(interestRateWad) / 1e18) - 1) * 10000);
-}
-
-/** Calculate when continuous interest will push LTV past liquidation threshold */
-export function calculateProjectedLiquidationDate(
-  currentDebt: bigint,
-  collateral: bigint,
-  interestRateWad: bigint,
-  currentLtv: bigint,
-  liquidationLtv: bigint,
-): Date | null {
-  if (currentDebt === 0n || collateral === 0n) return null;
-
-  const annualRate = Math.round((Math.exp(Number(interestRateWad) / 1e18) - 1) * 10000) / 10000;
-  const currentLtvNum = Number(formatUnits(currentLtv, 18));
-  const liquidationLtvNum = Number(formatUnits(liquidationLtv, 18));
-
-  if (currentLtvNum >= liquidationLtvNum) return new Date();
-
-  // t = ln(liquidationLtv / currentLtv) / annualRate
-  const timeInYears = Math.log(liquidationLtvNum / currentLtvNum) / annualRate;
-  const timeInMs = timeInYears * 365 * 24 * 60 * 60 * 1000;
-  return new Date(Date.now() + timeInMs);
 }

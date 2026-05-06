@@ -9,9 +9,8 @@ import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useMonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
+import type { MonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
 import { useMonoCoolerDebt } from "@/lib/hooks/cooler/useMonoCoolerDebt";
-import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerAuthorization } from "@/lib/hooks/cooler/useMonoCoolerAuthorization";
 import { useIsSmartContractWallet } from "@/lib/hooks/cooler/useIsSmartContractWallet";
 import { getContractAddress, ContractName } from "@/lib/contracts";
@@ -20,20 +19,16 @@ import { TokenName } from "@/lib/tokens";
 const ZERO = 0n;
 
 interface BorrowFormProps {
-  loan?: {
-    debt: bigint;
-    collateral: bigint;
-  };
+  calculations: MonoCoolerCalculations;
 }
 
-export function BorrowForm({ loan }: BorrowFormProps) {
+export function BorrowForm({ calculations }: BorrowFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const gohmToken = useToken(TokenName.GOHM, address);
   const usdsToken = useToken(TokenName.USDS, address);
 
-  useMonoCoolerPosition();
   const { isSmartContractWallet } = useIsSmartContractWallet();
   const { isAuthorized, setAuthorization, isSettingAuthorization } = useMonoCoolerAuthorization();
 
@@ -50,7 +45,7 @@ export function BorrowForm({ loan }: BorrowFormProps) {
     handleLtvChange,
     handleCollateralChange,
     handleDebtChange,
-  } = useMonoCoolerCalculations({ loan, isRepayMode: false });
+  } = calculations;
 
   const {
     borrow,
