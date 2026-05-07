@@ -58,14 +58,6 @@ function formatCompactNum(v: number) {
   }).format(v);
 }
 
-interface ChartEntry {
-  date: string;
-  totalBackingPerOhm: number;
-  liquidBackingPerOhm: number;
-  ohmPrice: number;
-  backedSupply: number;
-}
-
 interface TooltipEntry {
   dataKey?: string;
   value?: number;
@@ -145,7 +137,7 @@ export function TreasuryBackingCard() {
   const [days, setDays] = useState("30");
   const { data: historyPoints, isError } = useTreasuryHistory(Number(days));
 
-  const chartData: ChartEntry[] = historyPoints ?? [];
+  const chartData = historyPoints ?? [];
   // After downsampling caps points at 180, the 365 and 1825 ranges have the same point
   // count, so their tick intervals are picked to land ~6 and ~15 visible labels respectively.
   const tickInterval = days === "30" ? 6 : days === "90" ? 14 : days === "365" ? 30 : 12;
