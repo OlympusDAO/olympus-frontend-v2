@@ -119,8 +119,8 @@ export function TreasuryAssetsCard() {
         />
       </div>
 
-      <div className="flex items-start gap-4">
-        <div className="shrink-0">
+      <div className="flex flex-col md:flex-row items-start gap-4">
+        <div className="shrink-0 self-center md:self-auto">
           <PieChart width={140} height={140}>
             <Pie
               data={pieData}

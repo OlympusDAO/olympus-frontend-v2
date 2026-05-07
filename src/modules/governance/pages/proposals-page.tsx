@@ -123,10 +123,10 @@ function ProposalTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-auto">Proposal</TableHead>
-          <TableHead className="w-[140px]">Approval</TableHead>
-          <TableHead className="w-[140px]">Quorum</TableHead>
-          <TableHead className="w-[160px] text-right">Your Votes</TableHead>
-          <TableHead className="w-[180px] text-right">Total Votes</TableHead>
+          <TableHead className="w-[100px] md:w-[140px]">Approval</TableHead>
+          <TableHead className="w-[100px] md:w-[140px]">Quorum</TableHead>
+          <TableHead className="hidden md:table-cell w-[160px] text-right">Your Votes</TableHead>
+          <TableHead className="hidden md:table-cell w-[180px] text-right">Total Votes</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

@@ -15,7 +15,7 @@ import { getReferenceSnapshot } from "@/lib/utils.ts";
 export function WrapInfoCards() {
   const GOHMToken = useToken(TokenName.GOHM);
   const OHMToken = useToken(TokenName.OHM);
-  const { conversionRate, isLoading: indexLoading } = useGohmConversionRate();
+  const { ohmPerGohm, gohmPerOhm, isLoading: indexLoading } = useGohmConversionRate();
   const { data: ohmPriceHistory } = useOhmPriceHistory();
   const { data: gohmPriceHistory } = useGohmPriceHistory();
 
@@ -32,10 +32,9 @@ export function WrapInfoCards() {
 
   const [inverted, setInverted] = useState(false);
 
-  const rate = Number(conversionRate);
-  const fromLabel = inverted ? "gOHM" : "OHM";
-  const toLabel = inverted ? "OHM" : "gOHM";
-  const toValue = inverted && rate > 0 ? 1 / rate : rate;
+  const fromLabel = inverted ? "OHM" : "gOHM";
+  const toLabel = inverted ? "gOHM" : "OHM";
+  const toValue = Number(inverted ? gohmPerOhm : ohmPerGohm);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -83,7 +82,7 @@ export function WrapInfoCards() {
                 format={{
                   style: "decimal",
                   notation: "standard",
-                  ...(!inverted && { maximumFractionDigits: 6 }),
+                  maximumFractionDigits: inverted ? 6 : 2,
                 }}
                 suffix={toLabel}
               />
