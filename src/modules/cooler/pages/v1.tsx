@@ -150,17 +150,6 @@ export function CoolerV1Page() {
         duration={extendContext?.clearingHouseData?.duration ?? "0"}
         clearingHouseVersion={extendContext?.version ?? "clearingHouseV1"}
       />
-
-      <V1MigrateModal
-        isOpen={isMigrateOpen}
-        onClose={() => setIsMigrateOpen(false)}
-        v1CoolerAddress={v1CoolerAddress ?? ""}
-        v2CoolerAddress={v2CoolerAddress ?? ""}
-        v3CoolerAddress={v3CoolerAddress ?? ""}
-        v1Loans={v1Loans}
-        v2Loans={v2Loans}
-        v3Loans={v3Loans}
-      />
     </div>
   );
 }
