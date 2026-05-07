@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
-import { WAD, wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
+import { WAD, wmul, wdiv, pctToWad } from "@/lib/math";
 import { computeLiquidationDate } from "./cooler-math";
 
 const ZERO = 0n;

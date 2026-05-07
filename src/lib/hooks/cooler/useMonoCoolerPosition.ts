@@ -3,7 +3,7 @@ import type { Address } from "viem";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import CoolerV2MonoCoolerABI from "@/abis/CoolerV2MonoCooler";
 import CoolerV2CompositesABI from "@/abis/CoolerV2Composites";
-import { wmul } from "@/lib/utils/wad-math";
+import { wmul } from "@/lib/math";
 import { calculateInterestRateBps, computeLiquidationDate } from "./cooler-math";
 
 export interface MonoCoolerPosition {

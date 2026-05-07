@@ -5,8 +5,8 @@ import { CircleProgress } from "@/components/ui/progress.tsx";
 import { Icon } from "@/components/icon.tsx";
 import { cn } from "@/lib/utils";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
-import { RiCookieLine } from "@remixicon/react";
 import {
+  RiCookieLine,
   RiDiscordFill,
   RiMediumFill,
   RiGithubFill,

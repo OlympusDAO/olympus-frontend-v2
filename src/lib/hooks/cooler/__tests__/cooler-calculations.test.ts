@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseUnits } from "viem";
-import { wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
+import { wmul, wdiv, pctToWad } from "@/lib/math";
 
 const ZERO = 0n;
 const MIN_DEBT = parseUnits("1000", 18);
