@@ -66,11 +66,11 @@ function SortableHeader({
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Stable: "var(--olympus-chart-1)",
-  Volatile: "var(--olympus-chart-3)",
-  "Protocol-Owned Liquidity": "var(--olympus-chart-2)",
-  "Stable LP": "var(--olympus-chart-4)",
-  "Non-Reserve": "var(--olympus-chart-5)",
+  Stable: "var(--purple)",
+  Volatile: "var(--red)",
+  "Protocol-Owned Liquidity": "var(--blue)",
+  "Stable LP": "var(--green)",
+  "Non-Reserve": "var(--orange)",
 };
 
 interface Slice {
@@ -94,12 +94,12 @@ function buildSlices(
     {
       name: "Cooler Loan Receivables",
       value: coolerBorrowed,
-      color: "var(--olympus-chart-1)",
+      color: "var(--purple)",
       apy: coolerApy,
     },
-    { name: "sUSDe", value: susdeValue, color: "var(--olympus-chart-2)", apy: susdeApy },
-    { name: "LP positions", value: lpTotal, color: "var(--olympus-chart-3)", apy: lpApy },
-    { name: "sUSDS", value: susdsValue, color: "var(--olympus-chart-4)", apy: susdsApy },
+    { name: "sUSDe", value: susdeValue, color: "var(--red)", apy: susdeApy },
+    { name: "LP positions", value: lpTotal, color: "var(--blue)", apy: lpApy },
+    { name: "sUSDS", value: susdsValue, color: "var(--orange)", apy: susdsApy },
   ].filter((s) => s.value > 0);
 }
 
@@ -380,8 +380,7 @@ export function TreasuryAssetsCard() {
                       <span
                         className="size-2 shrink-0 rounded-full"
                         style={{
-                          backgroundColor:
-                            CATEGORY_COLORS[row.category] ?? "var(--olympus-chart-5)",
+                          backgroundColor: CATEGORY_COLORS[row.category] ?? "var(--orange)",
                         }}
                       />
                       <span className="truncate text-xs text-secondary-t">{row.category}</span>

@@ -50,6 +50,25 @@ const PAGE_SIZE = 1000;
 
 // Cursor-paginate a subgraph entity using the `id_gt` pattern so we get the
 // full history instead of being capped at a single 1000-row page.
+async function runSubgraphQuery<T>(
+  url: string,
+  query: string,
+  extract: (data: Record<string, unknown>) => T[] | undefined,
+): Promise<T[]> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  if (!response.ok) throw new Error("Subgraph fetch failed");
+  const { data, errors } = (await response.json()) as {
+    data?: Record<string, unknown>;
+    errors?: Array<{ message?: string }>;
+  };
+  if (errors) throw new Error(errors[0]?.message || "Subgraph query error");
+  return (data && extract(data)) ?? [];
+}
+
 async function fetchAllPages<T extends { id: string }>(
   url: string,
   buildQuery: (idGt: string, first: number) => string,
@@ -58,18 +77,7 @@ async function fetchAllPages<T extends { id: string }>(
   const all: T[] = [];
   let lastId = "";
   for (;;) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: buildQuery(lastId, PAGE_SIZE) }),
-    });
-    if (!response.ok) throw new Error("Subgraph fetch failed");
-    const { data, errors } = (await response.json()) as {
-      data?: Record<string, unknown>;
-      errors?: Array<{ message?: string }>;
-    };
-    if (errors) throw new Error(errors[0]?.message || "Subgraph query error");
-    const page = (data && extractPage(data)) ?? [];
+    const page = await runSubgraphQuery(url, buildQuery(lastId, PAGE_SIZE), extractPage);
     all.push(...page);
     if (page.length < PAGE_SIZE) break;
     lastId = page[page.length - 1].id;
@@ -143,12 +151,15 @@ export function useYrfHistory() {
           `,
           (d) => d.repoMarkets as RepoMarketRow[] | undefined,
         ),
-        fetchAllPages<NextYieldSetRow>(
+        // Latest 25 events ordered by timestamp. The full id-paginated fetch above is sorted by
+        // id, which is not strictly time-ordered, so its tail is not guaranteed to be the most
+        // recent events.
+        runSubgraphQuery<NextYieldSetRow>(
           YRF_SUBGRAPH_URL,
-          (_idGt, first) => `
+          `
             {
               nextYieldSets(
-                first: ${Math.min(first, 25)}
+                first: 25
                 orderBy: blockTimestamp
                 orderDirection: desc
               ) {

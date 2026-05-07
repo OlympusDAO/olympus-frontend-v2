@@ -49,13 +49,6 @@
   --purple: oklch(0.6281 0.167 306.1);
   --orange: oklch(0.68 0.155 52.5);
 
-  /* Pulse chart series derived from the app palette in this file. */
-  --olympus-chart-1: var(--brand-sand-1000);
-  --olympus-chart-2: var(--brand-sand-900);
-  --olympus-chart-3: var(--greyscale-400);
-  --olympus-chart-4: var(--greyscale-500);
-  --olympus-chart-5: color-mix(in srgb, var(--brand-sand-1000) 48%, var(--greyscale-500));
-
   /*custom variables*/
   --text-primary: var(--slate);
   --text-secondary: --alpha(var(--slate) / 0.6);

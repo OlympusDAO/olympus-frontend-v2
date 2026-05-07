@@ -34,11 +34,11 @@ const DAYS_OPTIONS = [
   { value: "1825", label: "Max" },
 ];
 
-const PRICE_COLOR = "var(--olympus-chart-1)";
-const TOTAL_BACKING_COLOR = "var(--olympus-chart-5)";
-const LIQUID_BACKING_COLOR = "var(--olympus-chart-2)";
-const BACKED_SUPPLY_COLOR = "var(--olympus-chart-3)";
-const EVENT_COLOR = "var(--olympus-chart-4)";
+const PRICE_COLOR = "var(--blue)";
+const TOTAL_BACKING_COLOR = "var(--orange)";
+const LIQUID_BACKING_COLOR = "var(--green)";
+const BACKED_SUPPLY_COLOR = "var(--purple)";
+const EVENT_COLOR = "var(--red)";
 
 const CHART_EVENTS = [{ date: "2025-02-26", label: "V1 Migrator", color: EVENT_COLOR }];
 
@@ -146,7 +146,9 @@ export function TreasuryBackingCard() {
   const { data: historyPoints, isError } = useTreasuryHistory(Number(days));
 
   const chartData: ChartEntry[] = historyPoints ?? [];
-  const tickInterval = days === "30" ? 6 : days === "90" ? 14 : days === "365" ? 60 : 120;
+  // After downsampling caps points at 180, the 365 and 1825 ranges have the same point
+  // count, so their tick intervals are picked to land ~6 and ~15 visible labels respectively.
+  const tickInterval = days === "30" ? 6 : days === "90" ? 14 : days === "365" ? 30 : 12;
 
   return (
     <Card className="flex flex-col gap-5 p-5">

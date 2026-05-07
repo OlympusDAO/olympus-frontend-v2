@@ -64,27 +64,27 @@ export function useWeeklyRevenue() {
       {
         name: "sUSDe Yield",
         weeklyAmount: susdeWeekly,
-        color: "var(--olympus-chart-1)",
+        color: "var(--blue)",
       },
       {
         name: "sUSDS Yield",
         weeklyAmount: susdsWeekly,
-        color: "var(--olympus-chart-2)",
+        color: "var(--purple)",
       },
       {
         name: "Cooler Interest",
         weeklyAmount: coolerWeekly,
-        color: "var(--olympus-chart-3)",
+        color: "var(--green)",
       },
       {
         name: "CD Borrow Interest",
         weeklyAmount: cdBorrowWeekly,
-        color: "var(--olympus-chart-4)",
+        color: "var(--orange)",
       },
       {
         name: "LP Fees",
         weeklyAmount: lpFeesWeekly,
-        color: "var(--olympus-chart-5)",
+        color: "var(--yellow)",
       },
     ].sort((a, b) => b.weeklyAmount - a.weeklyAmount);
 
