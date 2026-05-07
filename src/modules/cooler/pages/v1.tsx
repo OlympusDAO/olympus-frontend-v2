@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
-import { Button } from "@/components/ui/button";
 import { V1StatsBar } from "../components/v1-stats-bar";
 import { V1LoansTable } from "../components/v1-loans-table";
 import { V1RepayLegacyModal } from "../components/v1-repay-legacy-modal.tsx";
 import { V1ExtendLoanModal } from "../components/v1-extend-loan-modal.tsx";
-import { V1MigrateModal } from "../components/v1-migrate-modal.tsx";
 import {
   useGetClearingHouse,
   type ClearingHouseVersion,
@@ -89,7 +87,6 @@ export function CoolerV1Page() {
   // Modal state
   const [repayLoan, setRepayLoan] = useState<CoolerLoan | null>(null);
   const [extendLoan, setExtendLoan] = useState<CoolerLoan | null>(null);
-  const [isMigrateOpen, setIsMigrateOpen] = useState(false);
 
   // Determine cooler address, clearing house, and version for a given loan
   const getCoolerForLoan = (
@@ -124,12 +121,6 @@ export function CoolerV1Page() {
   return (
     <div data-slot="cooler-v1-page" className="space-y-6">
       <V1StatsBar clearingHouseData={activeClearingHouse} loans={allLoans} isLoading={isLoading} />
-
-      {allLoans.length > 0 && (
-        <div className="flex">
-          <Button onClick={() => setIsMigrateOpen(true)}>Migrate Loans to Cooler V2</Button>
-        </div>
-      )}
 
       <V1LoansTable
         loans={allLoans}

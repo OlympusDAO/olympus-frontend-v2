@@ -75,7 +75,7 @@ export function V1ExtendLoanModal({
   const { approve, isPending: isApprovePending } = useTokenApproval();
 
   const needsApproval = useMemo(() => {
-    if (!allowance || interestDueOnExtension === 0n) return false;
+    if (allowance === undefined || interestDueOnExtension === 0n) return false;
     return allowance < interestDueOnExtension;
   }, [allowance, interestDueOnExtension]);
 
@@ -108,29 +108,24 @@ export function V1ExtendLoanModal({
 
   if (!loan) return null;
 
+  const daysPerTerm = Number(duration);
+  const insufficientBalance = debtBalance !== undefined && debtBalance < interestDueOnExtension;
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Extend Loan</DialogTitle>
+      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-xl">Extend Loan</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-secondary-t">Current Term</span>
-              <span>{formatDate(currentExpiry)}</span>
+        <div className="px-6 pb-6 space-y-4">
+          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
+            <div className="flex items-center justify-between mb-3">
+              <label htmlFor="extend-terms" className="text-sm font-medium">
+                Number of Terms
+              </label>
+              <span className="text-xs text-secondary-t">{daysPerTerm} days each</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-secondary-t">New Term</span>
-              <span className="font-semibold">{formatDate(newExpiry)}</span>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="extend-terms" className="mb-1 block text-xs text-secondary-t">
-              Number of Terms
-            </label>
             <Input
               id="extend-terms"
               type="number"
@@ -139,45 +134,62 @@ export function V1ExtendLoanModal({
               placeholder="1"
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
+              className="md:text-3xl h-12 placeholder:text-disabled-t border-0 shadow-none pl-0 bg-transparent"
             />
-          </div>
-
-          <div className="flex flex-col gap-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-secondary-t">Interest Rate</span>
-              <span>{Number(interestRate).toFixed(2)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-secondary-t">Wallet Balance</span>
+            <div className="flex items-center justify-end text-xs text-secondary-t mt-2">
               <span>
+                Wallet:{" "}
                 {debtBalance !== undefined ? `${formatAmount(debtBalance)} ${debtAssetName}` : "--"}
               </span>
             </div>
-            <div className="border-a5-b flex justify-between border-t pt-2 font-semibold">
-              <span className="text-secondary-t">Interest Due on Extension</span>
-              <span>
-                {formatAmount(interestDueOnExtension)} {debtAssetName}
-              </span>
+          </div>
+
+          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
+            <div className="flex flex-col gap-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-secondary-t">Current Term</span>
+                <span>{formatDate(currentExpiry)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary-t">New Term</span>
+                <span>{formatDate(newExpiry)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary-t">Interest Rate</span>
+                <span>{Number(interestRate).toFixed(2)}%</span>
+              </div>
+              <div className="border-a5-b flex justify-between border-t pt-2 mt-1 font-semibold">
+                <span>Interest Due on Extension</span>
+                <span>
+                  {formatAmount(interestDueOnExtension)} {debtAssetName}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {needsApproval ? (
-              <Button
-                onClick={handleApprove}
-                disabled={isApprovePending || interestDueOnExtension === 0n}
-              >
-                {isApprovePending ? "Approving..." : `Approve ${debtAssetName}`}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleExtend}
-                disabled={isExtendPending || interestDueOnExtension === 0n}
-              >
-                {isExtendPending ? "Extending..." : "Extend"}
-              </Button>
-            )}
-          </div>
+          {needsApproval ? (
+            <Button
+              onClick={handleApprove}
+              disabled={isApprovePending || interestDueOnExtension === 0n}
+              className="w-full"
+              size="lg"
+            >
+              {isApprovePending ? "Approving..." : `Approve ${debtAssetName}`}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleExtend}
+              disabled={isExtendPending || interestDueOnExtension === 0n || insufficientBalance}
+              className="w-full"
+              size="lg"
+            >
+              {insufficientBalance
+                ? `Insufficient ${debtAssetName}`
+                : isExtendPending
+                  ? "Extending..."
+                  : "Extend"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
