@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { trackCoolerRepay } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
@@ -25,8 +26,7 @@ interface RepayFormProps {
 }
 
 function formatGohm(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 4,
     maximumFractionDigits: 4,
   });
@@ -234,7 +234,7 @@ export function RepayForm({ calculations }: RepayFormProps) {
     steps.push({
       number: stepNum,
       title: txTitle,
-      detail: `${Number(formatUnits(repayAmount, 18)).toFixed(2)} USDS`,
+      detail: `${formatTokenAmount(repayAmount).toFixed(2)} USDS`,
       isActive:
         (hasSufficientAllowance || approvalSuccess) &&
         (!needsScwAuthorization || isAuthorized) &&
@@ -317,7 +317,7 @@ export function RepayForm({ calculations }: RepayFormProps) {
             <p className="text-xs text-secondary-t">
               Debt:{" "}
               <span className="font-medium text-primary-t">
-                {Number(formatUnits(currentDebt, 18)).toLocaleString("en-US", {
+                {formatTokenAmount(currentDebt).toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

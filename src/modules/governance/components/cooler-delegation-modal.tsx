@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { isAddress, formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { RiInformationLine, RiDeleteBinLine, RiAddLine } from "@remixicon/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
   const [initialDelegations, setInitialDelegations] = useState<Map<string, string>>(new Map());
 
   const maxEntries = position ? Number(position.maxDelegateAddresses) : 10;
-  const availableCollateral = position ? Number(formatUnits(position.collateral, 18)) : 0;
+  const availableCollateral = position ? formatTokenAmount(position.collateral) : 0;
 
   useEffect(() => {
     if (delegations && delegations.length > 0) {

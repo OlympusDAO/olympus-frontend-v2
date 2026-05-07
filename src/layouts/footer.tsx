@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useGasPrice } from "wagmi";
 import { Separator } from "@/components/ui/separator.tsx";
 import { CircleProgress } from "@/components/ui/progress.tsx";
@@ -108,7 +108,7 @@ export function Footer() {
   const GOHMToken = useToken(TokenName.GOHM);
   const OHMToken = useToken(TokenName.OHM);
 
-  const gasPriceGwei = gasPriceWei ? Math.round(Number(formatUnits(gasPriceWei, 9))) : 0;
+  const gasPriceGwei = gasPriceWei ? Math.round(formatTokenAmount(gasPriceWei, 9)) : 0;
   const beatLabel = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 
   return (

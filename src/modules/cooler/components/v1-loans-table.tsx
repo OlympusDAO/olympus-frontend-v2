@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NumberFlow } from "@/components/ui/number-flow";
@@ -54,12 +54,12 @@ export function V1LoansTable({ loans, onRepay, onExtend, isLoading }: V1LoansTab
           <tbody>
             {loans.map((loan) => {
               const repaymentTotal = loan.principal + loan.interestDue;
-              const interestRate = Number(formatUnits(loan.request.interest, 16));
+              const interestRate = formatTokenAmount(loan.request.interest, 16);
               return (
                 <tr key={loan.loanId} className="border-a5-b border-b last:border-b-0">
                   <td className="py-4 pr-4">
                     <NumberFlow
-                      value={Number(formatUnits(loan.collateral, 18))}
+                      value={formatTokenAmount(loan.collateral)}
                       format={{
                         style: "decimal",
                         minimumFractionDigits: 2,
@@ -82,7 +82,7 @@ export function V1LoansTable({ loans, onRepay, onExtend, isLoading }: V1LoansTab
                   </td>
                   <td className="py-4 pr-4">
                     <NumberFlow
-                      value={Number(formatUnits(repaymentTotal, 18))}
+                      value={formatTokenAmount(repaymentTotal)}
                       format={{
                         style: "decimal",
                         minimumFractionDigits: 2,

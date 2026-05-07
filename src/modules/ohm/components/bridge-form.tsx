@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { ChevronDownIcon, Settings } from "lucide-react";
 import { RiInformationLine } from "@remixicon/react";
 import { parseUnits, formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount, useBalance } from "wagmi";
 import { Icon } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
@@ -335,7 +336,7 @@ function ChainInputSection({
               {address && ohmToken?.balance != null ? (
                 <NumberFlow
                   className="font-semibold text-primary-t"
-                  value={Number(formatUnits(ohmToken.balance, ohmToken.decimals))}
+                  value={formatTokenAmount(ohmToken.balance, ohmToken.decimals)}
                   format={{
                     style: "decimal",
                     minimumFractionDigits: 0,

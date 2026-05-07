@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatUnits, parseUnits, type Address } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount } from "wagmi";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import { useExtendLoan } from "@/lib/hooks/cooler/useExtendLoan";
@@ -55,7 +56,7 @@ export function V1ExtendLoanModal({
     const rateDecimal = Number(interestRate) * 0.01;
     const interestPercent = (extensionTerms * durationSeconds * rateDecimal) / (365 * 86400);
     const totalDebt = loan.principal + loan.interestDue;
-    const interestDue = Number(formatUnits(totalDebt, 18)) * interestPercent;
+    const interestDue = formatTokenAmount(totalDebt) * interestPercent;
     try {
       return parseUnits(interestDue.toFixed(18), 18);
     } catch {

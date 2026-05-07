@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { parseUnits, formatUnits } from "viem";
+import { parseUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { WAD, wmul, wdiv, pctToWad } from "@/lib/math";
@@ -152,8 +153,7 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
       const existingCollateral = loan.collateral;
       const totalCollateral = existingCollateral + collateralAmount;
 
-      const minLtvPct =
-        Number(formatUnits(wdiv(currentDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
+      const minLtvPct = formatTokenAmount(wdiv(currentDebt, wmul(totalCollateral, maxLtv))) * 100;
       const adjustedValue = Math.max(value, minLtvPct);
       setLtvPercentage(adjustedValue);
 
@@ -215,11 +215,10 @@ export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCa
     if (loan) {
       const totalCollateral = loan.collateral + collateralAmount;
       const totalDebt = currentDebt + value;
-      const newLtvPct =
-        Number(formatUnits(wdiv(totalDebt, wmul(totalCollateral, maxLtv)), 18)) * 100;
+      const newLtvPct = formatTokenAmount(wdiv(totalDebt, wmul(totalCollateral, maxLtv))) * 100;
       setLtvPercentage(Math.min(newLtvPct, 100));
     } else if (collateralAmount > ZERO) {
-      const newLtvPct = Number(formatUnits(wdiv(value, wmul(collateralAmount, maxLtv)), 18)) * 100;
+      const newLtvPct = formatTokenAmount(wdiv(value, wmul(collateralAmount, maxLtv))) * 100;
       setLtvPercentage(Math.min(newLtvPct, 100));
     }
   };

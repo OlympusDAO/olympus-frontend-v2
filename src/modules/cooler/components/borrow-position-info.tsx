@@ -1,5 +1,5 @@
 import { Icon } from "@/components/icon";
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { cn } from "@/lib/utils";
 import { TooltipInfo } from "@/components/ui/tooltip";
 
@@ -13,16 +13,14 @@ interface PositionInfoProps {
 }
 
 function formatGohm(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 4,
     maximumFractionDigits: 4,
   });
 }
 
 function formatUsds(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -30,7 +28,7 @@ function formatUsds(value: bigint): string {
 
 function calculateLtv(debt: bigint, liquidationThreshold: bigint): string {
   if (liquidationThreshold === 0n) return "0.00";
-  const ltv = (Number(formatUnits(debt, 18)) / Number(formatUnits(liquidationThreshold, 18))) * 100;
+  const ltv = (formatTokenAmount(debt) / formatTokenAmount(liquidationThreshold)) * 100;
   return ltv.toFixed(2);
 }
 

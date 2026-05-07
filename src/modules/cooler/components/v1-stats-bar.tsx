@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { Card } from "@/components/ui/card";
 import type { Format } from "@number-flow/react";
@@ -26,7 +26,7 @@ export function V1StatsBar({ clearingHouseData, loans, isLoading }: V1StatsBarPr
   const stats: Stat[] = [
     {
       label: "Capacity Remaining",
-      value: clearingHouseData ? Number(formatUnits(clearingHouseData.capacity, 18)) : "-",
+      value: clearingHouseData ? formatTokenAmount(clearingHouseData.capacity) : "-",
       format: { style: "decimal", maximumFractionDigits: 0 },
       suffix: debtAsset,
     },
@@ -45,7 +45,7 @@ export function V1StatsBar({ clearingHouseData, loans, isLoading }: V1StatsBarPr
     },
     {
       label: "Amount Borrowed",
-      value: loans.length > 0 ? Number(formatUnits(totalPrincipal, 18)) : "-",
+      value: loans.length > 0 ? formatTokenAmount(totalPrincipal) : "-",
       format: { style: "decimal", maximumFractionDigits: 0 },
       suffix: debtAsset,
     },

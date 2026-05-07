@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { trackCoolerBorrow } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
@@ -269,7 +270,7 @@ export function BorrowForm({ calculations }: BorrowFormProps) {
       title: txTitle,
       detail:
         collateralAmount > ZERO && borrowAmount > ZERO
-          ? `${Number(formatUnits(collateralAmount, 18)).toFixed(4)} gOHM → ${Number(formatUnits(borrowAmount, 18)).toFixed(2)} USDS`
+          ? `${formatTokenAmount(collateralAmount).toFixed(4)} gOHM → ${formatTokenAmount(borrowAmount).toFixed(2)} USDS`
           : undefined,
       isActive:
         (hasSufficientAllowance || approvalSuccess) &&

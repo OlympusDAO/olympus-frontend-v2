@@ -1,10 +1,10 @@
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 
 const MS_PER_YEAR = 365 * 24 * 60 * 60 * 1000;
 
 /** Convert WAD continuous interest rate (e.g. ln(1 + APR)) to basis points. */
 export function calculateInterestRateBps(interestRateWad: bigint): number {
-  return Math.round((Math.exp(Number(formatUnits(interestRateWad, 18))) - 1) * 10000);
+  return Math.round((Math.exp(formatTokenAmount(interestRateWad)) - 1) * 10000);
 }
 
 /**
@@ -22,11 +22,11 @@ export function computeLiquidationDate(
 ): Date | null {
   if (debt === 0n || threshold === 0n || interestRateWad <= 0n) return null;
 
-  const debtNum = Number(formatUnits(debt, 18));
-  const thresholdNum = Number(formatUnits(threshold, 18));
+  const debtNum = formatTokenAmount(debt);
+  const thresholdNum = formatTokenAmount(threshold);
   if (debtNum >= thresholdNum) return new Date();
 
-  const annualRate = Math.exp(Number(formatUnits(interestRateWad, 18))) - 1;
+  const annualRate = Math.exp(formatTokenAmount(interestRateWad)) - 1;
   const yearsToLiquidation = Math.log(thresholdNum / debtNum) / annualRate;
   return new Date(Date.now() + yearsToLiquidation * MS_PER_YEAR);
 }
