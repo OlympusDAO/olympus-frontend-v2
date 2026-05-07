@@ -28,9 +28,10 @@ export interface MonoCoolerPosition {
   projectedLiquidationDate: Date | null;
 }
 
-export function useMonoCoolerPosition() {
+export function useMonoCoolerPosition({ chainId: overrideChainId }: { chainId?: number } = {}) {
   const { address } = useAccount();
-  const chainId = useChainId();
+  const connectedChainId = useChainId();
+  const chainId = overrideChainId ?? connectedChainId;
 
   const monoCoolerAddress = getContractAddress(ContractName.COOLER_V2_MONOCOOLER, chainId);
   const compositesAddress = getContractAddress(ContractName.COOLER_V2_COMPOSITES, chainId);
@@ -42,41 +43,49 @@ export function useMonoCoolerPosition() {
         abi: CoolerV2MonoCoolerABI,
         functionName: "accountPosition",
         args: address ? [address] : undefined,
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "interestRateWad",
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "loanToValues",
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "collateralToken",
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "debtToken",
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "borrowsPaused",
+        chainId,
       },
       {
         address: monoCoolerAddress,
         abi: CoolerV2MonoCoolerABI,
         functionName: "isActive",
+        chainId,
       },
       {
         address: compositesAddress,
         abi: CoolerV2CompositesABI,
         functionName: "isEnabled",
+        chainId,
       },
     ],
     query: {
