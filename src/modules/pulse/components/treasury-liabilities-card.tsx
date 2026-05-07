@@ -20,10 +20,13 @@ function OhmValue({
   compact = false,
   prefix,
 }: {
-  value: number;
+  value: number | null;
   compact?: boolean;
   prefix?: string;
 }) {
+  if (value == null)
+    return <span className="text-sm font-semibold text-secondary-t">Unavailable</span>;
+
   return (
     <div className="flex items-center gap-1.5 shrink-0">
       <Icon name="OHMTokenIcon" className="size-5" />
@@ -66,7 +69,15 @@ function FullWidthLiabilityRow({
   );
 }
 
-function SupplyRow({ label, value, tooltip }: { label: string; value: number; tooltip?: string }) {
+function SupplyRow({
+  label,
+  value,
+  tooltip,
+}: {
+  label: string;
+  value: number | null;
+  tooltip?: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 px-3.5 py-3">
       {tooltip ? (
@@ -88,29 +99,33 @@ export function TreasuryLiabilitiesCard() {
   const { data: yrfHistory } = useYrfHistory();
   const { data: ohmPriceData } = useOhmPrice();
 
-  const ohmTotalSupply = metrics?.ohmTotalSupply ?? 0;
-  const ohmCirculatingSupply = metrics?.ohmCirculatingSupply ?? 0;
-  const ohmBackedSupply = metrics?.ohmBackedSupply ?? 0;
+  const ohmTotalSupply = metrics?.ohmTotalSupply ?? null;
+  const ohmCirculatingSupply = metrics?.ohmCirculatingSupply ?? null;
+  const ohmBackedSupply = metrics?.ohmBackedSupply ?? null;
 
-  const supplyGrowthOhm = cd?.supplyGrowthOhm ?? 0;
+  const supplyGrowthOhm = cd?.supplyGrowthOhm ?? null;
 
-  const weeklyYield = yrfHistory?.currentWeeklyYield ?? 0;
-  const ohmPrice = ohmPriceData?.price ?? 0;
-  const latestActualWeeklyBurns = [...(yrfHistory?.weeklyYields ?? [])]
-    .reverse()
-    .find((w) => w.ohmBurned > 0)?.ohmBurned;
-  const weeklyBurnsFromBudget = ohmPrice > 0 ? weeklyYield / ohmPrice : 0;
+  const weeklyYield = yrfHistory?.currentWeeklyYield;
+  const ohmPrice = ohmPriceData?.price;
+  const latestActualWeeklyBurns = yrfHistory
+    ? [...yrfHistory.weeklyYields].reverse().find((w) => w.ohmBurned > 0)?.ohmBurned
+    : undefined;
+  const weeklyBurnsFromBudget =
+    ohmPrice && ohmPrice > 0 && weeklyYield != null ? weeklyYield / ohmPrice : null;
   const annualBurnsFromCoolerDrip =
-    ohmPrice > 0
-      ? ((cooler?.totalCollateralGohm ?? 0) * COOLER_YRF_USD_PER_GOHM_YEAR) / ohmPrice
-      : 0;
+    ohmPrice && ohmPrice > 0 && cooler?.totalCollateralGohm != null
+      ? (cooler.totalCollateralGohm * COOLER_YRF_USD_PER_GOHM_YEAR) / ohmPrice
+      : null;
   const annualBurns =
     latestActualWeeklyBurns !== undefined
       ? latestActualWeeklyBurns * 52
-      : weeklyBurnsFromBudget > 0
+      : weeklyBurnsFromBudget != null && weeklyBurnsFromBudget > 0
         ? weeklyBurnsFromBudget * 52
         : annualBurnsFromCoolerDrip;
-  const burnRatePct = ohmCirculatingSupply > 0 ? (annualBurns / ohmCirculatingSupply) * 100 : 0;
+  const burnRatePct =
+    annualBurns != null && ohmCirculatingSupply != null && ohmCirculatingSupply > 0
+      ? (annualBurns / ohmCirculatingSupply) * 100
+      : null;
 
   return (
     <Card className="flex flex-col gap-4 p-5">
@@ -143,14 +158,18 @@ export function TreasuryLiabilitiesCard() {
         value={<OhmValue value={annualBurns} prefix="–" />}
         tooltip="Annualizes the latest actual weekly OHM burned from YRF"
         subtext={
-          <>
-            <NumberFlow
-              value={burnRatePct / 100}
-              format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
-              prefix="–"
-            />
-            /yr of Circulating Supply at current YRF spend
-          </>
+          burnRatePct == null ? (
+            "Awaiting YRF, Cooler, price, and supply data"
+          ) : (
+            <>
+              <NumberFlow
+                value={burnRatePct / 100}
+                format={{ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+                prefix="–"
+              />
+              /yr of Circulating Supply at current YRF spend
+            </>
+          )
         }
       />
 

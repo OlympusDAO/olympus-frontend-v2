@@ -126,6 +126,7 @@ export function TreasuryPolTable() {
     () => (rows ?? []).reduce((s, r) => s + (r.weeklyFees ?? 0), 0),
     [rows],
   );
+  const hasUnavailableFees = useMemo(() => (rows ?? []).some((r) => r.weeklyFees == null), [rows]);
   const totalOhmDepth = useMemo(() => (rows ?? []).reduce((s, r) => s + r.ohmDepth, 0), [rows]);
 
   const table = useReactTable({
@@ -205,7 +206,14 @@ export function TreasuryPolTable() {
                 <NumberFlow value={totalTvl} format={COMPACT_USD} />
               </TableCell>
               <TableCell className="text-right font-bold text-primary-t">
-                <NumberFlow value={totalFees} format={COMPACT_USD} />
+                <div className="flex flex-col items-end gap-0.5">
+                  <NumberFlow value={totalFees} format={COMPACT_USD} />
+                  {hasUnavailableFees ? (
+                    <TooltipInfo title="Partial total: excludes rows where fee APY data is unavailable.">
+                      <span className="text-[10px]/3 font-semibold text-secondary-t">Partial</span>
+                    </TooltipInfo>
+                  ) : null}
+                </div>
               </TableCell>
               <TableCell className="text-right text-secondary-t">—</TableCell>
               <TableCell className="text-right text-secondary-t">—</TableCell>

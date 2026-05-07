@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { RiInformationLine } from "@remixicon/react";
 import type { Format } from "@number-flow/react";
 import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
@@ -17,6 +18,7 @@ import { Segmented } from "@/components/ui/tabs.tsx";
 import { Spinner } from "@/components/spinner";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { useTreasuryHistory } from "@/modules/pulse/hooks/useTreasuryHistory";
+import { useTreasuryDataFreshness } from "@/modules/pulse/hooks/useTreasuryDataFreshness";
 import goldenTexture from "@/assets/golden-texture.webp";
 
 const USD_PER_OHM = {
@@ -136,8 +138,22 @@ function TooltipRow({
 export function TreasuryBackingCard() {
   const [days, setDays] = useState("30");
   const { data: historyPoints, isError } = useTreasuryHistory(Number(days));
+  const { data: lagging } = useTreasuryDataFreshness();
 
   const chartData = historyPoints ?? [];
+  const lastChartDate = chartData.length > 0 ? chartData[chartData.length - 1].date : undefined;
+  const freshnessNote =
+    lastChartDate && lagging && lagging.length > 0
+      ? {
+          throughDate: lastChartDate,
+          callout: lagging
+            .map(
+              (l) =>
+                `${l.chain} subgraph is ${l.daysBehind} day${l.daysBehind === 1 ? "" : "s"} behind`,
+            )
+            .join("; "),
+        }
+      : null;
   // After downsampling caps points at 180, the 365 and 1825 ranges have the same point
   // count, so their tick intervals are picked to land ~6 and ~15 visible labels respectively.
   const tickInterval = days === "30" ? 6 : days === "90" ? 14 : days === "365" ? 30 : 12;
@@ -145,7 +161,24 @@ export function TreasuryBackingCard() {
   return (
     <Card className="flex flex-col gap-5 p-5">
       <div className="flex min-w-0 flex-col gap-5">
-        <h3 className="text-lg/6 font-semibold">Liquid Backing per Backed OHM</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-lg/6 font-semibold">Liquid Backing per Backed OHM</h3>
+          {freshnessNote && (
+            <InfoTooltip
+              title={
+                <span className="text-xs/4">
+                  Data through {format(parseISO(freshnessNote.throughDate), "MMM d, yyyy")}.{" "}
+                  {freshnessNote.callout}.
+                </span>
+              }
+            >
+              <RiInformationLine
+                size={16}
+                className="cursor-pointer text-tertiary-t transition-colors hover:text-secondary-t"
+              />
+            </InfoTooltip>
+          )}
+        </div>
 
         <div className="flex items-stretch gap-3">
           <div
