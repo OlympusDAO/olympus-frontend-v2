@@ -128,7 +128,7 @@ export function TreasuryLiabilitiesCard() {
       : null;
 
   return (
-    <Card className="flex flex-col gap-4 p-5">
+    <Card className="flex h-full flex-col gap-4 p-5">
       <h3 className="text-[18px]/[20px] font-semibold">Liabilities</h3>
 
       <Separator />
@@ -173,7 +173,10 @@ export function TreasuryLiabilitiesCard() {
         }
       />
 
-      <ProtocolDataSource sources={["Treasury API", "CD Subgraph", "YRF Subgraph"]} />
+      <ProtocolDataSource
+        sources={["Treasury API", "CD Subgraph", "YRF Subgraph"]}
+        className="pt-0"
+      />
     </Card>
   );
 }
