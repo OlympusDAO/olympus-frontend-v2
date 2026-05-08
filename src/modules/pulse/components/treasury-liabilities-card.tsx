@@ -129,7 +129,7 @@ export function TreasuryLiabilitiesCard() {
 
   return (
     <Card className="flex flex-col gap-4 p-5">
-      <h3 className="text-[18px]/[20px] font-semibold">Liabilities:</h3>
+      <h3 className="text-[18px]/[20px] font-semibold">Liabilities</h3>
 
       <Separator />
 

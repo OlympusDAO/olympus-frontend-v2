@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { RiArrowDownLine, RiArrowUpLine, RiExpandUpDownLine } from "@remixicon/react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -10,6 +11,7 @@ import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { TooltipInfo } from "@/components/ui/tooltip.tsx";
 import { ProtocolDataSource } from "@/modules/pulse/components/protocol-data-source.tsx";
 import { ChainIcon } from "@/components/chain-icon";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CHAIN_NAME_TO_ID } from "@/modules/ohm/utils/defi-llama";
 
@@ -54,13 +56,21 @@ function SortableHeader({
   return (
     <button
       type="button"
-      className={cn("inline-flex items-center gap-1", numeric && "justify-end")}
+      className={cn(
+        "inline-flex items-center gap-1",
+        numeric && "justify-end",
+        sorted && "text-primary-t",
+      )}
       onClick={onClick}
     >
       {label}
-      <span className={cn("text-disabled-t", sorted && "text-primary-t")}>
-        {sorted === "asc" ? "▲" : sorted === "desc" ? "▼" : "↕"}
-      </span>
+      {sorted === "asc" ? (
+        <RiArrowUpLine className="size-3" />
+      ) : sorted === "desc" ? (
+        <RiArrowDownLine className="size-3" />
+      ) : (
+        <RiExpandUpDownLine className="size-3" />
+      )}
     </button>
   );
 }
@@ -71,6 +81,17 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Protocol-Owned Liquidity": "var(--blue)",
   "Stable LP": "var(--green)",
   "Non-Reserve": "var(--orange)",
+};
+
+const CATEGORY_BADGE_COLOR: Record<
+  string,
+  "purple" | "red" | "blue" | "green" | "orange" | "gray"
+> = {
+  Stable: "green",
+  Volatile: "orange",
+  "Protocol-Owned Liquidity": "blue",
+  "Stable LP": "green",
+  "Non-Reserve": "gray",
 };
 
 interface Slice {
@@ -94,12 +115,12 @@ function buildSlices(
     {
       name: "Cooler Loan Receivables",
       value: coolerBorrowed,
-      color: "var(--purple)",
+      color: "rgba(137, 121, 255, 1)",
       apy: coolerApy,
     },
-    { name: "sUSDe", value: susdeValue, color: "var(--red)", apy: susdeApy },
-    { name: "LP positions", value: lpTotal, color: "var(--blue)", apy: lpApy },
-    { name: "sUSDS", value: susdsValue, color: "var(--orange)", apy: susdsApy },
+    { name: "sUSDe", value: susdeValue, color: "rgba(255, 146, 138, 1)", apy: susdeApy },
+    { name: "LP positions", value: lpTotal, color: "rgba(60, 195, 223, 1)", apy: lpApy },
+    { name: "sUSDS", value: susdsValue, color: "rgba(255, 174, 76, 1)", apy: susdsApy },
   ].filter((s) => s.value > 0);
 }
 
@@ -208,7 +229,7 @@ export function TreasuryAssetsCard() {
     <Card className="flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[18px]/[20px] font-semibold">Assets:</h3>
+          <h3 className="text-[18px]/[20px] font-semibold">Assets</h3>
           <p className="mt-1 text-xs text-secondary-t">
             Major income-producing treasury positions. LP APY is the weighted fee APY across current
             Protocol Owned Liquidity.
@@ -376,15 +397,9 @@ export function TreasuryAssetsCard() {
                     </span>
                   </td>
                   <td className="py-2 pr-3">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <span
-                        className="size-2 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: CATEGORY_COLORS[row.category] ?? "var(--orange)",
-                        }}
-                      />
-                      <span className="truncate text-xs text-secondary-t">{row.category}</span>
-                    </div>
+                    <Badge color={CATEGORY_BADGE_COLOR[row.category] ?? "gray"}>
+                      {row.category}
+                    </Badge>
                   </td>
                   <td className="py-2 pr-3">
                     <div className="flex min-w-0 items-center gap-1.5 text-xs text-secondary-t">
@@ -424,7 +439,10 @@ export function TreasuryAssetsCard() {
         />
       </div>
 
-      <ProtocolDataSource sources={["Treasury API", "DeFiLlama", "Cooler Subgraph"]} />
+      <ProtocolDataSource
+        sources={["Treasury API", "DeFiLlama", "Cooler Subgraph"]}
+        className="pt-0"
+      />
     </Card>
   );
 }
