@@ -107,9 +107,10 @@ export function TreasuryLiabilitiesCard() {
 
   const weeklyYield = yrfHistory?.currentWeeklyYield;
   const ohmPrice = ohmPriceData?.price;
-  const latestActualWeeklyBurns = yrfHistory?.weeklyYields.findLast(
-    (w) => w.ohmBurned > 0,
-  )?.ohmBurned;
+  const latestActualWeeklyBurns = yrfHistory?.weeklyYields
+    .slice()
+    .reverse()
+    .find((w) => w.ohmBurned > 0)?.ohmBurned;
   const weeklyBurnsFromBudget =
     ohmPrice && ohmPrice > 0 && weeklyYield != null ? weeklyYield / ohmPrice : null;
   const annualBurnsFromCoolerDrip =
