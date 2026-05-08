@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
+import { useAccount } from "wagmi";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { WAD, wmul, wdiv, pctToWad } from "@/lib/utils/wad-math";
@@ -16,10 +17,11 @@ interface UseMonoCoolerCalculationsProps {
 }
 
 export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCalculationsProps) {
+  const { address } = useAccount();
   const { position } = useMonoCoolerPosition();
 
   const collateralAddress = position?.collateralAddress;
-  const { balance: collateralBalance } = useTokenBalance(collateralAddress, undefined);
+  const { balance: collateralBalance } = useTokenBalance(collateralAddress, address);
 
   // Hourly interest rate as a number
   const hourlyInterestRate = useMemo(() => {
