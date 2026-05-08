@@ -200,8 +200,8 @@ export function TreasuryBackingCard() {
       </div>
 
       <div className="flex h-[360px] min-w-0 flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-4 text-xs/4 font-normal">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs/4 font-normal sm:justify-start">
             <div className="flex items-center gap-1.5">
               <span className="size-2.5 rounded-full" style={{ backgroundColor: PRICE_COLOR }} />
               <span className="text-secondary-t">OHM Price</span>
@@ -230,7 +230,14 @@ export function TreasuryBackingCard() {
               </InfoTooltip>
             </div>
           </div>
-          <Segmented size="sm" value={days} onValueChange={setDays} options={DAYS_OPTIONS} />
+          <Segmented
+            size="sm"
+            value={days}
+            onValueChange={setDays}
+            options={DAYS_OPTIONS}
+            className="flex w-full sm:inline-flex sm:w-fit [&>[data-slot=tabs-trigger]]:flex-1 sm:[&>[data-slot=tabs-trigger]]:flex-initial"
+            classNameTrigger="w-full sm:w-auto"
+          />
         </div>
 
         {isError && chartData.length <= 1 ? (

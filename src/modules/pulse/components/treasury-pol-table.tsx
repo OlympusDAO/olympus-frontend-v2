@@ -64,8 +64,8 @@ export function TreasuryPolTable() {
 
       <Separator />
 
-      <div className="overflow-hidden">
-        <table className="w-full table-fixed text-sm">
+      <div className="-mx-5 overflow-x-auto px-5">
+        <table className="w-full min-w-[720px] table-fixed text-sm">
           <thead>
             <tr className="border-b border-a10-b">
               <th className="w-[18%] pb-2 text-left text-xs font-normal text-secondary-t">Pool</th>
