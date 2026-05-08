@@ -75,14 +75,6 @@ function SortableHeader({
   );
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Stable: "var(--purple)",
-  Volatile: "var(--red)",
-  "Protocol-Owned Liquidity": "var(--blue)",
-  "Stable LP": "var(--green)",
-  "Non-Reserve": "var(--orange)",
-};
-
 const CATEGORY_BADGE_COLOR: Record<
   string,
   "purple" | "red" | "blue" | "green" | "orange" | "gray"
@@ -124,22 +116,18 @@ function buildSlices(
   ].filter((s) => s.value > 0);
 }
 
-interface DonutEntry {
-  name: string;
-  value: number;
-  total: number;
-}
-
 function DonutTooltip({
   active,
   payload,
+  total,
 }: {
   active?: boolean;
-  payload?: { name: string; value: number; payload: DonutEntry }[];
+  payload?: { name: string; value: number; payload: { name: string } }[];
+  total: number;
 }) {
   if (!active || !payload?.[0]) return null;
   const entry = payload[0];
-  const pct = entry.payload.total > 0 ? (entry.value / entry.payload.total) * 100 : 0;
+  const pct = total > 0 ? (entry.value / total) * 100 : 0;
 
   return (
     <div className="bg-surface-tooltip shadow-tooltip rounded-[20px] px-3 py-2 max-w-[216px] text-center text-primary-t">
@@ -223,8 +211,6 @@ export function TreasuryAssetsCard() {
     lpWeightedApy,
   );
 
-  const pieData = slices.map((s) => ({ ...s, total: treasuryMarketValue }));
-
   return (
     <Card className="flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between gap-4">
@@ -252,7 +238,7 @@ export function TreasuryAssetsCard() {
         <div className="shrink-0">
           <PieChart width={140} height={140}>
             <Pie
-              data={pieData}
+              data={slices}
               dataKey="value"
               nameKey="name"
               innerRadius={42}
@@ -261,11 +247,11 @@ export function TreasuryAssetsCard() {
               stroke="var(--surface-bg-l2)"
               strokeWidth={2}
             >
-              {pieData.map((s) => (
+              {slices.map((s) => (
                 <Cell key={s.name} fill={s.color} />
               ))}
             </Pie>
-            <Tooltip content={<DonutTooltip />} />
+            <Tooltip content={<DonutTooltip total={treasuryMarketValue} />} />
           </PieChart>
         </div>
 

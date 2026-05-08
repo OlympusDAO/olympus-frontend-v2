@@ -44,13 +44,24 @@ const SKELETON_CELLS = [
 export function TreasuryPolTable() {
   const { data: rows, isLoading } = useLpPoolsData();
 
-  const totalTvl = useMemo(() => (rows ?? []).reduce((s, r) => s + r.tvl, 0), [rows]);
-  const totalFees = useMemo(
-    () => (rows ?? []).reduce((s, r) => s + (r.weeklyFees ?? 0), 0),
-    [rows],
-  );
-  const hasUnavailableFees = useMemo(() => (rows ?? []).some((r) => r.weeklyFees == null), [rows]);
-  const totalOhmDepth = useMemo(() => (rows ?? []).reduce((s, r) => s + r.ohmDepth, 0), [rows]);
+  const { totalTvl, totalFees, hasUnavailableFees, totalOhmDepth } = useMemo(() => {
+    let tvl = 0;
+    let fees = 0;
+    let ohmDepth = 0;
+    let unavailable = false;
+    for (const r of rows ?? []) {
+      tvl += r.tvl;
+      fees += r.weeklyFees ?? 0;
+      ohmDepth += r.ohmDepth;
+      if (r.weeklyFees == null) unavailable = true;
+    }
+    return {
+      totalTvl: tvl,
+      totalFees: fees,
+      hasUnavailableFees: unavailable,
+      totalOhmDepth: ohmDepth,
+    };
+  }, [rows]);
 
   return (
     <Card className="flex flex-col gap-4 p-5">

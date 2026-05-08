@@ -107,21 +107,20 @@ export function TreasuryLiabilitiesCard() {
 
   const weeklyYield = yrfHistory?.currentWeeklyYield;
   const ohmPrice = ohmPriceData?.price;
-  const latestActualWeeklyBurns = yrfHistory
-    ? [...yrfHistory.weeklyYields].reverse().find((w) => w.ohmBurned > 0)?.ohmBurned
-    : undefined;
+  const latestActualWeeklyBurns = yrfHistory?.weeklyYields.findLast(
+    (w) => w.ohmBurned > 0,
+  )?.ohmBurned;
   const weeklyBurnsFromBudget =
     ohmPrice && ohmPrice > 0 && weeklyYield != null ? weeklyYield / ohmPrice : null;
   const annualBurnsFromCoolerDrip =
     ohmPrice && ohmPrice > 0 && cooler?.totalCollateralGohm != null
       ? (cooler.totalCollateralGohm * COOLER_YRF_USD_PER_GOHM_YEAR) / ohmPrice
       : null;
-  const annualBurns =
-    latestActualWeeklyBurns !== undefined
-      ? latestActualWeeklyBurns * 52
-      : weeklyBurnsFromBudget != null && weeklyBurnsFromBudget > 0
-        ? weeklyBurnsFromBudget * 52
-        : annualBurnsFromCoolerDrip;
+  let annualBurns: number | null;
+  if (latestActualWeeklyBurns !== undefined) annualBurns = latestActualWeeklyBurns * 52;
+  else if (weeklyBurnsFromBudget != null && weeklyBurnsFromBudget > 0)
+    annualBurns = weeklyBurnsFromBudget * 52;
+  else annualBurns = annualBurnsFromCoolerDrip;
   const burnRatePct =
     annualBurns != null && ohmCirculatingSupply != null && ohmCirculatingSupply > 0
       ? (annualBurns / ohmCirculatingSupply) * 100

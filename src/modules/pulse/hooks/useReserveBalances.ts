@@ -140,12 +140,13 @@ export function useReserveBalances() {
       }
 
       const holdings = Array.from(holdingAgg.values()).filter((h) => h.value > 1);
-      const susdeValue = holdings
-        .filter((h) => h.token.toLowerCase() === "staked usde")
-        .reduce((sum, h) => sum + h.value, 0);
-      const susdsValue = holdings
-        .filter((h) => h.token.toLowerCase() === "savings usds")
-        .reduce((sum, h) => sum + h.value, 0);
+      let susdeValue = 0;
+      let susdsValue = 0;
+      for (const h of holdings) {
+        const name = h.token.toLowerCase();
+        if (name === "staked usde") susdeValue += h.value;
+        else if (name === "savings usds") susdsValue += h.value;
+      }
       const lpPositions = Array.from(lpAgg.values()).filter((p) => p.value > 1000);
 
       return { susdeValue, susdsValue, lpPositions, holdings };

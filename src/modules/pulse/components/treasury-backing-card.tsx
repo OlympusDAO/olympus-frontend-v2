@@ -29,6 +29,12 @@ const USD_PER_OHM = {
 } as const;
 const COMPACT_NUM = { style: "decimal", notation: "compact", maximumFractionDigits: 2 } as const;
 
+const usdPerOhmFormatter = new Intl.NumberFormat("en-US", USD_PER_OHM);
+const compactNumFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 2,
+});
+
 const DAYS_OPTIONS = [
   { value: "30", label: "30d" },
   { value: "90", label: "90d" },
@@ -43,22 +49,6 @@ const BACKED_SUPPLY_COLOR = "var(--purple)";
 const EVENT_COLOR = "var(--red)";
 
 const CHART_EVENTS = [{ date: "2025-02-26", label: "V1 Migrator", color: EVENT_COLOR }];
-
-function formatUsdPerOhm(v: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(v);
-}
-
-function formatCompactNum(v: number) {
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 2,
-  }).format(v);
-}
 
 interface TooltipEntry {
   dataKey?: string;
@@ -288,7 +278,7 @@ export function TreasuryBackingCard() {
                   tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v: number) => formatUsdPerOhm(v)}
+                  tickFormatter={(v: number) => usdPerOhmFormatter.format(v)}
                   domain={[
                     (min: number) => Math.floor(min * 0.97),
                     (max: number) => Math.ceil(max * 1.03),
@@ -303,7 +293,7 @@ export function TreasuryBackingCard() {
                   tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={formatCompactNum}
+                  tickFormatter={(v: number) => compactNumFormatter.format(v)}
                   domain={[
                     (min: number) => Math.floor(min * 0.97),
                     (max: number) => Math.ceil(max * 1.03),
