@@ -21,9 +21,13 @@ const ZERO = 0n;
 
 interface BorrowFormProps {
   calculations: MonoCoolerCalculations;
+  loan?: {
+    debt: bigint;
+    collateral: bigint;
+  };
 }
 
-export function BorrowForm({ calculations }: BorrowFormProps) {
+export function BorrowForm({ calculations, loan }: BorrowFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatUnits, parseUnits, type Address } from "viem";
+import { parseUnits, type Address } from "viem";
 import { formatTokenAmount } from "@/lib/math";
 import { useAccount } from "wagmi";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
