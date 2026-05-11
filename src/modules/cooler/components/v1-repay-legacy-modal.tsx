@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatUnits, parseUnits, type Address } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount } from "wagmi";
 import type { CoolerLoan } from "@/lib/hooks/cooler/useGetCoolerLoans";
 import type { ClearingHouseData } from "@/lib/hooks/cooler/useGetClearingHouse";
@@ -96,7 +97,7 @@ export function V1RepayLegacyModal({
 
   if (!loan) return null;
 
-  const interestRate = Number(formatUnits(loan.request.interest, 16));
+  const interestRate = formatTokenAmount(loan.request.interest, 16);
   const repaymentTotal = loan.principal + loan.interestDue;
   const loanToCollateral = clearingHouseData?.loanToCollateral ?? "0";
 

@@ -15,10 +15,9 @@ describe("BorrowPositionInfo", () => {
     projectedCollateral: parseUnits("10", 18),
     projectedDebt: parseUnits("5000", 18),
     liquidationThreshold: parseUnits("8500", 18),
-    additionalBorrowingAvailable: parseUnits("2000", 18),
-    maxPotentialBorrowAmount: parseUnits("7000", 18),
+    projectedLiquidationDate: new Date("2027-01-15T00:00:00Z"),
+    availableToBorrow: parseUnits("2000", 18),
     currentDebt: parseUnits("5000", 18),
-    isRepayMode: false,
   };
 
   it("renders all position fields when data exists", () => {
@@ -28,6 +27,7 @@ describe("BorrowPositionInfo", () => {
     expect(screen.getByText("Debt")).toBeDefined();
     expect(screen.getByText("LTV")).toBeDefined();
     expect(screen.getByText("Buffer to Liquidation")).toBeDefined();
+    expect(screen.getByText("Est. Liquidation Date")).toBeDefined();
     expect(screen.getByText("Available to Borrow")).toBeDefined();
   });
 
@@ -51,24 +51,17 @@ describe("BorrowPositionInfo", () => {
         projectedCollateral={0n}
         projectedDebt={0n}
         liquidationThreshold={0n}
-        additionalBorrowingAvailable={0n}
-        maxPotentialBorrowAmount={0n}
+        projectedLiquidationDate={null}
+        availableToBorrow={0n}
         currentDebt={0n}
-        isRepayMode={false}
       />,
     );
 
     expect(screen.getByText("No position")).toBeDefined();
   });
 
-  it("shows 'Position Overview' in borrow mode", () => {
+  it("shows 'Projected Position' heading", () => {
     render(<BorrowPositionInfo {...defaultProps} />);
-
-    expect(screen.getByText("Position Overview")).toBeDefined();
-  });
-
-  it("shows 'Projected Position' in repay mode", () => {
-    render(<BorrowPositionInfo {...defaultProps} isRepayMode={true} />);
 
     expect(screen.getByText("Projected Position")).toBeDefined();
   });
@@ -91,7 +84,7 @@ describe("BorrowPositionInfo", () => {
 
     // Buffer to Liquidation row should show 0.00 USDS
     const bufferLabel = screen.getByText("Buffer to Liquidation");
-    const bufferRow = bufferLabel.closest("div[class*='flex items-center justify-between']")!;
-    expect(bufferRow.textContent).toContain("0.00");
+    const bufferRow = bufferLabel.closest("div[class*='flex items-center justify-between']");
+    expect(bufferRow?.textContent).toContain("0.00");
   });
 });

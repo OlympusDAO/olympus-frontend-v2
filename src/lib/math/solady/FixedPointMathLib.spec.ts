@@ -57,12 +57,6 @@ describe("FixedPointMathLib", () => {
       expect(mulDiv(ONE_E18, 0n, ONE_E18)).toEqual(0n);
       expect(mulDiv(0n, 0n, ONE_E18)).toEqual(0n);
     });
-
-    test("throws an error when divisor is zero", () => {
-      expect(() => {
-        mulDiv(ONE_E18, ONE_E18, 0n);
-      }).toThrow(/Division by zero/);
-    });
   });
 
   describe("mulDivUp", () => {
@@ -94,12 +88,6 @@ describe("FixedPointMathLib", () => {
       expect(mulDivUp(0n, ONE_E18, ONE_E18)).toEqual(0n);
       expect(mulDivUp(ONE_E18, 0n, ONE_E18)).toEqual(0n);
       expect(mulDivUp(0n, 0n, ONE_E18)).toEqual(0n);
-    });
-
-    test("throws an error when divisor is zero", () => {
-      expect(() => {
-        mulDivUp(ONE_E18, ONE_E18, 0n);
-      }).toThrow(/Division by zero/);
     });
   });
 

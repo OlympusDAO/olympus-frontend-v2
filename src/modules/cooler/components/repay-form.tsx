@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { trackCoolerRepay } from "@/lib/analytics";
 import { parseUnits, formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { useAccount, useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
@@ -10,7 +11,7 @@ import { BorrowCoolerApprovalModal } from "./borrow-cooler-approval-modal.tsx";
 import { useToken } from "@/lib/hooks/useToken";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useMonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
+import type { MonoCoolerCalculations } from "@/lib/hooks/cooler/useMonoCoolerCalculations";
 import { useMonoCoolerDebt, calculateRepayAmount } from "@/lib/hooks/cooler/useMonoCoolerDebt";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerAuthorization } from "@/lib/hooks/cooler/useMonoCoolerAuthorization";
@@ -21,21 +22,17 @@ import { TokenName } from "@/lib/tokens";
 const ZERO = 0n;
 
 interface RepayFormProps {
-  loan?: {
-    debt: bigint;
-    collateral: bigint;
-  };
+  calculations: MonoCoolerCalculations;
 }
 
 function formatGohm(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 4,
     maximumFractionDigits: 4,
   });
 }
 
-export function RepayForm({ loan }: RepayFormProps) {
+export function RepayForm({ calculations }: RepayFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
@@ -57,7 +54,7 @@ export function RepayForm({ loan }: RepayFormProps) {
     isBelowMinDebt,
     handleLtvChange,
     handleDebtChange,
-  } = useMonoCoolerCalculations({ loan, isRepayMode: true });
+  } = calculations;
 
   const {
     repay,
@@ -237,7 +234,7 @@ export function RepayForm({ loan }: RepayFormProps) {
     steps.push({
       number: stepNum,
       title: txTitle,
-      detail: `${Number(formatUnits(repayAmount, 18)).toFixed(2)} USDS`,
+      detail: `${formatTokenAmount(repayAmount).toFixed(2)} USDS`,
       isActive:
         (hasSufficientAllowance || approvalSuccess) &&
         (!needsScwAuthorization || isAuthorized) &&
@@ -320,7 +317,7 @@ export function RepayForm({ loan }: RepayFormProps) {
             <p className="text-xs text-secondary-t">
               Debt:{" "}
               <span className="font-medium text-primary-t">
-                {Number(formatUnits(currentDebt, 18)).toLocaleString("en-US", {
+                {formatTokenAmount(currentDebt).toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

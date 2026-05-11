@@ -1,5 +1,5 @@
 import { useAccount } from "wagmi";
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { RiWalletLine, RiTokenSwapLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export function DelegationCards({
     : "0";
 
   const coolerCollateral = position
-    ? Number(formatUnits(position.collateral, 18)).toLocaleString(undefined, {
+    ? formatTokenAmount(position.collateral).toLocaleString(undefined, {
         maximumFractionDigits: 4,
       })
     : "0";
