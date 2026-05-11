@@ -14,8 +14,8 @@ export interface LpPoolRow {
   chain: string;
   chainId: number;
   tvl: number;
-  apyBase: number;
-  weeklyFees: number;
+  apyBase: number | null;
+  weeklyFees: number | null;
   ohmPct: number;
   ohmDepth: number;
 }
@@ -38,25 +38,25 @@ type KodiakVault = {
   apr: number | null;
 };
 
-function getFeeApy(point: DefiLlamaChartPoint | undefined): number {
-  return point?.apyBase7d ?? point?.apyBase ?? 0;
+function getFeeApy(point: DefiLlamaChartPoint | undefined): number | null {
+  return point?.apyBase7d ?? point?.apyBase ?? null;
 }
 
 // Fetches fee APY for every pool in LP_POOL_MAP via DefiLlama's per-pool chart endpoint.
-// The Pulse table displays "7d Fees", so prefer apyBase7d when available and fall back
-// to the latest apyBase only when DefiLlama has not calculated a 7d value.
-async function fetchFeeApyByPoolId(poolIds: string[]): Promise<Map<string, number>> {
+// The table reports an estimated weekly run-rate, not observed fees collected by Olympus:
+// prefer DefiLlama's 7d fee APY when available and fall back to latest fee APY.
+async function fetchFeeApyByPoolId(poolIds: string[]): Promise<Map<string, number | null>> {
   const results = await Promise.all(
     poolIds.map(async (id) => {
       try {
         const res = await fetch(`${DEFILLAMA_YIELDS_URL}/chart/${id}`);
-        if (!res.ok) return [id, 0] as const;
+        if (!res.ok) return [id, null] as const;
         const json = await res.json();
         const points: DefiLlamaChartPoint[] = json?.data ?? [];
         const latest = points[points.length - 1];
         return [id, getFeeApy(latest)] as const;
       } catch {
-        return [id, 0] as const;
+        return [id, null] as const;
       }
     }),
   );
@@ -66,7 +66,7 @@ async function fetchFeeApyByPoolId(poolIds: string[]): Promise<Map<string, numbe
 // Kodiak Island fee APR is not currently populated in DefiLlama's OHM-HONEY pool.
 // Use Kodiak's own vault endpoint for Berachain POL rows so the 7d Fees column does
 // not silently zero out when the vault has fee APR data.
-async function fetchKodiakFeeApyByVaultId(vaultIds: string[]): Promise<Map<string, number>> {
+async function fetchKodiakFeeApyByVaultId(vaultIds: string[]): Promise<Map<string, number | null>> {
   if (vaultIds.length === 0) return new Map();
 
   try {
@@ -79,7 +79,7 @@ async function fetchKodiakFeeApyByVaultId(vaultIds: string[]): Promise<Map<strin
     return new Map(
       vaults
         .filter((vault) => wantedVaultIds.has(vault.id.toLowerCase()))
-        .map((vault) => [vault.id.toLowerCase(), vault.apr ?? 0] as const),
+        .map((vault) => [vault.id.toLowerCase(), vault.apr] as const),
     );
   } catch {
     return new Map();
@@ -112,8 +112,8 @@ export function useLpPoolsData() {
         const apyBase =
           (llamaPoolId ? feeApyByPoolId.get(llamaPoolId) : undefined) ??
           (kodiakVaultId ? feeApyByKodiakVaultId.get(kodiakVaultId) : undefined) ??
-          0;
-        const weeklyFees = (pos.value * (apyBase / 100)) / 52;
+          null;
+        const weeklyFees = apyBase == null ? null : (pos.value * (apyBase / 100)) / 52;
         const ohmDepth = Math.max(pos.value - pos.valueExcludingOhm, 0);
         const ohmPct = pos.value > 0 ? ohmDepth / pos.value : 0;
 
