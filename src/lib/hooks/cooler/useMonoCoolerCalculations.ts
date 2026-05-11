@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
 import { formatTokenAmount } from "@/lib/math";
 import { useMonoCoolerPosition } from "./useMonoCoolerPosition";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
@@ -20,10 +21,11 @@ interface UseMonoCoolerCalculationsProps {
 export type MonoCoolerCalculations = ReturnType<typeof useMonoCoolerCalculations>;
 
 export function useMonoCoolerCalculations({ loan, isRepayMode }: UseMonoCoolerCalculationsProps) {
+  const { address } = useAccount();
   const { position } = useMonoCoolerPosition();
 
   const collateralAddress = position?.collateralAddress;
-  const { balance: collateralBalance } = useTokenBalance(collateralAddress, undefined);
+  const { balance: collateralBalance } = useTokenBalance(collateralAddress, address);
 
   const hourlyInterestRate = position?.interestRateBps
     ? position.interestRateBps / 10000 / 8760

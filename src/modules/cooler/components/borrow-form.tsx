@@ -167,6 +167,8 @@ export function BorrowForm({ calculations }: BorrowFormProps) {
       collateralAmount > gohmToken.balance
     )
       return { label: "Insufficient gOHM Balance", disabled: true };
+    if (!loan && borrowAmount > ZERO && collateralAmount === ZERO)
+      return { label: "Enter Collateral Amount", disabled: true };
     if (borrowAmount > ZERO && borrowAmount > additionalBorrowingAvailable)
       return { label: "Exceeds Available Borrow", disabled: true };
     if (isBelowMinDebt && projectedDebt > ZERO)
@@ -183,6 +185,7 @@ export function BorrowForm({ calculations }: BorrowFormProps) {
     isComposite,
     isBorrowOnly,
     isCollateralOnly,
+    loan,
   ]);
 
   function getActionLabel() {

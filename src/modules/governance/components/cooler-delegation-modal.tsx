@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GOHMTokenIcon } from "@/icons";
 import { useAccount } from "wagmi";
+import { mainnet } from "@/lib/chains";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import {
   useMonoCoolerDelegations,
@@ -22,9 +23,13 @@ function createEmptyEntry(): DelegationEntry {
   return { address: "", amount: "" };
 }
 
+function isDecimalInput(value: string) {
+  return /^\d*\.?\d*$/.test(value);
+}
+
 export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { address } = useAccount();
-  const { position } = useMonoCoolerPosition();
+  const { position } = useMonoCoolerPosition({ chainId: mainnet.id });
   const { delegations, delegationsLoading, applyDelegations, isPending, isSuccess, reset } =
     useMonoCoolerDelegations();
 
@@ -32,21 +37,27 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
   const [initialDelegations, setInitialDelegations] = useState<Map<string, string>>(new Map());
 
   const maxEntries = position ? Number(position.maxDelegateAddresses) : 10;
-  const availableCollateral = position ? formatTokenAmount(position.collateral) : 0;
+  const totalCollateral = position ? formatTokenAmount(position.collateral) : 0;
 
   useEffect(() => {
-    if (delegations && delegations.length > 0) {
-      const currentEntries = delegations.map((d) => ({
-        address: d.delegate,
-        amount: formatUnits(d.amount, 18),
-      }));
-      setEntries(currentEntries);
+    if (!delegations) return;
 
-      const initialMap = new Map(
-        delegations.map((d) => [d.delegate.toLowerCase(), formatUnits(d.amount, 18)]),
-      );
-      setInitialDelegations(initialMap);
+    if (delegations.length === 0) {
+      setEntries([createEmptyEntry()]);
+      setInitialDelegations(new Map());
+      return;
     }
+
+    const currentEntries = delegations.map((d) => ({
+      address: d.delegate,
+      amount: formatUnits(d.amount, 18),
+    }));
+    setEntries(currentEntries);
+
+    const initialMap = new Map(
+      delegations.map((d) => [d.delegate.toLowerCase(), formatUnits(d.amount, 18)]),
+    );
+    setInitialDelegations(initialMap);
   }, [delegations]);
 
   const totalDelegationAmount = useMemo(() => {
@@ -77,7 +88,7 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
     const hasInitial = initialDelegations.size > 0;
     const allEmpty = entries.every((e) => !e.address && !e.amount);
     if (hasInitial && allEmpty) return true;
-    if (totalDelegationAmount > availableCollateral) return false;
+    if (totalDelegationAmount > totalCollateral) return false;
     const addresses = new Set<string>();
     for (const entry of entries) {
       if (entry.address) {
@@ -95,7 +106,7 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
       }
       return true;
     });
-  }, [entries, totalDelegationAmount, availableCollateral, initialDelegations]);
+  }, [entries, totalDelegationAmount, totalCollateral, initialDelegations]);
 
   function handleClose() {
     if (delegations && delegations.length > 0) {
@@ -122,6 +133,9 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
       const isDuplicate = entries.some((e, i) => i !== index && e.address.toLowerCase() === lower);
       if (isDuplicate) return;
     }
+
+    if (field === "amount" && !isDecimalInput(value)) return;
+
     setEntries((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -158,7 +172,14 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
     applyDelegations(requests);
   }
 
-  const exceedsCollateral = totalDelegationAmount > availableCollateral;
+  const exceedsCollateral = totalDelegationAmount > totalCollateral;
+  const remainingDelegationCapacity = Math.max(totalCollateral - totalDelegationAmount, 0);
+  const hasNoRemainingCapacity = totalCollateral > 0 && remainingDelegationCapacity === 0;
+  const isFullyDelegatedToWallet =
+    !!address &&
+    entries.length === 1 &&
+    entries[0]?.address.toLowerCase() === address.toLowerCase() &&
+    Number(entries[0]?.amount) === totalCollateral;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -173,18 +194,28 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
         <div className="flex items-start gap-3 p-3 rounded-2xl bg-blue/10 border border-blue/5">
           <RiInformationLine className="size-5 text-blue shrink-0" />
           <p className="text-sm/5 font-semibold text-primary-t">
-            You can delegate your Cooler position to up to {maxEntries} unique addresses.
+            You can split your Cooler voting power across up to {maxEntries} unique addresses. To
+            add another delegate when fully allocated, reduce an existing delegation amount first.
           </p>
         </div>
 
         {/* Stats */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between border-b border-a5-b pb-3 mb-3">
-            <span className="text-sm/5 font-normal text-secondary-t">Available Collateral</span>
+            <span className="text-sm/5 font-normal text-secondary-t">Total Collateral</span>
             <div className="flex items-center gap-1.5">
               <GOHMTokenIcon className="size-5" />
               <span className="text-sm/5 font-semibold text-primary-t">
-                {delegationsLoading ? "..." : `${availableCollateral.toFixed(4)} gOHM`}
+                {delegationsLoading ? "..." : `${totalCollateral.toFixed(4)} gOHM`}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between border-b border-a5-b pb-3 mb-3">
+            <span className="text-sm/5 font-normal text-secondary-t">Remaining to Delegate</span>
+            <div className="flex items-center gap-1.5">
+              <GOHMTokenIcon className="size-5" />
+              <span className="text-sm/5 font-semibold text-primary-t">
+                {delegationsLoading ? "..." : `${remainingDelegationCapacity.toFixed(4)} gOHM`}
               </span>
             </div>
           </div>
@@ -201,6 +232,13 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
           </div>
         </div>
 
+        {hasNoRemainingCapacity && !hasStateChanged && (
+          <div className="rounded-2xl bg-surface-a3 border border-a5-b px-3 py-2 text-xs/4 text-secondary-t">
+            Your full Cooler position is already delegated. Reduce an existing amount before adding
+            another delegate.
+          </div>
+        )}
+
         {/* Delegation Entries */}
         <div className="flex flex-col gap-2">
           {entries.map((entry, index) => (
@@ -214,7 +252,8 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
               <div className="relative w-32">
                 <GOHMTokenIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 pointer-events-none" />
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="0.0000"
                   value={entry.amount}
                   onChange={(e) => updateEntry(index, "amount", e.target.value)}
@@ -235,7 +274,7 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
 
         {/* Add Entry + Counter */}
         <div className="flex items-center justify-between">
-          {entries.length < maxEntries ? (
+          {entries.length < maxEntries && remainingDelegationCapacity > 0 ? (
             <button
               type="button"
               onClick={addEntry}
@@ -244,6 +283,10 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
               <RiAddLine className="size-4" />
               Add Additional Delegation Address
             </button>
+          ) : hasNoRemainingCapacity ? (
+            <span className="text-xs/4 text-secondary-t">
+              Reduce an existing amount to add another delegate.
+            </span>
           ) : (
             <span />
           )}
@@ -261,15 +304,15 @@ export function CoolerDelegationModal({ open, onClose }: { open: boolean; onClos
             <Button
               variant="secondary"
               onClick={handleSetToMyWallet}
-              disabled={!address || !position}
+              disabled={!address || !position || isFullyDelegatedToWallet}
             >
-              Set to My Wallet
+              {isFullyDelegatedToWallet ? "Fully Self Delegated" : "Set to My Wallet"}
             </Button>
             <Button
               onClick={handleApplyDelegations}
               disabled={!isValid || isPending || !hasStateChanged}
             >
-              {isPending ? "Delegating..." : "Delegate Voting"}
+              {isPending ? "Delegating..." : hasStateChanged ? "Delegate Voting" : "No Changes"}
             </Button>
           </div>
         )}

@@ -52,9 +52,18 @@ export function V1RepayLegacyModal({
   const { approve, isPending: isApprovePending } = useTokenApproval();
 
   const needsApproval = useMemo(() => {
-    if (!allowance || repayAmountBigInt === 0n) return false;
+    if (allowance === undefined || repayAmountBigInt === 0n) return false;
     return allowance < repayAmountBigInt;
   }, [allowance, repayAmountBigInt]);
+
+  const collateralReturned = useMemo(() => {
+    if (!loan || repayAmountBigInt === 0n || loan.principal === 0n) return 0n;
+    const totalDebt = loan.principal + loan.interestDue;
+    const cappedRepay = repayAmountBigInt > totalDebt ? totalDebt : repayAmountBigInt;
+    if (cappedRepay <= loan.interestDue) return 0n;
+    const principalPortion = cappedRepay - loan.interestDue;
+    return (loan.collateral * principalPortion) / loan.principal;
+  }, [loan, repayAmountBigInt]);
 
   const debtAsset = loan?.debtAssetName ?? clearingHouseData?.debtAssetName ?? "DAI";
 
@@ -94,50 +103,46 @@ export function V1RepayLegacyModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Repay Loan</DialogTitle>
+      <DialogContent className="w-full sm:max-w-md mx-auto p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-xl">Repay Loan</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
-            <div>
-              <label htmlFor="repay-amount" className="mb-1 block text-xs text-secondary-t">
-                Repay Amount ({debtAsset})
+        <div className="px-6 pb-6 space-y-4">
+          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
+            <div className="flex items-center justify-between mb-3">
+              <label htmlFor="repay-amount" className="text-sm font-medium">
+                Repay Amount
               </label>
-              <div className="flex gap-2">
-                <Input
-                  id="repay-amount"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={repayAmount}
-                  onChange={(e) => setRepayAmount(e.target.value)}
-                />
-                <Button variant="secondary" size="sm" onClick={handleSetMax}>
-                  Max
-                </Button>
-              </div>
+              <span className="text-xs text-secondary-t">{debtAsset}</span>
             </div>
-
-            <div className="flex flex-col gap-2">
-              {needsApproval ? (
-                <Button
-                  onClick={handleApprove}
-                  disabled={isApprovePending || repayAmountBigInt === 0n}
-                >
-                  {isApprovePending ? "Approving..." : `Approve ${debtAsset}`}
-                </Button>
-              ) : (
-                <Button onClick={handleRepay} disabled={isRepayPending || repayAmountBigInt === 0n}>
-                  {isRepayPending ? "Repaying..." : "Repay"}
-                </Button>
-              )}
+            <div className="flex items-center justify-between">
+              <Input
+                id="repay-amount"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={repayAmount}
+                onChange={(e) => setRepayAmount(e.target.value)}
+                className="md:text-3xl h-12 placeholder:text-disabled-t border-0 shadow-none pl-0 bg-transparent"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSetMax}
+                className="h-7 px-3 text-xs"
+              >
+                Max
+              </Button>
+            </div>
+            <div className="flex items-center justify-end text-xs text-secondary-t mt-2">
+              <span>
+                Repayment: {formatAmount(repaymentTotal)} {debtAsset}
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <h4 className="text-sm font-semibold">Position Info</h4>
+          <div className="bg-surface-a3 rounded-3xl p-4 border border-a3-b">
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-secondary-t">Interest Rate</span>
@@ -173,14 +178,32 @@ export function V1RepayLegacyModal({
                   {formatAmount(loan.interestDue)} {debtAsset}
                 </span>
               </div>
-              <div className="border-a5-b flex justify-between border-t pt-2 font-semibold">
-                <span className="text-secondary-t">Repayment</span>
-                <span>
-                  {formatAmount(repaymentTotal)} {debtAsset}
-                </span>
+              <div className="border-a5-b flex justify-between border-t pt-2 mt-1 font-semibold">
+                <span>gOHM Returned</span>
+                <span>{formatAmount(collateralReturned)} gOHM</span>
               </div>
             </div>
           </div>
+
+          {needsApproval ? (
+            <Button
+              onClick={handleApprove}
+              disabled={isApprovePending || repayAmountBigInt === 0n}
+              className="w-full"
+              size="lg"
+            >
+              {isApprovePending ? "Approving..." : `Approve ${debtAsset}`}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleRepay}
+              disabled={isRepayPending || repayAmountBigInt === 0n}
+              className="w-full"
+              size="lg"
+            >
+              {isRepayPending ? "Repaying..." : "Repay"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
