@@ -35,6 +35,17 @@ Requires Node.js 24+ and pnpm.
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
 
+> **Why are the `VITE_*` keys public?**
+> Vite inlines any `VITE_`-prefixed variable into the client bundle at build time, so these values ship to every visitor's browser and are inherently public — they are project identifiers, not secrets. Each provider enforces access at the edge via allowlisted domains or origins configured in their dashboard, not via key secrecy:
+>
+> - **WalletConnect Project ID** — restricted to approved domains in [WalletConnect Cloud](https://cloud.walletconnect.com).
+> - **The Graph API key** — restricted to approved domains in [The Graph Studio](https://thegraph.com/studio).
+> - **Safe API key** — origin-restricted by the Safe Transaction Service.
+> - **PostHog project API key** — write-only, project-scoped, and domain-restricted in the PostHog project settings.
+> - **Google Analytics Measurement ID** — public by design (GA4 measurement IDs are not credentials).
+>
+> Never place a true secret (server-side API key, signing key, private key) behind a `VITE_` prefix.
+
 ## Stack
 
 - **React 19** + **TypeScript 5.8** — UI and type safety
