@@ -88,21 +88,21 @@
   },
   "pnpm": {
     "overrides": {
+      "@protobufjs/utf8": "^1.1.1",
+      "axios": "^1.15.2",
       "defu": "6.1.5",
+      "fast-uri": "^3.1.1",
       "h3": "1.15.11",
-      "hono": ">=4.12.16",
+      "hono": "^4.12.16",
       "lodash": "4.18.1",
       "picomatch@<2.3.2": "2.3.2",
       "picomatch@>=4.0.0 <4.0.4": "4.0.4",
+      "postcss": "^8.5.10",
+      "protobufjs": "^7.5.6",
       "rollup": "4.59.0",
       "socket.io-parser": "4.2.6",
       "vite": "7.3.2",
-      "axios": ">=1.15.2",
-      "fast-uri": ">=3.1.1",
-      "yaml": "2.8.3",
-      "postcss": "^8.5.10",
-      "@protobufjs/utf8": ">=1.1.1",
-      "protobufjs": ">=7.5.6"
+      "yaml": "2.8.3"
     }
   },
   "lint-staged": {
