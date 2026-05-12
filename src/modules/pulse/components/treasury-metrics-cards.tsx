@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
+import { TooltipInfo } from "@/components/ui/tooltip.tsx";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 import treasuryMarketDark from "@/assets/treasury-market-value_dark.webp";
@@ -72,7 +73,9 @@ export function TreasuryMetricsCards() {
           className="size-12"
         />
         <div className="flex flex-col gap-0.5">
-          <p className="text-secondary-t text-sm font-normal">OHM Supply</p>
+          <TooltipInfo title="Total Supply of OHM" className="text-secondary-t text-sm font-normal">
+            Total Supply
+          </TooltipInfo>
           <NumberFlow
             value={data?.ohmTotalSupply ?? 0}
             format={{ style: "decimal" }}

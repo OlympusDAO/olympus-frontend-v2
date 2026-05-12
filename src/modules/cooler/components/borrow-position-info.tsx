@@ -1,28 +1,26 @@
 import { Icon } from "@/components/icon";
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { cn } from "@/lib/utils";
+import { TooltipInfo } from "@/components/ui/tooltip";
 
 interface PositionInfoProps {
   projectedCollateral: bigint;
   projectedDebt: bigint;
   liquidationThreshold: bigint;
-  additionalBorrowingAvailable: bigint;
-  maxPotentialBorrowAmount: bigint;
+  projectedLiquidationDate: Date | null;
+  availableToBorrow: bigint;
   currentDebt: bigint;
-  isRepayMode: boolean;
 }
 
 function formatGohm(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 4,
     maximumFractionDigits: 4,
   });
 }
 
 function formatUsds(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
-  return num.toLocaleString("en-US", {
+  return formatTokenAmount(value).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -30,17 +28,27 @@ function formatUsds(value: bigint): string {
 
 function calculateLtv(debt: bigint, liquidationThreshold: bigint): string {
   if (liquidationThreshold === 0n) return "0.00";
-  const ltv = (Number(formatUnits(debt, 18)) / Number(formatUnits(liquidationThreshold, 18))) * 100;
+  const ltv = (formatTokenAmount(debt) / formatTokenAmount(liquidationThreshold)) * 100;
   return ltv.toFixed(2);
+}
+
+function formatLiquidationDate(date: Date | null): string {
+  if (!date) return "—";
+  if (date.getTime() <= Date.now()) return "Now";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function BorrowPositionInfo({
   projectedCollateral,
   projectedDebt,
   liquidationThreshold,
-  additionalBorrowingAvailable,
+  projectedLiquidationDate,
+  availableToBorrow,
   currentDebt,
-  isRepayMode,
 }: PositionInfoProps) {
   const hasPosition = projectedCollateral > 0n || projectedDebt > 0n || currentDebt > 0n;
   const bufferToLiquidation =
@@ -51,9 +59,7 @@ export function BorrowPositionInfo({
       data-slot="position-info"
       className="rounded-2xl bg-surface-a3 border border-a3-b px-4 py-4 flex flex-col h-full"
     >
-      <h3 className="mb-4 text-sm font-semibold">
-        {isRepayMode ? "Projected Position" : "Position Overview"}
-      </h3>
+      <h3 className="mb-4 text-sm font-semibold">Projected Position</h3>
 
       {!hasPosition ? (
         <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
@@ -91,12 +97,22 @@ export function BorrowPositionInfo({
             </span>
           </InfoRow>
 
-          <InfoRow label="Buffer to Liquidation">
+          <InfoRow
+            label="Buffer to Liquidation"
+            tooltip="How much your debt can grow — through accruing interest or new borrows — before the position is liquidated."
+          >
             <span className="font-medium">{formatUsds(bufferToLiquidation)} USDS</span>
           </InfoRow>
 
+          <InfoRow
+            label="Est. Liquidation Date"
+            tooltip='When accruing interest is projected to push your debt to the liquidation threshold, assuming no further actions. "Now" means the position is already past the threshold; "—" means there is no debt or no rate to project from.'
+          >
+            <span className="font-medium">{formatLiquidationDate(projectedLiquidationDate)}</span>
+          </InfoRow>
+
           <InfoRow label="Available to Borrow">
-            <span className="font-medium">{formatUsds(additionalBorrowingAvailable)} USDS</span>
+            <span className="font-medium">{formatUsds(availableToBorrow)} USDS</span>
           </InfoRow>
         </div>
       )}
@@ -104,10 +120,24 @@ export function BorrowPositionInfo({
   );
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoRow({
+  label,
+  tooltip,
+  children,
+}: {
+  label: string;
+  tooltip?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between border-b border-a3-b py-2 last:border-b-0">
-      <span className="text-xs text-secondary-t">{label}</span>
+      {tooltip ? (
+        <TooltipInfo title={tooltip} className="text-xs font-normal">
+          {label}
+        </TooltipInfo>
+      ) : (
+        <span className="text-xs text-secondary-t">{label}</span>
+      )}
       <div className="text-sm">{children}</div>
     </div>
   );

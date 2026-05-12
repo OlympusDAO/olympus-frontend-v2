@@ -1,7 +1,7 @@
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 
 export function formatAmount(value: bigint, decimals: number = 2): string {
-  const num = Number(formatUnits(value, 18));
+  const num = formatTokenAmount(value);
   return num.toLocaleString("en-US", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,

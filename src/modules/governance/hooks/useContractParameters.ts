@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { formatEther, formatUnits } from "viem";
+import { formatEther } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import { usePublicClient } from "wagmi";
 import { olympusGovernorBravoAbi } from "@/abis/OlympusGovernorBravo";
 import gOHMAbi from "@/abis/gOHM";
@@ -145,10 +146,10 @@ export function useContractParameters() {
 
       return {
         proposalThreshold: formatEther((supply * thresholdPct) / PRECISION_FACTOR),
-        proposalThresholdPercent: Number(formatUnits(thresholdPct, 8)),
-        proposalApprovalThreshold: Number(formatUnits(approvalPct, 8)) * 100,
+        proposalThresholdPercent: formatTokenAmount(thresholdPct, 8),
+        proposalApprovalThreshold: formatTokenAmount(approvalPct, 8) * 100,
         proposalQuorum: formatEther((supply * quorum) / PRECISION_FACTOR),
-        proposalQuorumPercent: Number(formatUnits(quorum, 8)) * 100,
+        proposalQuorumPercent: formatTokenAmount(quorum, 8) * 100,
         votingDelay: formatBlockDuration(votingDelay as bigint, BLOCKS_PER_DAY),
         votingPeriod: formatBlockDuration(votingPeriod as bigint, BLOCKS_PER_DAY),
         executionDelay: formatSecondsDuration(timelockDelay as bigint),

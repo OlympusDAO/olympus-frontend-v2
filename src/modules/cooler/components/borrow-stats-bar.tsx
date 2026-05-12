@@ -2,7 +2,7 @@ import { NumberFlow } from "@/components/ui/number-flow";
 import { Card } from "@/components/ui/card";
 import { useMonoCoolerPosition } from "@/lib/hooks/cooler/useMonoCoolerPosition";
 import { useMonoCoolerCapacity } from "@/lib/hooks/cooler/useMonoCoolerCapacity";
-import { formatUnits } from "viem";
+import { formatTokenAmount } from "@/lib/math";
 import type { Format } from "@number-flow/react";
 
 type Stat = {
@@ -14,7 +14,7 @@ type Stat = {
 };
 
 function bigintToNumber(value: bigint): number {
-  return Number(formatUnits(value, 18));
+  return formatTokenAmount(value);
 }
 
 export function BorrowStatsBar() {
