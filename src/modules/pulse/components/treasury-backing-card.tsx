@@ -126,7 +126,7 @@ function TooltipRow({
 }
 
 export function TreasuryBackingCard() {
-  const [days, setDays] = useState("30");
+  const [days, setDays] = useState("90");
   const { data: historyPoints, isError } = useTreasuryHistory(Number(days));
   const { data: lagging } = useTreasuryDataFreshness();
 
