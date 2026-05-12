@@ -8,6 +8,7 @@ import { useReserveYields } from "@/modules/pulse/hooks/useReserveYields";
 import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { TooltipInfo } from "@/components/ui/tooltip.tsx";
 import { ProtocolDataSource } from "@/modules/pulse/components/protocol-data-source.tsx";
+import { COOLER_APR } from "@/lib/constants";
 
 const PERCENT_FORMAT = {
   style: "decimal",
@@ -31,6 +32,7 @@ function buildSlices(
   susdsApy: number,
   lpTotal: number,
   lpApy: number | null,
+  otherValue: number,
 ): Slice[] {
   return [
     {
@@ -42,6 +44,7 @@ function buildSlices(
     { name: "sUSDe", value: susdeValue, color: "rgba(255, 146, 138, 1)", apy: susdeApy },
     { name: "LP positions", value: lpTotal, color: "rgba(60, 195, 223, 1)", apy: lpApy },
     { name: "sUSDS", value: susdsValue, color: "rgba(255, 174, 76, 1)", apy: susdsApy },
+    { name: "Other", value: otherValue, color: "rgba(154, 163, 177, 1)", apy: null },
   ].filter((s) => s.value > 0);
 }
 
@@ -75,8 +78,17 @@ export function TreasuryAssetsCard() {
   const { data: cooler } = useCoolerMetrics();
 
   const treasuryMarketValue = metrics?.treasuryMarketValue ?? 0;
-  const coolerBorrowed = cooler ? cooler.monoDebt + cooler.v1Principal + cooler.v1Interest : 0;
-  const coolerApy = cooler?.interestRate ?? 0;
+  // Prefer the Cooler subgraph for current principal + interest. If it is unavailable,
+  // fall back to the Treasury API's receivable tokenRecords so Cooler does not get
+  // swallowed into the residual Other bucket while the subgraph loads or errors.
+  const coolerReceivablesFromReserves =
+    reserves?.holdings
+      .filter((h) => h.token.includes("Cooler Loan") && h.token.includes("Receivables"))
+      .reduce((sum, h) => sum + h.value, 0) ?? 0;
+  const coolerBorrowed = cooler
+    ? cooler.monoDebt + cooler.v1Principal + cooler.v1Interest
+    : coolerReceivablesFromReserves;
+  const coolerApy = cooler?.interestRate ?? COOLER_APR * 100;
   const susdeValue = reserves?.susdeValue ?? 0;
   const susdeApy = yields?.susdeApy ?? 0;
   const susdsValue = reserves?.susdsValue ?? 0;
@@ -88,6 +100,8 @@ export function TreasuryAssetsCard() {
       ? lpPositions.reduce((sum, p) => sum + p.value * (yields.lpApys[p.name] ?? 0), 0) / lpTotal
       : null;
   const freeReserves = treasuryMarketValue - coolerBorrowed;
+  const namedAssetsTotal = coolerBorrowed + susdeValue + susdsValue + lpTotal;
+  const otherValue = Math.max(treasuryMarketValue - namedAssetsTotal, 0);
 
   const slices = buildSlices(
     coolerBorrowed,
@@ -98,6 +112,7 @@ export function TreasuryAssetsCard() {
     susdsApy,
     lpTotal,
     lpWeightedApy,
+    otherValue,
   );
 
   return (
