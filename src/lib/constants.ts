@@ -11,7 +11,9 @@ export const BOND_SUBGRAPH_URL = graphUrl("E4Mikyz3ec1MGGFYNuEDQ3F1qtcLashFKwyTv
 export const EMISSION_MANAGER_SUBGRAPH_URL = graphUrl(
   "7KwoppR1FTbHpz7VieAEFmyyPh9z2ZWUvYjSs5w3cTV8",
 );
-export const TREASURY_API_URL = "https://olympus-treasury-subgraph-prod.web.app";
+export const INDEXER_GRAPHQL_URL =
+  (import.meta.env.VITE_INDEXER_GRAPHQL_URL as string | undefined) ||
+  "https://indexer.hyperindex.xyz/8905631/v1/graphql";
 export const DEFILLAMA_YIELDS_URL = "https://yields.llama.fi";
 export const KODIAK_API_URL = "https://backend.kodiak.finance";
 export const ETHERSCAN_BASE_URL = "https://etherscan.io";

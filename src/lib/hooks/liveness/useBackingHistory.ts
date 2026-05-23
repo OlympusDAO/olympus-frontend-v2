@@ -1,41 +1,44 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import { gql } from "graphql-request";
+import { envioGraphqlClient } from "@/lib/graphql-client";
+import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface BackingHistory {
   dataPoints: Array<{ date: string; backing: number; ohmPrice: number }>;
 }
 
+const BACKING_HISTORY_QUERY = gql`
+  query BackingHistory($start: String!) {
+    GlobalMetricSnapshot(
+      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
+      order_by: { date: asc }
+      limit: 5000
+    ) {
+      date
+      treasuryLiquidBackingPerOhmBacked
+      ohmPrice
+    }
+  }
+`;
+
+type Row = Pick<GlobalMetricSnapshotRaw, "date" | "treasuryLiquidBackingPerOhmBacked" | "ohmPrice">;
+
 export function useBackingHistory(days = 90) {
   return useQuery<BackingHistory>({
-    queryKey: ["backingHistory", days],
-    queryFn: async () => {
-      const startDate = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        ignoreCache: false,
-      });
+    queryKey: ["backingHistory", "envio", days],
+    queryFn: async ({ signal }) => {
+      const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch backing history");
+      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
+        GlobalMetricSnapshot: Row[];
+      }>(BACKING_HISTORY_QUERY, { start }, { signal } as RequestInit);
 
-      const json = await response.json();
-      const records: Array<{
-        date: string;
-        treasuryLiquidBackingPerOhmBacked: number;
-        ohmPrice: number;
-      }> = json.data ?? [];
-
-      records.sort((a, b) => a.date.localeCompare(b.date));
-
-      const dataPoints = records
-        .filter((r) => (r.treasuryLiquidBackingPerOhmBacked ?? 0) > 0)
-        .map((r) => ({
-          date: r.date,
-          backing: r.treasuryLiquidBackingPerOhmBacked,
-          ohmPrice: r.ohmPrice ?? 0,
-        }));
+      const dataPoints = GlobalMetricSnapshot.map((r) => ({
+        date: r.date,
+        backing: parseEnvioNumber(r.treasuryLiquidBackingPerOhmBacked),
+        ohmPrice: parseEnvioNumber(r.ohmPrice),
+      })).filter((p) => p.backing > 0);
 
       return { dataPoints };
     },

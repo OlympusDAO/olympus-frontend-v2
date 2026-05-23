@@ -31,6 +31,7 @@ Copy `.env.example` to `.env` and fill in values:
 |---|---|---|
 | `VITE_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect Cloud project ID for wallet connections |
 | `VITE_THEGRAPH_API_KEY` | Yes | The Graph Gateway API key for subgraph queries |
+| `VITE_INDEXER_GRAPHQL_URL` | No | Envio Hasura indexer endpoint (treasury/protocol metrics). Defaults to the public hosted deployment. |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 

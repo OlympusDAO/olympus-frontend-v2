@@ -1,33 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants.ts";
+import { gql } from "graphql-request";
+import { envioGraphqlClient } from "@/lib/graphql-client";
+import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface OhmPriceHistory {
   dataPoints: Array<{ date: string; price: number }>;
 }
 
+const OHM_PRICE_HISTORY_QUERY = gql`
+  query OhmPriceHistory($start: String!) {
+    GlobalMetricSnapshot(
+      where: { date: { _gte: $start } }
+      order_by: { date: asc }
+      limit: 5000
+    ) {
+      date
+      ohmPrice
+    }
+  }
+`;
+
+type Row = Pick<GlobalMetricSnapshotRaw, "date" | "ohmPrice">;
+
 export function useOhmPriceHistory(days = 30) {
   return useQuery<OhmPriceHistory>({
-    queryKey: ["ohmPriceHistory", days],
-    queryFn: async () => {
-      const startDate = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        ignoreCache: false,
-      });
+    queryKey: ["ohmPriceHistory", "envio", days],
+    queryFn: async ({ signal }) => {
+      const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
+      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
+        GlobalMetricSnapshot: Row[];
+      }>(OHM_PRICE_HISTORY_QUERY, { start }, { signal } as RequestInit);
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch price history");
-
-      const json = await response.json();
-      const records: Array<{ date: string; ohmPrice: number }> = json.data ?? [];
-
-      records.sort((a, b) => a.date.localeCompare(b.date));
-
-      const dataPoints = records
-        .filter((r) => (r.ohmPrice ?? 0) > 0)
-        .map((r) => ({ date: r.date, price: r.ohmPrice }));
+      const dataPoints = GlobalMetricSnapshot.map((r) => ({
+        date: r.date,
+        price: parseEnvioNumber(r.ohmPrice),
+      })).filter((p) => p.price > 0);
 
       return { dataPoints };
     },

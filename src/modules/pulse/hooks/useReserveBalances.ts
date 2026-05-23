@@ -1,5 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import {
+  fetchTokenRecords,
+  filterLatestSnapshotPerChain,
+  parseEnvioNumber,
+} from "@/lib/utils/envio";
+
+function isLpToken(token: string): boolean {
+  const lower = token.toLowerCase();
+  return lower.includes("liquidity pool") || lower.includes(" lp");
+}
 
 export interface LpPosition {
   name: string;
@@ -29,76 +38,31 @@ interface ReserveBalances {
 // (e.g. Arbitrum), so a yesterday-only window drops live positions.
 const LOOKBACK_DAYS = 30;
 
-function isLpToken(token: string): boolean {
-  const lower = token.toLowerCase();
-  return lower.includes("liquidity pool") || lower.includes(" lp");
-}
-
-function isNewer(date: string, latest?: string): boolean {
-  return !latest || date > latest;
-}
-
 function getDisplayTokenName(token: string): string {
-  if (token === "USDS - Borrowed Through Cooler Loans V2") return "Cooler Loan USDS Receivables";
-  if (token === "DAI - Borrowed Through Cooler Loans") return "Cooler Loan DAI Receivables";
+  if (token.startsWith("USDS - Borrowed Through Cooler Loans"))
+    return "Cooler Loan USDS Receivables";
+  if (token.startsWith("DAI - Borrowed Through Cooler Loans")) return "Cooler Loan DAI Receivables";
   return token;
 }
 
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
-    queryKey: ["reserveBalances"],
-    queryFn: async () => {
+    queryKey: ["reserveBalances", "pulse", "envio"],
+    queryFn: async ({ signal }) => {
       const startDate = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000)
         .toISOString()
         .split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        crossChainDataComplete: false,
-        ignoreCache: false,
-      });
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/tokenRecords?wg_variables=${encodeURIComponent(params)}`,
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch reserve balances");
-
-      const json = await response.json();
-      const records: Array<{
-        token: string;
-        blockchain: string;
-        balance: string;
-        value: string;
-        valueExcludingOhm: string;
-        isLiquid: boolean;
-        date: string;
-        category: string;
-        id: string;
-        sourceAddress: string;
-      }> = json.data ?? [];
-
-      // Use the latest available snapshot per chain before aggregating.
-      // A pure "latest per wallet/token across 30 days" window can preserve positions that
-      // disappeared from newer snapshots, e.g. redeemed receipt tokens.
-      const latestDateByChain = new Map<string, string>();
-      for (const rec of records) {
-        const chain = rec.blockchain || "Unknown";
-        if (isNewer(rec.date, latestDateByChain.get(chain))) {
-          latestDateByChain.set(chain, rec.date);
-        }
-      }
-
-      const latestSnapshotRecords = records.filter(
-        (rec) => rec.date === latestDateByChain.get(rec.blockchain || "Unknown"),
-      );
+      const raw = await fetchTokenRecords({ date: { _gte: startDate } }, signal);
+      const latestSnapshotRecords = filterLatestSnapshotPerChain(raw);
 
       const holdingAgg = new Map<string, ReserveHolding>();
       const lpAgg = new Map<string, LpPosition>();
 
       for (const rec of latestSnapshotRecords) {
-        const value = parseFloat(rec.value) || 0;
-        const balance = parseFloat(rec.balance) || 0;
-        const valueExcludingOhm = parseFloat(rec.valueExcludingOhm) || 0;
+        const value = parseEnvioNumber(rec.value);
+        const balance = parseEnvioNumber(rec.balance);
+        const valueExcludingOhm = parseEnvioNumber(rec.valueExcludingOhm);
         const backingContribution = rec.isLiquid ? valueExcludingOhm : 0;
         const token = getDisplayTokenName(rec.token);
         const holdingKey = `${token}|${rec.blockchain}|${rec.category}`;
@@ -144,8 +108,8 @@ export function useReserveBalances() {
       let susdsValue = 0;
       for (const h of holdings) {
         const name = h.token.toLowerCase();
-        if (name === "staked usde") susdeValue += h.value;
-        else if (name === "savings usds") susdsValue += h.value;
+        if (name === "staked usde (susde)") susdeValue += h.value;
+        else if (name === "savings usds (susds)") susdsValue += h.value;
       }
       const lpPositions = Array.from(lpAgg.values()).filter((p) => p.value > 1000);
 

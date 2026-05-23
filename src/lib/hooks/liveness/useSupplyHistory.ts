@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import { gql } from "graphql-request";
+import { envioGraphqlClient } from "@/lib/graphql-client";
+import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface WeeklySupplyChange {
   weekLabel: string; // e.g. "Jan 6"
@@ -16,6 +19,21 @@ export interface SupplyHistory {
   annualizedChangeRate: number; // as percentage (negative = deflationary)
 }
 
+const SUPPLY_HISTORY_QUERY = gql`
+  query SupplyHistory($start: String!) {
+    GlobalMetricSnapshot(
+      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
+      order_by: { date: asc }
+      limit: 5000
+    ) {
+      date
+      ohmTotalSupply
+    }
+  }
+`;
+
+type Row = Pick<GlobalMetricSnapshotRaw, "date" | "ohmTotalSupply">;
+
 function getMonday(date: Date): Date {
   const d = new Date(date);
   const day = d.getUTCDay();
@@ -27,29 +45,18 @@ function getMonday(date: Date): Date {
 
 export function useSupplyHistory() {
   return useQuery<SupplyHistory>({
-    queryKey: ["supplyHistory"],
-    queryFn: async () => {
-      // Fetch ~90 days of daily metrics
-      const startDate = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        crossChainDataComplete: true,
-        ignoreCache: false,
-      });
+    queryKey: ["supplyHistory", "envio"],
+    queryFn: async ({ signal }) => {
+      const start = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch supply history");
+      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
+        GlobalMetricSnapshot: Row[];
+      }>(SUPPLY_HISTORY_QUERY, { start }, { signal } as RequestInit);
 
-      const json = await response.json();
-      const records: Array<{
-        date: string;
-        ohmTotalSupply: number;
-      }> = json.data ?? [];
-
-      // Sort by date ascending
-      records.sort((a, b) => a.date.localeCompare(b.date));
+      const records = GlobalMetricSnapshot.map((r) => ({
+        date: r.date,
+        ohmTotalSupply: parseEnvioNumber(r.ohmTotalSupply),
+      }));
 
       // Group by ISO week (Monday-Sunday)
       const weekMap = new Map<string, { dates: string[]; supplies: number[] }>();
@@ -62,13 +69,12 @@ export function useSupplyHistory() {
         }
         const week = weekMap.get(key)!;
         week.dates.push(rec.date);
-        week.supplies.push(rec.ohmTotalSupply || 0);
+        week.supplies.push(rec.ohmTotalSupply);
       }
 
-      // Convert to weekly changes
       const weeks: WeeklySupplyChange[] = [];
       for (const [weekStart, { supplies }] of weekMap) {
-        if (supplies.length < 2) continue; // Need at least 2 days
+        if (supplies.length < 2) continue;
         const startSupply = supplies[0];
         const endSupply = supplies[supplies.length - 1];
         const change = endSupply - startSupply;
@@ -81,7 +87,6 @@ export function useSupplyHistory() {
         weeks.push({ weekLabel, weekStart, startSupply, endSupply, change });
       }
 
-      // Sort by date and drop the current incomplete week if it just started
       weeks.sort((a, b) => a.weekStart.localeCompare(b.weekStart));
 
       const currentSupply = records.length ? records[records.length - 1].ohmTotalSupply : 0;
