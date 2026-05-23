@@ -63,7 +63,7 @@ export function useTreasuryHistory(days = 7) {
 
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(TREASURY_HISTORY_QUERY, { start }, { signal } as RequestInit);
+      }>({ document: TREASURY_HISTORY_QUERY, variables: { start }, signal });
 
       const points = GlobalMetricSnapshot.map((r) => {
         const backedSupply = parseEnvioNumber(r.ohmBackedSupply);

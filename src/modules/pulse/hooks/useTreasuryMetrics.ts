@@ -59,7 +59,7 @@ export function useTreasuryMetrics() {
     queryFn: async ({ signal }) => {
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(LATEST_METRICS_QUERY, undefined, { signal } as RequestInit);
+      }>({ document: LATEST_METRICS_QUERY, signal });
 
       const row = GlobalMetricSnapshot[0];
       if (!row) return EMPTY;

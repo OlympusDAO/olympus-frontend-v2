@@ -32,7 +32,7 @@ export function useBackingHistory(days = 90) {
 
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(BACKING_HISTORY_QUERY, { start }, { signal } as RequestInit);
+      }>({ document: BACKING_HISTORY_QUERY, variables: { start }, signal });
 
       const dataPoints = GlobalMetricSnapshot.map((r) => ({
         date: r.date,

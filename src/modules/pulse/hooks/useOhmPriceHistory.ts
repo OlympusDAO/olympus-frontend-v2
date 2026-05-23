@@ -30,7 +30,7 @@ export function useOhmPriceHistory(days = 30) {
       const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(OHM_PRICE_HISTORY_QUERY, { start }, { signal } as RequestInit);
+      }>({ document: OHM_PRICE_HISTORY_QUERY, variables: { start }, signal });
 
       const dataPoints = GlobalMetricSnapshot.map((r) => ({
         date: r.date,

@@ -28,11 +28,10 @@ export function useTreasuryDataFreshness() {
   return useQuery<LaggingChain[]>({
     queryKey: ["treasuryDataFreshness", "envio"],
     queryFn: async ({ signal }) => {
-      const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: Row[] }>(
-        LATEST_PER_CHAIN_QUERY,
-        undefined,
-        { signal } as RequestInit,
-      );
+      const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: Row[] }>({
+        document: LATEST_PER_CHAIN_QUERY,
+        signal,
+      });
 
       let latestDate = "";
       for (const r of TokenRecord) {

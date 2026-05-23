@@ -30,7 +30,7 @@ export function useGohmPriceHistory() {
       const start = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(GOHM_PRICE_HISTORY_QUERY, { start }, { signal } as RequestInit);
+      }>({ document: GOHM_PRICE_HISTORY_QUERY, variables: { start }, signal });
 
       const dataPoints = GlobalMetricSnapshot.map((r) => ({
         date: r.date,

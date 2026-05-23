@@ -51,7 +51,7 @@ export function useSupplyHistory() {
 
       const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
         GlobalMetricSnapshot: Row[];
-      }>(SUPPLY_HISTORY_QUERY, { start }, { signal } as RequestInit);
+      }>({ document: SUPPLY_HISTORY_QUERY, variables: { start }, signal });
 
       const records = GlobalMetricSnapshot.map((r) => ({
         date: r.date,

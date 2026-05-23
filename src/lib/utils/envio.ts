@@ -76,11 +76,11 @@ export async function fetchTokenRecords(
 ): Promise<TokenRecordRaw[]> {
   const out: TokenRecordRaw[] = [];
   for (let page = 0; page < MAX_PAGES; page++) {
-    const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: TokenRecordRaw[] }>(
-      TOKEN_RECORDS_PAGE_QUERY,
-      { where, offset: page * PAGE_SIZE, limit: PAGE_SIZE },
-      { signal } as RequestInit,
-    );
+    const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: TokenRecordRaw[] }>({
+      document: TOKEN_RECORDS_PAGE_QUERY,
+      variables: { where, offset: page * PAGE_SIZE, limit: PAGE_SIZE },
+      signal,
+    });
     out.push(...TokenRecord);
     if (TokenRecord.length < PAGE_SIZE) return out;
   }
