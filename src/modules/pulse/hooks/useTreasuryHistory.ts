@@ -29,11 +29,12 @@ function downsample(points: TreasuryHistoryPoint[], maxPoints = MAX_CHART_POINTS
 }
 
 const TREASURY_HISTORY_QUERY = gql`
-  query TreasuryHistory($start: String!) {
+  query TreasuryHistory($start: String!, $offset: Int!, $limit: Int!) {
     GlobalMetricSnapshot(
       where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
       order_by: { date: asc }
-      limit: 5000
+      limit: $limit
+      offset: $offset
     ) {
       date
       ohmBackedSupply
@@ -55,17 +56,31 @@ type Row = Pick<
   | "treasuryMarketValue"
 >;
 
+// Hasura caps single queries at 1000 rows. The "Max" window (1825 days) blows
+// past that — without paginating, the recent end of the chart gets truncated.
+const PAGE_SIZE = 1000;
+const MAX_PAGES = 10;
+
 export function useTreasuryHistory(days = 7) {
   return useQuery<TreasuryHistoryPoint[]>({
     queryKey: ["treasuryHistory", "envio", days],
     queryFn: async ({ signal }) => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
 
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: TREASURY_HISTORY_QUERY, variables: { start }, signal });
+      const rows: Row[] = [];
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
+          GlobalMetricSnapshot: Row[];
+        }>({
+          document: TREASURY_HISTORY_QUERY,
+          variables: { start, offset: page * PAGE_SIZE, limit: PAGE_SIZE },
+          signal,
+        });
+        rows.push(...GlobalMetricSnapshot);
+        if (GlobalMetricSnapshot.length < PAGE_SIZE) break;
+      }
 
-      const points = GlobalMetricSnapshot.map((r) => {
+      const points = rows.map((r) => {
         const backedSupply = parseEnvioNumber(r.ohmBackedSupply);
         const treasuryMarketValue = parseEnvioNumber(r.treasuryMarketValue);
         const totalBackingPerOhm = backedSupply > 0 ? treasuryMarketValue / backedSupply : 0;
