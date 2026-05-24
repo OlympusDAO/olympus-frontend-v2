@@ -44,6 +44,7 @@ export function useReserveBalances() {
       for (const [name, value] of lpMap) {
         if (value > 1000) lpPositions.push({ name, value });
       }
+      lpPositions.sort((a, b) => b.value - a.value);
 
       return { susdeValue, susdsValue, lpPositions };
     },

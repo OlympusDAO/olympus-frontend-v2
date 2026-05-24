@@ -106,7 +106,9 @@ export function useReserveBalances() {
         if (name === "staked usde (susde)") susdeValue += h.value;
         else if (name === "savings usds (susds)") susdsValue += h.value;
       }
-      const lpPositions = Array.from(lpAgg.values()).filter((p) => p.value > 1000);
+      const lpPositions = Array.from(lpAgg.values())
+        .filter((p) => p.value > 1000)
+        .sort((a, b) => b.value - a.value);
 
       return { susdeValue, susdsValue, lpPositions, holdings };
     },
