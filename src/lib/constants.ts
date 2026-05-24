@@ -24,11 +24,12 @@ export const DEFILLAMA_POOLS = {
   SUSDS: "d8c4eff5-c8a9-46fc-a888-057c4c668e72",
 } as const;
 
-// Map treasury tokenRecord LP names → DeFiLlama pool IDs (for fee APY lookup)
+// Map treasury tokenRecord LP names → DeFiLlama pool IDs (for fee APY lookup).
+// Keys must match Envio's exact token strings — verified via TokenRecord query.
 export const LP_POOL_MAP: Record<string, string> = {
-  "Uniswap V3 OHM-sUSDS Liquidity Pool": "0cc155d9-0e7f-4bdd-b07e-0a09e34b9af0",
-  "Uniswap V3 wETH-OHM Liquidity Pool": "dea7e764-1c6a-4d51-bb35-5f428fc85b57",
-  "Uniswap V3 OHM-USDC LP": "56772e92-32e2-47a5-9611-1626eaf92826",
+  "UniswapV3 OHM-sUSDS": "0cc155d9-0e7f-4bdd-b07e-0a09e34b9af0",
+  "UniswapV3 WETH-OHM": "dea7e764-1c6a-4d51-bb35-5f428fc85b57",
+  "UniswapV3 OHM-USDC Liquidity Pool": "56772e92-32e2-47a5-9611-1626eaf92826",
   "Camelot OHM-wETH Liquidity Pool": "d1a3947b-c4c8-4ca3-80d9-c91a5decbc9e",
 };
 

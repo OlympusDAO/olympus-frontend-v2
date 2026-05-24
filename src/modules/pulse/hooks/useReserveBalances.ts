@@ -5,11 +5,6 @@ import {
   parseEnvioNumber,
 } from "@/lib/utils/envio";
 
-function isLpToken(token: string): boolean {
-  const lower = token.toLowerCase();
-  return lower.includes("liquidity pool") || lower.includes(" lp");
-}
-
 export interface LpPosition {
   name: string;
   blockchain: string;
@@ -85,7 +80,7 @@ export function useReserveBalances() {
           });
         }
 
-        if (isLpToken(rec.token) && rec.category === "Protocol-Owned Liquidity") {
+        if (rec.category === "Protocol-Owned Liquidity") {
           const lpKey = `${rec.token}|${rec.blockchain}`;
           const existingLp = lpAgg.get(lpKey);
 

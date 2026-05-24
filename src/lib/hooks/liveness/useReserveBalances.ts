@@ -16,11 +16,6 @@ interface ReserveBalances {
   lpPositions: LpPosition[];
 }
 
-function isLpToken(token: string): boolean {
-  const lower = token.toLowerCase();
-  return lower.includes("liquidity pool") || lower.includes(" lp");
-}
-
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
     queryKey: ["reserveBalances", "envio"],
@@ -40,7 +35,7 @@ export function useReserveBalances() {
         if (tokenLower === "staked usde (susde)") susdeValue += value;
         else if (tokenLower === "savings usds (susds)") susdsValue += value;
 
-        if (isLpToken(rec.token) && rec.category === "Protocol-Owned Liquidity") {
+        if (rec.category === "Protocol-Owned Liquidity") {
           lpMap.set(rec.token, (lpMap.get(rec.token) ?? 0) + value);
         }
       }
