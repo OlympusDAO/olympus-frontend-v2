@@ -53,8 +53,12 @@ export type GovernanceParameters = {
   votingDelay: string;
   /** Human-readable voting period (e.g., "7 Days"). */
   votingPeriod: string;
+  /** Voting period length in blocks (raw), used for timeline date estimation. */
+  votingPeriodBlocks: number;
   /** Human-readable execution delay (e.g., "1 Day"). */
   executionDelay: string;
+  /** Execution (timelock) delay in seconds (raw), used for timeline date estimation. */
+  executionDelaySeconds: number;
   /** Human-readable activation grace period (e.g., "2 Day"). */
   activationGracePeriod: string;
   /** Timelock contract address. */
@@ -152,7 +156,9 @@ export function useContractParameters() {
         proposalQuorumPercent: formatTokenAmount(quorum, 8) * 100,
         votingDelay: formatBlockDuration(votingDelay as bigint, BLOCKS_PER_DAY),
         votingPeriod: formatBlockDuration(votingPeriod as bigint, BLOCKS_PER_DAY),
+        votingPeriodBlocks: Number(votingPeriod as bigint),
         executionDelay: formatSecondsDuration(timelockDelay as bigint),
+        executionDelaySeconds: Number(timelockDelay),
         activationGracePeriod: formatBlockDuration(activationGracePeriod as bigint, BLOCKS_PER_DAY),
         timelockContract: timelockAddress as string,
         governanceContract: governorAddress,
