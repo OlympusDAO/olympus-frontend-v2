@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { useProtocolIncome } from "@/lib/hooks/cooler/useV1Data.ts";
+import { formatDateTick } from "@/lib/hooks/cooler/utils.ts";
 import type { Format } from "@number-flow/react";
 
 const CHART_COLORS = {
@@ -40,11 +41,6 @@ function formatTimestamp(timestamp: string): string {
   }
 }
 
-function formatDateLabel(dateStr: string): string {
-  const parts = dateStr.split("-");
-  return `${parts[1]}/${parts[2]}`;
-}
-
 function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
@@ -53,7 +49,6 @@ function formatCurrency(value: number): string {
 
 interface IncomeDataPoint {
   date: string;
-  dateLabel: string;
   interest: number;
   income: number;
 }
@@ -180,7 +175,6 @@ export const ProtocolIncomeChart: React.FC = () => {
           parseFloat(item.totalValueClaimed) - parseFloat(item.totalPrincipalDefaulted);
         return {
           date,
-          dateLabel: date ? formatDateLabel(date) : "",
           interest: totalInterest,
           income,
         };
@@ -257,7 +251,8 @@ export const ProtocolIncomeChart: React.FC = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
-                  dataKey="dateLabel"
+                  dataKey="date"
+                  tickFormatter={formatDateTick}
                   stroke={CHART_COLORS.text}
                   fontSize={11}
                   tickLine={false}
@@ -301,7 +296,8 @@ export const ProtocolIncomeChart: React.FC = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
-                  dataKey="dateLabel"
+                  dataKey="date"
+                  tickFormatter={formatDateTick}
                   stroke={CHART_COLORS.text}
                   fontSize={11}
                   tickLine={false}

@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData.ts";
 import { useV2HistoricalData } from "@/lib/hooks/cooler/useV2Data.ts";
+import { formatDateTick } from "@/lib/hooks/cooler/utils.ts";
 import type { Format } from "@number-flow/react";
 
 const CHART_COLORS = {
@@ -32,7 +33,6 @@ const USD_COMPACT: Format = {
 
 interface CombinedDataPoint {
   date: string;
-  dateLabel: string;
   v1: number;
   v2: number;
 }
@@ -111,10 +111,8 @@ export const MetricsProtocolUtilizationChart: React.FC = () => {
       if (v1ValuesByDate.has(date)) lastV1 = v1ValuesByDate.get(date)!;
       if (v2ValuesByDate.has(date)) lastV2 = v2ValuesByDate.get(date)!;
 
-      const parts = date.split("-");
       return {
         date,
-        dateLabel: `${parts[1]}/${parts[2]}`,
         v1: lastV1,
         v2: lastV2,
       };
@@ -171,7 +169,8 @@ export const MetricsProtocolUtilizationChart: React.FC = () => {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
-              dataKey="dateLabel"
+              dataKey="date"
+              tickFormatter={formatDateTick}
               stroke={CHART_COLORS.text}
               fontSize={11}
               tickLine={false}

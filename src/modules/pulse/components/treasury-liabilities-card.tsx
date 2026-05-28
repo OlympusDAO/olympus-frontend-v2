@@ -28,14 +28,14 @@ function OhmValue({
     return <span className="text-sm font-semibold text-secondary-t">Unavailable</span>;
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
+    <div className="grid min-w-[172px] shrink-0 grid-cols-[20px_minmax(0,1fr)] items-center gap-1.5">
       <Icon name="OHMTokenIcon" className="size-5" />
       <NumberFlow
         value={value}
         format={compact ? COMPACT_FORMAT : DECIMAL_FORMAT}
         prefix={prefix}
         suffix="OHM"
-        className="text-sm font-semibold [--number-flow-char-height:20px]"
+        className="justify-self-end text-sm font-semibold [--number-flow-char-height:20px]"
       />
     </div>
   );
