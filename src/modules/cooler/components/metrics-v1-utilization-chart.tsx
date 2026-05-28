@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card.tsx";
 import { useV1UtilizationData } from "@/lib/hooks/cooler/useV1UtilizationData.ts";
-import { formatUSD } from "@/lib/hooks/cooler/utils.ts";
+import { formatUSD, formatDateTick } from "@/lib/hooks/cooler/utils.ts";
 
 const CHART_COLORS = {
   principal: "var(--blue)",
@@ -23,7 +23,6 @@ const CHART_COLORS = {
 
 interface ChartDataPoint {
   date: string;
-  dateLabel: string;
   totalPrincipalReceivables: number;
   totalInterestReceivables: number;
 }
@@ -33,15 +32,11 @@ export const MetricsV1UtilizationChart: React.FC = () => {
 
   const chartData = useMemo((): ChartDataPoint[] => {
     if (!v1Data || v1Data.length === 0) return [];
-    return v1Data.map((dp) => {
-      const parts = dp.date.split("-");
-      return {
-        date: dp.date,
-        dateLabel: `${parts[1]}/${parts[2]}`,
-        totalPrincipalReceivables: dp.totalPrincipalReceivables,
-        totalInterestReceivables: dp.totalInterestReceivables,
-      };
-    });
+    return v1Data.map((dp) => ({
+      date: dp.date,
+      totalPrincipalReceivables: dp.totalPrincipalReceivables,
+      totalInterestReceivables: dp.totalInterestReceivables,
+    }));
   }, [v1Data]);
 
   const capacityRemaining = useMemo(() => {
@@ -122,7 +117,8 @@ export const MetricsV1UtilizationChart: React.FC = () => {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
-              dataKey="dateLabel"
+              dataKey="date"
+              tickFormatter={formatDateTick}
               stroke={CHART_COLORS.text}
               fontSize={11}
               tickLine={false}

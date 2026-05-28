@@ -27,21 +27,29 @@ const SERIES_COLORS = {
 
 interface ProcessedDataPoint {
   date: string;
+  dateFull: string;
   totalCollateral: number;
   totalDebt: number;
   maxOriginationLtv: number;
   interestRate: number;
 }
 
-function formatDate(timestamp: number): string {
+function toIsoDate(timestamp: number): string {
   try {
     if (Number.isNaN(timestamp) || timestamp <= 0) return "";
     const date = new Date(timestamp / 1000);
     if (date.toString() === "Invalid Date") return "";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toISOString().split("T")[0];
   } catch {
     return "";
   }
+}
+
+// Renders an ISO date (YYYY-MM-DD) as a short "Mon D" axis tick.
+function formatDateTickLabel(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 function formatDateFull(timestamp: number): string {
@@ -96,7 +104,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
     const point = payload[0].payload;
     return (
       <div className="bg-surface-tooltip border border-a10 rounded-xl p-3 shadow-lg">
-        <p className="text-xs text-secondary-t mb-1">{point.date}</p>
+        <p className="text-xs text-secondary-t mb-1">{point.dateFull}</p>
         <p className="text-sm font-medium">{tooltipFormatter(point[dataKey] as number)}</p>
       </div>
     );
@@ -121,6 +129,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="date"
+              tickFormatter={formatDateTickLabel}
               stroke={CHART_COLORS.text}
               fontSize={11}
               tickLine={false}
@@ -157,7 +166,7 @@ export const MetricsV2HistoricalCharts: React.FC = () => {
     if (!data) return [];
     return data
       .map((point) => ({
-        date: formatDate(point.timestamp),
+        date: toIsoDate(point.timestamp),
         dateFull: formatDateFull(point.timestamp),
         totalCollateral: point.totalCollateral,
         totalDebt: point.totalDebt,

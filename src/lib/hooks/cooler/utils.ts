@@ -3,6 +3,14 @@
  */
 
 /**
+ * Format an ISO date string (YYYY-MM-DD) as a short MM/DD chart axis label.
+ */
+export function formatDateTick(date: string): string {
+  const [, month, day] = date.split("-");
+  return month && day ? `${month}/${day}` : date;
+}
+
+/**
  * Format a number as USD currency with no decimal places.
  */
 export function formatUSD(value: number): string {
