@@ -78,25 +78,32 @@ export function useProposalDetails({ proposalId }: { proposalId: number }) {
       let startDate: Date | undefined;
       let endDate: Date | undefined;
 
-      try {
-        const [startBlockData, endBlockData] = await Promise.all([
-          Number(startBlock) <= currentBlock
-            ? publicClient.getBlock({ blockNumber: startBlock })
-            : null,
-          Number(endBlock) <= currentBlock
-            ? publicClient.getBlock({ blockNumber: endBlock })
-            : null,
-        ]);
+      // Resolve a block number to a calendar date. A block of 0 means "not assigned
+      // yet" — e.g. endBlock before a proposal is activated. Returning undefined avoids
+      // fetching the genesis block, whose timestamp is 0 and renders as 12/31/1969.
+      const resolveBlockDate = async (blockNum: number): Promise<Date | undefined> => {
+        if (!blockNum || blockNum <= 0) return undefined;
+        if (blockNum <= currentBlock) {
+          const block = await publicClient.getBlock({ blockNumber: BigInt(blockNum) });
+          return block?.timestamp ? new Date(Number(block.timestamp) * 1000) : undefined;
+        }
+        return getDateFromBlock(blockNum, currentBlock, currentTimestamp);
+      };
 
-        startDate = startBlockData
-          ? new Date(Number(startBlockData.timestamp) * 1000)
-          : getDateFromBlock(Number(startBlock), currentBlock, currentTimestamp);
-        endDate = endBlockData
-          ? new Date(Number(endBlockData.timestamp) * 1000)
-          : getDateFromBlock(Number(endBlock), currentBlock, currentTimestamp);
+      try {
+        [startDate, endDate] = await Promise.all([
+          resolveBlockDate(Number(startBlock)),
+          resolveBlockDate(Number(endBlock)),
+        ]);
       } catch {
-        startDate = getDateFromBlock(Number(startBlock), currentBlock, currentTimestamp);
-        endDate = getDateFromBlock(Number(endBlock), currentBlock, currentTimestamp);
+        startDate =
+          Number(startBlock) > 0
+            ? getDateFromBlock(Number(startBlock), currentBlock, currentTimestamp)
+            : undefined;
+        endDate =
+          Number(endBlock) > 0
+            ? getDateFromBlock(Number(endBlock), currentBlock, currentTimestamp)
+            : undefined;
       }
 
       return {
