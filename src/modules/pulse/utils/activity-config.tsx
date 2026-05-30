@@ -96,6 +96,12 @@ export const TYPE_CONFIG: Record<ActivityType, ActivityTypeConfig> = {
     icon: <RiAlertLine className={iconClass} />,
     verb: "liquidated",
   },
+  "cooler-v1-default": {
+    protocol: "Cooler",
+    actionLabel: "V1 Default",
+    icon: <RiAlertLine className={iconClass} />,
+    verb: "defaulted",
+  },
 };
 
 export const PROTOCOL_BADGE: Record<Protocol, "blue" | "orange" | "red"> = {
