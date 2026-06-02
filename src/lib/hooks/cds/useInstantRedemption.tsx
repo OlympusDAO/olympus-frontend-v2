@@ -166,7 +166,9 @@ export function usePreviewReclaim({
 }: UsePreviewReclaimParams) {
   const { chainId } = useAccount();
 
-  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
+  const contractAddress = chainId
+    ? getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId)
+    : undefined;
 
   return useReadContract({
     address: contractAddress,
@@ -182,7 +184,9 @@ export function usePreviewReclaim({
 export function useReclaimRate({ asset, depositPeriod, enabled = true }: UseReclaimRateParams) {
   const { chainId } = useAccount();
 
-  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
+  const contractAddress = chainId
+    ? getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId)
+    : undefined;
 
   const { data, ...rest } = useReadContract({
     address: contractAddress,
