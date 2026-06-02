@@ -1,5 +1,5 @@
 import { useReadContract, useChainId, usePublicClient } from "wagmi";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
+import { ContractName, getContractAddress } from "@/lib/contracts";
 import ConvertibleDepositAuctioneerAbi from "@/abis/ConvertibleDepositAuctioneer";
 import { useQuery } from "@tanstack/react-query";
 import { formatPeriodDisplayName } from "@/lib/utils";
@@ -15,9 +15,7 @@ export function useDepositPeriods() {
   const chainId = useChainId();
   const publicClient = usePublicClient({ chainId });
 
-  const contractAddress = chainId
-    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
-    : undefined;
+  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId);
 
   // Get all available deposit periods
   const { data: rawPeriods, isLoading: isLoadingPeriods } = useReadContract({

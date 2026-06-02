@@ -12,7 +12,7 @@ import type { TokenWithBalance } from "@/lib/hooks/useToken.tsx";
 import { useAccount, useChainId } from "wagmi";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
-import { ContractName, requireContractAddress } from "@/lib/contracts.ts";
+import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance.tsx";
 import { getTokenAddress, TokenName } from "@/lib/tokens.ts";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
@@ -75,9 +75,7 @@ export const BorrowExtendLoanModal: React.FC<ExtendLoanModalProps> = ({
   const { balance: usdsBalance } = useTokenBalance(usdsTokenAddress, userAddress);
 
   // Get the target contract address for approval (DepositRedemptionVault)
-  const targetContractAddress = chainId
-    ? requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId)
-    : undefined;
+  const targetContractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   // Token approval hooks
   const {

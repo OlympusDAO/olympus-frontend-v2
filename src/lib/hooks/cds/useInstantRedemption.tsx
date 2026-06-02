@@ -9,7 +9,7 @@ import {
 } from "wagmi";
 import { useTransactionToast, type TransactionToastConfig } from "@/lib/hooks/useTransactionToast";
 import ConvertibleDepositFacilityAbi from "@/abis/ConvertibleDepositFacility";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
+import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
 
 interface UseInstantRedemptionParams {
   depositToken: string;
@@ -166,9 +166,7 @@ export function usePreviewReclaim({
 }: UsePreviewReclaimParams) {
   const { chainId } = useAccount();
 
-  const contractAddress = chainId
-    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId)
-    : undefined;
+  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   return useReadContract({
     address: contractAddress,
@@ -184,9 +182,7 @@ export function usePreviewReclaim({
 export function useReclaimRate({ asset, depositPeriod, enabled = true }: UseReclaimRateParams) {
   const { chainId } = useAccount();
 
-  const contractAddress = chainId
-    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId)
-    : undefined;
+  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_FACILITY, chainId);
 
   const { data, ...rest } = useReadContract({
     address: contractAddress,

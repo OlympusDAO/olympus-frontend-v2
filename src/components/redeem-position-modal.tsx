@@ -17,7 +17,7 @@ import {
   useFlexibleApproveReceiptToken,
 } from "@/lib/hooks/cds/useFlexibleReceiptTokenApproval";
 import { formatTermSuffix } from "@/lib/utils";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
+import { ContractName, getContractAddress } from "@/lib/contracts";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
 import type { TokenWithBalance } from "@/lib/hooks/useToken";
 
@@ -73,9 +73,7 @@ export const RedeemPositionModal: React.FC<RedeemPositionModalProps> = ({
   const { tokenName } = useReceiptTokenName(tokenId);
 
   // Get the target contract address for approval (DepositRedemptionVault)
-  const targetContractAddress = chainId
-    ? requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId)
-    : undefined;
+  const targetContractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { allowance } = useFlexibleReceiptTokenAllowance(
     tokenId,

@@ -12,7 +12,7 @@ import { formatEther, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Link } from "react-router-dom";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
-import { ContractName, requireContractAddress } from "@/lib/contracts.ts";
+import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { useRedemptionLoan } from "@/lib/hooks/cds/useRedemptionLoan.ts";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance.tsx";
 import { getTokenAddress, TokenName } from "@/lib/tokens.ts";
@@ -53,9 +53,7 @@ export const BorrowRepayLoanModal: React.FC<RepayLoanModalProps> = ({
   const usdsTokenAddress = getTokenAddress(TokenName.USDS, chainId);
   const { balance: usdsBalance } = useTokenBalance(usdsTokenAddress, userAddress);
 
-  const targetContractAddress = chainId
-    ? requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId)
-    : undefined;
+  const targetContractAddress = getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const {
     allowance,

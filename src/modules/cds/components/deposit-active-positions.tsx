@@ -27,32 +27,15 @@ import { ConvertToOHMModal } from "@/components/convert-to-ohm-modal";
 import { WrapPositionModal } from "@/components/wrap-position-modal";
 import { TransferPositionModal } from "@/components/transfer-position-modal";
 import { RedeemPositionModal } from "@/components/redeem-position-modal";
-import { useUserPositions } from "@/lib/hooks/cds/useUserPositions";
+import { useUserPositions, type UserPosition } from "@/lib/hooks/cds/useUserPositions";
 import { formatEther } from "viem";
-import { formatTermSuffix } from "@/lib/utils";
-import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
 import { Icon } from "@/components/icon";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 import { TokenName } from "@/lib/tokens.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Position = {
-  id: bigint;
-  data:
-    | {
-        operator: `0x${string}`;
-        owner: `0x${string}`;
-        asset: `0x${string}`;
-        periodMonths: number;
-        remainingDeposit: bigint;
-        conversionPrice: bigint;
-        expiry: number;
-        wrapped: boolean;
-        additionalData: `0x${string}`;
-      }
-    | undefined;
-};
+type Position = UserPosition;
 
 // ─── Table meta ───────────────────────────────────────────────────────────────
 
@@ -92,27 +75,6 @@ function calculateOhmReceived(remainingDeposit: bigint, conversionPrice: bigint)
   return (Number(ohmAmount) / 1e9).toFixed(2);
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const PositionTokenName = ({
-  asset,
-  periodMonths,
-  amount,
-}: {
-  asset: `0x${string}`;
-  periodMonths: number;
-  amount: string;
-}) => {
-  const { tokenId } = useReceiptTokenId(asset, periodMonths);
-  const { tokenName } = useReceiptTokenName(tokenId);
-  const displayName = tokenName || `cdUSDS-${formatTermSuffix(periodMonths)}`;
-  return (
-    <span className="text-xs font-semibold">
-      {amount} {displayName}
-    </span>
-  );
-};
-
 // ─── Cell components ──────────────────────────────────────────────────────────
 
 const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice: number }) => {
@@ -129,11 +91,9 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
       <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
         <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
-          <PositionTokenName
-            asset={position.data.asset}
-            periodMonths={position.data.periodMonths}
-            amount={amount}
-          />
+          <span className="text-xs font-semibold">
+            {amount} {position.displayName}
+          </span>
           <span className="text-xs font-normal text-secondary-t">${amount}</span>
         </div>
       </div>
@@ -203,7 +163,7 @@ const ActionsCell = ({
   meta: ReturnType<typeof useReactTable<Position>>["options"]["meta"];
 }) => {
   if (!position.data || !meta) return null;
-  const { periodMonths, wrapped } = position.data;
+  const { wrapped } = position.data;
 
   return (
     <div className="flex items-center gap-2 justify-end">
@@ -224,12 +184,7 @@ const ActionsCell = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                const displayName = `cdUSDS-${formatTermSuffix(periodMonths)}`;
-                meta.onTransfer?.(position, displayName);
-              }}
-            >
+            <DropdownMenuItem onClick={() => meta.onTransfer?.(position, position.displayName)}>
               Transfer
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => meta.onRedeem?.(position)}>Redeem</DropdownMenuItem>
@@ -425,7 +380,6 @@ export const DepositActivePositions = () => {
           <div className="block md:hidden space-y-4">
             {positions.map((position) => {
               if (!position.data) return null;
-              const { periodMonths } = position.data;
               const amount = formatPositionAmountLocal(position.data.remainingDeposit);
               const expiryDate = formatExpiryDate(position.data.expiry);
               const daysLeft = getDaysUntilExpiry(position.data.expiry);
@@ -446,7 +400,7 @@ export const DepositActivePositions = () => {
                     <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
                     <div>
                       <div className="text-sm font-semibold">
-                        {amount} cdUSDS-{formatTermSuffix(position.data.periodMonths)}
+                        {amount} {position.displayName}
                       </div>
                       <div className="text-xs text-secondary-t">${amount}</div>
                     </div>
@@ -509,9 +463,7 @@ export const DepositActivePositions = () => {
                             Unwrap
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() =>
-                              handleTransfer(position, `cdUSDS-${formatTermSuffix(periodMonths)}`)
-                            }
+                            onClick={() => handleTransfer(position, position.displayName)}
                           >
                             Transfer
                           </DropdownMenuItem>
