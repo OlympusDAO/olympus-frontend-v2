@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
-import { parseEnvioNumber } from "@/lib/utils/envio";
+import { treasuryClient } from "@/lib/treasury-api";
 
 interface TreasuryMetrics {
   ohmTotalSupply: number;
@@ -14,35 +11,6 @@ interface TreasuryMetrics {
   ohmPrice: number;
 }
 
-const LATEST_METRICS_QUERY = gql`
-  query LatestTreasuryMetrics {
-    GlobalMetricSnapshot(
-      where: { crossChainComplete: { _eq: true } }
-      order_by: { date: desc }
-      limit: 1
-    ) {
-      ohmTotalSupply
-      ohmCirculatingSupply
-      ohmBackedSupply
-      treasuryMarketValue
-      treasuryLiquidBacking
-      treasuryLiquidBackingPerOhmBacked
-      ohmPrice
-    }
-  }
-`;
-
-type Row = Pick<
-  GlobalMetricSnapshotRaw,
-  | "ohmTotalSupply"
-  | "ohmCirculatingSupply"
-  | "ohmBackedSupply"
-  | "treasuryMarketValue"
-  | "treasuryLiquidBacking"
-  | "treasuryLiquidBackingPerOhmBacked"
-  | "ohmPrice"
->;
-
 const EMPTY: TreasuryMetrics = {
   ohmTotalSupply: 0,
   ohmCirculatingSupply: 0,
@@ -53,25 +21,36 @@ const EMPTY: TreasuryMetrics = {
   ohmPrice: 0,
 };
 
+// How many days back from `latestDate` we'll scan looking for a cross-chain-
+// complete row. The publisher typically finalises within ≤ 1 day; 5 is
+// generous and still one round trip.
+const LOOKBACK_DAYS = 5;
+
 export function useTreasuryMetrics() {
   return useQuery<TreasuryMetrics>({
-    queryKey: ["treasuryMetrics", "envio"],
+    queryKey: ["treasuryMetrics", "treasury-api"],
     queryFn: async ({ signal }) => {
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: LATEST_METRICS_QUERY, signal });
+      const bounds = await treasuryClient.getCachedBounds();
+      const end = bounds.latestDate;
+      const start = new Date(new Date(`${end}T00:00:00Z`).getTime() - LOOKBACK_DAYS * 86_400_000)
+        .toISOString()
+        .split("T")[0];
 
-      const row = GlobalMetricSnapshot[0];
+      const rows = await treasuryClient.getDailyMetrics({ start, end, signal });
+
+      // Walk back from the newest row to find the freshest cross-chain-complete day.
+      const sorted = [...rows].sort((a, b) => (a.date < b.date ? 1 : -1));
+      const row = sorted.find((r) => r.crossChainComplete) ?? sorted[0];
       if (!row) return EMPTY;
 
       return {
-        ohmTotalSupply: parseEnvioNumber(row.ohmTotalSupply),
-        ohmCirculatingSupply: parseEnvioNumber(row.ohmCirculatingSupply),
-        ohmBackedSupply: parseEnvioNumber(row.ohmBackedSupply),
-        treasuryMarketValue: parseEnvioNumber(row.treasuryMarketValue),
-        treasuryLiquidBacking: parseEnvioNumber(row.treasuryLiquidBacking),
-        treasuryLiquidBackingPerOhmBacked: parseEnvioNumber(row.treasuryLiquidBackingPerOhmBacked),
-        ohmPrice: parseEnvioNumber(row.ohmPrice),
+        ohmTotalSupply: row.ohmTotalSupply,
+        ohmCirculatingSupply: row.ohmCirculatingSupply,
+        ohmBackedSupply: row.ohmBackedSupply,
+        treasuryMarketValue: row.treasuryMarketValue,
+        treasuryLiquidBacking: row.treasuryLiquidBacking,
+        treasuryLiquidBackingPerOhmBacked: row.treasuryLiquidBackingPerOhmBacked,
+        ohmPrice: row.ohmPrice,
       };
     },
     staleTime: 60_000,

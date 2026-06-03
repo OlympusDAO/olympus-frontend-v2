@@ -1,44 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
-import { parseEnvioNumber } from "@/lib/utils/envio";
+import { treasuryClient } from "@/lib/treasury-api";
 
 export interface BackingHistory {
   dataPoints: Array<{ date: string; backing: number; ohmPrice: number }>;
 }
 
-const BACKING_HISTORY_QUERY = gql`
-  query BackingHistory($start: String!) {
-    GlobalMetricSnapshot(
-      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
-      order_by: { date: asc }
-      limit: 5000
-    ) {
-      date
-      treasuryLiquidBackingPerOhmBacked
-      ohmPrice
-    }
-  }
-`;
-
-type Row = Pick<GlobalMetricSnapshotRaw, "date" | "treasuryLiquidBackingPerOhmBacked" | "ohmPrice">;
-
 export function useBackingHistory(days = 90) {
   return useQuery<BackingHistory>({
-    queryKey: ["backingHistory", "envio", days],
+    queryKey: ["backingHistory", "treasury-api", days],
     queryFn: async ({ signal }) => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
 
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: BACKING_HISTORY_QUERY, variables: { start }, signal });
+      const rows = await treasuryClient.getDailyMetrics({ start, signal });
 
-      const dataPoints = GlobalMetricSnapshot.map((r) => ({
-        date: r.date,
-        backing: parseEnvioNumber(r.treasuryLiquidBackingPerOhmBacked),
-        ohmPrice: parseEnvioNumber(r.ohmPrice),
-      })).filter((p) => p.backing > 0);
+      const dataPoints = rows
+        .filter((r) => r.crossChainComplete)
+        .map((r) => ({
+          date: r.date,
+          backing: r.treasuryLiquidBackingPerOhmBacked,
+          ohmPrice: r.ohmPrice,
+        }))
+        .filter((p) => p.backing > 0);
 
       return { dataPoints };
     },

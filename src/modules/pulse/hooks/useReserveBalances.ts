@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchTokenRecords,
-  filterLatestSnapshotPerChain,
-  parseEnvioNumber,
-} from "@/lib/utils/envio";
+import { treasuryClient } from "@/lib/treasury-api";
+import type { TreasuryAsset } from "@/lib/treasury-api";
 
 export interface LpPosition {
   name: string;
@@ -40,24 +37,44 @@ function getDisplayTokenName(token: string): string {
   return token;
 }
 
+// The publisher emits ~3 daily snapshots per chain (8h cadence). Summing all
+// rows in the window over-counts; keep only the freshest (date, block) per
+// chain.
+function filterLatestSnapshotPerChain(records: TreasuryAsset[]): TreasuryAsset[] {
+  const keyByChain = new Map<string, { date: string; block: number }>();
+  for (const r of records) {
+    const chain = r.blockchain || "Unknown";
+    const cur = keyByChain.get(chain);
+    if (!cur || r.date > cur.date || (r.date === cur.date && r.block > cur.block)) {
+      keyByChain.set(chain, { date: r.date, block: r.block });
+    }
+  }
+  return records.filter((r) => {
+    const key = keyByChain.get(r.blockchain || "Unknown");
+    return !!key && r.date === key.date && r.block === key.block;
+  });
+}
+
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
-    queryKey: ["reserveBalances", "pulse", "envio"],
+    queryKey: ["reserveBalances", "pulse", "treasury-api"],
     queryFn: async ({ signal }) => {
-      const startDate = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000)
-        .toISOString()
-        .split("T")[0];
+      const start = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000).toISOString().split("T")[0];
 
-      const raw = await fetchTokenRecords({ date: { _gte: startDate } }, signal);
+      const raw = await treasuryClient.getDailyTreasuryAssets({
+        start,
+        autoPaginate: true,
+        signal,
+      });
       const latestSnapshotRecords = filterLatestSnapshotPerChain(raw);
 
       const holdingAgg = new Map<string, ReserveHolding>();
       const lpAgg = new Map<string, LpPosition>();
 
       for (const rec of latestSnapshotRecords) {
-        const value = parseEnvioNumber(rec.value);
-        const balance = parseEnvioNumber(rec.balance);
-        const valueExcludingOhm = parseEnvioNumber(rec.valueExcludingOhm);
+        const value = rec.value;
+        const balance = rec.balance;
+        const valueExcludingOhm = rec.valueExcludingOhm;
         const backingContribution = rec.isLiquid ? valueExcludingOhm : 0;
         const token = getDisplayTokenName(rec.token);
         const holdingKey = `${token}|${rec.blockchain}|${rec.category}`;
