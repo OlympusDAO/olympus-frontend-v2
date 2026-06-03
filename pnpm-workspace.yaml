@@ -1,4 +1,10 @@
 minimumReleaseAge: 10080
+# Allow react-router/react-router-dom to bypass the freshness window so we can
+# pick up 7.16.0 security fixes (GHSA-49rj-9fvp-4h2h, GHSA-2j2x-hqr9-3h42,
+# GHSA-8646-j5j9-6r62, GHSA-f22v-gfqf-p8f3, GHSA-8x6r-g9mw-2r78).
+minimumReleaseAgeExclude:
+  - react-router
+  - react-router-dom
 preferFrozenLockfile: true
 engineStrict: true
 strictDepBuilds: true
