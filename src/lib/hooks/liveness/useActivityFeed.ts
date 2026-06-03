@@ -18,7 +18,8 @@ export type ActivityType =
   | "cooler-repay"
   | "cooler-add-collateral"
   | "cooler-withdraw-collateral"
-  | "cooler-liquidation";
+  | "cooler-liquidation"
+  | "cooler-v1-default";
 
 export interface ActivityItem {
   id: string;
@@ -307,7 +308,7 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
         // Bond purchase data is non-critical for the feed
       }
 
-      // Fetch Cooler (MonoCooler V2) activity
+      // Fetch Cooler activity: MonoCooler V2 plus Cooler V1 defaults
       try {
         const coolerQuery = `
           {
@@ -324,6 +325,25 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
               debt
               txHash
               timestamp
+            }
+
+            claimDefaultedLoanEvents(
+              first: 25
+              where: { blockTimestamp_gte: "${thirtyDaysAgo}" }
+              orderBy: blockTimestamp
+              orderDirection: desc
+            ) {
+              id
+              blockTimestamp
+              transactionHash
+              defaultedPrincipal
+              collateralQuantityClaimed
+              collateralValueClaimed
+              loan {
+                borrower { id }
+                cooler
+                loanId
+              }
             }
           }
         `;
@@ -377,6 +397,25 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
               secondaryValue,
               address: activity.account?.address || undefined,
               txHash: activity.txHash || undefined,
+            });
+          }
+
+          for (const defaultEvent of coolerJson.data?.claimDefaultedLoanEvents ?? []) {
+            const defaultedPrincipal = parseFloat(defaultEvent.defaultedPrincipal) || 0;
+            const collateralClaimed = parseFloat(defaultEvent.collateralQuantityClaimed) || 0;
+            const collateralValueClaimed = parseFloat(defaultEvent.collateralValueClaimed) || 0;
+
+            items.push({
+              id: `cooler-v1-default-${defaultEvent.id}`,
+              type: "cooler-v1-default",
+              timestamp: Number(defaultEvent.blockTimestamp),
+              primaryValue: `$${defaultedPrincipal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+              secondaryValue:
+                collateralValueClaimed > 0
+                  ? `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed ($${collateralValueClaimed.toLocaleString("en-US", { maximumFractionDigits: 0 })})`
+                  : `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed`,
+              address: defaultEvent.loan?.borrower?.id || undefined,
+              txHash: defaultEvent.transactionHash || undefined,
             });
           }
         }
