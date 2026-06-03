@@ -1,10 +1,6 @@
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw, TokenRecordRaw } from "@/lib/types/envio";
+import type { DailyMetric, TreasuryAsset } from "@olympusdao/treasury-subgraph-client";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 
-// Hasura's `numeric` scalar serializes as a string with up to ~50 digits of
-// precision. `parseEnvioNumber` coerces to JS f64. Truncation past ~15
-// significant digits is acceptable for the dashboards that consume these.
 export function parseEnvioNumber(value: string | number | null | undefined): number {
   if (value == null) return 0;
   if (typeof value === "number") return value;
@@ -12,47 +8,11 @@ export function parseEnvioNumber(value: string | number | null | undefined): num
   return Number.isFinite(n) ? n : 0;
 }
 
-// Hasura enforces a hard 1000-row cap per query on this deployment.
-// TokenRecord windows over many days easily exceed that; this helper
-// paginates by offset until the page is short or the safety cap is hit.
-const PAGE_SIZE = 1000;
-const MAX_PAGES = 20;
-
-const TOKEN_RECORDS_PAGE_QUERY = gql`
-  query TokenRecordsPage($where: TokenRecord_bool_exp!, $offset: Int!, $limit: Int!) {
-    TokenRecord(
-      where: $where
-      order_by: [{ date: desc }, { block: desc }, { id: asc }]
-      limit: $limit
-      offset: $offset
-    ) {
-      id
-      date
-      chainId
-      blockchain
-      block
-      timestamp
-      token
-      tokenAddress
-      source
-      sourceAddress
-      category
-      isLiquid
-      isBluechip
-      balance
-      rate
-      multiplier
-      value
-      valueExcludingOhm
-    }
-  }
-`;
-
-// Envio emits 3 snapshots per day (~8h cadence) per chain. The legacy
-// treasury-subgraph emitted one, so downstream aggregation that simply sums
+// The metrics publisher can emit multiple snapshots per day per chain.
+// Downstream aggregation that simply sums
 // all rows for "today's date" over-counts 3×. Filter raw records to only the
 // rows at the highest block within the latest date per chain.
-export function filterLatestSnapshotPerChain(records: TokenRecordRaw[]): TokenRecordRaw[] {
+export function filterLatestSnapshotPerChain(records: TreasuryAsset[]): TreasuryAsset[] {
   // First pass: latest (date, block) per chain.
   const keyByChain = new Map<string, { date: string; block: bigint }>();
   for (const r of records) {
@@ -70,21 +30,12 @@ export function filterLatestSnapshotPerChain(records: TokenRecordRaw[]): TokenRe
   });
 }
 
-export async function fetchTokenRecords(
-  where: Record<string, unknown>,
-  signal?: AbortSignal,
-): Promise<TokenRecordRaw[]> {
-  const out: TokenRecordRaw[] = [];
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: TokenRecordRaw[] }>({
-      document: TOKEN_RECORDS_PAGE_QUERY,
-      variables: { where, offset: page * PAGE_SIZE, limit: PAGE_SIZE },
-      signal,
-    });
-    out.push(...TokenRecord);
-    if (TokenRecord.length < PAGE_SIZE) return out;
-  }
-  return out;
+export async function fetchTreasuryAssets(start: string, end?: string): Promise<TreasuryAsset[]> {
+  return treasurySubgraphClient.getDailyTreasuryAssets({
+    start,
+    ...(end ? { end } : {}),
+    autoPaginate: true,
+  });
 }
 
 export interface MetricRow {
@@ -110,7 +61,7 @@ export interface MetricRow {
   sOhmTotalValueLocked: number;
 }
 
-export function mapEnvioMetric(raw: GlobalMetricSnapshotRaw): MetricRow {
+export function mapEnvioMetric(raw: DailyMetric): MetricRow {
   return {
     date: raw.date,
     crossChainComplete: raw.crossChainComplete,

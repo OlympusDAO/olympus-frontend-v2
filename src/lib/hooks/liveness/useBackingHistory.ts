@@ -1,44 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface BackingHistory {
   dataPoints: Array<{ date: string; backing: number; ohmPrice: number }>;
 }
 
-const BACKING_HISTORY_QUERY = gql`
-  query BackingHistory($start: String!) {
-    GlobalMetricSnapshot(
-      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
-      order_by: { date: asc }
-      limit: 5000
-    ) {
-      date
-      treasuryLiquidBackingPerOhmBacked
-      ohmPrice
-    }
-  }
-`;
-
-type Row = Pick<GlobalMetricSnapshotRaw, "date" | "treasuryLiquidBackingPerOhmBacked" | "ohmPrice">;
-
 export function useBackingHistory(days = 90) {
   return useQuery<BackingHistory>({
-    queryKey: ["backingHistory", "envio", days],
-    queryFn: async ({ signal }) => {
+    queryKey: ["backingHistory", "treasury-subgraph", days],
+    queryFn: async () => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
+      const rows = (
+        await treasurySubgraphClient.getDailyMetrics({ start, autoPaginate: true })
+      ).filter((r) => r.crossChainComplete);
 
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: BACKING_HISTORY_QUERY, variables: { start }, signal });
-
-      const dataPoints = GlobalMetricSnapshot.map((r) => ({
-        date: r.date,
-        backing: parseEnvioNumber(r.treasuryLiquidBackingPerOhmBacked),
-        ohmPrice: parseEnvioNumber(r.ohmPrice),
-      })).filter((p) => p.backing > 0);
+      const dataPoints = rows
+        .map((r) => ({
+          date: r.date,
+          backing: parseEnvioNumber(r.treasuryLiquidBackingPerOhmBacked),
+          ohmPrice: parseEnvioNumber(r.ohmPrice),
+        }))
+        .filter((p) => p.backing > 0);
 
       return { dataPoints };
     },

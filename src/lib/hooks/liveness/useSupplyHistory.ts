@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface WeeklySupplyChange {
@@ -19,21 +17,6 @@ export interface SupplyHistory {
   annualizedChangeRate: number; // as percentage (negative = deflationary)
 }
 
-const SUPPLY_HISTORY_QUERY = gql`
-  query SupplyHistory($start: String!) {
-    GlobalMetricSnapshot(
-      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
-      order_by: { date: asc }
-      limit: 5000
-    ) {
-      date
-      ohmTotalSupply
-    }
-  }
-`;
-
-type Row = Pick<GlobalMetricSnapshotRaw, "date" | "ohmTotalSupply">;
-
 function getMonday(date: Date): Date {
   const d = new Date(date);
   const day = d.getUTCDay();
@@ -45,15 +28,13 @@ function getMonday(date: Date): Date {
 
 export function useSupplyHistory() {
   return useQuery<SupplyHistory>({
-    queryKey: ["supplyHistory", "envio"],
-    queryFn: async ({ signal }) => {
+    queryKey: ["supplyHistory", "treasury-subgraph"],
+    queryFn: async () => {
       const start = new Date(Date.now() - 90 * 86_400_000).toISOString().split("T")[0];
-
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: SUPPLY_HISTORY_QUERY, variables: { start }, signal });
-
-      const records = GlobalMetricSnapshot.map((r) => ({
+      const rows = (
+        await treasurySubgraphClient.getDailyMetrics({ start, autoPaginate: true })
+      ).filter((r) => r.crossChainComplete);
+      const records = rows.map((r) => ({
         date: r.date,
         ohmTotalSupply: parseEnvioNumber(r.ohmTotalSupply),
       }));
@@ -64,10 +45,11 @@ export function useSupplyHistory() {
       for (const rec of records) {
         const monday = getMonday(new Date(`${rec.date}T00:00:00Z`));
         const key = monday.toISOString().split("T")[0];
-        if (!weekMap.has(key)) {
-          weekMap.set(key, { dates: [], supplies: [] });
+        let week = weekMap.get(key);
+        if (!week) {
+          week = { dates: [], supplies: [] };
+          weekMap.set(key, week);
         }
-        const week = weekMap.get(key)!;
         week.dates.push(rec.date);
         week.supplies.push(rec.ohmTotalSupply);
       }

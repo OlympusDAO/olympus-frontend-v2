@@ -1,11 +1,9 @@
-minimumReleaseAge: 10080
-preferFrozenLockfile: true
-engineStrict: true
-strictDepBuilds: true
 blockExoticSubdeps: true
+engineStrict: true
 ignoredBuiltDependencies:
   - '@swc/core'
   - esbuild
+minimumReleaseAge: 10080
 onlyBuiltDependencies:
   - "@posthog/cli@0.7.11"
   - "bufferutil@4.1.0"
@@ -14,6 +12,7 @@ onlyBuiltDependencies:
   - "protobufjs@7.5.8"
   - "utf-8-validate@5.0.10"
 overrides:
+  '@olympusdao/treasury-subgraph-client': link:../../../../Library/pnpm/global/5/node_modules/@olympusdao/treasury-subgraph-client
   "@protobufjs/utf8": "^1.1.1"
   "axios": "^1.15.2"
   "brace-expansion@<5.0.6": "^5.0.6"
@@ -32,3 +31,5 @@ overrides:
   "vite": "7.3.2"
   "ws@<8.20.1": "^8.20.1"
   "yaml": "2.8.3"
+preferFrozenLockfile: true
+strictDepBuilds: true

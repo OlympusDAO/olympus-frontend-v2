@@ -1,53 +1,43 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 
-export interface LaggingChain {
+export interface TreasuryIndexingProgress {
   chain: string;
   date: string;
+  block: number;
+  timestamp: number;
   daysBehind: number;
 }
 
 const MS_PER_DAY = 86_400_000;
 
-const LATEST_PER_CHAIN_QUERY = gql`
-  query LatestPerChain {
-    TokenRecord(
-      distinct_on: [blockchain]
-      order_by: [{ blockchain: asc }, { date: desc }, { block: desc }]
-    ) {
-      blockchain
-      date
-    }
-  }
-`;
-
-type Row = { blockchain: string; date: string };
-
 export function useTreasuryDataFreshness() {
-  return useQuery<LaggingChain[]>({
-    queryKey: ["treasuryDataFreshness", "envio"],
-    queryFn: async ({ signal }) => {
-      const { TokenRecord } = await envioGraphqlClient.request<{ TokenRecord: Row[] }>({
-        document: LATEST_PER_CHAIN_QUERY,
-        signal,
-      });
+  return useQuery<TreasuryIndexingProgress[]>({
+    queryKey: ["treasuryDataFreshness", "treasury-subgraph"],
+    queryFn: async () => {
+      const bounds = await treasurySubgraphClient.getBounds();
+      const latestMs = Date.parse(bounds.latestDate);
+      const progress = bounds.indexingProgress?.chains ?? {};
 
-      let latestDate = "";
-      for (const r of TokenRecord) {
-        if (r.date > latestDate) latestDate = r.date;
-      }
+      return Object.entries(progress)
+        .map(([chain, chainProgress]) => {
+          if (!chainProgress) return undefined;
+          const chainMs = Date.parse(chainProgress.date);
+          const daysBehind =
+            Number.isFinite(latestMs) && Number.isFinite(chainMs)
+              ? Math.max(0, Math.round((latestMs - chainMs) / MS_PER_DAY))
+              : 0;
 
-      const latestMs = latestDate ? Date.parse(latestDate) : 0;
-      const lagging: LaggingChain[] = [];
-      for (const r of TokenRecord) {
-        if (r.date === latestDate) continue;
-        const daysBehind = Math.round((latestMs - Date.parse(r.date)) / MS_PER_DAY);
-        lagging.push({ chain: r.blockchain, date: r.date, daysBehind });
-      }
-      lagging.sort((a, b) => b.daysBehind - a.daysBehind);
-
-      return lagging;
+          return {
+            chain,
+            date: chainProgress.date,
+            block: chainProgress.block,
+            timestamp: chainProgress.timestamp,
+            daysBehind,
+          };
+        })
+        .filter((item): item is TreasuryIndexingProgress => item !== undefined)
+        .sort((a, b) => b.daysBehind - a.daysBehind || a.chain.localeCompare(b.chain));
     },
     staleTime: 300_000,
     refetchInterval: 600_000,

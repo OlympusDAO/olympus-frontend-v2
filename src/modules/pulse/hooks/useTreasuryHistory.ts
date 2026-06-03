@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface TreasuryHistoryPoint {
@@ -28,57 +26,17 @@ function downsample(points: TreasuryHistoryPoint[], maxPoints = MAX_CHART_POINTS
   return sampled;
 }
 
-const TREASURY_HISTORY_QUERY = gql`
-  query TreasuryHistory($start: String!, $offset: Int!, $limit: Int!) {
-    GlobalMetricSnapshot(
-      where: { date: { _gte: $start }, crossChainComplete: { _eq: true } }
-      order_by: { date: asc }
-      limit: $limit
-      offset: $offset
-    ) {
-      date
-      ohmBackedSupply
-      ohmPrice
-      treasuryLiquidBacking
-      treasuryLiquidBackingPerOhmBacked
-      treasuryMarketValue
-    }
-  }
-`;
-
-type Row = Pick<
-  GlobalMetricSnapshotRaw,
-  | "date"
-  | "ohmBackedSupply"
-  | "ohmPrice"
-  | "treasuryLiquidBacking"
-  | "treasuryLiquidBackingPerOhmBacked"
-  | "treasuryMarketValue"
->;
-
-// Hasura caps single queries at 1000 rows. The "Max" window (1825 days) blows
-// past that — without paginating, the recent end of the chart gets truncated.
-const PAGE_SIZE = 1000;
-const MAX_PAGES = 10;
-
 export function useTreasuryHistory(days = 7) {
   return useQuery<TreasuryHistoryPoint[]>({
-    queryKey: ["treasuryHistory", "envio", days],
-    queryFn: async ({ signal }) => {
+    queryKey: ["treasuryHistory", "treasury-subgraph", days],
+    queryFn: async () => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
-
-      const rows: Row[] = [];
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-          GlobalMetricSnapshot: Row[];
-        }>({
-          document: TREASURY_HISTORY_QUERY,
-          variables: { start, offset: page * PAGE_SIZE, limit: PAGE_SIZE },
-          signal,
-        });
-        rows.push(...GlobalMetricSnapshot);
-        if (GlobalMetricSnapshot.length < PAGE_SIZE) break;
-      }
+      const rows = (
+        await treasurySubgraphClient.getDailyMetrics({
+          start,
+          autoPaginate: true,
+        })
+      ).filter((r) => r.crossChainComplete);
 
       const points = rows.map((r) => {
         const backedSupply = parseEnvioNumber(r.ohmBackedSupply);

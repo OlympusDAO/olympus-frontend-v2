@@ -11,9 +11,6 @@ export const BOND_SUBGRAPH_URL = graphUrl("E4Mikyz3ec1MGGFYNuEDQ3F1qtcLashFKwyTv
 export const EMISSION_MANAGER_SUBGRAPH_URL = graphUrl(
   "7KwoppR1FTbHpz7VieAEFmyyPh9z2ZWUvYjSs5w3cTV8",
 );
-export const INDEXER_GRAPHQL_URL =
-  (import.meta.env.VITE_INDEXER_GRAPHQL_URL as string | undefined) ||
-  "https://indexer.hyperindex.xyz/8905631/v1/graphql";
 export const DEFILLAMA_YIELDS_URL = "https://yields.llama.fi";
 export const KODIAK_API_URL = "https://backend.kodiak.finance";
 export const ETHERSCAN_BASE_URL = "https://etherscan.io";
@@ -24,8 +21,7 @@ export const DEFILLAMA_POOLS = {
   SUSDS: "d8c4eff5-c8a9-46fc-a888-057c4c668e72",
 } as const;
 
-// Map treasury tokenRecord LP names → DeFiLlama pool IDs (for fee APY lookup).
-// Keys must match Envio's exact token strings — verified via TokenRecord query.
+// Map treasury asset LP names to DeFiLlama pool IDs (for fee APY lookup).
 export const LP_POOL_MAP: Record<string, string> = {
   "UniswapV3 OHM-sUSDS": "0cc155d9-0e7f-4bdd-b07e-0a09e34b9af0",
   "UniswapV3 WETH-OHM": "dea7e764-1c6a-4d51-bb35-5f428fc85b57",

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  fetchTokenRecords,
+  fetchTreasuryAssets,
   filterLatestSnapshotPerChain,
   parseEnvioNumber,
 } from "@/lib/utils/envio";
@@ -18,10 +18,10 @@ interface ReserveBalances {
 
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
-    queryKey: ["reserveBalances", "envio"],
-    queryFn: async ({ signal }) => {
+    queryKey: ["reserveBalances", "treasury-subgraph"],
+    queryFn: async () => {
       const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
-      const raw = await fetchTokenRecords({ date: { _gte: yesterday } }, signal);
+      const raw = await fetchTreasuryAssets(yesterday);
       const records = filterLatestSnapshotPerChain(raw);
 
       let susdeValue = 0;

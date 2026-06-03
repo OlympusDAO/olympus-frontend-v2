@@ -33,6 +33,7 @@ Requires Node.js 24+ and pnpm.
 | `VITE_POSTHOG_API_KEY` | No | PostHog project API key for product analytics |
 | `VITE_POSTHOG_HOST` | No | PostHog host URL (defaults to `https://eu.i.posthog.com`) |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
+| `VITE_TREASURY_SUBGRAPH_METRICS_API` | No | Treasury subgraph metrics API override; omitted values use the treasury client default |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
 
 > **Why are the `VITE_*` keys public?**

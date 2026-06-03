@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { envioGraphqlClient } from "@/lib/graphql-client";
-import type { GlobalMetricSnapshotRaw } from "@/lib/types/envio";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 import { parseEnvioNumber } from "@/lib/utils/envio";
 
 interface TreasuryMetrics {
@@ -13,35 +11,6 @@ interface TreasuryMetrics {
   treasuryLiquidBackingPerOhmBacked: number;
   ohmPrice: number;
 }
-
-const LATEST_METRICS_QUERY = gql`
-  query LatestTreasuryMetrics {
-    GlobalMetricSnapshot(
-      where: { crossChainComplete: { _eq: true } }
-      order_by: { date: desc }
-      limit: 1
-    ) {
-      ohmTotalSupply
-      ohmCirculatingSupply
-      ohmBackedSupply
-      treasuryMarketValue
-      treasuryLiquidBacking
-      treasuryLiquidBackingPerOhmBacked
-      ohmPrice
-    }
-  }
-`;
-
-type Row = Pick<
-  GlobalMetricSnapshotRaw,
-  | "ohmTotalSupply"
-  | "ohmCirculatingSupply"
-  | "ohmBackedSupply"
-  | "treasuryMarketValue"
-  | "treasuryLiquidBacking"
-  | "treasuryLiquidBackingPerOhmBacked"
-  | "ohmPrice"
->;
 
 const EMPTY: TreasuryMetrics = {
   ohmTotalSupply: 0,
@@ -55,13 +24,14 @@ const EMPTY: TreasuryMetrics = {
 
 export function useTreasuryMetrics() {
   return useQuery<TreasuryMetrics>({
-    queryKey: ["treasuryMetrics", "envio"],
-    queryFn: async ({ signal }) => {
-      const { GlobalMetricSnapshot } = await envioGraphqlClient.request<{
-        GlobalMetricSnapshot: Row[];
-      }>({ document: LATEST_METRICS_QUERY, signal });
-
-      const row = GlobalMetricSnapshot[0];
+    queryKey: ["treasuryMetrics", "treasury-subgraph"],
+    queryFn: async () => {
+      const bounds = await treasurySubgraphClient.getBounds();
+      const rows = await treasurySubgraphClient.getDailyMetrics({
+        start: bounds.latestDate,
+        end: bounds.latestDate,
+      });
+      const row = rows.find((r) => r.crossChainComplete) ?? rows[0];
       if (!row) return EMPTY;
 
       return {
