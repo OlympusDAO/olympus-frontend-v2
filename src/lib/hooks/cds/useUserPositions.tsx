@@ -202,6 +202,10 @@ export const useUserPositions = () => {
 
   return {
     positions,
+    // `isLoading` covers position fetching only — receipt-token metadata
+    // (DEPOSIT_MANAGER, token IDs, symbols) resolves in the background and each
+    // row's `displayName` falls back to `cdUSDS-${term}` until its real symbol
+    // lands. Intentional: render the table ASAP rather than gate it on metadata.
     isLoading: isLoadingIds || isLoadingPositions,
     error: idsError || positionsError,
     refetch: () => {

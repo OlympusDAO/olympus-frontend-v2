@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router-dom";
 import posthog from "posthog-js";
 import { ErrorScreen } from "@/components/error-screen";
@@ -15,13 +15,16 @@ export function RouteErrorElement() {
   const navigate = useNavigate();
 
   // Normalize whatever React Router gave us into an Error for display + reporting.
-  const errorObj: Error = (() => {
+  // Memoized so the reference stays stable across re-renders — otherwise the
+  // posthog.captureException effect below would refire on every render while
+  // the error screen is mounted and we'd flood PostHog with duplicates.
+  const errorObj: Error = useMemo(() => {
     if (error instanceof Error) return error;
     if (isRouteErrorResponse(error)) {
       return new Error(`${error.status} ${error.statusText}: ${error.data ?? "Route error"}`);
     }
     return new Error(typeof error === "string" ? error : "Unknown route error");
-  })();
+  }, [error]);
 
   useEffect(() => {
     console.error("Error caught by route error element:", errorObj);
