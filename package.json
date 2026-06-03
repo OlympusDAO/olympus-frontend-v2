@@ -13,7 +13,6 @@
     "format": "biome format --write src/",
     "check": "biome check src/",
     "check:fix": "biome check --write src/",
-    "preinstall": "npx only-allow@1.2.2 pnpm",
     "prepare": "husky",
     "codegen": "orval",
     "test": "vitest run",
