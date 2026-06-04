@@ -34,10 +34,12 @@ export function useSupplyHistory() {
       const rows = (
         await treasurySubgraphClient.getDailyMetrics({ start, autoPaginate: true })
       ).filter((r) => r.crossChainComplete);
-      const records = rows.map((r) => ({
-        date: r.date,
-        ohmTotalSupply: parseEnvioNumber(r.ohmTotalSupply),
-      }));
+      const records = rows
+        .map((r) => ({
+          date: r.date,
+          ohmTotalSupply: parseEnvioNumber(r.ohmTotalSupply),
+        }))
+        .sort((a, b) => Date.parse(`${a.date}T00:00:00Z`) - Date.parse(`${b.date}T00:00:00Z`));
 
       // Group by ISO week (Monday-Sunday)
       const weekMap = new Map<string, { dates: string[]; supplies: number[] }>();

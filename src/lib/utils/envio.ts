@@ -3,7 +3,7 @@ import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 
 export function parseEnvioNumber(value: string | number | null | undefined): number {
   if (value == null) return 0;
-  if (typeof value === "number") return value;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   const n = parseFloat(value);
   return Number.isFinite(n) ? n : 0;
 }
