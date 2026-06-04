@@ -6,9 +6,9 @@ ignoredBuiltDependencies:
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
   # Allow the React Router security release to bypass the freshness window.
-  - "react-router@7.16.0"
-  - "react-router-dom@7.16.0"
-  - "@olympusdao/treasury-subgraph-client@3.0.0"
+  - "react-router@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
+  - "react-router-dom@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
+  - "@olympusdao/treasury-subgraph-client@3.0.0" # TODO(2026-06-04): remove when >=7 days old.
 onlyBuiltDependencies:
   - "@posthog/cli@0.7.11"
   - "bufferutil@4.1.0"
