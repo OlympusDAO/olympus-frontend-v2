@@ -54,6 +54,7 @@ function TimelineItem({
   icon: Icon,
   state,
   showRelativeTime,
+  isEstimate,
 }: {
   label: string;
   date: Date | undefined;
@@ -61,10 +62,12 @@ function TimelineItem({
   icon: React.ComponentType<{ className?: string }>;
   state: TimelineState;
   showRelativeTime: boolean;
+  isEstimate: boolean;
 }) {
   const relativeTime =
     date && showRelativeTime ? formatDistanceToNow(date, { addSuffix: true }) : null;
   const formattedDate = formatTimelineDate(date);
+  const displayDate = formattedDate && isEstimate ? `${formattedDate} (est.)` : formattedDate;
 
   return (
     <div className="flex items-center gap-3 relative first:[&>[data-line=top]]:hidden last:[&>[data-line=bottom]]:hidden">
@@ -88,7 +91,7 @@ function TimelineItem({
       </div>
 
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <span className="text-xs/4 font-normal text-tertiary-t">{formattedDate}</span>
+        <span className="text-xs/4 font-normal text-tertiary-t">{displayDate}</span>
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -125,11 +128,14 @@ export function VoteSidebar({
   proposalId,
   startBlock: _startBlock,
   status,
+  publishedDate,
   onVoteClick,
 }: {
   proposalId: number;
   startBlock: number;
   status: ProposalStatus;
+  /** When the proposal was created onchain (ProposalCreated event timestamp). */
+  publishedDate?: Date;
   onVoteClick: () => void;
 }) {
   const { isConnected } = useAccount();
@@ -165,8 +171,8 @@ export function VoteSidebar({
   const totalVotes = details ? details.forCount + details.againstCount + details.abstainCount : 0;
 
   const timelineItems = useMemo(
-    () => buildTimelineItems({ details, timeline, status, now: new Date() }),
-    [details, timeline, status],
+    () => buildTimelineItems({ details, timeline, status, publishedDate, params, now: new Date() }),
+    [details, timeline, status, publishedDate, params],
   );
 
   return (
@@ -276,6 +282,7 @@ export function VoteSidebar({
                 txHash={item.txHash}
                 state={item.state}
                 showRelativeTime={item.showRelativeTime}
+                isEstimate={item.isEstimate}
               />
             ))}
           </div>
@@ -292,29 +299,50 @@ type TimelineItemData = {
   txHash?: string;
   state: TimelineState;
   showRelativeTime: boolean;
+  isEstimate: boolean;
 };
 
-type RawTimelineItem = Omit<TimelineItemData, "state" | "showRelativeTime"> & {
+type RawTimelineItem = Omit<TimelineItemData, "state" | "showRelativeTime" | "isEstimate"> & {
   isCompleted: boolean;
   isFuture: boolean;
 };
+
+const SECONDS_PER_BLOCK = 12;
 
 function buildTimelineItems({
   details,
   timeline,
   status,
+  publishedDate,
+  params,
   now,
 }: {
   details: ReturnType<typeof useProposalDetails>["data"];
   timeline: ReturnType<typeof useProposalTimeline>["data"];
   status: ProposalStatus;
+  publishedDate?: Date;
+  params: ReturnType<typeof useContractParameters>["data"];
   now: Date;
 }): TimelineItemData[] {
+  // Once a proposal is activated, endDate is known. While Pending, endBlock isn't
+  // assigned yet, so estimate it as startBlock + votingPeriod and derive the queue
+  // (right after voting ends) and execute (after the timelock delay) dates from there.
+  // Any date in the future is flagged as an estimate (see isEstimate below).
+  const estEndDate =
+    details?.endDate ??
+    (details?.startDate && params?.votingPeriodBlocks
+      ? new Date(details.startDate.getTime() + params.votingPeriodBlocks * SECONDS_PER_BLOCK * 1000)
+      : undefined);
+  const estExecuteDate =
+    estEndDate && params?.executionDelaySeconds
+      ? new Date(estEndDate.getTime() + params.executionDelaySeconds * 1000)
+      : estEndDate;
+
   const raw: RawTimelineItem[] = [
     {
       label: "Published onchain",
       icon: RiLinksFill,
-      date: details?.startDate ? new Date(details.startDate.getTime()) : undefined,
+      date: publishedDate,
       isCompleted: true,
       isFuture: false,
     },
@@ -328,9 +356,9 @@ function buildTimelineItems({
     {
       label: "End voting period",
       icon: RiChatCheckFill,
-      date: details?.endDate,
+      date: estEndDate,
       isCompleted: status !== "Pending" && status !== "Active",
-      isFuture: details?.endDate ? details.endDate > now : false,
+      isFuture: estEndDate ? estEndDate > now : false,
     },
   ];
 
@@ -338,7 +366,7 @@ function buildTimelineItems({
     raw.push({
       label: "Queue proposal",
       icon: RiSurveyFill,
-      date: timeline?.queued.date ?? details?.endDate,
+      date: timeline?.queued.date ?? estEndDate,
       txHash: timeline?.queued.txHash,
       isCompleted: !!timeline?.queued.date,
       isFuture: false,
@@ -348,7 +376,7 @@ function buildTimelineItems({
     raw.push({
       label: "Execute proposal",
       icon: RiFlashlightFill,
-      date: timeline?.executed.date,
+      date: timeline?.executed.date ?? estExecuteDate,
       txHash: timeline?.executed.txHash,
       isCompleted: !!timeline?.executed.date,
       isFuture: false,
@@ -359,14 +387,14 @@ function buildTimelineItems({
       {
         label: "Queue proposal",
         icon: RiSurveyFill,
-        date: details?.endDate,
+        date: estEndDate,
         isCompleted: false,
         isFuture: true,
       },
       {
         label: "Execute proposal",
         icon: RiFlashlightFill,
-        date: details?.endDate,
+        date: estExecuteDate,
         isCompleted: false,
         isFuture: true,
       },
@@ -407,6 +435,8 @@ function buildTimelineItems({
     else if (i === activeIdx) state = "active";
     else state = "inactive";
     const showRelativeTime = i === activeIdx + 1 && isFuture;
-    return { ...item, state, showRelativeTime };
+    // A date in the future can't have happened yet, so it's a projection, not a fact.
+    const isEstimate = !!item.date && item.date > now;
+    return { ...item, state, showRelativeTime, isEstimate };
   });
 }

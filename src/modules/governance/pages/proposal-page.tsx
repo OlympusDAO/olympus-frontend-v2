@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useEnsName } from "wagmi";
+import { useEnsName, useBlockNumber, useAccount, useChainId } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -63,36 +64,79 @@ export function ProposalPage() {
   }, [ensName, proposerAddress]);
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
+  const { data: currentBlock } = useBlockNumber({ chainId: mainnet.id });
+  const { isConnected } = useAccount();
+  const walletChainId = useChainId();
+  const isWrongNetwork = isConnected && walletChainId !== mainnet.id;
 
   // Action button logic based on proposal status
   const actionButton = useMemo(() => {
     if (!details || !proposalId) return null;
 
-    if (details.status === "Pending" && details.startBlock > 0) {
+    // Resolve which lifecycle action (if any) is available in the current state.
+    // Only show Activate once the voting delay has elapsed (current block has reached
+    // startBlock); activate() reverts before then. Matches v1 governance behavior.
+    let action: {
+      label: string;
+      pendingLabel: string;
+      isPending: boolean;
+      run: () => void;
+    } | null = null;
+
+    if (
+      details.status === "Pending" &&
+      currentBlock !== undefined &&
+      Number(currentBlock) >= details.startBlock
+    ) {
+      action = {
+        label: "Activate Proposal",
+        pendingLabel: "Activating...",
+        isPending: isActivating,
+        run: () => activate({ proposalId }),
+      };
+    } else if (details.status === "Succeeded") {
+      action = {
+        label: "Queue for Execution",
+        pendingLabel: "Queueing...",
+        isPending: isQueueing,
+        run: () => queue({ proposalId }),
+      };
+    } else if (details.status === "Queued" && details.eta > 0 && currentTimestamp >= details.eta) {
+      action = {
+        label: "Execute Proposal",
+        pendingLabel: "Executing...",
+        isPending: isExecuting,
+        run: () => execute({ proposalId }),
+      };
+    }
+
+    if (!action) return null;
+
+    // There's an action to take, but writes require a connected wallet on mainnet —
+    // surface that affordance instead of a button that would silently prompt or revert.
+    if (!isConnected || isWrongNetwork) {
       return (
-        <Button onClick={() => activate({ proposalId })} disabled={isActivating}>
-          {isActivating ? "Activating..." : "Activate Proposal"}
-        </Button>
+        <ConnectButton.Custom>
+          {({ openConnectModal, openChainModal }) =>
+            isConnected ? (
+              <Button variant="secondary" type="button" onClick={openChainModal}>
+                Switch to Mainnet
+              </Button>
+            ) : (
+              <Button type="button" onClick={openConnectModal}>
+                Connect Wallet
+              </Button>
+            )
+          }
+        </ConnectButton.Custom>
       );
     }
 
-    if (details.status === "Succeeded") {
-      return (
-        <Button onClick={() => queue({ proposalId })} disabled={isQueueing}>
-          {isQueueing ? "Queueing..." : "Queue for Execution"}
-        </Button>
-      );
-    }
-
-    if (details.status === "Queued" && details.eta > 0 && currentTimestamp >= details.eta) {
-      return (
-        <Button onClick={() => execute({ proposalId })} disabled={isExecuting}>
-          {isExecuting ? "Executing..." : "Execute Proposal"}
-        </Button>
-      );
-    }
-
-    return null;
+    return (
+      <Button onClick={action.run} disabled={action.isPending}>
+        {action.isPending ? action.pendingLabel : action.label}
+      </Button>
+    );
   }, [
     details,
     proposalId,
@@ -103,6 +147,9 @@ export function ProposalPage() {
     queue,
     execute,
     currentTimestamp,
+    currentBlock,
+    isConnected,
+    isWrongNetwork,
   ]);
 
   if (isProposalLoading || isDetailsLoading) {
@@ -210,6 +257,7 @@ export function ProposalPage() {
               proposalId={proposal.details.id}
               startBlock={details.startBlock}
               status={details.status}
+              publishedDate={proposal.createdAtBlock}
               onVoteClick={() => setVoteModalOpen(true)}
             />
           )}
