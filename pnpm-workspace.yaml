@@ -1,10 +1,11 @@
 minimumReleaseAge: 10080
-# Allow react-router/react-router-dom to bypass the freshness window so we can
-# pick up 7.16.0 security fixes (GHSA-49rj-9fvp-4h2h, GHSA-2j2x-hqr9-3h42,
-# GHSA-8646-j5j9-6r62, GHSA-f22v-gfqf-p8f3, GHSA-8x6r-g9mw-2r78).
+# Allow react-router/react-router-dom 7.16.0 to bypass the freshness window so
+# we can pick up the security fixes (GHSA-49rj-9fvp-4h2h, GHSA-2j2x-hqr9-3h42,
+# GHSA-8646-j5j9-6r62, GHSA-f22v-gfqf-p8f3, GHSA-8x6r-g9mw-2r78). Pinned to
+# 7.16.0 so future releases still go through the freshness window.
 minimumReleaseAgeExclude:
-  - react-router
-  - react-router-dom
+  - react-router@7.16.0
+  - react-router-dom@7.16.0
 preferFrozenLockfile: true
 engineStrict: true
 strictDepBuilds: true
@@ -22,6 +23,7 @@ onlyBuiltDependencies:
 overrides:
   "@protobufjs/utf8": "^1.1.1"
   "axios": "^1.15.2"
+  "brace-expansion@<5.0.6": "^5.0.6"
   "defu": "6.1.5"
   "fast-uri": "^3.1.1"
   "h3": "1.15.11"
@@ -30,8 +32,11 @@ overrides:
   "picomatch@<2.3.2": "2.3.2"
   "picomatch@>=4.0.0 <4.0.4": "4.0.4"
   "postcss": "^8.5.10"
-  "protobufjs": "^7.5.6"
+  "protobufjs": "^7.5.8"
+  "react-router@<7.16.0": "^7.16.0"
   "rollup": "4.59.0"
   "socket.io-parser": "4.2.6"
+  "uuid@<11.1.1": "^11.1.1"
   "vite": "7.3.2"
+  "ws@>=8.0.0 <8.20.1": "^8.20.1"
   "yaml": "2.8.3"

@@ -91,14 +91,5 @@
     "*.{ts,tsx,js,jsx}": [
       "biome check --write --no-errors-on-unmatched"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "brace-expansion@<5.0.6": "^5.0.6",
-      "ws@>=8.0.0 <8.20.1": "^8.20.1",
-      "protobufjs@<7.5.8": "^7.5.8",
-      "uuid@<11.1.1": "^11.1.1",
-      "react-router@<7.16.0": "^7.16.0"
-    }
   }
 }
