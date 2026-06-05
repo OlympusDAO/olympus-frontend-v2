@@ -302,7 +302,15 @@ type TimelineItemData = {
   isEstimate: boolean;
 };
 
-type RawTimelineItem = Omit<TimelineItemData, "state" | "showRelativeTime" | "isEstimate"> & {
+type RawTimelineItem = Omit<
+  TimelineItemData,
+  "state" | "showRelativeTime" | "isEstimate" | "label"
+> & {
+  // pastLabel is shown once the step has happened (state = completed/active).
+  // futureLabel is shown while the step is still upcoming (state = inactive);
+  // terminal-only events (Canceled, Vetoed) omit it because they only render once completed.
+  pastLabel: string;
+  futureLabel?: string;
   isCompleted: boolean;
   isFuture: boolean;
 };
@@ -340,21 +348,23 @@ function buildTimelineItems({
 
   const raw: RawTimelineItem[] = [
     {
-      label: "Published onchain",
+      pastLabel: "Published onchain",
       icon: RiLinksFill,
       date: publishedDate,
       isCompleted: true,
       isFuture: false,
     },
     {
-      label: "Voting period started",
+      pastLabel: "Voting period started",
+      futureLabel: "Voting period starts",
       icon: RiMessage2Fill,
       date: details?.startDate,
       isCompleted: status !== "Pending",
       isFuture: details?.startDate ? details.startDate > now : false,
     },
     {
-      label: "End voting period",
+      pastLabel: "Voting period ended",
+      futureLabel: "Voting period ends",
       icon: RiChatCheckFill,
       date: estEndDate,
       isCompleted: status !== "Pending" && status !== "Active",
@@ -364,7 +374,8 @@ function buildTimelineItems({
 
   if (timeline?.queued.date || status === "Queued" || status === "Executed") {
     raw.push({
-      label: "Queue proposal",
+      pastLabel: "Proposal queued",
+      futureLabel: "Queue proposal",
       icon: RiSurveyFill,
       date: timeline?.queued.date ?? estEndDate,
       txHash: timeline?.queued.txHash,
@@ -374,7 +385,8 @@ function buildTimelineItems({
   }
   if (timeline?.executed.date || status === "Executed") {
     raw.push({
-      label: "Execute proposal",
+      pastLabel: "Proposal executed",
+      futureLabel: "Execute proposal",
       icon: RiFlashlightFill,
       date: timeline?.executed.date ?? estExecuteDate,
       txHash: timeline?.executed.txHash,
@@ -385,14 +397,16 @@ function buildTimelineItems({
   if (!timeline?.queued.date && status !== "Queued" && status !== "Executed") {
     raw.push(
       {
-        label: "Queue proposal",
+        pastLabel: "Proposal queued",
+        futureLabel: "Queue proposal",
         icon: RiSurveyFill,
         date: estEndDate,
         isCompleted: false,
         isFuture: true,
       },
       {
-        label: "Execute proposal",
+        pastLabel: "Proposal executed",
+        futureLabel: "Execute proposal",
         icon: RiFlashlightFill,
         date: estExecuteDate,
         isCompleted: false,
@@ -402,7 +416,7 @@ function buildTimelineItems({
   }
   if (timeline?.canceled.date) {
     raw.push({
-      label: "Canceled",
+      pastLabel: "Canceled",
       icon: RiCloseCircleLine,
       date: timeline.canceled.date,
       txHash: timeline.canceled.txHash,
@@ -412,7 +426,7 @@ function buildTimelineItems({
   }
   if (timeline?.vetoed.date) {
     raw.push({
-      label: "Vetoed",
+      pastLabel: "Vetoed",
       icon: RiCloseCircleLine,
       date: timeline.vetoed.date,
       txHash: timeline.vetoed.txHash,
@@ -429,7 +443,7 @@ function buildTimelineItems({
     if (item.isCompleted) activeIdx = i;
   });
 
-  return raw.map(({ isCompleted: _c, isFuture, ...item }, i) => {
+  return raw.map(({ isCompleted: _c, isFuture, pastLabel, futureLabel, ...item }, i) => {
     let state: TimelineState;
     if (i < activeIdx) state = "completed";
     else if (i === activeIdx) state = "active";
@@ -437,6 +451,9 @@ function buildTimelineItems({
     const showRelativeTime = i === activeIdx + 1 && isFuture;
     // A date in the future can't have happened yet, so it's a projection, not a fact.
     const isEstimate = !!item.date && item.date > now;
-    return { ...item, state, showRelativeTime, isEstimate };
+    // Past tense once the step has happened (completed/active); future tense while
+    // it's still upcoming. Terminal-only steps (Canceled, Vetoed) only set pastLabel.
+    const label = state === "inactive" && futureLabel !== undefined ? futureLabel : pastLabel;
+    return { ...item, label, state, showRelativeTime, isEstimate };
   });
 }
