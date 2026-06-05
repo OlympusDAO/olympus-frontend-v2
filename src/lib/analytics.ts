@@ -422,16 +422,6 @@ export function trackMonoCoolerDelegation(params: {
   });
 }
 
-// ─── UI ───────────────────────────────────────────────────────────────────────
-
-export function trackSwitchToClassic(): void {
-  track("classic_view_toggled", { direction: "new_to_classic" });
-}
-
-export function trackDismissClassicBanner(): void {
-  track("dismiss_classic_banner");
-}
-
 // ─── Engage ───────────────────────────────────────────────────────────────────
 
 export function trackClaimDrachmas(params: { amount: string; txHash?: string }): void {

@@ -8,7 +8,6 @@ import { Header } from "@/layouts/Header";
 import { ToasterProvider } from "@/components/ui/sonner";
 import { Footer } from "@/layouts/footer.tsx";
 import { FeatureTour } from "@/components/feature-tour";
-import { ClassicViewBanner } from "@/layouts/ClassicViewBanner";
 import { trackPageView } from "@/lib/analytics";
 import { useWalletAnalytics } from "@/lib/hooks/useWalletAnalytics";
 import { useGlobalErrorHandler } from "@/lib/hooks/useGlobalErrorHandler";
@@ -52,7 +51,6 @@ export default function AppLayout() {
 
           {/* SubNav + main + footer wrapper */}
           <div className="flex-1 min-w-0 flex flex-col">
-            <ClassicViewBanner />
             <div className="flex flex-1 min-h-0 overflow-hidden">
               <div className="hidden md:flex">
                 <SubNav />
