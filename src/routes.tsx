@@ -1,4 +1,4 @@
-import { createHashRouter, Navigate } from "react-router-dom";
+import { createHashRouter, Navigate, useParams } from "react-router-dom";
 import { mainnet, sepolia } from "viem/chains";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
@@ -133,14 +133,35 @@ export const router = createHashRouter([
         ],
       },
 
-      // Legacy governance redirects
+      // Legacy governance redirects.
+      // Note: <Navigate to="…/:id" /> does NOT interpolate :id — it navigates to the
+      // literal string. The wrapper components below pull the param via useParams()
+      // and build the real destination so external proposal/delegate links still land
+      // on the right page in the new app.
       { path: "governance", element: <Navigate to="/dao/vote" replace /> },
-      { path: "governance/proposals/:id", element: <Navigate to="/dao/vote/:id" replace /> },
+      { path: "governance/proposals/:id", element: <RedirectProposal /> },
       { path: "governance/delegate", element: <Navigate to="/dao/delegate" replace /> },
-      { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
+      { path: "governance/delegate/:id", element: <RedirectDelegate /> },
+      // manageDelegation existed in v1 but has no dedicated page in v2 — drop users
+      // on the delegates list so they can pick a delegate from there.
+      { path: "governance/manageDelegation", element: <Navigate to="/dao/delegate" replace /> },
+      // Catch any other /governance/* deep links rather than letting them fall through
+      // to the global catch-all (which would silently land on Pulse Overview).
+      { path: "governance/*", element: <Navigate to="/dao/vote" replace /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/pulse/overview" replace /> },
     ],
   },
 ]);
+
+function RedirectProposal() {
+  const { id } = useParams<{ id: string }>();
+  // No id (shouldn't happen for this route) → fall back to the list.
+  return <Navigate to={id ? `/dao/vote/${id}` : "/dao/vote"} replace />;
+}
+
+function RedirectDelegate() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/dao/delegate/${id}` : "/dao/delegate"} replace />;
+}
