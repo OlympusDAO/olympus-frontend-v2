@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface BackingHistory {
   dataPoints: Array<{ date: string; backing: number; ohmPrice: number }>;
@@ -7,35 +8,20 @@ export interface BackingHistory {
 
 export function useBackingHistory(days = 90) {
   return useQuery<BackingHistory>({
-    queryKey: ["backingHistory", days],
+    queryKey: ["backingHistory", "treasury-subgraph", days],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        ignoreCache: false,
-      });
+      const start = new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
+      const rows = (
+        await treasurySubgraphClient.getDailyMetrics({ start, autoPaginate: true })
+      ).filter((r) => r.crossChainComplete);
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch backing history");
-
-      const json = await response.json();
-      const records: Array<{
-        date: string;
-        treasuryLiquidBackingPerOhmBacked: number;
-        ohmPrice: number;
-      }> = json.data ?? [];
-
-      records.sort((a, b) => a.date.localeCompare(b.date));
-
-      const dataPoints = records
-        .filter((r) => (r.treasuryLiquidBackingPerOhmBacked ?? 0) > 0)
+      const dataPoints = rows
         .map((r) => ({
           date: r.date,
-          backing: r.treasuryLiquidBackingPerOhmBacked,
-          ohmPrice: r.ohmPrice ?? 0,
-        }));
+          backing: parseEnvioNumber(r.treasuryLiquidBackingPerOhmBacked),
+          ohmPrice: parseEnvioNumber(r.ohmPrice),
+        }))
+        .filter((p) => p.backing > 0);
 
       return { dataPoints };
     },

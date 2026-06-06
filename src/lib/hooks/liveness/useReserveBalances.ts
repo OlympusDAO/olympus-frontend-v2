@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants";
+import {
+  fetchTreasuryAssets,
+  filterLatestSnapshotPerChain,
+  parseEnvioNumber,
+} from "@/lib/utils/envio";
 
 export interface LpPosition {
   name: string;
@@ -12,72 +16,35 @@ interface ReserveBalances {
   lpPositions: LpPosition[];
 }
 
-// Map treasury tokenRecord names to identify LP positions
-const LP_TOKEN_MATCHERS = ["liquidity pool", " lp"];
-
-function isLpToken(token: string): boolean {
-  const lower = token.toLowerCase();
-  return LP_TOKEN_MATCHERS.some((m) => lower.includes(m));
-}
-
 export function useReserveBalances() {
   return useQuery<ReserveBalances>({
-    queryKey: ["reserveBalances"],
+    queryKey: ["reserveBalances", "treasury-subgraph"],
     queryFn: async () => {
-      // Query yesterday's tokenRecords (today's may not be indexed yet)
       const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate: yesterday,
-        crossChainDataComplete: false,
-        ignoreCache: false,
-      });
-
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/tokenRecords?wg_variables=${encodeURIComponent(params)}`,
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch reserve balances");
-
-      const json = await response.json();
-      const records: Array<{
-        token: string;
-        balance: string;
-        value: string;
-        date: string;
-        category: string;
-      }> = json.data ?? [];
+      const raw = await fetchTreasuryAssets(yesterday);
+      const records = filterLatestSnapshotPerChain(raw);
 
       let susdeValue = 0;
       let susdsValue = 0;
-      // Track latest LP values by token name (records ordered by date desc)
       const lpMap = new Map<string, number>();
 
       for (const rec of records) {
-        const token = (rec.token || "").toLowerCase();
-        const value = parseFloat(rec.value) || 0;
+        const tokenLower = (rec.token || "").toLowerCase();
+        const value = parseEnvioNumber(rec.value);
 
-        if (token === "staked usde" && value > susdeValue) {
-          susdeValue = value;
-        }
-        if (token === "savings usds" && value > susdsValue) {
-          susdsValue = value;
-        }
-        // Capture LP positions (first occurrence = latest date)
-        if (
-          isLpToken(rec.token) &&
-          rec.category === "Protocol-Owned Liquidity" &&
-          !lpMap.has(rec.token)
-        ) {
-          lpMap.set(rec.token, value);
+        if (tokenLower === "staked usde (susde)") susdeValue += value;
+        else if (tokenLower === "savings usds (susds)") susdsValue += value;
+
+        if (rec.category === "Protocol-Owned Liquidity") {
+          lpMap.set(rec.token, (lpMap.get(rec.token) ?? 0) + value);
         }
       }
 
       const lpPositions: LpPosition[] = [];
       for (const [name, value] of lpMap) {
-        if (value > 1000) {
-          lpPositions.push({ name, value });
-        }
+        if (value > 1000) lpPositions.push({ name, value });
       }
+      lpPositions.sort((a, b) => b.value - a.value);
 
       return { susdeValue, susdsValue, lpPositions };
     },

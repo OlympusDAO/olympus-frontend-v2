@@ -30,9 +30,11 @@ Requires Node.js 24+ and pnpm.
 | `VITE_OLYMPUS_UNITS_API_ENDPOINT` | Yes | Olympus Units API base URL (runtime requests) |
 | `VITE_OLYMPUS_SAFE_API_KEY` | Yes | Safe Transaction Service API key for submitting multisig transactions |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID |
-| `VITE_POSTHOG_API_KEY` | No | PostHog project API key for product analytics |
-| `VITE_POSTHOG_HOST` | No | PostHog host URL (defaults to `https://eu.i.posthog.com`) |
+| `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN` | No | PostHog project token for product analytics |
+| `VITE_PUBLIC_POSTHOG_HOST` | No | PostHog host URL (defaults to `https://us.i.posthog.com`) |
+| `VITE_PUBLIC_POSTHOG_INGEST_HOST` | No | PostHog ingest host URL; defaults to `VITE_PUBLIC_POSTHOG_HOST` locally, or `/panoptes` behind the Vercel rewrite |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
+| `VITE_TREASURY_SUBGRAPH_METRICS_API` | No | Treasury subgraph metrics API override; omitted values use the treasury client default |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
 
 > **Why are the `VITE_*` keys public?**
@@ -138,7 +140,7 @@ See [CLAUDE.md](./CLAUDE.md) for coding conventions and architectural guidelines
 
 ## Security Hardening
 
-- **Package manager enforcement:** pnpm is required via `packageManager`, `preinstall` (`only-allow`), and `.npmrc` strict settings.
+- **Package manager enforcement:** pnpm is required via `packageManager` and package-manager engines.
 - **Frozen lockfile by default:** installs fail if `pnpm-lock.yaml` is out of sync, which keeps CI and local installs deterministic.
 - **CI coverage:** `.github/workflows/ci.yml` runs `lint:check`, build, and tests (when a `test` script is present).
 - **Dependency audit:** `.github/workflows/audit.yml` runs `pnpm audit --audit-level moderate` on pull requests.

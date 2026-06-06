@@ -1,48 +1,43 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants.ts";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
 
-export interface LaggingChain {
+export interface TreasuryIndexingProgress {
   chain: string;
   date: string;
+  block: number;
+  timestamp: number;
   daysBehind: number;
 }
 
 const MS_PER_DAY = 86_400_000;
 
 export function useTreasuryDataFreshness() {
-  return useQuery<LaggingChain[]>({
-    queryKey: ["treasuryDataFreshness"],
+  return useQuery<TreasuryIndexingProgress[]>({
+    queryKey: ["treasuryDataFreshness", "treasury-subgraph"],
     queryFn: async () => {
-      const params = encodeURIComponent(JSON.stringify({ ignoreCache: false }));
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/latest/tokenRecords?wg_variables=${params}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch treasury data freshness");
+      const bounds = await treasurySubgraphClient.getBounds();
+      const latestMs = Date.parse(bounds.latestDate);
+      const progress = bounds.indexingProgress?.chains ?? {};
 
-      const json = await response.json();
-      const records: Array<{ blockchain: string; date: string }> = json.data ?? [];
+      return Object.entries(progress)
+        .map(([chain, chainProgress]) => {
+          if (!chainProgress) return undefined;
+          const chainMs = Date.parse(chainProgress.date);
+          const daysBehind =
+            Number.isFinite(latestMs) && Number.isFinite(chainMs)
+              ? Math.max(0, Math.round((latestMs - chainMs) / MS_PER_DAY))
+              : 0;
 
-      const latestByChain = new Map<string, string>();
-      for (const r of records) {
-        const prev = latestByChain.get(r.blockchain);
-        if (!prev || r.date > prev) latestByChain.set(r.blockchain, r.date);
-      }
-
-      let latestDate = "";
-      for (const date of latestByChain.values()) {
-        if (date > latestDate) latestDate = date;
-      }
-
-      const latestMs = latestDate ? Date.parse(latestDate) : 0;
-      const lagging: LaggingChain[] = [];
-      for (const [chain, date] of latestByChain) {
-        if (date === latestDate) continue;
-        const daysBehind = Math.round((latestMs - Date.parse(date)) / MS_PER_DAY);
-        lagging.push({ chain, date, daysBehind });
-      }
-      lagging.sort((a, b) => b.daysBehind - a.daysBehind);
-
-      return lagging;
+          return {
+            chain,
+            date: chainProgress.date,
+            block: chainProgress.block,
+            timestamp: chainProgress.timestamp,
+            daysBehind,
+          };
+        })
+        .filter((item): item is TreasuryIndexingProgress => item !== undefined)
+        .sort((a, b) => b.daysBehind - a.daysBehind || a.chain.localeCompare(b.chain));
     },
     staleTime: 300_000,
     refetchInterval: 600_000,

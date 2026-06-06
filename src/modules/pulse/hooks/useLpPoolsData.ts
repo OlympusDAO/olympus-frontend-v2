@@ -20,12 +20,16 @@ export interface LpPoolRow {
   ohmDepth: number;
 }
 
-// "Uniswap V3 OHM-sUSDS Liquidity Pool" → "Uniswap V3"
-// "Beradrome Kodiak OHM-HONEY LP" → "Beradrome Kodiak"
+// "UniswapV3 WETH-OHM" → "Uniswap V3"
 // "Camelot OHM-wETH Liquidity Pool" → "Camelot"
+// "Beradrome Kodiak OHM-HONEY LP" → "Beradrome Kodiak"
+// Envio dropped the "LP"/"Liquidity Pool" suffix on some UniV3 pools and
+// collapsed "Uniswap V3" → "UniswapV3"; restore the canonical spacing.
 function parseProtocolFromToken(token: string): string {
-  const match = token.match(/^(.+?)\s+[A-Za-z0-9]+-[A-Za-z0-9]+\s+(LP|Liquidity Pool)$/i);
-  return match ? match[1].trim() : token;
+  const withoutSuffix = token.replace(/\s+(LP|Liquidity Pool)$/i, "").trim();
+  const withoutPair = withoutSuffix.replace(/\s+[A-Za-z0-9]+-[A-Za-z0-9]+$/, "").trim();
+  const protocol = withoutPair || token;
+  return protocol.replace(/^UniswapV(\d)/i, "Uniswap V$1");
 }
 
 type DefiLlamaChartPoint = {
