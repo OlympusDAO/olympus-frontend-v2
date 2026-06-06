@@ -65,7 +65,7 @@ export const allChains = isTestnetMode
  * Custom RPC transports per chain.
  */
 export const transports: Record<number, Transport> = {
-  [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
+  [mainnet.id]: http("https://ethereum-rpc.publicnode.com", { batch: true }),
   [arbitrum.id]: http("https://arbitrum-rpc.publicnode.com"),
   [polygon.id]: http("https://polygon-bor-rpc.publicnode.com"),
   [optimism.id]: http("https://optimism-rpc.publicnode.com"),
