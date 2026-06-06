@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants.ts";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 interface TreasuryMetrics {
   ohmTotalSupply: number;
@@ -11,24 +12,36 @@ interface TreasuryMetrics {
   ohmPrice: number;
 }
 
+const EMPTY: TreasuryMetrics = {
+  ohmTotalSupply: 0,
+  ohmCirculatingSupply: 0,
+  ohmBackedSupply: 0,
+  treasuryMarketValue: 0,
+  treasuryLiquidBacking: 0,
+  treasuryLiquidBackingPerOhmBacked: 0,
+  ohmPrice: 0,
+};
+
 export function useTreasuryMetrics() {
   return useQuery<TreasuryMetrics>({
-    queryKey: ["treasuryMetrics"],
+    queryKey: ["treasuryMetrics", "treasury-subgraph"],
     queryFn: async () => {
-      const response = await fetch(`${TREASURY_API_URL}/operations/latest/metrics`);
-      if (!response.ok) throw new Error("Failed to fetch treasury metrics");
-
-      const response_data = await response.json();
-      const data = response_data.data || response_data;
+      const bounds = await treasurySubgraphClient.getBounds();
+      const rows = await treasurySubgraphClient.getDailyMetrics({
+        start: bounds.latestDate,
+        end: bounds.latestDate,
+      });
+      const row = rows.find((r) => r.crossChainComplete) ?? rows[0];
+      if (!row) return EMPTY;
 
       return {
-        ohmTotalSupply: data.ohmTotalSupply || 0,
-        ohmCirculatingSupply: data.ohmCirculatingSupply || 0,
-        ohmBackedSupply: data.ohmBackedSupply || 0,
-        treasuryMarketValue: data.treasuryMarketValue || 0,
-        treasuryLiquidBacking: data.treasuryLiquidBacking || 0,
-        treasuryLiquidBackingPerOhmBacked: data.treasuryLiquidBackingPerOhmBacked || 0,
-        ohmPrice: data.ohmPrice || 0,
+        ohmTotalSupply: parseEnvioNumber(row.ohmTotalSupply),
+        ohmCirculatingSupply: parseEnvioNumber(row.ohmCirculatingSupply),
+        ohmBackedSupply: parseEnvioNumber(row.ohmBackedSupply),
+        treasuryMarketValue: parseEnvioNumber(row.treasuryMarketValue),
+        treasuryLiquidBacking: parseEnvioNumber(row.treasuryLiquidBacking),
+        treasuryLiquidBackingPerOhmBacked: parseEnvioNumber(row.treasuryLiquidBackingPerOhmBacked),
+        ohmPrice: parseEnvioNumber(row.ohmPrice),
       };
     },
     staleTime: 60_000,
