@@ -104,6 +104,37 @@ const LTVCell = ({ ltv }: { ltv: number }) => {
   );
 };
 
+const ExpirationCell = ({ dueDate, depositPeriod }: { dueDate: number; depositPeriod: number }) => {
+  const now = Math.floor(Date.now() / 1000);
+  const secondsRemaining = Math.max(0, dueDate - now);
+  const daysRemaining = Math.floor(secondsRemaining / 86400);
+  const totalDays = depositPeriod * 30;
+  const progress =
+    totalDays > 0 ? Math.max(0, Math.min(100, ((totalDays - daysRemaining) / totalDays) * 100)) : 0;
+  const indicatorColor =
+    progress >= 75 ? "text-red" : progress >= 50 ? "text-orange" : "text-green";
+  const dueLabel = new Date(dueDate * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+
+  return (
+    <div className="flex items-center gap-2">
+      <CircularProgress
+        value={progress}
+        size={16}
+        strokeWidth={2}
+        trackColor="text-secondary/20"
+        indicatorColor={indicatorColor}
+      />
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs font-semibold whitespace-nowrap">{daysRemaining} days</span>
+        <span className="text-xs font-normal text-secondary-t">{dueLabel}</span>
+      </div>
+    </div>
+  );
+};
+
 const ActionsCell = ({
   loan,
   onRepay,
@@ -240,6 +271,16 @@ export const BorrowActiveLoans = () => {
         cell: ({ row }) => <span className="text-xs font-semibold">{row.original.borrowAPY}%</span>,
       }),
       columnHelper.display({
+        id: "expires",
+        header: "Expires",
+        cell: ({ row }) => (
+          <ExpirationCell
+            dueDate={row.original.dueDate}
+            depositPeriod={row.original.depositPeriod}
+          />
+        ),
+      }),
+      columnHelper.display({
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
@@ -329,6 +370,12 @@ export const BorrowActiveLoans = () => {
                     <div>
                       <span className="text-xs text-secondary-t">Borrow APY</span>
                       <div className="mt-1 text-xs font-semibold">{loan.borrowAPY}%</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-secondary-t">Expires</span>
+                      <div className="mt-1">
+                        <ExpirationCell dueDate={loan.dueDate} depositPeriod={loan.depositPeriod} />
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2">

@@ -50,6 +50,11 @@ const EVENT_COLOR = "var(--red)";
 
 const CHART_EVENTS = [{ date: "2025-02-26", label: "V1 Migrator", color: EVENT_COLOR }];
 
+function formatIndexingTimestamp(timestamp: number): string {
+  const timestampMs = timestamp > 1_000_000_000_000 ? timestamp : timestamp * 1000;
+  return new Date(timestampMs).toISOString();
+}
+
 interface TooltipEntry {
   dataKey?: string;
   value?: number;
@@ -139,7 +144,7 @@ export function TreasuryBackingCard() {
           callout: lagging
             .map(
               (l) =>
-                `${l.chain} subgraph is ${l.daysBehind} day${l.daysBehind === 1 ? "" : "s"} behind`,
+                `${l.chain}: ${l.date}, block ${l.block.toString()}, ${formatIndexingTimestamp(l.timestamp)}`,
             )
             .join("; "),
         }

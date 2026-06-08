@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { TREASURY_API_URL } from "@/lib/constants.ts";
+import { treasurySubgraphClient } from "@/lib/treasury-subgraph-client";
+import { parseEnvioNumber } from "@/lib/utils/envio";
 
 export interface GohmPriceHistory {
   dataPoints: Array<{ date: string; price: number }>;
@@ -7,27 +8,17 @@ export interface GohmPriceHistory {
 
 export function useGohmPriceHistory() {
   return useQuery<GohmPriceHistory>({
-    queryKey: ["gohmPriceHistory"],
+    queryKey: ["gohmPriceHistory", "treasury-subgraph"],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
-      const params = JSON.stringify({
-        startDate,
-        ignoreCache: false,
-      });
+      const start = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
+      const rows = await treasurySubgraphClient.getDailyMetrics({ start, autoPaginate: true });
 
-      const response = await fetch(
-        `${TREASURY_API_URL}/operations/paginated/metrics?wg_variables=${encodeURIComponent(params)}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch gOHM price history");
-
-      const json = await response.json();
-      const records: Array<{ date: string; gOhmPrice: number }> = json.data ?? [];
-
-      records.sort((a, b) => a.date.localeCompare(b.date));
-
-      const dataPoints = records
-        .filter((r) => (r.gOhmPrice ?? 0) > 0)
-        .map((r) => ({ date: r.date, price: r.gOhmPrice }));
+      const dataPoints = rows
+        .map((r) => ({
+          date: r.date,
+          price: parseEnvioNumber(r.gOhmPrice),
+        }))
+        .filter((p) => p.price > 0);
 
       return { dataPoints };
     },

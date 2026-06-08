@@ -1,5 +1,5 @@
 import { useReadContract, useChainId } from "wagmi";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
+import { ContractName, getContractAddress } from "@/lib/contracts";
 import ConvertibleDepositAuctioneerAbi from "@/abis/ConvertibleDepositAuctioneer";
 import { useRef, useEffect } from "react";
 
@@ -26,9 +26,7 @@ export function useCurrentTick({ depositPeriod, enabled = true }: UseCurrentTick
     }
   }, [depositPeriod]);
 
-  const contractAddress = chainId
-    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
-    : undefined;
+  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId);
 
   const {
     data: tickData,

@@ -1,31 +1,40 @@
-minimumReleaseAge: 10080
-preferFrozenLockfile: true
 engineStrict: true
-strictDepBuilds: true
-blockExoticSubdeps: true
 ignoredBuiltDependencies:
   - '@swc/core'
   - esbuild
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # Allow the React Router security release to bypass the freshness window.
+  - "react-router@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
+  - "react-router-dom@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
+  - "@olympusdao/treasury-subgraph-client@3.0.0" # TODO(2026-06-04): remove when >=7 days old.
 onlyBuiltDependencies:
   - "@posthog/cli@0.7.11"
   - "bufferutil@4.1.0"
   - "core-js@3.49.0"
   - "keccak@3.0.4"
-  - "protobufjs@7.5.6"
+  - "protobufjs@7.5.8"
   - "utf-8-validate@5.0.10"
 overrides:
-  "@protobufjs/utf8": "^1.1.1"
-  "axios": "^1.15.2"
-  "defu": "6.1.5"
-  "fast-uri": "^3.1.1"
-  "h3": "1.15.11"
-  "hono": "^4.12.16"
-  "lodash": "4.18.1"
+  "@protobufjs/utf8@<1.1.1": "^1.1.1"
+  "axios@<1.15.2": "^1.15.2"
+  "brace-expansion@<5.0.6": "^5.0.6"
+  "defu@<6.1.5": "6.1.5"
+  "fast-uri@<3.1.1": "^3.1.1"
+  "h3@<1.15.11": "1.15.11"
+  "hono@<4.12.21": "^4.12.21"
+  "lodash@<4.18.1": "4.18.1"
   "picomatch@<2.3.2": "2.3.2"
   "picomatch@>=4.0.0 <4.0.4": "4.0.4"
-  "postcss": "^8.5.10"
-  "protobufjs": "^7.5.6"
-  "rollup": "4.59.0"
-  "socket.io-parser": "4.2.6"
-  "vite": "7.3.2"
-  "yaml": "2.8.3"
+  "postcss@<8.5.10": "^8.5.10"
+  "protobufjs@<7.5.8": "^7.5.8"
+  "react-router@<7.16.0": "^7.16.0"
+  "react-router-dom@<7.16.0": "^7.16.0"
+  "rollup@<4.59.0": "4.59.0"
+  "socket.io-parser@<4.2.6": "4.2.6"
+  "uuid@<11.1.1": "^11.1.1"
+  "vite@<7.3.2": "7.3.2"
+  "ws@<8.20.1": "^8.20.1"
+  "yaml@<2.8.3": "2.8.3"
+preferFrozenLockfile: true
+strictDepBuilds: true

@@ -20,7 +20,10 @@ const PERCENT_FORMAT = {
 } as const;
 
 function stripLpSuffix(name: string): string {
-  return name.replace(/ Liquidity Pool$/i, "").replace(/ LP$/i, "");
+  return name
+    .replace(/ Liquidity Pool$/i, "")
+    .replace(/ LP$/i, "")
+    .replace(/^UniswapV(\d)/i, "Uniswap V$1");
 }
 
 const SKELETON_ROWS = [

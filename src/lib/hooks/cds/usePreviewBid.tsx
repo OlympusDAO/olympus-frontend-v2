@@ -1,5 +1,5 @@
 import { useReadContract, useChainId } from "wagmi";
-import { ContractName, requireContractAddress } from "@/lib/contracts";
+import { ContractName, getContractAddress } from "@/lib/contracts";
 import ConvertibleDepositAuctioneerAbi from "@/abis/ConvertibleDepositAuctioneer";
 import { parseEther } from "viem";
 
@@ -12,9 +12,7 @@ interface UsePreviewBidParams {
 export function usePreviewBid({ depositPeriod, bidAmount, enabled = true }: UsePreviewBidParams) {
   const chainId = useChainId();
 
-  const contractAddress = chainId
-    ? requireContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId)
-    : undefined;
+  const contractAddress = getContractAddress(ContractName.CONVERTIBLE_DEPOSIT_AUCTIONEER, chainId);
 
   // Convert bidAmount to wei (18 decimals for USDS)
   const bidAmountWei =

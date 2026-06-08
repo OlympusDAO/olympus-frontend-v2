@@ -79,11 +79,10 @@ export const RedeemModal: React.FC<RedeemModalProps> = ({ isOpen, onClose, token
   const { depositManagerAddress } = useDepositManager(facilityAddress);
 
   // Get the target contract address based on redemption type
-  const targetContractAddress = chainId
-    ? redemptionType === "instant"
+  const targetContractAddress =
+    redemptionType === "instant"
       ? depositManagerAddress
-      : requireContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId)
-    : undefined;
+      : getContractAddress(ContractName.DEPOSIT_REDEMPTION_VAULT, chainId);
 
   const { allowance } = useFlexibleReceiptTokenAllowance(
     tokenId,

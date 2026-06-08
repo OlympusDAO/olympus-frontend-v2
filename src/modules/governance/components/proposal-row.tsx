@@ -87,8 +87,9 @@ export function ProposalRow({
   const approvalForSegment = approvalPercent;
   const approvalAgainstSegment = 100 - approvalPercent;
 
-  // Quorum bar segments: forVotes relative to totalSupply
-  const quorumForSegment = quorumActual;
+  // Quorum bar segments: render the filled cells in green once quorum is met,
+  // red while still under quorum. Mirrors the inside-proposal view in <VoteSidebar/>.
+  const aboveQuorum = details ? details.forCount > details.quorumVotes : false;
 
   return (
     <TableRow
@@ -132,8 +133,8 @@ export function ProposalRow({
           <ApprovalQuorumBar
             percentage={quorumActual}
             threshold={quorumThreshold}
-            forPercent={quorumForSegment}
-            againstPercent={0}
+            forPercent={aboveQuorum ? quorumActual : 0}
+            againstPercent={aboveQuorum ? 0 : quorumActual}
           />
         )}
       </TableCell>

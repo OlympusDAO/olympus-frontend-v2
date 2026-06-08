@@ -1,4 +1,5 @@
-import { createHashRouter, Navigate } from "react-router-dom";
+import { createHashRouter, Navigate, useParams } from "react-router-dom";
+import { mainnet, sepolia } from "viem/chains";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";
 import { BalancesPage } from "@/modules/ohm/pages/balance-page.tsx";
@@ -23,25 +24,68 @@ import { OverviewPage } from "@/modules/pulse/pages/overview-page";
 import { TreasuryPage } from "@/modules/pulse/pages/treasury-page";
 import { ProtocolPage } from "@/modules/pulse/pages/protocol-page.tsx";
 import { FeedPage } from "@/modules/pulse/pages/feed-page.tsx";
+import { ChainGuard } from "@/components/chain-guard";
+import { RouteErrorElement } from "@/components/route-error-element";
+
+// ── Per-feature supported-chain declarations ─────────────────────────────────
+// Pages whose underlying contracts only exist on a subset of chains get wrapped
+// in <ChainGuard>. Multi-chain pages (bridge, balances, pulse) intentionally
+// don't get guarded — they read from many chains on purpose.
+const MAINNET_AND_SEPOLIA = [mainnet.id, sepolia.id] as const;
+const MAINNET_ONLY = [mainnet.id] as const;
+
+const cdsGuard = (el: React.ReactNode) => (
+  <ChainGuard supportedChains={MAINNET_AND_SEPOLIA} featureName="Convertible Deposits">
+    {el}
+  </ChainGuard>
+);
+
+const coolerV2Guard = (el: React.ReactNode) => (
+  <ChainGuard supportedChains={MAINNET_AND_SEPOLIA} featureName="Cooler Loans">
+    {el}
+  </ChainGuard>
+);
+
+const coolerV1Guard = (el: React.ReactNode) => (
+  <ChainGuard supportedChains={MAINNET_ONLY} featureName="Cooler V1">
+    {el}
+  </ChainGuard>
+);
+
+const ohmContractsGuard = (el: React.ReactNode) => (
+  <ChainGuard supportedChains={MAINNET_AND_SEPOLIA} featureName="This page">
+    {el}
+  </ChainGuard>
+);
+
+const governanceGuard = (el: React.ReactNode) => (
+  <ChainGuard supportedChains={MAINNET_ONLY} featureName="Governance">
+    {el}
+  </ChainGuard>
+);
 
 export const router = createHashRouter([
   {
     path: "/",
     Component: AppLayout,
+    errorElement: <RouteErrorElement />,
     children: [
       // Redirect root to Pulse overview
       { index: true, element: <Navigate to="/pulse/overview" replace /> },
 
-      // Pulse section
+      // Pulse section — reads aggregated data from many chains, no guard
       { path: "pulse/overview", element: <OverviewPage /> },
       { path: "pulse/treasury", element: <TreasuryPage /> },
       { path: "pulse/protocol", element: <ProtocolPage /> },
       { path: "pulse/feed", element: <FeedPage /> },
 
       // OHM section
+      // - balances: intentionally multi-chain
+      // - bridge: intentionally multi-chain
+      // - wrap / utility: depend on mainnet/sepolia contracts
       { path: "ohm/balances", element: <BalancesPage /> },
-      { path: "ohm/wrap", element: <WrapPage /> },
-      { path: "ohm/utility", element: <UtilityPage /> },
+      { path: "ohm/wrap", element: ohmContractsGuard(<WrapPage />) },
+      { path: "ohm/utility", element: ohmContractsGuard(<UtilityPage />) },
       { path: "ohm/bridge", element: <BridgePage /> },
 
       // Legacy redirects
@@ -56,25 +100,28 @@ export const router = createHashRouter([
       { path: "stake", element: <Navigate to="/ohm/wrap" replace /> },
       { path: "wrap", element: <Navigate to="/ohm/wrap" replace /> },
 
-      // Cooler section
-      { path: "cooler/borrow", element: <CoolerBorrowPage /> },
-      { path: "cooler/v1", element: <CoolerV1Page /> },
+      // Cooler section — only guard pages that need on-chain writes/reads from
+      // the user's wallet. Metrics and explorer are subgraph reads that work
+      // anywhere.
+      { path: "cooler/borrow", element: coolerV2Guard(<CoolerBorrowPage />) },
+      { path: "cooler/v1", element: coolerV1Guard(<CoolerV1Page />) },
       { path: "cooler/explorer", element: <CoolerActivityLayout /> },
       { path: "cooler/activity", element: <Navigate to="/cooler/explorer" replace /> },
       { path: "cooler/metrics", element: <CoolerMetricsPage /> },
 
-      // CDs section
-      { path: "cds/deposit", element: <CDPage /> },
-      { path: "cds/borrow", element: <BorrowPage /> },
+      // CDs section — metrics is a subgraph read, only deposit/borrow need a guard.
+      { path: "cds/deposit", element: cdsGuard(<CDPage />) },
+      { path: "cds/borrow", element: cdsGuard(<BorrowPage />) },
       { path: "cds/metrics", element: <CDMetricsPage /> },
       { path: "cds/statistics", element: <Navigate to="/cds/metrics" replace /> },
       { path: "cds/activity", element: <StubPage title="Activity" /> },
 
-      // DAO section
-      { path: "dao/vote", element: <ProposalsPage /> },
-      { path: "dao/vote/:id", element: <ProposalPage /> },
-      { path: "dao/delegate", element: <DelegatesPage /> },
-      { path: "dao/delegate/:id", element: <DelegateDetailPage /> },
+      // DAO section — voting and delegating write to Governor Bravo (mainnet-only).
+      // Contract parameters is a read-only view, no guard needed.
+      { path: "dao/vote", element: governanceGuard(<ProposalsPage />) },
+      { path: "dao/vote/:id", element: governanceGuard(<ProposalPage />) },
+      { path: "dao/delegate", element: governanceGuard(<DelegatesPage />) },
+      { path: "dao/delegate/:id", element: governanceGuard(<DelegateDetailPage />) },
       { path: "dao/contract-parameters", element: <ContractParametersPage /> },
 
       // Engage
@@ -86,14 +133,35 @@ export const router = createHashRouter([
         ],
       },
 
-      // Legacy governance redirects
+      // Legacy governance redirects.
+      // Note: <Navigate to="…/:id" /> does NOT interpolate :id — it navigates to the
+      // literal string. The wrapper components below pull the param via useParams()
+      // and build the real destination so external proposal/delegate links still land
+      // on the right page in the new app.
       { path: "governance", element: <Navigate to="/dao/vote" replace /> },
-      { path: "governance/proposals/:id", element: <Navigate to="/dao/vote/:id" replace /> },
+      { path: "governance/proposals/:id", element: <RedirectProposal /> },
       { path: "governance/delegate", element: <Navigate to="/dao/delegate" replace /> },
-      { path: "governance/delegate/:id", element: <Navigate to="/dao/delegate/:id" replace /> },
+      { path: "governance/delegate/:id", element: <RedirectDelegate /> },
+      // manageDelegation existed in v1 but has no dedicated page in v2 — drop users
+      // on the delegates list so they can pick a delegate from there.
+      { path: "governance/manageDelegation", element: <Navigate to="/dao/delegate" replace /> },
+      // Catch any other /governance/* deep links rather than letting them fall through
+      // to the global catch-all (which would silently land on Pulse Overview).
+      { path: "governance/*", element: <Navigate to="/dao/vote" replace /> },
 
       // Catch-all
       { path: "*", element: <Navigate to="/pulse/overview" replace /> },
     ],
   },
 ]);
+
+function RedirectProposal() {
+  const { id } = useParams<{ id: string }>();
+  // No id (shouldn't happen for this route) → fall back to the list.
+  return <Navigate to={id ? `/dao/vote/${id}` : "/dao/vote"} replace />;
+}
+
+function RedirectDelegate() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/dao/delegate/${id}` : "/dao/delegate"} replace />;
+}
