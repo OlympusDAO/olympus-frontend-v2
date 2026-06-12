@@ -7,6 +7,7 @@ import {
 
 export interface LpPosition {
   name: string;
+  displayName: string;
   blockchain: string;
   value: number;
   valueExcludingOhm: number;
@@ -14,6 +15,8 @@ export interface LpPosition {
 
 export interface ReserveHolding {
   token: string;
+  tokenAddress?: string;
+  contractName?: string;
   blockchain: string;
   category: string;
   balance: number;
@@ -33,16 +36,70 @@ interface ReserveBalances {
 // (e.g. Arbitrum), so a yesterday-only window drops live positions.
 const LOOKBACK_DAYS = 30;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const NATIVE_TOKEN_SYMBOL_BY_CHAIN: Record<string, string> = {
-  Arbitrum: "ETH",
-  Base: "ETH",
-  Berachain: "BERA",
-  BSC: "BNB",
-  Ethereum: "ETH",
-  Fantom: "FTM",
-  Optimism: "ETH",
-  Polygon: "POL",
+export const EVM_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+export const BERACHAIN_NATIVE_TOKEN_ADDRESS = "0x6969696969696969696969696969696969696969";
+
+type NativeTokenContract = {
+  displayName: string;
+  contractName: string;
+  tokenAddress: string;
 };
+
+const NATIVE_TOKEN_CONTRACT_BY_CHAIN: Record<string, NativeTokenContract> = {
+  Arbitrum: {
+    displayName: "ETH",
+    contractName: "ETH",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Base: {
+    displayName: "ETH",
+    contractName: "ETH",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Berachain: {
+    displayName: "BERA",
+    contractName: "WBERA",
+    tokenAddress: BERACHAIN_NATIVE_TOKEN_ADDRESS,
+  },
+  BSC: {
+    displayName: "BNB",
+    contractName: "BNB",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Ethereum: {
+    displayName: "ETH",
+    contractName: "ETH",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Fantom: {
+    displayName: "FTM",
+    contractName: "FTM",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Optimism: {
+    displayName: "ETH",
+    contractName: "ETH",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+  Polygon: {
+    displayName: "POL",
+    contractName: "POL",
+    tokenAddress: EVM_NATIVE_TOKEN_ADDRESS,
+  },
+};
+
+function isZeroAddress(value?: string | null): boolean {
+  return value?.toLowerCase() === ZERO_ADDRESS;
+}
+
+export function getNativeTokenContract(
+  token: string,
+  blockchain?: string,
+  tokenAddress?: string | null,
+): NativeTokenContract | undefined {
+  if (!isZeroAddress(token) && !isZeroAddress(tokenAddress)) return undefined;
+  return NATIVE_TOKEN_CONTRACT_BY_CHAIN[blockchain ?? ""];
+}
 
 export function getDisplayTokenName(
   token: string,
@@ -52,11 +109,9 @@ export function getDisplayTokenName(
   if (token.startsWith("USDS - Borrowed Through Cooler Loans"))
     return "Cooler Loan USDS Receivables";
   if (token.startsWith("DAI - Borrowed Through Cooler Loans")) return "Cooler Loan DAI Receivables";
-  const isNativeTokenRecord =
-    token.toLowerCase() === ZERO_ADDRESS || tokenAddress?.toLowerCase() === ZERO_ADDRESS;
-  if (isNativeTokenRecord) {
-    return NATIVE_TOKEN_SYMBOL_BY_CHAIN[blockchain ?? ""] ?? "Native Token";
-  }
+  const nativeTokenContract = getNativeTokenContract(token, blockchain, tokenAddress);
+  if (nativeTokenContract) return nativeTokenContract.displayName;
+  if (isZeroAddress(token) || isZeroAddress(tokenAddress)) return "Native Token";
   return token;
 }
 
@@ -79,8 +134,18 @@ export function useReserveBalances() {
         const balance = parseEnvioNumber(rec.balance);
         const valueExcludingOhm = parseEnvioNumber(rec.valueExcludingOhm);
         const backingContribution = rec.isLiquid ? valueExcludingOhm : 0;
+        const nativeTokenContract = getNativeTokenContract(
+          rec.token,
+          rec.blockchain,
+          rec.tokenAddress,
+        );
         const token = getDisplayTokenName(rec.token, rec.blockchain, rec.tokenAddress);
-        const holdingKey = `${token}|${rec.blockchain}|${rec.category}`;
+        const holdingTokenAddress =
+          nativeTokenContract?.tokenAddress ?? rec.tokenAddress ?? undefined;
+        const holdingContractName = nativeTokenContract?.contractName;
+        const holdingKey = `${
+          holdingTokenAddress ?? token
+        }|${holdingContractName ?? ""}|${token}|${rec.blockchain}|${rec.category}`;
         const existingHolding = holdingAgg.get(holdingKey);
 
         if (existingHolding) {
@@ -91,6 +156,8 @@ export function useReserveBalances() {
         } else {
           holdingAgg.set(holdingKey, {
             token,
+            tokenAddress: holdingTokenAddress,
+            contractName: holdingContractName,
             blockchain: rec.blockchain,
             category: rec.category,
             balance,
@@ -110,6 +177,7 @@ export function useReserveBalances() {
           } else {
             lpAgg.set(lpKey, {
               name: rec.token,
+              displayName: getDisplayTokenName(rec.token, rec.blockchain, rec.tokenAddress),
               blockchain: rec.blockchain,
               value,
               valueExcludingOhm,

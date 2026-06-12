@@ -10,6 +10,7 @@ import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
 
 export interface LpPoolRow {
   name: string;
+  displayName: string;
   protocol: string;
   chain: string;
   chainId: number;
@@ -123,6 +124,7 @@ export function useLpPoolsData() {
 
         return {
           name: pos.name,
+          displayName: pos.displayName,
           protocol: parseProtocolFromToken(pos.name),
           chain: pos.blockchain,
           chainId,

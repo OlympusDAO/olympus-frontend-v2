@@ -49,7 +49,7 @@ export function useWeeklyRevenue() {
         const weekly = ((lp.value || 0) * (apy / 100)) / 52;
         lpFeesWeekly += weekly;
         lpBreakdown.push({
-          name: lp.name,
+          name: lp.displayName,
           value: lp.value,
           apy,
           weeklyAmount: weekly,

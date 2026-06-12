@@ -141,7 +141,7 @@ export function TreasuryPolTable() {
                   >
                     <td className="py-2 pr-3">
                       <span className="line-clamp-1 text-xs font-semibold text-primary-t">
-                        {stripLpSuffix(row.name)}
+                        {stripLpSuffix(row.displayName)}
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-xs text-secondary-t">{row.protocol}</td>
