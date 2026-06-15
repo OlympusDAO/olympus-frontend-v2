@@ -95,22 +95,31 @@ export const BorrowRepayLoanModal: React.FC<RepayLoanModalProps> = ({
     return (principal + interest).toFixed(2);
   }, [loanData]);
 
-  // Resolve the actual amount to send for the current input. When the user intends a full
-  // repayment (entered amount >= exact outstanding debt, e.g. via "Max"), send the buffered
-  // `fullRepayAmount` so the loan zeroes out in a single transaction. Otherwise send exactly
-  // what was entered.
+  // Whether the entered amount means "repay the whole loan" (>= exact outstanding debt, e.g.
+  // via "Max"). Such repayments must use the buffered `fullRepayAmount` to avoid leaving dust.
+  const isFullRepayIntent = useMemo(() => {
+    if (!repayAmount || repayAmount === "0" || exactDebt === 0n) return false;
+    try {
+      return parseEther(repayAmount) >= exactDebt;
+    } catch {
+      return false;
+    }
+  }, [repayAmount, exactDebt]);
+
+  // Resolve the actual amount to send for the current input. For a full repayment, send the
+  // buffered `fullRepayAmount` so the loan zeroes out in a single transaction. While that buffer
+  // is still loading (ERC4626 reads in flight) this stays `undefined`, which disables submission
+  // so we never fall through to an unbuffered, dust-leaving repay. Partial repayments send
+  // exactly what was entered.
   const repayAmountWei = useMemo(() => {
     if (!repayAmount || repayAmount === "0") return undefined;
     try {
-      const entered = parseEther(repayAmount);
-      if (exactDebt > 0n && entered >= exactDebt && fullRepayAmount !== undefined) {
-        return fullRepayAmount;
-      }
-      return entered;
+      if (isFullRepayIntent) return fullRepayAmount;
+      return parseEther(repayAmount);
     } catch {
       return undefined;
     }
-  }, [repayAmount, exactDebt, fullRepayAmount]);
+  }, [repayAmount, isFullRepayIntent, fullRepayAmount]);
 
   // For the "Max" button: repay the full debt (exact, full precision) when the balance covers
   // it, otherwise repay the entire balance. formatEther produces a minimal decimal string.
@@ -139,11 +148,15 @@ export const BorrowRepayLoanModal: React.FC<RepayLoanModalProps> = ({
     try {
       const entered = parseEther(repayAmount);
       const balance = usdsBalance ?? 0n;
-      return entered > 0n && entered <= exactDebt && entered <= balance;
+      if (entered <= 0n || entered > exactDebt || entered > balance) return false;
+      // Keep a full repayment disabled until its buffered amount is ready, so the click can't
+      // fall through to an unbuffered (dust-leaving) repay.
+      if (isFullRepayIntent && fullRepayAmount === undefined) return false;
+      return true;
     } catch {
       return false;
     }
-  }, [repayAmount, exactDebt, usdsBalance]);
+  }, [repayAmount, exactDebt, usdsBalance, isFullRepayIntent, fullRepayAmount]);
 
   const handleApprove = async () => {
     if (!repayAmountWei || !usdsTokenAddress || !targetContractAddress || !loanData) return;
