@@ -8,6 +8,10 @@ minimumReleaseAgeExclude:
   - "react-router@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
   - "react-router-dom@7.16.0" # TODO(2026-06-04): remove when >=7 days old.
   - "@olympusdao/treasury-subgraph-client@3.0.0" # TODO(2026-06-04): remove when >=7 days old.
+  # Allow the esbuild security release (GHSA-gv7w-rqvm-qjhr, GHSA-g7r4-m6w7-qqqr) to bypass the freshness window.
+  # Includes the per-platform @esbuild/* optional deps, all published alongside 0.28.1.
+  - "esbuild@0.28.1" # TODO(2026-06-18): remove when >=7 days old.
+  - "@esbuild/*" # TODO(2026-06-18): remove when >=7 days old.
 onlyBuiltDependencies:
   - "@posthog/cli@0.7.11"
   - "bufferutil@4.1.0"
@@ -20,6 +24,7 @@ overrides:
   "axios@<1.15.2": "^1.15.2"
   "brace-expansion@<5.0.6": "^5.0.6"
   "defu@<6.1.5": "6.1.5"
+  "esbuild@<0.28.1": "^0.28.1"
   "fast-uri@<3.1.1": "^3.1.1"
   "h3@<1.15.11": "1.15.11"
   "hono@<4.12.21": "^4.12.21"
