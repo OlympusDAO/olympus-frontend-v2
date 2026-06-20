@@ -13,12 +13,12 @@ import type {
   MigrationAction,
   MigrationStatus,
 } from "@/modules/ohm/components/migration-action.ts";
-import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
-import { BalanceWalletValue } from "../components/balance-wallet-value.tsx";
-import { BalanceTable } from "../components/balance-table";
-import { BalanceCards } from "../components/balance-cards";
-import { BalanceEmptyState } from "../components/balance-empty-state.tsx";
-import { BalanceDisconnectedState } from "../components/balance-disconnected-state.tsx";
+import { BalanceInfoCards } from "@/modules/ohm/components/balance-info-cards.tsx";
+import { BalanceWalletValue } from "@/modules/ohm/components/balance-wallet-value.tsx";
+import { BalanceTable } from "@/modules/ohm/components/balance-table";
+import { BalanceCards } from "@/modules/ohm/components/balance-cards";
+import { BalanceEmptyState } from "@/modules/ohm/components/balance-empty-state.tsx";
+import { BalanceDisconnectedState } from "@/modules/ohm/components/balance-disconnected-state.tsx";
 import type { IconName } from "@/components/icon";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 
