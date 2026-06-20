@@ -177,6 +177,7 @@ export function UnstakeSohmV1Modal({ isOpen, onClose }: UnstakeSohmV1ModalProps)
                     {step.hash && (
                       <Link
                         target="_blank"
+                        rel="noopener noreferrer"
                         to={`${blockExplorerTxBaseUrl}${step.hash}`}
                         className="flex items-center gap-1 text-xs text-blue hover:text-blue-800 mt-1"
                       >
@@ -253,6 +254,7 @@ export function UnstakeSohmV1Modal({ isOpen, onClose }: UnstakeSohmV1ModalProps)
                         {step.isCompleted && step.hash && (
                           <Link
                             target="_blank"
+                            rel="noopener noreferrer"
                             to={`${blockExplorerTxBaseUrl}${step.hash}`}
                             className="flex items-center gap-1 text-xs text-blue hover:text-blue-800 mt-1"
                           >

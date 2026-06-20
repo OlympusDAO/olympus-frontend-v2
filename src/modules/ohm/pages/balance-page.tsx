@@ -9,7 +9,10 @@ import { useV1MigrationInfo } from "@/lib/hooks/useV1MigrationInfo";
 import { MigrateOhmModal } from "@/components/migrate-ohm-modal";
 import { UnstakeSohmV1Modal } from "@/components/unstake-sohm-v1-modal";
 import { UnwrapWsohmModal } from "@/components/unwrap-wsohm-modal";
-import type { MigrationAction, MigrationStatus } from "../components/migration-action.ts";
+import type {
+  MigrationAction,
+  MigrationStatus,
+} from "@/modules/ohm/components/migration-action.ts";
 import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
 import { BalanceWalletValue } from "../components/balance-wallet-value.tsx";
 import { BalanceTable } from "../components/balance-table";
@@ -35,6 +38,8 @@ export function BalancesPage() {
   const {
     migrator,
     isEnabled: migratorEnabled,
+    isActive: migratorActive,
+    isClaimValid,
     remaining,
     isLoading: migrationInfoLoading,
   } = useV1MigrationInfo(claim);
@@ -42,9 +47,10 @@ export function BalancesPage() {
   const migrationStatus: MigrationStatus | undefined = useMemo(() => {
     if (mock || !isConnected) return undefined;
     if (claimLoading || migrationInfoLoading) return "loading";
-    if (!isEligible) return "ineligible";
-    // No migrator on this chain (e.g. connected to Arbitrum) or migration paused.
-    if (!migrator || migratorEnabled === false) return "not-live";
+    // Eligible = present in the snapshot AND not explicitly rejected by on-chain verifyClaim.
+    if (!isEligible || isClaimValid === false) return "ineligible";
+    // No migrator on this chain (e.g. connected to Arbitrum), policy inactive, or paused.
+    if (!migrator || migratorEnabled !== true || migratorActive !== true) return "not-live";
     if (remaining !== undefined && remaining === 0n) return "fully-migrated";
     return "ready";
   }, [
@@ -53,8 +59,10 @@ export function BalancesPage() {
     claimLoading,
     migrationInfoLoading,
     isEligible,
+    isClaimValid,
     migrator,
     migratorEnabled,
+    migratorActive,
     remaining,
   ]);
 

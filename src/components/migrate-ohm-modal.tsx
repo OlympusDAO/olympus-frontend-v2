@@ -14,6 +14,7 @@ import { usePreviewMigrate } from "@/lib/hooks/usePreviewMigrate";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName, getTokenAddress } from "@/lib/tokens";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import { formatTokenDisplay } from "@/lib/math";
 import type { MigrationClaim } from "@/lib/hooks/useMigrationClaim";
 
 interface MigrateOhmModalProps {
@@ -35,9 +36,7 @@ function formatTxHash(hash?: `0x${string}`) {
 }
 
 function formatOhm(value: bigint): string {
-  return Number(formatUnits(value, OHM_DECIMALS)).toLocaleString("en-US", {
-    maximumFractionDigits: 4,
-  });
+  return formatTokenDisplay(value, OHM_DECIMALS, { digits: 4 });
 }
 
 type Step = {
@@ -200,6 +199,7 @@ export function MigrateOhmModal({ isOpen, onClose, claim, remaining }: MigrateOh
                     {step.hash && (
                       <Link
                         target="_blank"
+                        rel="noopener noreferrer"
                         to={`${blockExplorerTxBaseUrl}${step.hash}`}
                         className="flex items-center gap-1 text-xs text-blue hover:text-blue-800 mt-1"
                       >
@@ -276,6 +276,7 @@ export function MigrateOhmModal({ isOpen, onClose, claim, remaining }: MigrateOh
                         {step.isCompleted && step.hash && (
                           <Link
                             target="_blank"
+                            rel="noopener noreferrer"
                             to={`${blockExplorerTxBaseUrl}${step.hash}`}
                             className="flex items-center gap-1 text-xs text-blue hover:text-blue-800 mt-1"
                           >

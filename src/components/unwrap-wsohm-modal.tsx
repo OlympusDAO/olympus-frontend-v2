@@ -11,6 +11,7 @@ import { useUnwrapWsohm } from "@/lib/hooks/useUnwrapWsohm";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import { formatTokenDisplay } from "@/lib/math";
 import WsOHMAbi from "@/abis/WsOHM";
 
 interface UnwrapWsohmModalProps {
@@ -60,11 +61,7 @@ export function UnwrapWsohmModal({ isOpen, onClose }: UnwrapWsohmModalProps) {
     query: { enabled: !!wsohmAddress && amountBigInt > 0n },
   });
   const receiveAmount =
-    sohmOut !== undefined
-      ? Number(formatUnits(sohmOut, SOHM_DECIMALS)).toLocaleString("en-US", {
-          maximumFractionDigits: 4,
-        })
-      : "0";
+    sohmOut !== undefined ? formatTokenDisplay(sohmOut, SOHM_DECIMALS, { digits: 4 }) : "0";
 
   const {
     unwrap,
@@ -109,6 +106,7 @@ export function UnwrapWsohmModal({ isOpen, onClose }: UnwrapWsohmModalProps) {
             {unwrapHash && (
               <Link
                 target="_blank"
+                rel="noopener noreferrer"
                 to={`${blockExplorerTxBaseUrl}${unwrapHash}`}
                 className="inline-flex items-center gap-1 text-sm text-blue hover:text-blue-800"
               >

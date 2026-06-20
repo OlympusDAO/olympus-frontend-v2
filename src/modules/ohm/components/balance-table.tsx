@@ -19,7 +19,10 @@ import { Icon, type IconName } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
-import { MIGRATION_TOOLTIP, type MigrationAction } from "./migration-action.ts";
+import {
+  MIGRATION_TOOLTIP,
+  type MigrationAction,
+} from "@/modules/ohm/components/migration-action.ts";
 
 type TokenEntry = {
   symbol: string;
