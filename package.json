@@ -17,7 +17,6 @@
     "codegen": "orval",
     "test": "vitest run",
     "test:watch": "vitest",
-    "shard:migration": "node scripts/shard-merkle-tree.ts",
     "test:tree": "node scripts/make-test-tree.ts",
     "fork:setup": "node scripts/fork-setup.ts",
     "sourcemap:upload": "posthog-cli sourcemap inject --directory ./dist/assets && posthog-cli sourcemap upload --directory ./dist/assets"
@@ -78,7 +77,6 @@
     "@types/node": "^24.0.5",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vercel/blob": "^2.4.0",
     "@vitejs/plugin-react-swc": "^3.10.2",
     "dotenv": "^17.3.1",
     "husky": "^9.1.7",

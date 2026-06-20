@@ -76,7 +76,8 @@ VITE_MAINNET_RPC_URL=http://localhost:8545 pnpm dev
 - `previewMigrate` returns ~1:1 but can round down 1 wei (OHM v1 → gOHM → OHM v2); the UI
   shows the previewed amount, not the input.
 - Each fork run is a clean slate. Re-run steps 1–3 to reset migrated amounts.
-- Production uses the real `tree.json` sharded to Vercel Blob via `pnpm shard:migration --upload`
-  with `VITE_MIGRATION_CLAIMS_BASE_URL` pointing at the Blob base — see the main plan.
+- Production shards are produced and uploaded from the **ohm-v1-balances** repo
+  (`pnpm merkle shard --upload`), which prints the `VITE_MIGRATION_CLAIMS_BASE_URL` to set.
+  This `make-test-tree` script is local/UI testing only.
 - The migrator's real mainnet `merkleRoot` is still `0x0`; it must be set on mainnet (by an
   address with the `legacy_migration_admin`/admin role) before production migration works.

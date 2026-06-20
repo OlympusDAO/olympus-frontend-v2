@@ -4,7 +4,7 @@ import type { Address, Hex } from "viem";
 
 /**
  * A single user's OHM v1 → v2 migration allocation, looked up from the sharded
- * merkle tree (see `scripts/shard-merkle-tree.ts`).
+ * merkle tree (produced by the ohm-v1-balances `merkle shard` command).
  */
 export type MigrationClaim = {
   /** Allocated OHM v1 amount (raw, 9 decimals). Passed to `migrate` as `allocatedAmount`. */
