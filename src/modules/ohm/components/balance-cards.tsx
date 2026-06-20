@@ -3,7 +3,9 @@ import { Card } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Icon, type IconName } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
+import { MIGRATION_TOOLTIP, type MigrationAction } from "./migration-action.ts";
 
 type TokenEntry = {
   symbol: string;
@@ -16,9 +18,26 @@ type TokenEntry = {
 
 type BalanceCardsProps = {
   tokens: TokenEntry[];
+  migration?: MigrationAction;
+  onUnstakeV1?: () => void;
+  onUnwrapWsohm?: () => void;
 };
 
-function getAction(symbol: string, chainName: string) {
+type CardAction = {
+  label: string;
+  to?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  tooltip?: string;
+};
+
+function getAction(
+  symbol: string,
+  chainName: string,
+  migration?: MigrationAction,
+  onUnstakeV1?: () => void,
+  onUnwrapWsohm?: () => void,
+): CardAction {
   const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
   switch (symbol) {
     case "OHM":
@@ -31,9 +50,25 @@ function getAction(symbol: string, chainName: string) {
       return isHomeChain
         ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
+    case "OHM v1":
+      return getMigrateAction(migration);
+    case "sOHM v1":
+      return { label: "Unstake", onClick: onUnstakeV1 };
+    case "wsOHM":
+      return { label: "Unwrap", onClick: onUnwrapWsohm };
     default:
-      return { label: "Migrate", disabled: true as const };
+      return { label: "View", disabled: true };
   }
+}
+
+function getMigrateAction(migration?: MigrationAction): CardAction {
+  if (!migration || migration.status === "loading") return { label: "Migrate", disabled: true };
+  if (migration.status === "ready") return { label: "Migrate", onClick: migration.onMigrate };
+  return {
+    label: migration.status === "fully-migrated" ? "Migrated" : "Migrate",
+    disabled: true,
+    tooltip: MIGRATION_TOOLTIP[migration.status],
+  };
 }
 
 function formatBalance(value: string, symbol: string): string {
@@ -52,7 +87,7 @@ function formatUsd(value: number): string {
   })}`;
 }
 
-export function BalanceCards({ tokens }: BalanceCardsProps) {
+export function BalanceCards({ tokens, migration, onUnstakeV1, onUnwrapWsohm }: BalanceCardsProps) {
   const rows: {
     key: string;
     token: TokenEntry;
@@ -79,7 +114,13 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
     <Card className="divide-y divide-surface-a5">
       <div className="px-4 py-2.5 text-xs text-tertiary-t">Asset</div>
       {rows.map((row) => {
-        const action = getAction(row.token.symbol, row.chain.chainName);
+        const action = getAction(
+          row.token.symbol,
+          row.chain.chainName,
+          migration,
+          onUnstakeV1,
+          onUnwrapWsohm,
+        );
         const usdValue = parseFloat(row.chain.formattedBalance) * row.token.price;
 
         return (
@@ -98,12 +139,20 @@ export function BalanceCards({ tokens }: BalanceCardsProps) {
                 <div className="text-xs text-tertiary-t">{formatUsd(usdValue)}</div>
               </div>
             </div>
-            {"to" in action && action.to ? (
+            {action.to ? (
               <Button size="sm" render={<Link to={action.to} />}>
                 {action.label}
               </Button>
+            ) : action.tooltip ? (
+              <Tooltip title={action.tooltip}>
+                <span className="inline-flex">
+                  <Button size="sm" disabled={action.disabled} onClick={action.onClick}>
+                    {action.label}
+                  </Button>
+                </span>
+              </Tooltip>
             ) : (
-              <Button size="sm" disabled>
+              <Button size="sm" disabled={action.disabled} onClick={action.onClick}>
                 {action.label}
               </Button>
             )}

@@ -1,9 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { useAllTokenBalances } from "@/lib/hooks/useAllTokenBalances";
 import { TokenName, TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
+import { useMigrationClaim } from "@/lib/hooks/useMigrationClaim";
+import { useV1MigrationInfo } from "@/lib/hooks/useV1MigrationInfo";
+import { MigrateOhmModal } from "@/components/migrate-ohm-modal";
+import { UnstakeSohmV1Modal } from "@/components/unstake-sohm-v1-modal";
+import { UnwrapWsohmModal } from "@/components/unwrap-wsohm-modal";
+import type { MigrationAction, MigrationStatus } from "../components/migration-action.ts";
 import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
 import { BalanceWalletValue } from "../components/balance-wallet-value.tsx";
 import { BalanceTable } from "../components/balance-table";
@@ -20,6 +26,45 @@ export function BalancesPage() {
 
   // In mock mode, override connection state
   const effectivelyConnected = mock ? mock.scenario.isConnected : isConnected;
+
+  // OHM v1 → v2 migration eligibility for the connected wallet
+  const [isMigrateOpen, setIsMigrateOpen] = useState(false);
+  const [isUnstakeV1Open, setIsUnstakeV1Open] = useState(false);
+  const [isUnwrapWsohmOpen, setIsUnwrapWsohmOpen] = useState(false);
+  const { claim, isEligible, isLoading: claimLoading } = useMigrationClaim();
+  const {
+    migrator,
+    isEnabled: migratorEnabled,
+    remaining,
+    isLoading: migrationInfoLoading,
+  } = useV1MigrationInfo(claim);
+
+  const migrationStatus: MigrationStatus | undefined = useMemo(() => {
+    if (mock || !isConnected) return undefined;
+    if (claimLoading || migrationInfoLoading) return "loading";
+    if (!isEligible) return "ineligible";
+    // No migrator on this chain (e.g. connected to Arbitrum) or migration paused.
+    if (!migrator || migratorEnabled === false) return "not-live";
+    if (remaining !== undefined && remaining === 0n) return "fully-migrated";
+    return "ready";
+  }, [
+    mock,
+    isConnected,
+    claimLoading,
+    migrationInfoLoading,
+    isEligible,
+    migrator,
+    migratorEnabled,
+    remaining,
+  ]);
+
+  const migration: MigrationAction | undefined = useMemo(
+    () =>
+      migrationStatus
+        ? { status: migrationStatus, onMigrate: () => setIsMigrateOpen(true) }
+        : undefined,
+    [migrationStatus],
+  );
 
   // Prices
   // const { price: ohmPriceBigInt, isLoading: ohmPriceLoading } = useOhmPrice();
@@ -137,9 +182,19 @@ export function BalancesPage() {
             <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
             {hasBalances ? (
               isMobile ? (
-                <BalanceCards tokens={tokens} />
+                <BalanceCards
+                  tokens={tokens}
+                  migration={migration}
+                  onUnstakeV1={() => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={() => setIsUnwrapWsohmOpen(true)}
+                />
               ) : (
-                <BalanceTable tokens={tokens} />
+                <BalanceTable
+                  tokens={tokens}
+                  migration={migration}
+                  onUnstakeV1={() => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={() => setIsUnwrapWsohmOpen(true)}
+                />
               )
             ) : (
               <BalanceEmptyState isLoading={isLoading} />
@@ -147,6 +202,19 @@ export function BalancesPage() {
           </>
         )}
       </div>
+
+      {claim && remaining !== undefined && (
+        <MigrateOhmModal
+          isOpen={isMigrateOpen}
+          onClose={() => setIsMigrateOpen(false)}
+          claim={claim}
+          remaining={remaining}
+        />
+      )}
+
+      <UnstakeSohmV1Modal isOpen={isUnstakeV1Open} onClose={() => setIsUnstakeV1Open(false)} />
+
+      <UnwrapWsohmModal isOpen={isUnwrapWsohmOpen} onClose={() => setIsUnwrapWsohmOpen(false)} />
     </div>
   );
 }

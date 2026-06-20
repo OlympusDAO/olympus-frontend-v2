@@ -17,7 +17,9 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Icon, type IconName } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
+import { MIGRATION_TOOLTIP, type MigrationAction } from "./migration-action.ts";
 
 type TokenEntry = {
   symbol: string;
@@ -30,12 +32,17 @@ type TokenEntry = {
 
 type BalanceTableProps = {
   tokens: TokenEntry[];
+  migration?: MigrationAction;
+  onUnstakeV1?: () => void;
+  onUnwrapWsohm?: () => void;
 };
 
 type RowAction = {
   label: string;
   to?: string;
   disabled?: boolean;
+  onClick?: () => void;
+  tooltip?: string;
 };
 
 type Row = {
@@ -46,7 +53,13 @@ type Row = {
   usdValue: number;
 };
 
-function getAction(symbol: string, chainName: string): RowAction {
+function getAction(
+  symbol: string,
+  chainName: string,
+  migration?: MigrationAction,
+  onUnstakeV1?: () => void,
+  onUnwrapWsohm?: () => void,
+): RowAction {
   const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
   switch (symbol) {
     case "OHM":
@@ -59,13 +72,27 @@ function getAction(symbol: string, chainName: string): RowAction {
       return isHomeChain
         ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
-    case "wsOHM":
     case "OHM v1":
+      return getMigrateAction(migration);
     case "sOHM v1":
-      return { label: "Migrate", disabled: true };
+      // Unstake to OHM v1 first; the migrator only accepts OHM v1.
+      return { label: "Unstake", onClick: onUnstakeV1 };
+    case "wsOHM":
+      // Unwrap to sOHM v1, then unstake to OHM v1, then migrate.
+      return { label: "Unwrap", onClick: onUnwrapWsohm };
     default:
       return { label: "View", disabled: true };
   }
+}
+
+function getMigrateAction(migration?: MigrationAction): RowAction {
+  if (!migration || migration.status === "loading") return { label: "Migrate", disabled: true };
+  if (migration.status === "ready") return { label: "Migrate", onClick: migration.onMigrate };
+  return {
+    label: migration.status === "fully-migrated" ? "Migrated" : "Migrate",
+    disabled: true,
+    tooltip: MIGRATION_TOOLTIP[migration.status],
+  };
 }
 
 function formatBalance(value: string): string {
@@ -133,16 +160,26 @@ const columns = [
     header: "",
     cell: ({ getValue }) => {
       const action = getValue();
-      return action.to ? (
-        <Button render={<Link to={action.to} />}>{action.label}</Button>
+      if (action.to) {
+        return <Button render={<Link to={action.to} />}>{action.label}</Button>;
+      }
+      const button = (
+        <Button disabled={action.disabled} onClick={action.onClick}>
+          {action.label}
+        </Button>
+      );
+      return action.tooltip ? (
+        <Tooltip title={action.tooltip}>
+          <span className="inline-flex">{button}</span>
+        </Tooltip>
       ) : (
-        <Button disabled>{action.label}</Button>
+        button
       );
     },
   }),
 ];
 
-export function BalanceTable({ tokens }: BalanceTableProps) {
+export function BalanceTable({ tokens, migration, onUnstakeV1, onUnwrapWsohm }: BalanceTableProps) {
   const data = useMemo<Row[]>(() => {
     const rows: Row[] = [];
     for (const token of tokens) {
@@ -154,14 +191,14 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
             key: `${token.symbol}-${chain.chainId}`,
             token,
             chain,
-            action: getAction(token.symbol, chain.chainName),
+            action: getAction(token.symbol, chain.chainName, migration, onUnstakeV1, onUnwrapWsohm),
             usdValue,
           });
         }
       }
     }
     return rows;
-  }, [tokens]);
+  }, [tokens, migration, onUnstakeV1, onUnwrapWsohm]);
 
   const table = useReactTable({
     data,
