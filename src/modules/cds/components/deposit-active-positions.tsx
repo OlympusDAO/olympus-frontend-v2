@@ -16,13 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { RiMoreFill, RiArrowRightSLine } from "@remixicon/react";
+import { RiArrowRightSLine } from "@remixicon/react";
 import { ConvertToOHMModal } from "@/components/convert-to-ohm-modal";
 import { WrapPositionModal } from "@/components/wrap-position-modal";
 import { TransferPositionModal } from "@/components/transfer-position-modal";
@@ -170,26 +164,26 @@ const ActionsCell = ({
       <Button size="sm" onClick={() => meta.onConvert?.(position)}>
         Convert
       </Button>
-
+      <Button size="sm" variant="secondary" onClick={() => meta.onRedeem?.(position)}>
+        Redeem
+      </Button>
+      {wrapped && (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => meta.onTransfer?.(position, position.displayName)}
+        >
+          Transfer
+        </Button>
+      )}
       {!wrapped ? (
         <Button size="sm" variant="secondary" onClick={() => meta.onWrap?.(position)}>
           Wrap
         </Button>
       ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button size="sm" variant="secondary" className="w-8 h-8 p-0" />}
-          >
-            <RiMoreFill className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onTransfer?.(position, position.displayName)}>
-              Transfer
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onRedeem?.(position)}>Redeem</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button size="sm" variant="secondary" onClick={() => meta.onUnwrap?.(position)}>
+          Unwrap
+        </Button>
       )}
     </div>
   );
@@ -442,6 +436,24 @@ export const DepositActivePositions = () => {
                     <Button size="sm" className="flex-1" onClick={() => handleConvert(position)}>
                       Convert
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => handleRedeem(position)}
+                    >
+                      Redeem
+                    </Button>
+                    {position.data.wrapped && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1"
+                        onClick={() => handleTransfer(position, position.displayName)}
+                      >
+                        Transfer
+                      </Button>
+                    )}
                     {!position.data.wrapped ? (
                       <Button
                         size="sm"
@@ -452,26 +464,14 @@ export const DepositActivePositions = () => {
                         Wrap
                       </Button>
                     ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button size="sm" variant="secondary" className="w-9 h-9 p-0" />}
-                        >
-                          <RiMoreFill className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleUnwrap(position)}>
-                            Unwrap
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleTransfer(position, position.displayName)}
-                          >
-                            Transfer
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleRedeem(position)}>
-                            Redeem
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1"
+                        onClick={() => handleUnwrap(position)}
+                      >
+                        Unwrap
+                      </Button>
                     )}
                   </div>
                 </div>
