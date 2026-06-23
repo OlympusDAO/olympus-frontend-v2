@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckIcon, ExternalLink, Info, Loader2 } from "lucide-react";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits, parseUnits, zeroAddress } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ export function MigrateOhmModal({ isOpen, onClose, claim, remaining }: MigrateOh
   const { ohmV2Out } = usePreviewMigrate(amountBigInt);
   const receiveAmount = ohmV2Out !== undefined ? formatOhm(ohmV2Out) : "0";
 
-  const { allowance, queryKey } = useTokenAllowance(ohmV1Address!, address, migrator);
+  const { allowance, queryKey } = useTokenAllowance(ohmV1Address ?? zeroAddress, address, migrator);
   const hasSufficientAllowance = allowance !== undefined && allowance >= amountBigInt;
 
   const {
