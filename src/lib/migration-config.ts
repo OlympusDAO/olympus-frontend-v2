@@ -14,6 +14,17 @@ export function getMigrationClaimsBaseUrl(): string {
   return (override ?? PRODUCTION_MIGRATION_CLAIMS_BASE_URL).replace(/\/$/, "");
 }
 
+export function shouldUseLocalMigrationClaimShards(): boolean {
+  return (
+    import.meta.env.DEV &&
+    !getOptionalEnv(import.meta.env.VITE_MIGRATION_CLAIMS_BASE_URL as string | undefined)
+  );
+}
+
+export function getLocalMigrationClaimShardsBaseUrl(): string {
+  return `${import.meta.env.BASE_URL}migration`.replace(/\/$/, "");
+}
+
 export function getMigrationMerkleRootOverride(): Hex | undefined {
   return getOptionalEnv(
     import.meta.env.VITE_MIGRATION_MERKLE_ROOT_OVERRIDE as string | undefined,
