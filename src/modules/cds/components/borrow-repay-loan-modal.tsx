@@ -130,7 +130,10 @@ export const BorrowRepayLoanModal: React.FC<RepayLoanModalProps> = ({
   }, [exactDebt, usdsBalance]);
 
   const needsApproval = useMemo(() => {
-    if (!repayAmountWei || !allowance || !loanData) return false;
+    if (!repayAmountWei || !loanData) return false;
+    // Allowance read still in flight: default to requiring approval so we never fall through
+    // to a repay that would revert on transferFrom. Matches borrow-form/repay-form/borrow-extend.
+    if (allowance === undefined) return true;
     const maxSlippage = (loanData.principal * 10n) / 10000n;
     return allowance < repayAmountWei + maxSlippage;
   }, [repayAmountWei, allowance, loanData]);
