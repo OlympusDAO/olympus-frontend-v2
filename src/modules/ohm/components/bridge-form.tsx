@@ -99,7 +99,11 @@ export function BridgeForm({
   });
 
   // Pre-flight enablement: source send + destination receive
-  const { canBridge, receiveEnabled } = useBridgeEnabled(sourceChainId, destinationChainId);
+  const {
+    canBridge,
+    receiveEnabled,
+    isLoading: isEnabledLoading,
+  } = useBridgeEnabled(sourceChainId, destinationChainId);
 
   // Pre-flight rate limits (cross-chain sendable/receivable + in-flight)
   const { canSend, isNearLimit } = useBridgeRateLimits({
@@ -138,6 +142,9 @@ export function BridgeForm({
   // Button state
   const buttonState = useMemo(() => {
     if (!address) return { disabled: true, label: "Connect Wallet" };
+    // While the enablement reads are still resolving, stay neutral rather than flashing
+    // "Bridge Disabled" (canBridge is false until both source reads come back).
+    if (isEnabledLoading) return { disabled: true, label: "Checking Bridge…" };
     if (canBridge === false && receiveEnabled === false)
       return { disabled: true, label: "Receiving Paused on Destination" };
     if (canBridge === false) return { disabled: true, label: "Bridge Disabled" };
@@ -161,6 +168,7 @@ export function BridgeForm({
     hasInsufficientNative,
     canBridge,
     receiveEnabled,
+    isEnabledLoading,
     canSend,
     isCanonicalDest,
     hasSufficientSupply,

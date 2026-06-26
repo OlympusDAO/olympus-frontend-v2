@@ -6,8 +6,9 @@ import { ContractName, getContractAddress } from "@/lib/contracts";
 import { BRIDGE_NETWORKS, eidToChainId, LZ_SCAN_API_BASE } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
 import { usePendingBridgeTxs, removePendingBridgeTxs } from "./usePendingBridgeTxs";
+import { classifyLzStatus, type BridgeStatus } from "./bridgeStatus";
 
-export type BridgeStatus = "DELIVERED" | "INFLIGHT" | "PENDING_RECOVERY" | "FAILED" | string;
+export type { BridgeStatus };
 
 export interface BridgeHistoryItem {
   srcChainId: number;
@@ -125,23 +126,9 @@ export function useBridgeHistory() {
   };
 }
 
-/**
- * Derive a UI status from a LayerZero Scan message.
- *
- * A delivered destination tx is DELIVERED. Otherwise a message with the OHM already burned on
- * the source but not yet received is either INFLIGHT (normal in-transit) or PENDING_RECOVERY
- * (delivery attempted but blocked/stored — retryable, e.g. receivable exceeded or receive
- * disabled). We surface the latter so users understand the OHM is not lost.
- */
+/** Derive a UI status from a LayerZero Scan message (see `classifyLzStatus`). */
 function deriveStatus(msg: LzMessage): BridgeStatus {
-  const name = (msg.status?.name ?? "").toUpperCase();
-  if (name === "DELIVERED" || msg.destination?.tx?.txHash) return "DELIVERED";
-  if (name === "FAILED") return "FAILED";
-  // LZ Scan surfaces stuck-but-retryable messages under names like these.
-  if (["PAYLOAD_STORED", "BLOCKED", "APPLICATION_BURNED", "UNRESOLVABLE_COMMAND"].includes(name)) {
-    return "PENDING_RECOVERY";
-  }
-  return "INFLIGHT";
+  return classifyLzStatus(msg.status?.name, msg.destination?.tx?.txHash);
 }
 
 /**

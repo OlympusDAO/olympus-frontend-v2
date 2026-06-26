@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { LZ_SCAN_API_BASE } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
+import { classifyLzStatus, isTerminalLzStatus, type BridgeStatus } from "./bridgeStatus";
 
 export interface BridgeMessageStatus {
   /** LayerZero status name, e.g. INFLIGHT / DELIVERED / CONFIRMING / PAYLOAD_STORED. */
@@ -35,18 +36,24 @@ export function useBridgeMessageStatus(txHash?: string) {
         guid: msg.guid,
       };
     },
-    // Poll every 5s until the message reaches a terminal state.
+    // Poll every 5s until the message reaches a terminal state (delivered, failed, or stuck
+    // pending recovery — none of which progress on their own).
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      return status === "DELIVERED" || status === "FAILED" ? false : 5_000;
+      const data = query.state.data;
+      return isTerminalLzStatus(data?.status, data?.dstTxHash) ? false : 5_000;
     },
   });
 
+  // Classified status, consistent with the history list's buckets.
+  const bridgeStatus: BridgeStatus | undefined =
+    data != null ? classifyLzStatus(data.status, data.dstTxHash) : undefined;
+
   return {
     status: data?.status,
+    bridgeStatus,
     dstTxHash: data?.dstTxHash,
     guid: data?.guid,
-    isDelivered: data?.status === "DELIVERED",
+    isDelivered: bridgeStatus === "DELIVERED",
     isLoading,
   };
 }

@@ -74,9 +74,18 @@ export function BridgeConfirmModal({
   } = useBridgeOhm();
 
   // Live cross-chain delivery status from LayerZero Scan, once the source tx is mined.
-  const { status: lzStatus, isDelivered } = useBridgeMessageStatus(
+  const { bridgeStatus, isDelivered } = useBridgeMessageStatus(
     bridgeSuccess ? bridgeHash : undefined,
   );
+  const deliveryLabel =
+    bridgeStatus === "DELIVERED"
+      ? "Delivered"
+      : bridgeStatus === "PENDING_RECOVERY"
+        ? "Pending Recovery"
+        : bridgeStatus === "FAILED"
+          ? "Failed"
+          : "In Flight";
+  const deliveryColor = isDelivered ? "green" : bridgeStatus === "FAILED" ? "red" : "blue";
 
   useEffect(() => {
     if (!bridgeSuccess) return;
@@ -212,12 +221,8 @@ export function BridgeConfirmModal({
             <div className="flex items-center justify-between rounded-2xl bg-surface-a3 border border-a3-b px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-primary-t">Delivery status</span>
-                <Badge variant="filled" color={isDelivered ? "green" : "blue"}>
-                  {isDelivered
-                    ? "Delivered"
-                    : lzStatus === "FAILED"
-                      ? "Pending Recovery"
-                      : "In Flight"}
+                <Badge variant="filled" color={deliveryColor}>
+                  {deliveryLabel}
                 </Badge>
               </div>
               <Link
