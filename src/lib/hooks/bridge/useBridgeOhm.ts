@@ -1,15 +1,23 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
-import type { Address } from "viem";
+import { formatUnits, type Address } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import CrossChainBridgeAbi from "@/abis/CrossChainBridge";
-import { LAYER_ZERO_CHAIN_IDS } from "@/modules/ohm/utils/constants";
+import { TokenName, getTokenAddress } from "@/lib/tokens";
+import LZCrossChainBridgeAbi from "@/abis/LZCrossChainBridge";
+import { chainIdToEid } from "@/modules/ohm/utils/constants";
+import { addPendingBridgeTx } from "./usePendingBridgeTxs";
 import { useTransactionToast, type TransactionToastConfig } from "../useTransactionToast";
 
 export function useBridgeOhm() {
   const queryClient = useQueryClient();
   const queryKeyRef = useRef<readonly unknown[] | undefined>(undefined);
+  // Source-chain OHM address whose balance should refresh once the burn confirms.
+  const ohmAddressRef = useRef<Address | undefined>(undefined);
+  // Transfer details captured at send time, used to record an optimistic history entry.
+  const pendingRef = useRef<
+    { sourceChainId: number; destinationChainId: number; amount: bigint } | undefined
+  >(undefined);
   const { address } = useAccount();
 
   const {
@@ -30,11 +38,54 @@ export function useBridgeOhm() {
   });
 
   useEffect(() => {
-    if (isConfirmed && queryKeyRef.current) {
+    if (!isConfirmed) return;
+
+    // Invalidate the allowance query passed in by the caller.
+    if (queryKeyRef.current) {
       queryClient.invalidateQueries({ queryKey: queryKeyRef.current });
       queryKeyRef.current = undefined;
     }
-  }, [isConfirmed, queryClient]);
+
+    // Refresh the source-chain OHM balance (burned on send) so the UI updates.
+    const ohmAddress = ohmAddressRef.current;
+    if (ohmAddress) {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key.some(
+              (k) =>
+                typeof k === "object" &&
+                k !== null &&
+                "functionName" in k &&
+                (k as { functionName?: string }).functionName === "balanceOf" &&
+                "address" in k &&
+                (k as { address?: string }).address === ohmAddress,
+            )
+          );
+        },
+      });
+    }
+
+    // Record an optimistic history entry so the transfer shows immediately, before
+    // LayerZero Scan indexes it.
+    const p = pendingRef.current;
+    if (p && hash && address) {
+      addPendingBridgeTx({
+        srcChainId: p.sourceChainId,
+        dstChainId: p.destinationChainId,
+        amount: formatUnits(p.amount, 9),
+        srcTxHash: hash,
+        timestamp: new Date().toISOString(),
+        address,
+      });
+      pendingRef.current = undefined;
+    }
+
+    // Refresh bridge history so the new transfer appears.
+    queryClient.invalidateQueries({ queryKey: ["bridgeHistory", address] });
+  }, [isConfirmed, queryClient, address, hash]);
 
   const toastConfig: TransactionToastConfig = {
     pending: {
@@ -83,10 +134,10 @@ export function useBridgeOhm() {
     nativeFee: bigint;
     queryKey?: readonly unknown[];
   }) => {
-    const bridgeAddress = getContractAddress(ContractName.CROSS_CHAIN_BRIDGE, sourceChainId);
-    const layerZeroChainId = LAYER_ZERO_CHAIN_IDS[destinationChainId];
+    const bridgeAddress = getContractAddress(ContractName.LZ_CROSS_CHAIN_BRIDGE, sourceChainId);
+    const dstEid = chainIdToEid(destinationChainId);
 
-    if (!address || !bridgeAddress || !layerZeroChainId) return;
+    if (!address || !bridgeAddress || !dstEid) return;
 
     resetWrite();
     resetToast();
@@ -94,12 +145,14 @@ export function useBridgeOhm() {
     if (queryKey) {
       queryKeyRef.current = queryKey;
     }
+    ohmAddressRef.current = getTokenAddress(TokenName.OHM, sourceChainId);
+    pendingRef.current = { sourceChainId, destinationChainId, amount };
 
     writeContract({
       address: bridgeAddress,
-      abi: CrossChainBridgeAbi,
+      abi: LZCrossChainBridgeAbi,
       functionName: "sendOhm",
-      args: [layerZeroChainId, recipientAddress, amount],
+      args: [dstEid, recipientAddress, amount],
       value: nativeFee,
       chainId: sourceChainId,
     });

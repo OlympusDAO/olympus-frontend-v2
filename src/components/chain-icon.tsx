@@ -29,6 +29,9 @@ const CHAIN_META: Record<number, ChainMeta> = {
   250: { label: "Fantom", Icon: FantomIcon },
   8453: { label: "Base", Icon: BaseIcon },
   80094: { label: "Berachain", Icon: BerachainIcon },
+  // Testnets (reuse mainnet icons)
+  421614: { label: "Arbitrum Sepolia", Icon: ArbitrumIcon },
+  84532: { label: "Base Sepolia", Icon: BaseIcon },
 };
 
 type ChainIconProps = {

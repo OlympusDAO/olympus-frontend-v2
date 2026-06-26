@@ -14,9 +14,11 @@ import { useToken } from "@/lib/hooks/useToken.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
-import { handleInputNumberChange } from "@/lib/helpers.ts";
+import { handleInputNumberChange, shortenAddress } from "@/lib/helpers.ts";
 import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee.ts";
-import { useBridgeActive } from "@/lib/hooks/bridge/useBridgeActive.ts";
+import { useBridgeEnabled } from "@/lib/hooks/bridge/useBridgeEnabled.ts";
+import { useBridgeRateLimits } from "@/lib/hooks/bridge/useBridgeRateLimits.ts";
+import { useBridgedSupply } from "@/lib/hooks/bridge/useBridgedSupply.ts";
 import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../utils/constants.ts";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 
@@ -76,24 +78,41 @@ export function BridgeForm({
     }
   }, [amount]);
 
-  // Approval check — OHM must be approved to the Minter contract
+  // Approval check — OHM must be approved to the facilitator (LZCrossChainBridge) in V2
   const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
-  const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance } = useTokenAllowance(ohmAddress as `0x${string}`, address, minterAddress);
+  const facilitatorAddress = getContractAddress(ContractName.LZ_CROSS_CHAIN_BRIDGE, sourceChainId);
+  const { allowance } = useTokenAllowance(ohmAddress as `0x${string}`, address, facilitatorAddress);
 
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
 
-  // Fee estimation
-  const { nativeFee, isLoading: isFeeLoading } = useEstimateBridgeFee({
+  // Fee estimation (bufferedFee is the value actually sent; overpayment is refunded by LZ)
+  const {
+    nativeFee,
+    bufferedFee,
+    isLoading: isFeeLoading,
+  } = useEstimateBridgeFee({
     sourceChainId,
     destinationChainId,
     recipientAddress,
     amount: amountBigInt,
   });
 
-  // Bridge active check
-  const { isActive: isBridgeActive } = useBridgeActive(sourceChainId);
+  // Pre-flight enablement: source send + destination receive
+  const { canBridge, receiveEnabled } = useBridgeEnabled(sourceChainId, destinationChainId);
+
+  // Pre-flight rate limits (cross-chain sendable/receivable + in-flight)
+  const { canSend, isNearLimit } = useBridgeRateLimits({
+    sourceChainId,
+    destinationChainId,
+    amount: amountBigInt,
+  });
+
+  // Bridged-supply guard when sending into the canonical chain
+  const { isCanonicalDest, hasSufficientSupply } = useBridgedSupply({
+    destinationChainId,
+    amount: amountBigInt,
+  });
 
   // Insufficient balance checks
   const hasInsufficientOhm = useMemo(() => {
@@ -102,9 +121,13 @@ export function BridgeForm({
   }, [amount, ohmToken.balance, amountBigInt]);
 
   const hasInsufficientNative = useMemo(() => {
-    if (!nativeFee || !nativeBalance) return false;
-    return nativeBalance.value < nativeFee;
-  }, [nativeFee, nativeBalance]);
+    if (!bufferedFee || !nativeBalance) return false;
+    return nativeBalance.value < bufferedFee;
+  }, [bufferedFee, nativeBalance]);
+
+  // Whether the recipient differs from the connected wallet.
+  const isCustomRecipient =
+    !!recipientAddress && !!address && recipientAddress.toLowerCase() !== address.toLowerCase();
 
   // Can swap chains?
   const canSwap = useMemo(() => {
@@ -115,9 +138,14 @@ export function BridgeForm({
   // Button state
   const buttonState = useMemo(() => {
     if (!address) return { disabled: true, label: "Connect Wallet" };
-    if (isBridgeActive === false) return { disabled: true, label: "Bridge Inactive" };
+    if (canBridge === false && receiveEnabled === false)
+      return { disabled: true, label: "Receiving Paused on Destination" };
+    if (canBridge === false) return { disabled: true, label: "Bridge Disabled" };
     if (!amount || parseFloat(amount) === 0) return { disabled: true, label: "Enter Amount" };
     if (hasInsufficientOhm) return { disabled: true, label: "Insufficient OHM Balance" };
+    if (isCanonicalDest && !hasSufficientSupply)
+      return { disabled: true, label: "Exceeds Bridged Supply" };
+    if (!canSend) return { disabled: true, label: "Exceeds Rate Limit" };
     if (!hasSufficientAllowance) return { disabled: false, label: "Approve OHM for Bridging" };
     if (hasInsufficientNative)
       return {
@@ -131,7 +159,11 @@ export function BridgeForm({
     hasInsufficientOhm,
     hasSufficientAllowance,
     hasInsufficientNative,
-    isBridgeActive,
+    canBridge,
+    receiveEnabled,
+    canSend,
+    isCanonicalDest,
+    hasSufficientSupply,
     sourceChain,
   ]);
 
@@ -146,10 +178,7 @@ export function BridgeForm({
     }
   };
 
-  const formattedFee = nativeFee ? formatUnits(nativeFee, 18) : undefined;
-  // const displayFee = formattedFee
-  //   ? `${Number(formattedFee).toFixed(6)} ${sourceChain?.nativeCurrencySymbol ?? "ETH"}`
-  //   : "N/A";
+  const formattedFee = nativeFee != null ? formatUnits(nativeFee, 18) : undefined;
 
   return (
     <Form {...form}>
@@ -210,12 +239,46 @@ export function BridgeForm({
           />
         </div>
 
+        {/* Recipient Row */}
+        <button
+          type="button"
+          onClick={onOpenSettingsModal}
+          className="flex w-full items-center justify-between rounded-2xl bg-surface-a3 border border-a3-b px-4 py-3 hover:border-a10-b transition-colors"
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-secondary-t">Recipient</span>
+            {isCustomRecipient && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-blue rounded-full border border-blue/30 px-1.5 py-0.5">
+                Custom
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-sm font-medium text-primary-t">
+            <span>
+              {recipientAddress ? shortenAddress(recipientAddress, 4) : "Connected wallet"}
+            </span>
+            <Settings className="h-3.5 w-3.5 text-secondary-t" />
+          </div>
+        </button>
+
         {/* Warning Banner */}
         {address && amountBigInt > 0n && !hasSufficientAllowance && (
           <Alert variant="compact" type="info" size="sm" className="w-full">
             <RiInformationLine size={16} />
             <AlertDescription className="text-xs font-semibold text-primary-t">
               Allowance is below requested amount.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Near rate-limit warning */}
+        {address && amountBigInt > 0n && canSend && isNearLimit && (
+          <Alert variant="compact" type="warning" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              This amount is close to the route's 24h transfer limit. If capacity runs out on the
+              destination, delivery can be delayed until it decays — consider sending less or
+              waiting.
             </AlertDescription>
           </Alert>
         )}
@@ -231,19 +294,10 @@ export function BridgeForm({
           other side. Bridge in peace OHMie.
         </p>
 
-        {/* Fees + Settings Row */}
+        {/* Fees Row */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-secondary-t">Base Bridge Fees</span>
-            <button
-              type="button"
-              onClick={onOpenSettingsModal}
-              className="text-secondary-t hover:text-primary-t transition-colors"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          {isFeeLoading ? (
+          <span className="text-xs text-secondary-t">Estimated Bridge Fee</span>
+          {formattedFee != null ? (
             <div className="flex items-center gap-x-1">
               {sourceChain && <ChainIcon size={16} chainId={sourceChain.chainId} />}
               <NumberFlow
@@ -252,9 +306,14 @@ export function BridgeForm({
               />
             </div>
           ) : (
-            <span className="text-xs font-medium text-primary-t">N/A</span>
+            <span className="text-xs font-medium text-primary-t">{isFeeLoading ? "…" : "N/A"}</span>
           )}
         </div>
+
+        {/* Fee buffer note */}
+        <p className="text-[11px] text-tertiary-t text-center">
+          A small buffer is added on top of the estimate; any overpayment is refunded to you.
+        </p>
       </form>
     </Form>
   );

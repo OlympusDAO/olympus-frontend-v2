@@ -13,7 +13,16 @@ import {
   base,
   berachain,
   sepolia,
+  arbitrumSepolia,
+  baseSepolia,
 } from "@/lib/chains";
+
+/**
+ * Placeholder for a LayerZero V2 bridge contract that has not been deployed to a
+ * production chain yet. Replace with the real address post-deploy. Treated as
+ * "not deployed" by getContractAddress (filtered out below).
+ */
+const BRIDGE_TODO = "0x0000000000000000000000000000000000000000" as const;
 
 /**
  * Registry of all known contract names.
@@ -55,9 +64,9 @@ export enum ContractName {
   DAO_TREASURY = "DAO_TREASURY",
   SUSDS = "SUSDS",
 
-  // Bridge
-  CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
-  CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
+  // Bridge (LayerZero V2)
+  LZ_CROSS_CHAIN_BRIDGE = "LZ_CROSS_CHAIN_BRIDGE",
+  LZ_BRIDGE_GATEWAY = "LZ_BRIDGE_GATEWAY",
 }
 
 type ContractAddresses = {
@@ -181,29 +190,46 @@ export const CONTRACTS: ContractAddresses = {
     [sepolia.id]: "0x74Ca575601aa47a1aa44bD6786F3C0be36afA079",
   },
 
-  // ── Bridge ──────────────────────────────────────────
-  [ContractName.CROSS_CHAIN_BRIDGE]: {
-    [mainnet.id]: "0x45e563c39cddba8699a90078f42353a57509543a",
-    [arbitrum.id]: "0x20B3834091f038Ce04D8686FAC99CA44A0FB285c",
-    [base.id]: "0x6CA1a916e883c7ce2BFBcF59dc70F2c1EF9dac6e",
-    [berachain.id]: "0xBA42BE149e5260EbA4B82418A6306f55D532eA47",
+  // ── Bridge (LayerZero V2) ───────────────────────────
+  // Facilitator (LZCrossChainBridge) — the user-facing contract; OHM is approved here.
+  // Testnet addresses are live; mainnet/L2 addresses are TODO until the V2 deploy lands.
+  [ContractName.LZ_CROSS_CHAIN_BRIDGE]: {
+    [mainnet.id]: BRIDGE_TODO,
+    [arbitrum.id]: BRIDGE_TODO,
+    [optimism.id]: BRIDGE_TODO,
+    [base.id]: BRIDGE_TODO,
+    [berachain.id]: BRIDGE_TODO,
+    [sepolia.id]: "0x3Edd66dE21FA6A4B141AD6971CB24F656e66ad4A",
+    [arbitrumSepolia.id]: "0xC8431fEb345B46c30A4576c1b5faF080fdc54e2f",
+    [baseSepolia.id]: "0x0770517d786dC11e8e9c9F6D7B64707A0f6b4E89",
   },
-  [ContractName.CROSS_CHAIN_MINTER]: {
-    [mainnet.id]: "0xa90bFe53217da78D900749eb6Ef513ee5b6a491e",
-    [arbitrum.id]: "0x8f6406eDbFA393e327822D4A08BcF15503570D87",
-    [base.id]: "0x623164A9Ee2556D524b08f34F1d2389d7B4e1A1C",
-    [berachain.id]: "0xbC9eE0D911739cBc72cd094ADA26F56E0C49EeAE",
+  // Gateway (LZBridgeGateway) — burns/mints OHM and emits Sent/Received; read for
+  // rate limits, enabled flags, and bridged supply.
+  [ContractName.LZ_BRIDGE_GATEWAY]: {
+    [mainnet.id]: BRIDGE_TODO,
+    [arbitrum.id]: BRIDGE_TODO,
+    [optimism.id]: BRIDGE_TODO,
+    [base.id]: BRIDGE_TODO,
+    [berachain.id]: BRIDGE_TODO,
+    [sepolia.id]: "0x28c3798314CEc6E921B5c70f61dFFBDbEFE65AFf",
+    [arbitrumSepolia.id]: "0x0D33c811D0fcC711BcB388DFB3a152DE445bE66F",
+    [baseSepolia.id]: "0x1A68BCB9f443fAcf75714d7cb1aA5795782327E8",
   },
 };
 
 /**
  * Look up a contract address on a specific chain.
  */
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 export function getContractAddress(
   contractName: ContractName,
   chainId: number,
 ): Address | undefined {
-  return CONTRACTS[contractName][chainId];
+  const address = CONTRACTS[contractName][chainId];
+  // Treat placeholder zero addresses (e.g. not-yet-deployed bridge contracts) as absent.
+  if (!address || address === ZERO_ADDRESS) return undefined;
+  return address;
 }
 
 /**
