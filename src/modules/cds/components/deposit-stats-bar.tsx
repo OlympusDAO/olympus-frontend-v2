@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { calculateNextTick, calculateDailyCapacityReset } from "@/lib/utils/auctionUtils";
-import { formatTickCapacity } from "@/lib/utils/formatters";
+import { formatTickCapacity, formatTickPrice } from "@/lib/utils/formatters";
 import { useCurrentTick } from "@/lib/hooks/cds/useCurrentTick";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
 import { useDayState } from "@/lib/hooks/cds/useDayState";
@@ -28,7 +28,8 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
     depositPeriod: selectedTermMonths,
     enabled: selectedTermMonths > 0,
   });
-  const { auctionParameters, depositPeriodsCount, tickStep } = useAuctionParameters();
+  const { auctionParameters, depositPeriodsCount, tickStep, minPrice, isAuctionDisabled } =
+    useAuctionParameters();
   const { dayState } = useDayState();
   const { currentTickSize } = useCurrentTickSize();
 
@@ -109,7 +110,12 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               suffix="USDS/OHM"
             />
             <div className="text-xs/4 text-secondary-t font-normal flex items-center gap-1">
-              {!nextTickInfo ? (
+              {isAuctionDisabled && minPrice ? (
+                <span>
+                  Market will reopen at{" "}
+                  <span className="font-semibold text-primary-t">{formatTickPrice(minPrice)}</span>
+                </span>
+              ) : !nextTickInfo ? (
                 <span>-</span>
               ) : nextTickInfo.timeUntilTick === "Min Price Reached" ? (
                 <span>{nextTickInfo.timeUntilTick}</span>
