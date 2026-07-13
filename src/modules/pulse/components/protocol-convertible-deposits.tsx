@@ -126,6 +126,12 @@ export function ProtocolConvertibleDeposits() {
             {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
             premium
           </p>
+          {!cd.isMarketActive && cd.minPrice > 0 && (
+            <p className="mt-0.5 text-xs font-normal text-secondary-t">
+              Market will reopen at{" "}
+              <span className="font-semibold text-primary-t">${cd.minPrice.toFixed(2)}</span>
+            </p>
+          )}
         </div>
         <Button
           variant="secondary"
