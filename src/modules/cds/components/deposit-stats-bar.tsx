@@ -6,9 +6,10 @@ import { Progress } from "@/components/ui/progress";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { calculateNextTick, calculateDailyCapacityReset } from "@/lib/utils/auctionUtils";
-import { formatTickCapacity, formatTickPrice } from "@/lib/utils/formatters";
+import { formatTickCapacity } from "@/lib/utils/formatters";
 import { useCurrentTick } from "@/lib/hooks/cds/useCurrentTick";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
+import { useCdReopenPrice } from "@/lib/hooks/cds/useCdReopenPrice";
 import { useDayState } from "@/lib/hooks/cds/useDayState";
 import { useCurrentTickSize } from "@/lib/hooks/cds/useCurrentTickSize";
 import cdDeposit1b from "@/assets/cd-deposit-1b.webp";
@@ -28,8 +29,9 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
     depositPeriod: selectedTermMonths,
     enabled: selectedTermMonths > 0,
   });
-  const { auctionParameters, depositPeriodsCount, tickStep, minPrice, isAuctionDisabled } =
+  const { auctionParameters, depositPeriodsCount, tickStep, isAuctionDisabled } =
     useAuctionParameters();
+  const { reopenPrice } = useCdReopenPrice();
   const { dayState } = useDayState();
   const { currentTickSize } = useCurrentTickSize();
 
@@ -110,10 +112,10 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               suffix="USDS/OHM"
             />
             <div className="text-xs/4 text-secondary-t font-normal flex items-center gap-1">
-              {isAuctionDisabled && minPrice ? (
+              {isAuctionDisabled && reopenPrice ? (
                 <span>
                   Market will reopen at{" "}
-                  <span className="font-semibold text-primary-t">${formatTickPrice(minPrice)}</span>
+                  <span className="font-semibold text-primary-t">${reopenPrice.toFixed(4)}</span>
                 </span>
               ) : !nextTickInfo ? (
                 <span>-</span>

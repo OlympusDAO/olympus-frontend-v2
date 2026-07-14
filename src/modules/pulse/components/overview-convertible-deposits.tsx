@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
+import { useCdReopenPrice } from "@/lib/hooks/cds/useCdReopenPrice";
+import { mainnet } from "wagmi/chains";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -16,10 +18,11 @@ export function OverviewConvertibleDeposits() {
   const { data: treasury } = useTreasuryMetrics();
   const { data: price } = useOhmPrice();
 
+  const { reopenPrice } = useCdReopenPrice(mainnet.id);
+
   const totalDepositsUsd = cd?.totalDepositsUsd ?? 0;
   const activeBidsCount = cd?.activeBidsCount ?? 0;
   const isMarketActive = cd?.isMarketActive ?? false;
-  const minPrice = cd?.minPrice ?? 0;
 
   const ohmPrice = price?.price ?? 0;
   const backing = treasury?.treasuryLiquidBackingPerOhmBacked ?? 0;
@@ -64,11 +67,11 @@ export function OverviewConvertibleDeposits() {
             className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
           />
         </div>
-        {!isMarketActive && minPrice > 0 && (
+        {!isMarketActive && reopenPrice && (
           <p className="mt-0.5 text-xs/4 font-normal text-secondary-t">
             Market will reopen at{" "}
             <NumberFlow
-              value={minPrice}
+              value={reopenPrice}
               format={{
                 style: "currency",
                 currency: "USD",

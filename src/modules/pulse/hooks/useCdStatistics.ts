@@ -39,7 +39,6 @@ export interface CdStatistics {
   borrowedAmount: number;
   annualInterestRate: number;
   isMarketActive: boolean;
-  minPrice: number;
   supplyGrowthOhm: number;
 }
 
@@ -121,7 +120,6 @@ export function useCdStatistics() {
             items {
               timestamp
               targetDecimal
-              minPriceDecimal
             }
           }
 
@@ -188,11 +186,6 @@ export function useCdStatistics() {
         ? parseFloat(latestAuctioneerSnapshot.targetDecimal) > 0
         : false;
 
-      // Auction floor price — the price at which the market reopens after a pause
-      const minPrice = latestAuctioneerSnapshot
-        ? parseFloat(latestAuctioneerSnapshot.minPriceDecimal) || 0
-        : 0;
-
       // Supply impact - sum of (remainingAmount / conversionPrice) for all positions
       const positions = data?.convertibleDepositPositions?.items || [];
       const supplyGrowthOhm = positions.reduce(
@@ -215,7 +208,6 @@ export function useCdStatistics() {
         borrowedAmount,
         annualInterestRate,
         isMarketActive,
-        minPrice,
         supplyGrowthOhm,
       };
     },
