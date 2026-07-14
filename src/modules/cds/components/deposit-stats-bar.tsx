@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { ColorModeImage } from "@/components/color-mode-wrapper.tsx";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { calculateNextTick, calculateDailyCapacityReset } from "@/lib/utils/auctionUtils";
-import { formatTickCapacity } from "@/lib/utils/formatters";
+import { formatTickCapacity, formatTickPrice } from "@/lib/utils/formatters";
 import { useCurrentTick } from "@/lib/hooks/cds/useCurrentTick";
 import { useAuctionParameters } from "@/lib/hooks/cds/useAuctionParameters";
 import { useDayState } from "@/lib/hooks/cds/useDayState";
@@ -113,9 +113,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               {isAuctionDisabled && minPrice ? (
                 <span>
                   Market will reopen at{" "}
-                  <span className="font-semibold text-primary-t">
-                    ${(Number(minPrice) / 1e18).toFixed(2)}
-                  </span>
+                  <span className="font-semibold text-primary-t">${formatTickPrice(minPrice)}</span>
                 </span>
               ) : !nextTickInfo ? (
                 <span>-</span>
