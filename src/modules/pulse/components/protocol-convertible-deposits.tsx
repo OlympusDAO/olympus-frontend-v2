@@ -129,7 +129,16 @@ export function ProtocolConvertibleDeposits() {
           {!cd.isMarketActive && cd.minPrice > 0 && (
             <p className="mt-0.5 text-xs font-normal text-secondary-t">
               Market will reopen at{" "}
-              <span className="font-semibold text-primary-t">${cd.minPrice.toFixed(2)}</span>
+              <NumberFlow
+                value={cd.minPrice}
+                format={{
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }}
+                className="text-xs font-semibold text-primary-t"
+              />
             </p>
           )}
         </div>

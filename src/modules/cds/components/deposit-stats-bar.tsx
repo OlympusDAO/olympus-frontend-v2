@@ -113,7 +113,7 @@ export function DepositStatsBar({ selectedTermMonths }: DepositStatsBarProps) {
               {isAuctionDisabled && minPrice ? (
                 <span>
                   Market will reopen at{" "}
-                  <span className="font-semibold text-primary-t">{formatTickPrice(minPrice)}</span>
+                  <span className="font-semibold text-primary-t">${formatTickPrice(minPrice)}</span>
                 </span>
               ) : !nextTickInfo ? (
                 <span>-</span>
