@@ -64,11 +64,20 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const displayTokenName = tokenName || `Receipt-${selectedTerm}`;
 
   // Get expected OHM output for slippage calculation
-  const { ohmOut } = usePreviewBid({
+  const {
+    ohmOut,
+    isLoading: isPreviewLoading,
+    isError: isPreviewError,
+  } = usePreviewBid({
     depositPeriod: periodMonths,
     bidAmount: depositAmount,
     enabled: !!auctioneerAddress && depositAmount !== "0" && depositAmount !== "",
   });
+
+  // A bid must only be submitted with a minOhmOut derived from a real quote.
+  // Without a valid preview, minOhmOut would be 0n, which silently disables the
+  // user's slippage protection on-chain.
+  const hasValidPreview = ohmOut !== undefined && ohmOut > 0n;
 
   // Helper function to calculate minimum OHM output based on slippage
   const calculateMinOhmOut = (expectedOhm: bigint, slippagePercent: string): bigint => {
@@ -150,8 +159,12 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
   const handleBid = () => {
     if (!tokenAddress || !auctioneerAddress || !address) return;
 
+    // Refuse to submit without a valid quote, otherwise minOhmOut would be 0n
+    // and the user's slippage protection would be silently bypassed.
+    if (!hasValidPreview) return;
+
     // Calculate minimum OHM output based on slippage
-    const minOhmOut = calculateMinOhmOut(ohmOut || 0n, slippage);
+    const minOhmOut = calculateMinOhmOut(ohmOut, slippage);
 
     bid({
       contractAddress: auctioneerAddress,
@@ -304,7 +317,7 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
           <div className="mt-6">
             <Button
               onClick={currentStep === 1 ? handleApprove : handleBid}
-              disabled={isApproving || isBidding}
+              disabled={isApproving || isBidding || (currentStep === 2 && !hasValidPreview)}
               className="w-full"
               size="lg"
             >
@@ -318,6 +331,13 @@ export const CreatePositionModal: React.FC<CreatePositionModalProps> = ({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Submitting Transaction...
                 </>
+              ) : currentStep === 2 && isPreviewLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Fetching price...
+                </>
+              ) : currentStep === 2 && (isPreviewError || !hasValidPreview) ? (
+                "Price unavailable — retry"
               ) : currentStep === 2 ? (
                 "Deposit & Mint"
               ) : (

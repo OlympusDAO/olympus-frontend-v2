@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!dist/", "!node_modules/", "!public/"]
+    "includes": ["**", "!dist/", "!node_modules/", "!public/", "!src/assets/animations/*.json"]
   },
   "formatter": {
     "enabled": true,
