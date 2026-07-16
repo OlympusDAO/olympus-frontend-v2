@@ -51,6 +51,7 @@ export function useCdStatistics() {
       const query = `
         query GetCdStatistics {
           depositFacilityAssetSnapshots(
+            where: { chainId: 1 }
             orderBy: "timestamp"
             orderDirection: "desc"
             limit: 1

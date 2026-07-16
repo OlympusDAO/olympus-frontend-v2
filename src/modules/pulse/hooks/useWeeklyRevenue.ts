@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useReserveYields } from "@/modules/pulse/hooks/useReserveYields";
 import { useCoolerMetrics } from "@/modules/pulse/hooks/useCoolerMetrics";
 import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
-import { useCdStatistics } from "../../../lib/hooks/liveness/useCdStatistics.ts";
+import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
 import { COOLER_APR } from "@/lib/constants.ts";
 
 export interface RevenueSource {
