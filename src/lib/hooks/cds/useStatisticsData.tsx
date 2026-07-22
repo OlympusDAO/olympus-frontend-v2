@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
 import { cdsGraphqlClient } from "@/lib/graphql-client";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -381,8 +382,25 @@ export function useCurrentConvertibleOhm() {
             limit: 1000
           ) {
             items {
+              positionId
               remainingAmountDecimal
               conversionPriceDecimal
+            }
+          }
+          redemptions(
+            where: {
+              chainId: 1
+            }
+            limit: 1000
+          ) {
+            items {
+              positionId
+              amountDecimal
+              loans {
+                items {
+                  status
+                }
+              }
             }
           }
         }
@@ -390,27 +408,11 @@ export function useCurrentConvertibleOhm() {
 
       const data = await cdsGraphqlClient.request(query);
 
-      // Get total deposits USD from snapshot (totalDeposited + borrowedAmount)
-      const snapshot = data?.depositFacilityAssetSnapshots?.items?.[0];
-      const totalDepositsUsd = snapshot
-        ? parseFloat(snapshot.totalDepositedDecimal) + parseFloat(snapshot.borrowedAmountDecimal)
-        : 0;
-
-      // Calculate convertible OHM from positions (remainingAmount / conversionPrice)
       const positions = data?.convertibleDepositPositions?.items || [];
-      const convertibleOhm = positions.reduce(
-        (
-          sum: number,
-          position: { remainingAmountDecimal: string; conversionPriceDecimal: string },
-        ) => {
-          const remaining = parseFloat(position.remainingAmountDecimal);
-          const price = parseFloat(position.conversionPriceDecimal);
-          if (remaining > 0 && price > 0) {
-            return sum + remaining / price;
-          }
-          return sum;
-        },
-        0,
+      const redemptions = data?.redemptions?.items || [];
+      const { convertibleOhm, totalDepositsUsd } = calculateConversionExposure(
+        positions,
+        redemptions,
       );
 
       return { convertibleOhm, totalDepositsUsd };
