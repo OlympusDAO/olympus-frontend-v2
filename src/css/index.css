@@ -30,7 +30,7 @@
 
   body {
     @apply text-primary-t;
-    font-family: 'Inter Tight', sans-serif;
+    font-family: "Inter Tight", sans-serif;
     font-synthesis: none;
     font-weight: 500;
     text-rendering: optimizeLegibility;
@@ -48,7 +48,7 @@
   /* Override RainbowKit font to match app */
   [data-rk] {
     /* biome-ignore lint: needed to override library styles */
-    font-family: 'Inter Tight', sans-serif !important;
+    font-family: "Inter Tight", sans-serif !important;
   }
 
   /* Hide elements depending on the current theme */

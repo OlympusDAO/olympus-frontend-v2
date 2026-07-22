@@ -125,7 +125,9 @@
   height: 6px;
   border-radius: 100px;
   background-color: var(--text-tertiary);
-  transition: width 0.2s, background-color 0.2s;
+  transition:
+    width 0.2s,
+    background-color 0.2s;
 }
 
 .olympus-tour-dot.active {
