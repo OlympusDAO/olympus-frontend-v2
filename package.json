@@ -22,7 +22,7 @@
   },
   "engines": {
     "node": ">=24",
-    "pnpm": ">=11.15.1",
+    "pnpm": ">=10.33.0",
     "npm": "use-pnpm",
     "yarn": "use-pnpm"
   },
@@ -60,7 +60,7 @@
     "viem": "^2.46.3",
     "wagmi": "^2.19.5"
   },
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@10.33.0",
   "devDependencies": {
     "@biomejs/biome": "^2.4.5",
     "@posthog/cli": "^0.7.11",
