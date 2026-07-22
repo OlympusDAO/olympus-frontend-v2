@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CD_SUBGRAPH_URL } from "@/lib/constants";
-import { calculateConversionExposure } from "@/lib/hooks/cds/conversionExposure";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 export interface DepositSnapshot {
   timestamp: number;

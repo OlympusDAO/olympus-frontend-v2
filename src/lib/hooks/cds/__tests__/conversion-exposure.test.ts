@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateConversionExposure } from "../conversionExposure";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 describe("calculateConversionExposure", () => {
   it("includes open and active redeemed CD exposure at each position strike", () => {

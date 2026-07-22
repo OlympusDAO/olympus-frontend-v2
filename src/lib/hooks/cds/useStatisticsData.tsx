@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
 import { cdsGraphqlClient } from "@/lib/graphql-client";
-import { calculateConversionExposure } from "./conversionExposure";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
