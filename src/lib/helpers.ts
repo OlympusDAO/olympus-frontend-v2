@@ -31,6 +31,11 @@ export function shortenAddress(address: Address, chars = 4) {
     : `${address.slice(0, chars + 2)}\u2026${address.slice(-chars)}`;
 }
 
+/** Truncated tx-hash display, e.g. "0x1234...abcd". */
+export function formatTxHash(hash?: `0x${string}`) {
+  return hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "";
+}
+
 export const validateInsufficientBalance = (
   value = "0",
   tokenInfo: { decimals: number; balance?: bigint },

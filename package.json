@@ -18,6 +18,8 @@
     "codegen": "orval",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:tree": "node scripts/make-test-tree.ts",
+    "fork:setup": "node scripts/fork-setup.ts",
     "sourcemap:upload": "posthog-cli sourcemap inject --directory ./dist/assets && posthog-cli sourcemap upload --directory ./dist/assets"
   },
   "engines": {
@@ -63,6 +65,7 @@
   "packageManager": "pnpm@11.13.0",
   "devDependencies": {
     "@biomejs/biome": "^2.4.5",
+    "@openzeppelin/merkle-tree": "^1.0.8",
     "@posthog/cli": "^0.7.11",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query-devtools": "^5.91.3",

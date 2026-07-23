@@ -1,15 +1,24 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { useAllTokenBalances } from "@/lib/hooks/useAllTokenBalances";
 import { TokenName, TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
-import { BalanceInfoCards } from "../components/balance-info-cards.tsx";
-import { BalanceWalletValue } from "../components/balance-wallet-value.tsx";
-import { BalanceTable } from "../components/balance-table";
-import { BalanceCards } from "../components/balance-cards";
-import { BalanceEmptyState } from "../components/balance-empty-state.tsx";
-import { BalanceDisconnectedState } from "../components/balance-disconnected-state.tsx";
+import { useMigrationClaim } from "@/lib/hooks/useMigrationClaim";
+import { useV1MigrationInfo, useV1MigratorMerkleRoot } from "@/lib/hooks/useV1MigrationInfo";
+import { MigrateOhmModal } from "@/components/migrate-ohm-modal";
+import { UnstakeSohmV1Modal } from "@/components/unstake-sohm-v1-modal";
+import { UnwrapWsohmModal } from "@/components/unwrap-wsohm-modal";
+import type {
+  MigrationAction,
+  MigrationStatus,
+} from "@/modules/ohm/components/migration-action.ts";
+import { BalanceInfoCards } from "@/modules/ohm/components/balance-info-cards.tsx";
+import { BalanceWalletValue } from "@/modules/ohm/components/balance-wallet-value.tsx";
+import { BalanceTable } from "@/modules/ohm/components/balance-table";
+import { BalanceCards } from "@/modules/ohm/components/balance-cards";
+import { BalanceEmptyState } from "@/modules/ohm/components/balance-empty-state.tsx";
+import { BalanceDisconnectedState } from "@/modules/ohm/components/balance-disconnected-state.tsx";
 import type { IconName } from "@/components/icon";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 
@@ -20,6 +29,75 @@ export function BalancesPage() {
 
   // In mock mode, override connection state
   const effectivelyConnected = mock ? mock.scenario.isConnected : isConnected;
+
+  // OHM v1 → v2 migration eligibility for the connected wallet
+  const [isMigrateOpen, setIsMigrateOpen] = useState(false);
+  const [isUnstakeV1Open, setIsUnstakeV1Open] = useState(false);
+  const [isUnwrapWsohmOpen, setIsUnwrapWsohmOpen] = useState(false);
+  const {
+    migrator,
+    merkleRoot,
+    hasMerkleRoot,
+    isOnChainMerkleRootActive,
+    isLoading: merkleRootLoading,
+    error: merkleRootError,
+  } = useV1MigratorMerkleRoot();
+  const {
+    claim,
+    isEligible,
+    isLoading: claimLoading,
+    error: claimError,
+  } = useMigrationClaim(merkleRoot);
+  const {
+    isEnabled: migratorEnabled,
+    isActive: migratorActive,
+    isClaimValid,
+    remaining,
+    remainingMintApproval,
+    isLoading: migrationInfoLoading,
+    error: migrationInfoError,
+  } = useV1MigrationInfo(claim, isOnChainMerkleRootActive);
+
+  const migrationStatus: MigrationStatus | undefined = useMemo(() => {
+    if (mock || !isConnected) return undefined;
+    if (merkleRootLoading || claimLoading || migrationInfoLoading) return "loading";
+    // A failed root read / claim fetch / migrator read is unknown eligibility, not
+    // proof of ineligibility — don't tell the user they aren't in the snapshot.
+    if (merkleRootError || claimError || migrationInfoError) return "error";
+    if (!hasMerkleRoot) return "not-live";
+    if (!isOnChainMerkleRootActive) return "not-live";
+    // Eligible = present in the snapshot AND not explicitly rejected by on-chain verifyClaim.
+    if (!isEligible || isClaimValid === false) return "ineligible";
+    // No migrator on this chain (e.g. connected to Arbitrum), policy inactive, or paused.
+    if (!migrator || migratorEnabled !== true || migratorActive !== true) return "not-live";
+    if (remaining !== undefined && remaining === 0n) return "fully-migrated";
+    return "ready";
+  }, [
+    mock,
+    isConnected,
+    merkleRootLoading,
+    claimLoading,
+    migrationInfoLoading,
+    merkleRootError,
+    claimError,
+    migrationInfoError,
+    hasMerkleRoot,
+    isOnChainMerkleRootActive,
+    isEligible,
+    isClaimValid,
+    migrator,
+    migratorEnabled,
+    migratorActive,
+    remaining,
+  ]);
+
+  const migration: MigrationAction | undefined = useMemo(
+    () =>
+      migrationStatus
+        ? { status: migrationStatus, onMigrate: () => setIsMigrateOpen(true) }
+        : undefined,
+    [migrationStatus],
+  );
 
   // Prices
   // const { price: ohmPriceBigInt, isLoading: ohmPriceLoading } = useOhmPrice();
@@ -137,9 +215,19 @@ export function BalancesPage() {
             <BalanceWalletValue totalUsd={totalUsd} isLoading={isLoading} />
             {hasBalances ? (
               isMobile ? (
-                <BalanceCards tokens={tokens} />
+                <BalanceCards
+                  tokens={tokens}
+                  migration={migration}
+                  onUnstakeV1={mock ? undefined : () => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={mock ? undefined : () => setIsUnwrapWsohmOpen(true)}
+                />
               ) : (
-                <BalanceTable tokens={tokens} />
+                <BalanceTable
+                  tokens={tokens}
+                  migration={migration}
+                  onUnstakeV1={mock ? undefined : () => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={mock ? undefined : () => setIsUnwrapWsohmOpen(true)}
+                />
               )
             ) : (
               <BalanceEmptyState isLoading={isLoading} />
@@ -147,6 +235,20 @@ export function BalancesPage() {
           </>
         )}
       </div>
+
+      {claim && remaining !== undefined && (
+        <MigrateOhmModal
+          isOpen={isMigrateOpen}
+          onClose={() => setIsMigrateOpen(false)}
+          claim={claim}
+          remaining={remaining}
+          remainingMintApproval={remainingMintApproval}
+        />
+      )}
+
+      <UnstakeSohmV1Modal isOpen={isUnstakeV1Open} onClose={() => setIsUnstakeV1Open(false)} />
+
+      <UnwrapWsohmModal isOpen={isUnwrapWsohmOpen} onClose={() => setIsUnwrapWsohmOpen(false)} />
     </div>
   );
 }
