@@ -6,6 +6,11 @@ import { ContractName, getContractAddress } from "@/lib/contracts";
 import V1MigratorAbi from "@/abis/V1Migrator";
 import { getMigrationMerkleRootOverride } from "@/lib/migration-config";
 
+// The migrator's merkle root (and a claim's verification against it) only changes via an
+// admin transaction — don't refetch on every remount/window focus. Post-tx invalidation
+// still forces a refresh, since invalidateQueries overrides staleTime.
+const MIGRATOR_READ_STALE_TIME = 5 * 60 * 1000;
+
 export function useV1MigratorMerkleRoot() {
   const chainId = useChainId();
   const migrator = getContractAddress(ContractName.OHM_V1_MIGRATOR, chainId);
@@ -14,7 +19,7 @@ export function useV1MigratorMerkleRoot() {
     address: migrator,
     abi: V1MigratorAbi,
     functionName: "merkleRoot",
-    query: { enabled: !!migrator },
+    query: { enabled: !!migrator, staleTime: MIGRATOR_READ_STALE_TIME },
   });
 
   const onChainMerkleRoot = data as Hex | undefined;
@@ -96,40 +101,43 @@ export function useV1MigrationInfo(
             },
           ]
         : []),
-      ...(address && claim && shouldVerifyClaim
-        ? [
-            {
-              address: migrator,
-              abi: V1MigratorAbi,
-              functionName: "verifyClaim" as const,
-              args: [address, claim.allocatedAmount, claim.proof] as const,
-            },
-          ]
-        : []),
     ];
     return base;
-  }, [migrator, address, claim, shouldVerifyClaim]);
+  }, [migrator, address]);
 
   const { data, isLoading, error, refetch } = useReadContracts({
     contracts,
     query: { enabled: contracts.length > 0 },
   });
 
+  // verifyClaim runs as its own read: the claim arrives async from the proof API, and
+  // appending it to the batch above would change that query's key and refetch the four
+  // already-resolved migrator reads.
+  const shouldRunVerify = !!migrator && !!address && !!claim && shouldVerifyClaim;
+  const {
+    data: verifyResult,
+    isLoading: isVerifyLoading,
+    error: verifyError,
+    refetch: refetchVerify,
+  } = useReadContract({
+    address: migrator,
+    abi: V1MigratorAbi,
+    functionName: "verifyClaim",
+    args: address && claim ? [address, claim.allocatedAmount, claim.proof] : undefined,
+    query: { enabled: shouldRunVerify, staleTime: MIGRATOR_READ_STALE_TIME },
+  });
+
   const isEnabled = data?.[0]?.result as boolean | undefined;
   const isActive = data?.[1]?.result as boolean | undefined;
   const remainingMintApproval = data?.[2]?.result as bigint | undefined;
   const migratedAmount = (address ? (data?.[3]?.result as bigint | undefined) : undefined) ?? 0n;
-  // verifyClaim is the 5th contract, only present when both address and claim exist
-  // and the active merkle root is also set on-chain. A reverted call means the claim
-  // could not be verified, so fail closed rather than letting `undefined` read as
-  // "not rejected" downstream.
-  const verifyClaimCall = address && claim && shouldVerifyClaim ? data?.[4] : undefined;
-  const isClaimValid =
-    verifyClaimCall == null
-      ? undefined
-      : verifyClaimCall.status === "failure"
-        ? false
-        : (verifyClaimCall.result as boolean | undefined);
+  // A reverted verifyClaim call means the claim could not be verified, so fail closed
+  // rather than letting `undefined` read as "not rejected" downstream.
+  const isClaimValid = !shouldRunVerify
+    ? undefined
+    : verifyError
+      ? false
+      : (verifyResult as boolean | undefined);
 
   const remaining = claim != null ? bigMax(claim.allocatedAmount - migratedAmount, 0n) : undefined;
 
@@ -162,11 +170,11 @@ export function useV1MigrationInfo(
       });
     }
 
-    if (verifyClaimCall?.status === "failure") {
-      console.warn("[V1Migrator] verifyClaim call reverted; treating claim as invalid", {
+    if (verifyError) {
+      console.warn("[V1Migrator] verifyClaim call failed; treating claim as invalid", {
         migrator,
         address,
-        error: verifyClaimCall.error,
+        error: verifyError,
       });
     } else if (claim && shouldVerifyClaim && isClaimValid === false) {
       console.warn("[V1Migrator] Migration claim failed on-chain verification", {
@@ -186,7 +194,7 @@ export function useV1MigrationInfo(
     isLoading,
     migrator,
     shouldVerifyClaim,
-    verifyClaimCall,
+    verifyError,
   ]);
 
   return {
@@ -198,9 +206,12 @@ export function useV1MigrationInfo(
     isClaimValid,
     /** Remaining allocation = allocated − already migrated (only when a claim is supplied). */
     remaining,
-    isLoading,
+    isLoading: isLoading || isVerifyLoading,
     error: error as Error | null,
-    refetch,
+    refetch: () => {
+      refetch();
+      if (shouldRunVerify) refetchVerify();
+    },
   };
 }
 

@@ -10,7 +10,7 @@ import { useToken } from "@/lib/hooks/useToken";
 import { useUnwrapWsohm } from "@/lib/hooks/useUnwrapWsohm";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
-import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import { blockExplorerTxBaseUrl, formatTxHash } from "@/lib/helpers";
 import { formatTokenDisplay } from "@/lib/math";
 import WsOHMAbi from "@/abis/WsOHM";
 
@@ -21,10 +21,6 @@ interface UnwrapWsohmModalProps {
 
 const WSOHM_DECIMALS = 18;
 const SOHM_DECIMALS = 9;
-
-function formatTxHash(hash?: `0x${string}`) {
-  return hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "";
-}
 
 export function UnwrapWsohmModal({ isOpen, onClose }: UnwrapWsohmModalProps) {
   const { address } = useAccount();

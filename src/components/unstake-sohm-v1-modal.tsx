@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckIcon, ExternalLink, Info, Loader2 } from "lucide-react";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits, parseUnits, zeroAddress } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useUnstakeV1 } from "@/lib/hooks/useUnstakeV1";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName, getTokenAddress } from "@/lib/tokens";
-import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import { blockExplorerTxBaseUrl, formatTxHash } from "@/lib/helpers";
 
 interface UnstakeSohmV1ModalProps {
   isOpen: boolean;
@@ -20,10 +20,6 @@ interface UnstakeSohmV1ModalProps {
 }
 
 const OHM_DECIMALS = 9;
-
-function formatTxHash(hash?: `0x${string}`) {
-  return hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "";
-}
 
 type Step = {
   number: number;
@@ -66,7 +62,11 @@ export function UnstakeSohmV1Modal({ isOpen, onClose }: UnstakeSohmV1ModalProps)
   // Unstaking is 1:1 — you receive the same amount of OHM v1.
   const receiveAmount = amount || "0";
 
-  const { allowance, queryKey } = useTokenAllowance(sohmV1Address!, address, stakingV1);
+  const { allowance, queryKey } = useTokenAllowance(
+    sohmV1Address ?? zeroAddress,
+    address,
+    stakingV1,
+  );
   const hasSufficientAllowance = allowance !== undefined && allowance >= amountBigInt;
 
   const {

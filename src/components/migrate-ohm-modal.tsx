@@ -13,7 +13,7 @@ import { useMigrate } from "@/lib/hooks/useMigrate";
 import { usePreviewMigrate } from "@/lib/hooks/usePreviewMigrate";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName, getTokenAddress } from "@/lib/tokens";
-import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import { blockExplorerTxBaseUrl, formatTxHash } from "@/lib/helpers";
 import { formatTokenDisplay } from "@/lib/math";
 import type { MigrationClaim } from "@/lib/hooks/useMigrationClaim";
 
@@ -32,10 +32,6 @@ const OHM_DECIMALS = 9;
 
 function bigMin(a: bigint, b: bigint): bigint {
   return a < b ? a : b;
-}
-
-function formatTxHash(hash?: `0x${string}`) {
-  return hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "";
 }
 
 function formatOhm(value: bigint): string {
