@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -19,6 +19,10 @@ import { useTransactionToast, type TransactionToastConfig } from "./useTransacti
 export function useMigrate() {
   const queryClient = useQueryClient();
   const queryKeyRef = useRef<readonly unknown[] | undefined>(undefined);
+  // Guards the async gas-estimation window before writeContract, during which
+  // isWritePending is still false — without it a double-click submits twice.
+  const isSubmittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const publicClient = usePublicClient();
@@ -101,43 +105,51 @@ export function useMigrate() {
     queryKey?: readonly unknown[];
   }) => {
     if (!address || !migrator) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
-    resetWrite();
-    resetToast();
-
-    if (queryKey) queryKeyRef.current = queryKey;
-
-    const args = [amount, proof, allocatedAmount] as const;
-
-    // Estimate gas at click-time (allowance is set) and add a 50% buffer. The migrate
-    // path mints OHM v2 through the Kernel/MINTR policy, so it is gas-heavier and more
-    // estimation-sensitive than a plain transfer; without this, a stale/low wallet
-    // estimate (e.g. from the pre-approval state) can cause an out-of-gas revert.
-    let gas: bigint | undefined;
     try {
-      if (publicClient) {
-        const estimate = await publicClient.estimateContractGas({
-          address: migrator,
-          abi: V1MigratorAbi,
-          functionName: "migrate",
-          args,
-          account: address,
-        });
-        gas = (estimate * 3n) / 2n;
-      }
-    } catch {
-      // Estimation failed (e.g. allowance not yet confirmed) — fall back to the
-      // wallet's own estimation so the existing error toast surfaces the revert.
-    }
+      resetWrite();
+      resetToast();
 
-    // migrate(amount_, proof_, allocatedAmount_)
-    writeContract({
-      address: migrator,
-      abi: V1MigratorAbi,
-      functionName: "migrate",
-      args,
-      gas,
-    });
+      if (queryKey) queryKeyRef.current = queryKey;
+
+      const args = [amount, proof, allocatedAmount] as const;
+
+      // Estimate gas at click-time (allowance is set) and add a 50% buffer. The migrate
+      // path mints OHM v2 through the Kernel/MINTR policy, so it is gas-heavier and more
+      // estimation-sensitive than a plain transfer; without this, a stale/low wallet
+      // estimate (e.g. from the pre-approval state) can cause an out-of-gas revert.
+      let gas: bigint | undefined;
+      try {
+        if (publicClient) {
+          const estimate = await publicClient.estimateContractGas({
+            address: migrator,
+            abi: V1MigratorAbi,
+            functionName: "migrate",
+            args,
+            account: address,
+          });
+          gas = (estimate * 3n) / 2n;
+        }
+      } catch {
+        // Estimation failed (e.g. allowance not yet confirmed) — fall back to the
+        // wallet's own estimation so the existing error toast surfaces the revert.
+      }
+
+      // migrate(amount_, proof_, allocatedAmount_)
+      writeContract({
+        address: migrator,
+        abi: V1MigratorAbi,
+        functionName: "migrate",
+        args,
+        gas,
+      });
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const reset = () => {
@@ -147,7 +159,7 @@ export function useMigrate() {
 
   return {
     migrate,
-    isPending: isWritePending || isConfirming,
+    isPending: isSubmitting || isWritePending || isConfirming,
     isSuccess: isConfirmed,
     error: writeError || confirmError,
     hash,

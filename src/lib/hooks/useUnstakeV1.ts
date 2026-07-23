@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -19,6 +19,10 @@ import { useTransactionToast, type TransactionToastConfig } from "./useTransacti
 export function useUnstakeV1() {
   const queryClient = useQueryClient();
   const queryKeyRef = useRef<readonly unknown[] | undefined>(undefined);
+  // Guards the async gas-estimation window before writeContract, during which
+  // isWritePending is still false — without it a double-click submits twice.
+  const isSubmittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const publicClient = usePublicClient();
@@ -95,38 +99,46 @@ export function useUnstakeV1() {
     queryKey?: readonly unknown[];
   }) => {
     if (!address || !stakingV1) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
-    resetWrite();
-    resetToast();
-
-    if (queryKey) queryKeyRef.current = queryKey;
-
-    // unstake(_amount, _trigger=false) — trigger=false skips the (gas-heavy) rebase.
-    const args = [amount, false] as const;
-
-    let gas: bigint | undefined;
     try {
-      if (publicClient) {
-        const estimate = await publicClient.estimateContractGas({
-          address: stakingV1,
-          abi: OlympusStakingV1Abi,
-          functionName: "unstake",
-          args,
-          account: address,
-        });
-        gas = (estimate * 3n) / 2n;
-      }
-    } catch {
-      // Fall back to the wallet's own estimation.
-    }
+      resetWrite();
+      resetToast();
 
-    writeContract({
-      address: stakingV1,
-      abi: OlympusStakingV1Abi,
-      functionName: "unstake",
-      args,
-      gas,
-    });
+      if (queryKey) queryKeyRef.current = queryKey;
+
+      // unstake(_amount, _trigger=false) — trigger=false skips the (gas-heavy) rebase.
+      const args = [amount, false] as const;
+
+      let gas: bigint | undefined;
+      try {
+        if (publicClient) {
+          const estimate = await publicClient.estimateContractGas({
+            address: stakingV1,
+            abi: OlympusStakingV1Abi,
+            functionName: "unstake",
+            args,
+            account: address,
+          });
+          gas = (estimate * 3n) / 2n;
+        }
+      } catch {
+        // Fall back to the wallet's own estimation.
+      }
+
+      writeContract({
+        address: stakingV1,
+        abi: OlympusStakingV1Abi,
+        functionName: "unstake",
+        args,
+        gas,
+      });
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const reset = () => {
@@ -136,7 +148,7 @@ export function useUnstakeV1() {
 
   return {
     unstake,
-    isPending: isWritePending || isConfirming,
+    isPending: isSubmitting || isWritePending || isConfirming,
     isSuccess: isConfirmed,
     error: writeError || confirmError,
     hash,

@@ -40,19 +40,30 @@ export function BalancesPage() {
     hasMerkleRoot,
     isOnChainMerkleRootActive,
     isLoading: merkleRootLoading,
+    error: merkleRootError,
   } = useV1MigratorMerkleRoot();
-  const { claim, isEligible, isLoading: claimLoading } = useMigrationClaim(merkleRoot);
+  const {
+    claim,
+    isEligible,
+    isLoading: claimLoading,
+    error: claimError,
+  } = useMigrationClaim(merkleRoot);
   const {
     isEnabled: migratorEnabled,
     isActive: migratorActive,
     isClaimValid,
     remaining,
+    remainingMintApproval,
     isLoading: migrationInfoLoading,
+    error: migrationInfoError,
   } = useV1MigrationInfo(claim, isOnChainMerkleRootActive);
 
   const migrationStatus: MigrationStatus | undefined = useMemo(() => {
     if (mock || !isConnected) return undefined;
     if (merkleRootLoading || claimLoading || migrationInfoLoading) return "loading";
+    // A failed root read / claim fetch / migrator read is unknown eligibility, not
+    // proof of ineligibility — don't tell the user they aren't in the snapshot.
+    if (merkleRootError || claimError || migrationInfoError) return "error";
     if (!hasMerkleRoot) return "not-live";
     if (!isOnChainMerkleRootActive) return "not-live";
     // Eligible = present in the snapshot AND not explicitly rejected by on-chain verifyClaim.
@@ -67,6 +78,9 @@ export function BalancesPage() {
     merkleRootLoading,
     claimLoading,
     migrationInfoLoading,
+    merkleRootError,
+    claimError,
+    migrationInfoError,
     hasMerkleRoot,
     isOnChainMerkleRootActive,
     isEligible,
@@ -204,15 +218,15 @@ export function BalancesPage() {
                 <BalanceCards
                   tokens={tokens}
                   migration={migration}
-                  onUnstakeV1={() => setIsUnstakeV1Open(true)}
-                  onUnwrapWsohm={() => setIsUnwrapWsohmOpen(true)}
+                  onUnstakeV1={mock ? undefined : () => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={mock ? undefined : () => setIsUnwrapWsohmOpen(true)}
                 />
               ) : (
                 <BalanceTable
                   tokens={tokens}
                   migration={migration}
-                  onUnstakeV1={() => setIsUnstakeV1Open(true)}
-                  onUnwrapWsohm={() => setIsUnwrapWsohmOpen(true)}
+                  onUnstakeV1={mock ? undefined : () => setIsUnstakeV1Open(true)}
+                  onUnwrapWsohm={mock ? undefined : () => setIsUnwrapWsohmOpen(true)}
                 />
               )
             ) : (
@@ -228,6 +242,7 @@ export function BalancesPage() {
           onClose={() => setIsMigrateOpen(false)}
           claim={claim}
           remaining={remaining}
+          remainingMintApproval={remainingMintApproval}
         />
       )}
 

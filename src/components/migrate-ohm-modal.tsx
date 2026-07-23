@@ -23,6 +23,9 @@ interface MigrateOhmModalProps {
   claim: MigrationClaim;
   /** Remaining allocation = allocated − already migrated (raw, 9 decimals). */
   remaining: bigint;
+  /** The migrator's global remaining OHM v2 mint approval (raw, 9 decimals). The
+   * contract reverts with CapExceeded when the converted output exceeds this. */
+  remainingMintApproval?: bigint;
 }
 
 const OHM_DECIMALS = 9;
@@ -49,7 +52,13 @@ type Step = {
   hash?: `0x${string}`;
 };
 
-export function MigrateOhmModal({ isOpen, onClose, claim, remaining }: MigrateOhmModalProps) {
+export function MigrateOhmModal({
+  isOpen,
+  onClose,
+  claim,
+  remaining,
+  remainingMintApproval,
+}: MigrateOhmModalProps) {
   const { address } = useAccount();
   const chainId = useChainId();
   const [amount, setAmount] = useState("");
@@ -108,8 +117,17 @@ export function MigrateOhmModal({ isOpen, onClose, claim, remaining }: MigrateOh
     if (!amount || amountBigInt === 0n) return { disabled: true, label: "Enter Amount" };
     if (amountBigInt > balance) return { disabled: true, label: "Insufficient OHM v1 Balance" };
     if (amountBigInt > remaining) return { disabled: true, label: "Exceeds Allocation" };
+    // The migrator reverts with CapExceeded when the converted OHM v2 output exceeds
+    // its global remaining mint approval — block that here instead of on-chain.
+    if (
+      remainingMintApproval !== undefined &&
+      ohmV2Out !== undefined &&
+      ohmV2Out > remainingMintApproval
+    ) {
+      return { disabled: true, label: "Exceeds Migrator Capacity" };
+    }
     return { disabled: false, label: "Migrate to OHM v2" };
-  }, [address, amount, amountBigInt, balance, remaining]);
+  }, [address, amount, amountBigInt, balance, remaining, remainingMintApproval, ohmV2Out]);
 
   const handleMax = () => setAmount(formatUnits(maxMigratable, OHM_DECIMALS));
 

@@ -29,6 +29,7 @@ type ProofResponse = {
 
 type ShardClaim = { amount: string; proof: string[] };
 type Shard = Record<string, ShardClaim>;
+type ShardManifest = { merkleRoot: string; shardPrefixLength?: number };
 
 function normalizeClaim(
   response: ProofResponse,
@@ -58,10 +59,20 @@ async function fetchProofClaim(baseUrl: string, merkleRoot: Hex, address: Addres
   return (await res.json()) as ProofResponse;
 }
 
-async function fetchLocalShardClaim(merkleRoot: Hex, address: Address) {
-  const lower = address.toLowerCase();
-  const prefix = lower.slice(2, 4);
+async function fetchLocalShardClaim(address: Address) {
   const baseUrl = getLocalMigrationClaimShardsBaseUrl();
+
+  // The manifest carries the tree's real merkle root; surfacing it (rather than echoing
+  // the expected root back) lets normalizeClaim reject stale shards from an old test tree.
+  const manifestRes = await fetch(`${baseUrl}/manifest.json`);
+  if (manifestRes.status === 404) return null;
+  if (!manifestRes.ok) {
+    throw new Error(`Failed to load migration shard manifest: ${manifestRes.status}`);
+  }
+  const manifest = (await manifestRes.json()) as ShardManifest;
+
+  const lower = address.toLowerCase();
+  const prefix = lower.slice(2, 2 + (manifest.shardPrefixLength ?? 2));
   const res = await fetch(`${baseUrl}/claims-${prefix}.json`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to load migration shard ${prefix}: ${res.status}`);
@@ -72,14 +83,14 @@ async function fetchLocalShardClaim(merkleRoot: Hex, address: Address) {
 
   console.info("[V1Migrator] Using local migration claim shard", {
     address,
-    merkleRoot,
+    merkleRoot: manifest.merkleRoot,
     claimsBaseUrl: baseUrl,
   });
 
   return {
     address,
     amount: claim.amount,
-    merkleRoot,
+    merkleRoot: manifest.merkleRoot,
     proof: claim.proof,
   };
 }
@@ -90,9 +101,17 @@ async function fetchClaim(
   address: Address,
   useLocalShardFallback: boolean,
 ) {
-  const claim = await fetchProofClaim(baseUrl, merkleRoot, address);
-  if (claim || !useLocalShardFallback) return claim;
-  return fetchLocalShardClaim(merkleRoot, address);
+  if (!useLocalShardFallback) return fetchProofClaim(baseUrl, merkleRoot, address);
+
+  // In dev, fall back to the local shards on any proof-API failure (network/CORS/5xx),
+  // not just a clean 404 — the API may be unreachable from a local fork setup.
+  let claim: ProofResponse | null = null;
+  try {
+    claim = await fetchProofClaim(baseUrl, merkleRoot, address);
+  } catch (error) {
+    console.warn("[V1Migrator] Proof API failed; falling back to local claim shards", { error });
+  }
+  return claim ?? fetchLocalShardClaim(address);
 }
 
 /** Look up the connected wallet's migration claim from the root-scoped proof API. */

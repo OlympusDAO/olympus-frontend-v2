@@ -6,6 +6,7 @@ import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
 import {
+  LEGACY_ACTION_TOOLTIP,
   MIGRATION_TOOLTIP,
   type MigrationAction,
 } from "@/modules/ohm/components/migration-action.ts";
@@ -56,9 +57,23 @@ function getAction(
     case "OHM v1":
       return getMigrateAction(migration);
     case "sOHM v1":
-      return { label: "Unstake", onClick: onUnstakeV1 };
+      // The legacy staking contract only exists on Ethereum, so bridged rows stay disabled.
+      return isHomeChain && onUnstakeV1
+        ? { label: "Unstake", onClick: onUnstakeV1 }
+        : {
+            label: "Unstake",
+            disabled: true,
+            tooltip: isHomeChain ? undefined : LEGACY_ACTION_TOOLTIP,
+          };
     case "wsOHM":
-      return { label: "Unwrap", onClick: onUnwrapWsohm };
+      // The legacy wsOHM contract only unwraps on Ethereum, so bridged rows stay disabled.
+      return isHomeChain && onUnwrapWsohm
+        ? { label: "Unwrap", onClick: onUnwrapWsohm }
+        : {
+            label: "Unwrap",
+            disabled: true,
+            tooltip: isHomeChain ? undefined : LEGACY_ACTION_TOOLTIP,
+          };
     default:
       return { label: "View", disabled: true };
   }
