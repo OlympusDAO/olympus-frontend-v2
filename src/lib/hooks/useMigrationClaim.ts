@@ -53,7 +53,9 @@ function normalizeClaim(
 }
 
 async function fetchProofClaim(baseUrl: string, merkleRoot: Hex, address: Address) {
-  const res = await fetch(`${baseUrl}/proof/${merkleRoot}/${address}/`);
+  // The proof API keys claims by lowercase address (wagmi returns EIP-55 checksummed);
+  // lowercase both path segments so a case-sensitive backend can't 404 an eligible user.
+  const res = await fetch(`${baseUrl}/proof/${merkleRoot.toLowerCase()}/${address.toLowerCase()}/`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to load migration proof: ${res.status}`);
   return (await res.json()) as ProofResponse;

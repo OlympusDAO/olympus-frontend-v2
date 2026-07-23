@@ -11,6 +11,11 @@ import { getMigrationMerkleRootOverride } from "@/lib/migration-config";
 // still forces a refresh, since invalidateQueries overrides staleTime.
 const MIGRATOR_READ_STALE_TIME = 5 * 60 * 1000;
 
+// Stable instance so consumers' memo deps don't churn on every render.
+const MIGRATED_AMOUNTS_READ_ERROR = new Error(
+  "Failed to read the migrated amount for the connected wallet.",
+);
+
 export function useV1MigratorMerkleRoot() {
   const chainId = useChainId();
   const migrator = getContractAddress(ContractName.OHM_V1_MIGRATOR, chainId);
@@ -130,7 +135,14 @@ export function useV1MigrationInfo(
   const isEnabled = data?.[0]?.result as boolean | undefined;
   const isActive = data?.[1]?.result as boolean | undefined;
   const remainingMintApproval = data?.[2]?.result as bigint | undefined;
-  const migratedAmount = (address ? (data?.[3]?.result as bigint | undefined) : undefined) ?? 0n;
+  // With allowFailure (the useReadContracts default), one failed sub-call leaves the
+  // query's top-level error null. A failed migratedAmounts read must not coerce to 0n —
+  // that would inflate `remaining` to the full allocation and offer a partially-migrated
+  // user an over-limit migrate that reverts on-chain. Fail closed via `remaining` and
+  // surface it as an error instead.
+  const migratedAmountsCall = address ? data?.[3] : undefined;
+  const migratedAmountsFailed = migratedAmountsCall?.status === "failure";
+  const migratedAmount = (migratedAmountsCall?.result as bigint | undefined) ?? 0n;
   // A reverted verifyClaim call means the claim could not be verified, so fail closed
   // rather than letting `undefined` read as "not rejected" downstream.
   const isClaimValid = !shouldRunVerify
@@ -139,7 +151,10 @@ export function useV1MigrationInfo(
       ? false
       : (verifyResult as boolean | undefined);
 
-  const remaining = claim != null ? bigMax(claim.allocatedAmount - migratedAmount, 0n) : undefined;
+  const remaining =
+    claim != null && !migratedAmountsFailed
+      ? bigMax(claim.allocatedAmount - migratedAmount, 0n)
+      : undefined;
 
   useEffect(() => {
     if (isLoading || !migrator || !address) return;
@@ -170,6 +185,14 @@ export function useV1MigrationInfo(
       });
     }
 
+    if (migratedAmountsFailed) {
+      console.warn("[V1Migrator] migratedAmounts read failed; withholding remaining amount", {
+        migrator,
+        address,
+        error: migratedAmountsCall?.error,
+      });
+    }
+
     if (verifyError) {
       console.warn("[V1Migrator] verifyClaim call failed; treating claim as invalid", {
         migrator,
@@ -192,6 +215,8 @@ export function useV1MigrationInfo(
     isClaimValid,
     isEnabled,
     isLoading,
+    migratedAmountsCall,
+    migratedAmountsFailed,
     migrator,
     shouldVerifyClaim,
     verifyError,
@@ -207,7 +232,7 @@ export function useV1MigrationInfo(
     /** Remaining allocation = allocated − already migrated (only when a claim is supplied). */
     remaining,
     isLoading: isLoading || isVerifyLoading,
-    error: error as Error | null,
+    error: (error as Error | null) ?? (migratedAmountsFailed ? MIGRATED_AMOUNTS_READ_ERROR : null),
     refetch: () => {
       refetch();
       if (shouldRunVerify) refetchVerify();
