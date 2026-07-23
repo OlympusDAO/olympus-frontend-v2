@@ -49,6 +49,7 @@ export enum ContractName {
   DEPOSIT_REDEMPTION_VAULT = "DEPOSIT_REDEMPTION_VAULT",
   LIMIT_ORDERS = "LIMIT_ORDERS",
   PRICE = "PRICE",
+  EMISSION_MANAGER = "EMISSION_MANAGER",
 
   // Governance
   GOVERNOR_BRAVO = "GOVERNOR_BRAVO",
@@ -174,6 +175,10 @@ export const CONTRACTS: ContractAddresses = {
   [ContractName.PRICE]: {
     [mainnet.id]: "0xd6C4D723fdadCf0D171eF9A2a3Bfa870675b282f",
     [sepolia.id]: "0x3bD25E292dC36b674BBF1EEecaAB4565bf2eF241",
+  },
+  [ContractName.EMISSION_MANAGER]: {
+    [mainnet.id]: "0xA61b846D5D8b757e3d541E0e4F80390E28f0B6Ff",
+    [sepolia.id]: "0x84785E392BfD02F97A9b84F85d86DEc11933ef81",
   },
 
   // ── Governance ───────────────────────────────────────

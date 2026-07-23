@@ -25,6 +25,7 @@ export const DEFILLAMA_POOLS = {
 export const LP_POOL_MAP: Record<string, string> = {
   "UniswapV3 OHM-sUSDS": "0cc155d9-0e7f-4bdd-b07e-0a09e34b9af0",
   "UniswapV3 WETH-OHM": "dea7e764-1c6a-4d51-bb35-5f428fc85b57",
+  "UniswapV3 1% WETH-OHM": "acd82191-477a-4aba-982a-21e31d0ae697",
   "UniswapV3 OHM-USDC Liquidity Pool": "56772e92-32e2-47a5-9611-1626eaf92826",
   "Camelot OHM-wETH Liquidity Pool": "d1a3947b-c4c8-4ca3-80d9-c91a5decbc9e",
 };

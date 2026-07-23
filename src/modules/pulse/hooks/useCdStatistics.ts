@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CD_SUBGRAPH_URL } from "@/lib/constants";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 export interface DepositSnapshot {
   timestamp: number;
@@ -51,6 +52,7 @@ export function useCdStatistics() {
       const query = `
         query GetCdStatistics {
           depositFacilityAssetSnapshots(
+            where: { chainId: 1 }
             orderBy: "timestamp"
             orderDirection: "desc"
             limit: 1
@@ -127,8 +129,24 @@ export function useCdStatistics() {
             limit: 1000
           ) {
             items {
+              positionId
               remainingAmountDecimal
               conversionPriceDecimal
+            }
+          }
+
+          redemptions(
+            where: { chainId: 1 }
+            limit: 1000
+          ) {
+            items {
+              positionId
+              amountDecimal
+              loans {
+                items {
+                  status
+                }
+              }
             }
           }
         }
@@ -185,16 +203,11 @@ export function useCdStatistics() {
         ? parseFloat(latestAuctioneerSnapshot.targetDecimal) > 0
         : false;
 
-      // Supply impact - sum of (remainingAmount / conversionPrice) for all positions
       const positions = data?.convertibleDepositPositions?.items || [];
-      const supplyGrowthOhm = positions.reduce(
-        (sum: number, pos: { remainingAmountDecimal: string; conversionPriceDecimal: string }) => {
-          const remaining = parseFloat(pos.remainingAmountDecimal) || 0;
-          const price = parseFloat(pos.conversionPriceDecimal) || 0;
-          if (remaining > 0 && price > 0) return sum + remaining / price;
-          return sum;
-        },
-        0,
+      const redemptions = data?.redemptions?.items || [];
+      const { convertibleOhm: supplyGrowthOhm } = calculateConversionExposure(
+        positions,
+        redemptions,
       );
 
       return {

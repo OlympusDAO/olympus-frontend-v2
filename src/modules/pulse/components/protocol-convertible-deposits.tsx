@@ -9,6 +9,8 @@ import { TooltipInfo } from "@/components/ui/tooltip";
 import { NumberFlow } from "@/components/ui/number-flow";
 import { PulseDot } from "@/components/pulse-dot";
 import { useCdStatistics } from "@/modules/pulse/hooks/useCdStatistics";
+import { useCdReopenPrice } from "@/lib/hooks/cds/useCdReopenPrice";
+import { mainnet } from "wagmi/chains";
 import { useOhmPrice } from "@/lib/hooks/liveness/useOhmPrice";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { ProtocolDataSource } from "./protocol-data-source";
@@ -20,6 +22,7 @@ export function ProtocolConvertibleDeposits() {
   const { data: cd, isLoading: cdLoading } = useCdStatistics();
   const { data: price } = useOhmPrice();
   const { data: treasury } = useTreasuryMetrics();
+  const { reopenPrice } = useCdReopenPrice(mainnet.id);
 
   if (cdLoading || !cd) {
     return (
@@ -126,6 +129,21 @@ export function ProtocolConvertibleDeposits() {
             {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
             premium
           </p>
+          {!cd.isMarketActive && reopenPrice && (
+            <p className="mt-0.5 text-xs font-normal text-secondary-t">
+              Market will reopen at{" "}
+              <NumberFlow
+                value={reopenPrice}
+                format={{
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }}
+                className="text-xs font-semibold text-primary-t"
+              />
+            </p>
+          )}
         </div>
         <Button
           variant="secondary"
