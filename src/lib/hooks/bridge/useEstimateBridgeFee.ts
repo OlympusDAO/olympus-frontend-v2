@@ -1,9 +1,20 @@
 import { useReadContract } from "wagmi";
 import type { Address } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import CrossChainBridgeAbi from "@/abis/CrossChainBridge";
-import { LAYER_ZERO_CHAIN_IDS } from "@/modules/ohm/utils/constants";
+import LZCrossChainBridgeAbi from "@/abis/LZCrossChainBridge";
+import { chainIdToEid } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
+
+/**
+ * Buffer applied on top of the estimated native fee when sending the transaction.
+ * LayerZero refunds any overpayment to the sender, so a small buffer absorbs fee
+ * drift between estimate and execution without costing the user anything.
+ */
+const FEE_BUFFER_BPS = 1000n; // +10%
+
+export function applyFeeBuffer(nativeFee: bigint): bigint {
+  return (nativeFee * (10_000n + FEE_BUFFER_BPS)) / 10_000n;
+}
 
 export function useEstimateBridgeFee({
   sourceChainId,
@@ -17,17 +28,17 @@ export function useEstimateBridgeFee({
   amount: bigint;
 }) {
   const mock = useMockData();
-  const bridgeAddress = getContractAddress(ContractName.CROSS_CHAIN_BRIDGE, sourceChainId);
-  const layerZeroChainId = LAYER_ZERO_CHAIN_IDS[destinationChainId];
+  const bridgeAddress = getContractAddress(ContractName.LZ_CROSS_CHAIN_BRIDGE, sourceChainId);
+  const dstEid = chainIdToEid(destinationChainId);
 
   const { data, isLoading, error } = useReadContract({
     address: bridgeAddress,
-    abi: CrossChainBridgeAbi,
+    abi: LZCrossChainBridgeAbi,
     functionName: "estimateSendFee",
-    args: [layerZeroChainId, recipientAddress!, amount, "0x"],
+    args: [dstEid!, recipientAddress!, amount],
     chainId: sourceChainId,
     query: {
-      enabled: !mock && !!bridgeAddress && !!layerZeroChainId && !!recipientAddress && amount > 0n,
+      enabled: !mock && !!bridgeAddress && !!dstEid && !!recipientAddress && amount > 0n,
       refetchInterval: 30_000,
     },
   });
@@ -36,15 +47,18 @@ export function useEstimateBridgeFee({
     const fee = BigInt(mock.scenario.bridge.nativeFeeWei);
     return {
       nativeFee: amount > 0n ? fee : undefined,
-      zroFee: 0n,
+      bufferedFee: amount > 0n ? applyFeeBuffer(fee) : undefined,
       isLoading: false,
       error: null,
     };
   }
 
+  // estimateSendFee returns a MessagingFee { nativeFee, lzTokenFee }; lzTokenFee is unused.
+  const nativeFee = data?.nativeFee;
+
   return {
-    nativeFee: data?.[0] as bigint | undefined,
-    zroFee: data?.[1] as bigint | undefined,
+    nativeFee,
+    bufferedFee: nativeFee != null ? applyFeeBuffer(nativeFee) : undefined,
     isLoading,
     error,
   };

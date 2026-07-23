@@ -31,35 +31,31 @@ import {
   TableCell,
 } from "@/components/ui/table.tsx";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
-import { getBridgeChain } from "../utils/constants.ts";
+import { getBridgeChain, getLayerZeroScanTxUrl } from "../utils/constants.ts";
 import { shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
 import { ExplorerLink } from "@/components/explorer-link.tsx";
 
 const PAGE_SIZE = 20;
 
-// Normalize LayerZero IDs to regular EVM chain IDs for UI rendering.
-// Handles both legacy LZ IDs (e.g. 101) and v2 endpoint IDs (e.g. 30101).
-const BRIDGE_CHAIN_ID_NORMALIZATION: Record<number, number> = {
-  // Legacy LayerZero chain IDs
-  101: 1, // Ethereum
-  106: 43114, // Avalanche
-  110: 42161, // Arbitrum
-  184: 8453, // Base
-  362: 80094, // Berachain
-  // LayerZero v2 endpoint IDs
-  30101: 1,
-  30106: 43114,
-  30110: 42161,
-  30184: 8453,
-  30362: 80094,
-};
-
-function normalizeBridgeChainId(chainId: number): number {
-  return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
-}
-
 const columnHelper = createColumnHelper<BridgeHistoryItem>();
+
+// Map a bridge status to its badge label + color.
+function statusBadge(status: string): {
+  label: string;
+  color: "green" | "blue" | "orange" | "red";
+} {
+  switch (status) {
+    case "DELIVERED":
+      return { label: "Delivered", color: "green" };
+    case "INFLIGHT":
+      return { label: "In Flight", color: "blue" };
+    case "PENDING_RECOVERY":
+      return { label: "Pending Recovery", color: "orange" };
+    default:
+      return { label: "Failed", color: "red" };
+  }
+}
 
 const columns = [
   columnHelper.accessor((row) => ({ srcChainId: row.srcChainId, dstChainId: row.dstChainId }), {
@@ -115,29 +111,39 @@ const columns = [
       const { hash, chainId } = getValue();
       if (!hash) return null;
       return (
-        <ExplorerLink chainId={chainId} href={`/tx/${hash}`}>
-          <div className="group flex items-center gap-x-1 text-xs/4 font-semibold text-primary-t">
-            {shortenAddress(hash as Address, 3)}{" "}
+        <div className="flex flex-col gap-y-1">
+          <ExplorerLink chainId={chainId} href={`/tx/${hash}`}>
+            <div className="group flex items-center gap-x-1 text-xs/4 font-semibold text-primary-t">
+              {shortenAddress(hash as Address, 3)}{" "}
+              <RiExternalLinkLine
+                size={16}
+                className="text-tertiary-t group-hover:text-secondary-t transition-colors"
+              />
+            </div>
+          </ExplorerLink>
+          <a
+            href={getLayerZeroScanTxUrl(hash)}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center gap-x-1 text-xs/4 font-normal text-secondary-t hover:text-primary-t transition-colors"
+          >
+            LZ Scan
             <RiExternalLinkLine
-              size={16}
+              size={14}
               className="text-tertiary-t group-hover:text-secondary-t transition-colors"
             />
-          </div>
-        </ExplorerLink>
+          </a>
+        </div>
       );
     },
   }),
   columnHelper.accessor("status", {
     header: () => <div className="text-right w-full">Status</div>,
     cell: ({ getValue }) => {
-      const value = getValue();
-      const isDelivered = value === "DELIVERED";
-      const isInflight = value === "INFLIGHT";
-      const label = isDelivered ? "Delivered" : isInflight ? "In Flight" : "Failed";
-
+      const { label, color } = statusBadge(getValue());
       return (
         <div className="flex justify-end">
-          <Badge variant="filled" color={isDelivered ? "green" : isInflight ? "blue" : "red"}>
+          <Badge variant="filled" color={color}>
             {label}
           </Badge>
         </div>
@@ -150,15 +156,8 @@ export function BridgeHistory() {
   const { address } = useAccount();
   const { history, isLoading } = useBridgeHistory();
 
-  const data = useMemo(
-    () =>
-      history.map((item) => ({
-        ...item,
-        srcChainId: normalizeBridgeChainId(item.srcChainId),
-        dstChainId: normalizeBridgeChainId(item.dstChainId),
-      })),
-    [history],
-  );
+  // History already returns EVM chain IDs (EIDs resolved in the hook).
+  const data = useMemo(() => history, [history]);
 
   const table = useReactTable({
     data,

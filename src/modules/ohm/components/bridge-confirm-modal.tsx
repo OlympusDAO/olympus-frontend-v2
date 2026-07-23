@@ -10,10 +10,12 @@ import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
 import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
+import { useBridgeMessageStatus } from "@/lib/hooks/bridge/useBridgeMessageStatus.ts";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
-import { getBridgeChain } from "../utils/constants.ts";
+import { getBridgeChain, getLayerZeroScanTxUrl } from "../utils/constants.ts";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Link } from "react-router-dom";
 
 interface BridgeConfirmModalProps {
@@ -48,10 +50,10 @@ export function BridgeConfirmModal({
     }
   })();
 
-  // Approval
+  // Approval — OHM is approved to the facilitator (LZCrossChainBridge) in V2
   const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
-  const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance, queryKey } = useTokenAllowance(ohmAddress!, address, minterAddress);
+  const facilitatorAddress = getContractAddress(ContractName.LZ_CROSS_CHAIN_BRIDGE, sourceChainId);
+  const { allowance, queryKey } = useTokenAllowance(ohmAddress!, address, facilitatorAddress);
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
 
@@ -70,6 +72,20 @@ export function BridgeConfirmModal({
     error: bridgeError,
     hash: bridgeHash,
   } = useBridgeOhm();
+
+  // Live cross-chain delivery status from LayerZero Scan, once the source tx is mined.
+  const { bridgeStatus, isDelivered } = useBridgeMessageStatus(
+    bridgeSuccess ? bridgeHash : undefined,
+  );
+  const deliveryLabel =
+    bridgeStatus === "DELIVERED"
+      ? "Delivered"
+      : bridgeStatus === "PENDING_RECOVERY"
+        ? "Pending Recovery"
+        : bridgeStatus === "FAILED"
+          ? "Failed"
+          : "In Flight";
+  const deliveryColor = isDelivered ? "green" : bridgeStatus === "FAILED" ? "red" : "blue";
 
   useEffect(() => {
     if (!bridgeSuccess) return;
@@ -101,10 +117,10 @@ export function BridgeConfirmModal({
   };
 
   const handleApprove = () => {
-    if (!ohmAddress || !minterAddress) return;
+    if (!ohmAddress || !facilitatorAddress) return;
     approve({
       tokenAddress: ohmAddress,
-      spender: minterAddress,
+      spender: facilitatorAddress,
       amount: amountBigInt,
       queryKey,
     });
@@ -171,11 +187,11 @@ export function BridgeConfirmModal({
                     <div>
                       <div className="font-medium text-sm">{step.title}</div>
                       {step.badges && (
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex flex-wrap gap-1 mt-1">
                           {step.badges.map((badge) => (
                             <span
                               key={badge.label}
-                              className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b"
+                              className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b whitespace-nowrap"
                             >
                               {badge.label}
                             </span>
@@ -199,6 +215,26 @@ export function BridgeConfirmModal({
               </div>
             ))}
           </div>
+
+          {/* LayerZero Scan: live cross-chain delivery status + link */}
+          {bridgeHash && (
+            <div className="flex items-center justify-between rounded-2xl bg-surface-a3 border border-a3-b px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-primary-t">Delivery status</span>
+                <Badge variant="filled" color={deliveryColor}>
+                  {deliveryLabel}
+                </Badge>
+              </div>
+              <Link
+                target="_blank"
+                to={getLayerZeroScanTxUrl(bridgeHash)}
+                className="flex items-center gap-1 text-sm text-blue hover:text-blue-800"
+              >
+                LayerZero Scan
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          )}
 
           <Button onClick={onClose} className="w-full">
             Close
@@ -256,11 +292,11 @@ export function BridgeConfirmModal({
                     <div>
                       <div className="text-sm/5 font-semibold text-primary-t">{step.title}</div>
                       {step.badges && (
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex flex-wrap gap-1 mt-1">
                           {step.badges.map((badge) => (
                             <span
                               key={badge.label}
-                              className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b"
+                              className="text-xs text-secondary-t rounded-full border px-2 py-0.5 border-a10-b whitespace-nowrap"
                             >
                               {badge.label}
                             </span>

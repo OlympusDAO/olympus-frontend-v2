@@ -69,8 +69,9 @@ export function BridgePage() {
     }
   }, [amount]);
 
-  // Fee estimate (for passing to confirm modal)
-  const { nativeFee } = useEstimateBridgeFee({
+  // Fee estimate (for passing to confirm modal). bufferedFee is the value actually sent;
+  // LayerZero refunds any overpayment.
+  const { bufferedFee } = useEstimateBridgeFee({
     sourceChainId,
     destinationChainId,
     recipientAddress: recipientAddress as `0x${string}`,
@@ -160,7 +161,7 @@ export function BridgePage() {
       />
 
       {/* Confirm Modal */}
-      {isConfirmOpen && nativeFee && (
+      {isConfirmOpen && bufferedFee && (
         <BridgeConfirmModal
           isOpen={isConfirmOpen}
           onClose={() => {
@@ -171,7 +172,7 @@ export function BridgePage() {
           destinationChainId={destinationChainId}
           amount={amount}
           recipientAddress={recipientAddress as `0x${string}`}
-          nativeFee={nativeFee}
+          nativeFee={bufferedFee}
         />
       )}
     </div>

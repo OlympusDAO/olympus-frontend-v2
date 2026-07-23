@@ -1,9 +1,14 @@
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
-import { formatUnits } from "viem";
+import { formatUnits, decodeAbiParameters } from "viem";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import { BRIDGE_CHAINS } from "@/modules/ohm/utils/constants";
+import { BRIDGE_NETWORKS, eidToChainId, LZ_SCAN_API_BASE } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
+import { usePendingBridgeTxs, removePendingBridgeTxs } from "./usePendingBridgeTxs";
+import { classifyLzStatus, type BridgeStatus } from "./bridgeStatus";
+
+export type { BridgeStatus };
 
 export interface BridgeHistoryItem {
   srcChainId: number;
@@ -12,39 +17,33 @@ export interface BridgeHistoryItem {
   amount: string;
   srcTxHash: string;
   dstTxHash?: string;
-  status: "DELIVERED" | "INFLIGHT" | "FAILED" | string;
+  guid?: string;
+  status: BridgeStatus;
 }
 
-// LayerZero v2 endpoint ID → EVM chain ID mapping
-const LZ_EID_TO_EVM: Record<number, number> = {
-  30101: 1, // Ethereum
-  30110: 42161, // Arbitrum
-  30184: 8453, // Base
-  30362: 80094, // Berachain
-};
-
 function lzEidToEvmChainId(eid: number): number {
-  return LZ_EID_TO_EVM[eid] ?? eid;
+  return eidToChainId(eid) ?? eid;
 }
 
 /**
- * Fetch bridge history from LayerZero Scan API.
- * Uses GET /v1/messages/wallet/{srcAddress} endpoint.
+ * Fetch bridge history from the LayerZero Scan API.
+ * Uses GET /v1/messages/wallet/{srcAddress}. Filters to OHM bridge gateway (OApp) messages
+ * for the active environment.
  */
 export function useBridgeHistory() {
   const { address } = useAccount();
   const mock = useMockData();
 
-  // Collect all bridge contract addresses for filtering
-  const bridgeAddresses = BRIDGE_CHAINS.map((chain) =>
-    getContractAddress(ContractName.CROSS_CHAIN_BRIDGE, chain.chainId),
+  // The LZ Scan pathway sender is the OApp — i.e. the gateway — so we filter on gateway addresses.
+  const gatewayAddresses = BRIDGE_NETWORKS.map((chain) =>
+    getContractAddress(ContractName.LZ_BRIDGE_GATEWAY, chain.chainId),
   ).filter(Boolean);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["bridgeHistory", address],
-    enabled: !mock && !!address && bridgeAddresses.length > 0,
+    enabled: !mock && !!address && gatewayAddresses.length > 0,
     queryFn: async () => {
-      const url = `https://scan.layerzero-api.com/v1/messages/wallet/${address}?limit=100`;
+      const url = `${LZ_SCAN_API_BASE}/messages/wallet/${address}?limit=100`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -54,13 +53,12 @@ export function useBridgeHistory() {
       const json = await response.json();
       const messages: LzMessage[] = json.data ?? [];
 
-      // Filter to only our OHM bridge contract messages
-      const bridgeAddressSet = new Set(bridgeAddresses.map((a) => a!.toLowerCase()));
+      const gatewaySet = new Set(gatewayAddresses.map((a) => a!.toLowerCase()));
 
       const items: BridgeHistoryItem[] = messages
         .filter((msg) => {
           const senderAddr = msg.pathway?.sender?.address?.toLowerCase();
-          return senderAddr && bridgeAddressSet.has(senderAddr);
+          return senderAddr && gatewaySet.has(senderAddr);
         })
         .map((msg) => {
           const srcChainId = lzEidToEvmChainId(msg.pathway.srcEid);
@@ -73,7 +71,8 @@ export function useBridgeHistory() {
             amount: parseAmountFromPayload(msg.source?.tx?.payload),
             srcTxHash: msg.source?.tx?.txHash ?? "",
             dstTxHash: msg.destination?.tx?.txHash ?? undefined,
-            status: msg.status?.name ?? "INFLIGHT",
+            guid: msg.guid,
+            status: deriveStatus(msg),
           } satisfies BridgeHistoryItem;
         });
 
@@ -82,6 +81,35 @@ export function useBridgeHistory() {
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
+
+  // Optimistic entries for transfers confirmed on-chain but not yet indexed by LZ Scan.
+  const pending = usePendingBridgeTxs(address);
+
+  // Once LZ Scan reports a tx, drop its optimistic placeholder.
+  useEffect(() => {
+    if (!data) return;
+    const lzHashes = new Set(data.map((i) => i.srcTxHash.toLowerCase()));
+    const indexed = pending
+      .filter((p) => lzHashes.has(p.srcTxHash.toLowerCase()))
+      .map((p) => p.srcTxHash);
+    removePendingBridgeTxs(indexed);
+  }, [data, pending]);
+
+  const history = useMemo(() => {
+    const lzItems = data ?? [];
+    const lzHashes = new Set(lzItems.map((i) => i.srcTxHash.toLowerCase()));
+    const optimistic: BridgeHistoryItem[] = pending
+      .filter((p) => !lzHashes.has(p.srcTxHash.toLowerCase()))
+      .map((p) => ({
+        srcChainId: p.srcChainId,
+        dstChainId: p.dstChainId,
+        timestamp: p.timestamp,
+        amount: p.amount,
+        srcTxHash: p.srcTxHash,
+        status: "INFLIGHT" as BridgeStatus,
+      }));
+    return [...optimistic, ...lzItems];
+  }, [data, pending]);
 
   if (mock?.scenario.bridge) {
     return {
@@ -92,27 +120,40 @@ export function useBridgeHistory() {
   }
 
   return {
-    history: data ?? [],
+    history,
     isLoading,
     error: error as Error | null,
   };
 }
 
+/** Derive a UI status from a LayerZero Scan message (see `classifyLzStatus`). */
+function deriveStatus(msg: LzMessage): BridgeStatus {
+  return classifyLzStatus(msg.status?.name, msg.destination?.tx?.txHash);
+}
+
 /**
- * Parse OHM amount from LayerZero message payload.
- * The bridge contract encodes: recipient address (20 bytes) + amount (uint256).
- * OHM has 9 decimals.
+ * Parse the OHM amount from a LayerZero V2 message payload.
+ * V2 encodes `abi.encode(uint8 msgType, abi.encode(address to, uint256 amount))`:
+ * decode the outer (uint8, bytes), then the inner (address, uint256). OHM has 9 decimals.
  */
 function parseAmountFromPayload(payload?: string): string {
-  if (!payload || payload.length < 66) return "0";
+  if (!payload) return "0";
   try {
-    // Skip the 0x prefix + first bytes (varies by encoding),
-    // look for the amount in the payload.
-    // OFT v1 payload format: abi.encode(address to, uint256 amount)
-    // = 32 bytes (address padded) + 32 bytes (amount) = 64 hex chars each
-    // After 0x prefix, that's positions 2..66 (address) and 66..130 (amount)
-    const amountHex = `0x${payload.slice(66, 130)}`;
-    const amount = BigInt(amountHex);
+    const hexPayload = (payload.startsWith("0x") ? payload : `0x${payload}`) as `0x${string}`;
+    const [, inner] = decodeAbiParameters(
+      [
+        { name: "msgType", type: "uint8" },
+        { name: "inner", type: "bytes" },
+      ],
+      hexPayload,
+    );
+    const [, amount] = decodeAbiParameters(
+      [
+        { name: "to", type: "address" },
+        { name: "amount", type: "uint256" },
+      ],
+      inner as `0x${string}`,
+    );
     if (amount === 0n) return "0";
     return formatUnits(amount, 9);
   } catch {

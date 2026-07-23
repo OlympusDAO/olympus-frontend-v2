@@ -8,11 +8,12 @@ const DAY = 86_400_000;
 const MOCK_HISTORY: BridgeHistoryItem[] = [
   {
     srcChainId: 1,
-    dstChainId: 42161,
-    timestamp: new Date(now - 2 * HOUR).toISOString(),
+    dstChainId: 10,
+    timestamp: new Date(now - 1 * HOUR).toISOString(),
     amount: "25.5",
     srcTxHash: "0xabc123def456789012345678901234567890abcdef1234567890abcdef123456",
     dstTxHash: "0xdef456abc789012345678901234567890abcdef1234567890abcdef123456abc",
+    guid: "0x1111111111111111111111111111111111111111111111111111111111111111",
     status: "DELIVERED",
   },
   {
@@ -21,6 +22,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     timestamp: new Date(now - 6 * HOUR).toISOString(),
     amount: "10.0",
     srcTxHash: "0x111222333444555666777888999000aaabbbcccdddeeefffaaabbbccc111222",
+    guid: "0x2222222222222222222222222222222222222222222222222222222222222222",
     status: "INFLIGHT",
   },
   {
@@ -30,6 +32,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     amount: "78.23",
     srcTxHash: "0xaaa111bbb222ccc333ddd444eee555fff666777888999000aaabbbccc111222",
     dstTxHash: "0xbbb222ccc333ddd444eee555fff666777888999000aaabbbccc111222aaa111",
+    guid: "0x3333333333333333333333333333333333333333333333333333333333333333",
     status: "DELIVERED",
   },
   {
@@ -39,6 +42,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     amount: "5.0",
     srcTxHash: "0xccc333ddd444eee555fff666777888999000aaabbbccc111222aaa111bbb222",
     dstTxHash: "0xddd444eee555fff666777888999000aaabbbccc111222aaa111bbb222ccc333",
+    guid: "0x4444444444444444444444444444444444444444444444444444444444444444",
     status: "DELIVERED",
   },
   {
@@ -47,7 +51,8 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     timestamp: new Date(now - 3 * DAY).toISOString(),
     amount: "12.75",
     srcTxHash: "0xeee555fff666777888999000aaabbbccc111222aaa111bbb222ccc333ddd444",
-    status: "FAILED",
+    guid: "0x5555555555555555555555555555555555555555555555555555555555555555",
+    status: "PENDING_RECOVERY",
   },
 ];
 
