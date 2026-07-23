@@ -120,9 +120,16 @@ export function useV1MigrationInfo(
   const remainingMintApproval = data?.[2]?.result as bigint | undefined;
   const migratedAmount = (address ? (data?.[3]?.result as bigint | undefined) : undefined) ?? 0n;
   // verifyClaim is the 5th contract, only present when both address and claim exist
-  // and the active merkle root is also set on-chain.
+  // and the active merkle root is also set on-chain. A reverted call means the claim
+  // could not be verified, so fail closed rather than letting `undefined` read as
+  // "not rejected" downstream.
+  const verifyClaimCall = address && claim && shouldVerifyClaim ? data?.[4] : undefined;
   const isClaimValid =
-    address && claim && shouldVerifyClaim ? (data?.[4]?.result as boolean | undefined) : undefined;
+    verifyClaimCall == null
+      ? undefined
+      : verifyClaimCall.status === "failure"
+        ? false
+        : (verifyClaimCall.result as boolean | undefined);
 
   const remaining = claim != null ? bigMax(claim.allocatedAmount - migratedAmount, 0n) : undefined;
 
@@ -155,7 +162,13 @@ export function useV1MigrationInfo(
       });
     }
 
-    if (claim && shouldVerifyClaim && isClaimValid === false) {
+    if (verifyClaimCall?.status === "failure") {
+      console.warn("[V1Migrator] verifyClaim call reverted; treating claim as invalid", {
+        migrator,
+        address,
+        error: verifyClaimCall.error,
+      });
+    } else if (claim && shouldVerifyClaim && isClaimValid === false) {
       console.warn("[V1Migrator] Migration claim failed on-chain verification", {
         migrator,
         address,
@@ -173,6 +186,7 @@ export function useV1MigrationInfo(
     isLoading,
     migrator,
     shouldVerifyClaim,
+    verifyClaimCall,
   ]);
 
   return {
