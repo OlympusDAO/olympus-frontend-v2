@@ -5,7 +5,7 @@ import { TokenName, TOKENS } from "@/lib/tokens";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useMockData } from "@/lib/mock/provider";
 import { useMigrationClaim } from "@/lib/hooks/useMigrationClaim";
-import { useV1MigrationInfo } from "@/lib/hooks/useV1MigrationInfo";
+import { useV1MigrationInfo, useV1MigratorMerkleRoot } from "@/lib/hooks/useV1MigrationInfo";
 import { MigrateOhmModal } from "@/components/migrate-ohm-modal";
 import { UnstakeSohmV1Modal } from "@/components/unstake-sohm-v1-modal";
 import { UnwrapWsohmModal } from "@/components/unwrap-wsohm-modal";
@@ -34,19 +34,27 @@ export function BalancesPage() {
   const [isMigrateOpen, setIsMigrateOpen] = useState(false);
   const [isUnstakeV1Open, setIsUnstakeV1Open] = useState(false);
   const [isUnwrapWsohmOpen, setIsUnwrapWsohmOpen] = useState(false);
-  const { claim, isEligible, isLoading: claimLoading } = useMigrationClaim();
   const {
     migrator,
+    merkleRoot,
+    hasMerkleRoot,
+    isOnChainMerkleRootActive,
+    isLoading: merkleRootLoading,
+  } = useV1MigratorMerkleRoot();
+  const { claim, isEligible, isLoading: claimLoading } = useMigrationClaim(merkleRoot);
+  const {
     isEnabled: migratorEnabled,
     isActive: migratorActive,
     isClaimValid,
     remaining,
     isLoading: migrationInfoLoading,
-  } = useV1MigrationInfo(claim);
+  } = useV1MigrationInfo(claim, isOnChainMerkleRootActive);
 
   const migrationStatus: MigrationStatus | undefined = useMemo(() => {
     if (mock || !isConnected) return undefined;
-    if (claimLoading || migrationInfoLoading) return "loading";
+    if (merkleRootLoading || claimLoading || migrationInfoLoading) return "loading";
+    if (!hasMerkleRoot) return "not-live";
+    if (!isOnChainMerkleRootActive) return "not-live";
     // Eligible = present in the snapshot AND not explicitly rejected by on-chain verifyClaim.
     if (!isEligible || isClaimValid === false) return "ineligible";
     // No migrator on this chain (e.g. connected to Arbitrum), policy inactive, or paused.
@@ -56,8 +64,11 @@ export function BalancesPage() {
   }, [
     mock,
     isConnected,
+    merkleRootLoading,
     claimLoading,
     migrationInfoLoading,
+    hasMerkleRoot,
+    isOnChainMerkleRootActive,
     isEligible,
     isClaimValid,
     migrator,
