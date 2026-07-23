@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckIcon, ExternalLink, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TransactionSuccessDialog } from "@/components/transaction-steps";
 import { Button } from "@/components/ui/button";
 import { TokenBigInput } from "@/components/ui/token-big-input";
 import { useToken } from "@/lib/hooks/useToken";
 import { useUnwrapWsohm } from "@/lib/hooks/useUnwrapWsohm";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName } from "@/lib/tokens";
-import { blockExplorerTxBaseUrl, formatTxHash } from "@/lib/helpers";
 import { formatTokenDisplay } from "@/lib/math";
 import WsOHMAbi from "@/abis/WsOHM";
 
@@ -89,33 +88,13 @@ export function UnwrapWsohmModal({ isOpen, onClose }: UnwrapWsohmModalProps) {
   // Success state.
   if (unwrapSuccess) {
     return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="w-full sm:max-w-md mx-auto p-6 gap-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckIcon className="h-8 w-8 text-green" />
-            </div>
-            <DialogTitle className="text-xl font-semibold mb-2">Unwrapped to sOHM v1</DialogTitle>
-            <p className="text-sm text-secondary-t mb-2">
-              Next, unstake your sOHM v1 to OHM v1, then migrate.
-            </p>
-            {unwrapHash && (
-              <Link
-                target="_blank"
-                rel="noopener noreferrer"
-                to={`${blockExplorerTxBaseUrl}${unwrapHash}`}
-                className="inline-flex items-center gap-1 text-sm text-blue hover:text-blue-800"
-              >
-                {formatTxHash(unwrapHash)}
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            )}
-          </div>
-          <Button onClick={handleClose} className="w-full">
-            Close
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <TransactionSuccessDialog
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Unwrapped to sOHM v1"
+        description="Next, unstake your sOHM v1 to OHM v1, then migrate."
+        hash={unwrapHash}
+      />
     );
   }
 

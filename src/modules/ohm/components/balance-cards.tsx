@@ -5,11 +5,7 @@ import { Icon, type IconName } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
-import {
-  LEGACY_ACTION_TOOLTIP,
-  MIGRATION_TOOLTIP,
-  type MigrationAction,
-} from "@/modules/ohm/components/migration-action.ts";
+import { getTokenAction, type MigrationAction } from "@/modules/ohm/components/migration-action.ts";
 
 type TokenEntry = {
   symbol: string;
@@ -26,68 +22,6 @@ type BalanceCardsProps = {
   onUnstakeV1?: () => void;
   onUnwrapWsohm?: () => void;
 };
-
-type CardAction = {
-  label: string;
-  to?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  tooltip?: string;
-};
-
-function getAction(
-  symbol: string,
-  chainName: string,
-  migration?: MigrationAction,
-  onUnstakeV1?: () => void,
-  onUnwrapWsohm?: () => void,
-): CardAction {
-  const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
-  switch (symbol) {
-    case "OHM":
-      return isHomeChain
-        ? { label: "Wrap", to: "/ohm/wrap" }
-        : { label: "Bridge", to: "/ohm/bridge" };
-    case "sOHM":
-      return { label: "Wrap", to: "/ohm/wrap" };
-    case "gOHM":
-      return isHomeChain
-        ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
-        : { label: "Bridge", to: "/ohm/bridge" };
-    case "OHM v1":
-      return getMigrateAction(migration);
-    case "sOHM v1":
-      // The legacy staking contract only exists on Ethereum, so bridged rows stay disabled.
-      return isHomeChain && onUnstakeV1
-        ? { label: "Unstake", onClick: onUnstakeV1 }
-        : {
-            label: "Unstake",
-            disabled: true,
-            tooltip: isHomeChain ? undefined : LEGACY_ACTION_TOOLTIP,
-          };
-    case "wsOHM":
-      // The legacy wsOHM contract only unwraps on Ethereum, so bridged rows stay disabled.
-      return isHomeChain && onUnwrapWsohm
-        ? { label: "Unwrap", onClick: onUnwrapWsohm }
-        : {
-            label: "Unwrap",
-            disabled: true,
-            tooltip: isHomeChain ? undefined : LEGACY_ACTION_TOOLTIP,
-          };
-    default:
-      return { label: "View", disabled: true };
-  }
-}
-
-function getMigrateAction(migration?: MigrationAction): CardAction {
-  if (!migration || migration.status === "loading") return { label: "Migrate", disabled: true };
-  if (migration.status === "ready") return { label: "Migrate", onClick: migration.onMigrate };
-  return {
-    label: migration.status === "fully-migrated" ? "Migrated" : "Migrate",
-    disabled: true,
-    tooltip: MIGRATION_TOOLTIP[migration.status],
-  };
-}
 
 function formatBalance(value: string, symbol: string): string {
   const num = parseFloat(value);
@@ -132,7 +66,7 @@ export function BalanceCards({ tokens, migration, onUnstakeV1, onUnwrapWsohm }: 
     <Card className="divide-y divide-surface-a5">
       <div className="px-4 py-2.5 text-xs text-tertiary-t">Asset</div>
       {rows.map((row) => {
-        const action = getAction(
+        const action = getTokenAction(
           row.token.symbol,
           row.chain.chainName,
           migration,
