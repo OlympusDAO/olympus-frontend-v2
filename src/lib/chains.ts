@@ -62,10 +62,21 @@ export const allChains = isTestnetMode
   : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**
+ * Mainnet RPC URL. In dev, override via VITE_MAINNET_RPC_URL to point at a local anvil
+ * fork (e.g. http://localhost:8545) for testing; defaults to a public node. The override
+ * is DEV-gated so a fork URL lingering in a shared build env can never be baked into a
+ * production bundle.
+ */
+const mainnetRpcUrl =
+  (import.meta.env.DEV
+    ? (import.meta.env.VITE_MAINNET_RPC_URL as string | undefined)
+    : undefined) || "https://ethereum-rpc.publicnode.com";
+
+/**
  * Custom RPC transports per chain.
  */
 export const transports: Record<number, Transport> = {
-  [mainnet.id]: http("https://ethereum-rpc.publicnode.com", { batch: true }),
+  [mainnet.id]: http(mainnetRpcUrl, { batch: true }),
   [arbitrum.id]: http("https://arbitrum-rpc.publicnode.com"),
   [polygon.id]: http("https://polygon-bor-rpc.publicnode.com"),
   [optimism.id]: http("https://optimism-rpc.publicnode.com"),

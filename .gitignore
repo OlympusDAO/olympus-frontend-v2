@@ -7,4 +7,8 @@ dist
 .idea/
 .pi-lens
 
+# OHM v1 migration merkle shards (generated via `pnpm shard:migration`; hosted on Vercel Blob)
+.migration-out/
+public/migration/
+
 .pnpm-store/
