@@ -10,7 +10,7 @@ import { Icon } from "@/components/icon.tsx";
 import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
 import { formatEther, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { useRedemptionLoan } from "@/lib/hooks/cds/useRedemptionLoan.ts";

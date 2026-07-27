@@ -14,7 +14,7 @@ import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
 import { getBridgeChain } from "../utils/constants.ts";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 interface BridgeConfirmModalProps {
   isOpen: boolean;

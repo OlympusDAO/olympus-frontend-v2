@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 
 interface Step {

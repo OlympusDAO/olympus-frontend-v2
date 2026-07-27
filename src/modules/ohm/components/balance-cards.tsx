@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Card } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Icon, type IconName } from "@/components/icon.tsx";

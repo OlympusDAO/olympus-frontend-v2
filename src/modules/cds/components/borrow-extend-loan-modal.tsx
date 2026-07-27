@@ -10,7 +10,7 @@ import { Loader2, CheckIcon, ExternalLink, CheckCircle2 } from "lucide-react";
 import { formatEther } from "viem";
 import type { TokenWithBalance } from "@/lib/hooks/useToken.tsx";
 import { useAccount, useChainId } from "wagmi";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers.ts";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance.tsx";

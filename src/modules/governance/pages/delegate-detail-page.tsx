@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { useEnsName } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
