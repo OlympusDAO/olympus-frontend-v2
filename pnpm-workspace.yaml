@@ -2,10 +2,12 @@ blockExoticSubdeps: true
 engineStrict: true
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
-  # Only patch for GHSA-qwww-vcr4-c8h2; remove after the seven-day window (published 2026-07-22).
-  - "react-router@8.3.0"
-  # Patch for GHSA-mh99-v99m-4gvg; remove after the seven-day window (published 2026-07-23).
-  - "brace-expansion@5.0.8"
+  # Exact-version pins for urgent security patches. Each entry goes inert once its
+  # version is older than minimumReleaseAge, so these are permanent audit-trail
+  # records. No cleanup needed.
+  - "fast-uri@3.1.4" # GHSA-v2hh-gcrm-f6hx
+  - "react-router@8.3.0" # GHSA-qwww-vcr4-c8h2
+  - "brace-expansion@5.0.8" # GHSA-mh99-v99m-4gvg
 allowBuilds:
   "@posthog/cli@0.7.11": true
   "@swc/core": false
