@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { RiArrowRightUpLine } from "@remixicon/react";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/lib/navigation";

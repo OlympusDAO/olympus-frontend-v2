@@ -6,7 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!dist/", "!node_modules/", "!public/", "!src/assets/animations/*.json"]
+    "includes": [
+      "**",
+      "!dist/",
+      "!node_modules/",
+      "!public/",
+      "!src/assets/animations/*.json",
+      "!src/generated/"
+    ]
   },
   "formatter": {
     "enabled": true,

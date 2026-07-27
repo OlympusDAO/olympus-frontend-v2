@@ -7,7 +7,7 @@ import { InfoIcon, CheckCircle, ExternalLink, Loader2 } from "lucide-react";
 import { useWrapPosition } from "@/lib/hooks/cds/useWrapPosition";
 import { useUnwrapPosition } from "@/lib/hooks/cds/useUnwrapPosition";
 import { formatEther } from "viem";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { formatTermSuffix } from "@/lib/utils";
 

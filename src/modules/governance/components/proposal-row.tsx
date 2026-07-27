@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { formatEther } from "viem";
 import { RiThumbUpFill, RiThumbDownFill, RiEyeCloseFill } from "@remixicon/react";
 import type { RemixiconComponentType } from "@remixicon/react";

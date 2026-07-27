@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { RiArrowRightSLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";

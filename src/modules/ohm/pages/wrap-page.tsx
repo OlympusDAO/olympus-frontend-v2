@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { WrapInfoCards } from "../components/wrap-info-cards";
 import { WrapForm } from "../components/wrap-form";
 import { WrapBalancePanel } from "../components/wrap-balance-panel.tsx";
