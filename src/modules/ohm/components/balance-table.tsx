@@ -17,7 +17,13 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Icon, type IconName } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Tooltip } from "@/components/ui/tooltip.tsx";
 import type { MultiChainBalanceResult, ChainBalance } from "@/lib/hooks/useMultiChainBalance.tsx";
+import {
+  getTokenAction,
+  type MigrationAction,
+  type TokenAction,
+} from "@/modules/ohm/components/migration-action.ts";
 
 type TokenEntry = {
   symbol: string;
@@ -30,43 +36,18 @@ type TokenEntry = {
 
 type BalanceTableProps = {
   tokens: TokenEntry[];
-};
-
-type RowAction = {
-  label: string;
-  to?: string;
-  disabled?: boolean;
+  migration?: MigrationAction;
+  onUnstakeV1?: () => void;
+  onUnwrapWsohm?: () => void;
 };
 
 type Row = {
   key: string;
   token: TokenEntry;
   chain: ChainBalance;
-  action: RowAction;
+  action: TokenAction;
   usdValue: number;
 };
-
-function getAction(symbol: string, chainName: string): RowAction {
-  const isHomeChain = chainName === "Ethereum" || chainName === "Sepolia";
-  switch (symbol) {
-    case "OHM":
-      return isHomeChain
-        ? { label: "Wrap", to: "/ohm/wrap" }
-        : { label: "Bridge", to: "/ohm/bridge" };
-    case "sOHM":
-      return { label: "Wrap", to: "/ohm/wrap" };
-    case "gOHM":
-      return isHomeChain
-        ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }
-        : { label: "Bridge", to: "/ohm/bridge" };
-    case "wsOHM":
-    case "OHM v1":
-    case "sOHM v1":
-      return { label: "Migrate", disabled: true };
-    default:
-      return { label: "View", disabled: true };
-  }
-}
 
 function formatBalance(value: string): string {
   const num = parseFloat(value);
@@ -133,16 +114,26 @@ const columns = [
     header: "",
     cell: ({ getValue }) => {
       const action = getValue();
-      return action.to ? (
-        <Button render={<Link to={action.to} />}>{action.label}</Button>
+      if (action.to) {
+        return <Button render={<Link to={action.to} />}>{action.label}</Button>;
+      }
+      const button = (
+        <Button disabled={action.disabled} onClick={action.onClick}>
+          {action.label}
+        </Button>
+      );
+      return action.tooltip ? (
+        <Tooltip title={action.tooltip}>
+          <span className="inline-flex">{button}</span>
+        </Tooltip>
       ) : (
-        <Button disabled>{action.label}</Button>
+        button
       );
     },
   }),
 ];
 
-export function BalanceTable({ tokens }: BalanceTableProps) {
+export function BalanceTable({ tokens, migration, onUnstakeV1, onUnwrapWsohm }: BalanceTableProps) {
   const data = useMemo<Row[]>(() => {
     const rows: Row[] = [];
     for (const token of tokens) {
@@ -154,14 +145,20 @@ export function BalanceTable({ tokens }: BalanceTableProps) {
             key: `${token.symbol}-${chain.chainId}`,
             token,
             chain,
-            action: getAction(token.symbol, chain.chainName),
+            action: getTokenAction(
+              token.symbol,
+              chain.chainName,
+              migration,
+              onUnstakeV1,
+              onUnwrapWsohm,
+            ),
             usdValue,
           });
         }
       }
     }
     return rows;
-  }, [tokens]);
+  }, [tokens, migration, onUnstakeV1, onUnwrapWsohm]);
 
   const table = useReactTable({
     data,

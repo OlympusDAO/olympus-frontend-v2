@@ -28,6 +28,8 @@ export enum ContractName {
   WSOHM = "WSOHM",
   V1_OHM = "V1_OHM",
   V1_SOHM = "V1_SOHM",
+  OHM_V1_MIGRATOR = "OHM_V1_MIGRATOR",
+  STAKING_V1 = "STAKING_V1",
 
   // Cooler
   COOLER_CLEARING_HOUSE_V3 = "COOLER_CLEARING_HOUSE_V3",
@@ -102,10 +104,18 @@ export const CONTRACTS: ContractAddresses = {
     [avalanche.id]: "0x8CD309e14575203535EF120b5b0Ab4DDeD0C2073",
   },
   [ContractName.V1_OHM]: {
-    [mainnet.id]: "0x383518188c0c6d7730D91b2c03a03C36BCD12f65",
+    // Canonical OHM v1 ERC20 (matches TOKENS.V1_OHM in tokens.ts).
+    [mainnet.id]: "0x383518188c0c6d7730d91b2c03a03c837814a899",
   },
   [ContractName.V1_SOHM]: {
     [mainnet.id]: "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F",
+  },
+  [ContractName.OHM_V1_MIGRATOR]: {
+    [mainnet.id]: "0x5131654eFCd63f7b797e00118792e0d0dD90B8B0",
+  },
+  // Legacy Olympus v1 staking — used to unstake sOHM v1 back to OHM v1 before migrating.
+  [ContractName.STAKING_V1]: {
+    [mainnet.id]: "0xFd31c7d00Ca47653c6Ce64Af53c1571f9C36566a",
   },
 
   // ── Cooler ────────────────────────────────────────────

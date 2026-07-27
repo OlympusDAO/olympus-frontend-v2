@@ -35,6 +35,8 @@ Requires Node.js 24+ and pnpm.
 | `VITE_PUBLIC_POSTHOG_INGEST_HOST` | No | PostHog ingest host URL; defaults to `VITE_PUBLIC_POSTHOG_HOST` locally, or `/panoptes` behind the Vercel rewrite |
 | `VITE_TESTNET_MODE` | No | Set to `true` to enable testnet chains (Sepolia) |
 | `VITE_TREASURY_SUBGRAPH_METRICS_API` | No | Treasury subgraph metrics API override; omitted values use the treasury client default |
+| `VITE_MIGRATION_CLAIMS_BASE_URL` | No | OHM v1 migration claims/proof API base URL override; omitted values use the production API |
+| `VITE_MIGRATION_MERKLE_ROOT_OVERRIDE` | No | OHM v1 migration merkle root override, used before the policy contract has a root set on-chain |
 | `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
 
 > **Why are the `VITE_*` keys public?**
