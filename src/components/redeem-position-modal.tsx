@@ -10,7 +10,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { formatEther, parseEther } from "viem";
 import { usePositionRedemption } from "@/lib/hooks/cds/usePositionRedemption";
 import { useAccount, useChainId } from "wagmi";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import {
   useFlexibleReceiptTokenAllowance,

@@ -17,7 +17,7 @@ import {
 } from "@/lib/hooks/cds/useReceiptTokenApproval";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { formatTermSuffix } from "@/lib/utils";
 import { trackConvertToOhm } from "@/lib/analytics";

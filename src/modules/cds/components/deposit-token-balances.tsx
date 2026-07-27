@@ -24,7 +24,7 @@ import { CancelRedemptionModal } from "@/components/cancel-redemption-modal";
 import { FinishRedemptionModal } from "@/components/finish-redemption-modal";
 import { UnwrapReceiptTokenModal } from "@/components/unwrap-receipt-token-modal";
 import { WrapReceiptTokenModal } from "@/components/wrap-receipt-token-modal";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
 

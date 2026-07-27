@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router-dom";
+import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router";
 import posthog from "posthog-js";
 import { ErrorScreen } from "@/components/error-screen";
 

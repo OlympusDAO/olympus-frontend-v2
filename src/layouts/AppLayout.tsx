@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
+import { Outlet, useLocation } from "react-router";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v8";
 import { Providers } from "@/components/providers";
 import { IconSidebar } from "@/layouts/IconSidebar";
 import { SubNav } from "@/layouts/SubNav";
