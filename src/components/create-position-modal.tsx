@@ -11,7 +11,7 @@ import { usePreviewBid } from "@/lib/hooks/cds/usePreviewBid";
 import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { Icon, type IconName } from "@/components/icon";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { useReceiptTokenId, useReceiptTokenName } from "@/lib/hooks/cds/useReceiptToken";
 import { trackDepositCreate, trackTransactionFailed } from "@/lib/analytics";

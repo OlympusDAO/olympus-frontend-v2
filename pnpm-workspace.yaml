@@ -2,8 +2,12 @@ blockExoticSubdeps: true
 engineStrict: true
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
-  # Urgent patch for GHSA-v2hh-gcrm-f6hx; remove after the seven-day window.
-  - "fast-uri@3.1.4"
+  # Exact-version pins for urgent security patches. Each entry goes inert once its
+  # version is older than minimumReleaseAge, so these are permanent audit-trail
+  # records. No cleanup needed.
+  - "fast-uri@3.1.4" # GHSA-v2hh-gcrm-f6hx
+  - "react-router@8.3.0" # GHSA-qwww-vcr4-c8h2
+  - "brace-expansion@5.0.8" # GHSA-mh99-v99m-4gvg
 allowBuilds:
   "@posthog/cli@0.7.11": true
   "@swc/core": false
@@ -18,7 +22,7 @@ overrides:
   "@opentelemetry/core@<2.8.0": "^2.8.0"
   "@protobufjs/utf8@<1.1.1": "^1.1.1"
   "axios@<1.18.0": "^1.18.0"
-  "brace-expansion@<5.0.7": "^5.0.7"
+  "brace-expansion@<5.0.8": "^5.0.8"
   "defu@<6.1.5": "6.1.5"
   "dompurify@<3.4.12": "3.4.12"
   "esbuild@<0.28.1": "0.28.1"
@@ -32,10 +36,9 @@ overrides:
   "markdown-it@<14.2.0": "14.2.0"
   "picomatch@<2.3.2": "2.3.2"
   "picomatch@>=4.0.0 <4.0.4": "4.0.4"
-  "postcss@<8.5.12": "^8.5.12"
+  "postcss@<8.5.18": "^8.5.18"
   "protobufjs@<7.6.3": "^7.6.3"
-  "react-router@<7.16.0": "^7.16.0"
-  "react-router-dom@<7.16.0": "^7.16.0"
+  "react-router@<8.3.0": "^8.3.0"
   "rollup@<4.59.0": "4.59.0"
   "socket.io-parser@<4.2.6": "4.2.6"
   "undici@<7.28.0": "7.28.0"

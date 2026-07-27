@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useAccount, useChainId } from "wagmi";
 import { getActiveSectionFromPath } from "@/lib/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";

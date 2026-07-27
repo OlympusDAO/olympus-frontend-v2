@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { RiArrowRightSLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -11,7 +11,7 @@ import { useWrapOhm } from "@/lib/hooks/useWrapOhm";
 import { useUnwrapGohm } from "@/lib/hooks/useUnwrapGohm";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TokenName, getTokenAddress } from "@/lib/tokens";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 
 interface WrapOhmModalProps {

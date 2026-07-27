@@ -21,7 +21,7 @@ import { getContractAddress, ContractName } from "@/lib/contracts";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
 import { formatEther } from "viem";
 import { formatTermSuffix } from "@/lib/utils";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { Icon } from "@/components/icon";
 import { RiExchangeFundsLine } from "@remixicon/react";
 import type { TokenWithBalance } from "@/lib/hooks/useToken";

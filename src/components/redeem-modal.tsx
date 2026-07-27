@@ -14,7 +14,7 @@ import {
 import { useFullRedemption } from "@/lib/hooks/cds/useFullRedemption";
 import { ContractName, getContractAddress, requireContractAddress } from "@/lib/contracts";
 import { useAccount, useChainId } from "wagmi";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
 import { useReceiptTokenBalance, useReceiptTokenId } from "@/lib/hooks/cds/useReceiptToken";
 import {

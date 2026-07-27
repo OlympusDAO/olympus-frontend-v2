@@ -1,4 +1,4 @@
-import { createHashRouter, Navigate, useParams } from "react-router-dom";
+import { createHashRouter, Navigate, useParams } from "react-router";
 import { mainnet, sepolia } from "viem/chains";
 import AppLayout from "@/layouts/AppLayout";
 import { StubPage } from "@/pages/stub-page.tsx";

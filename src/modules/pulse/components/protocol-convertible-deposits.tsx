@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { calcOhmPremiumPct } from "@/modules/pulse/utils/ohm-metrics";
 import { RiArrowRightSLine } from "@remixicon/react";
 import { Card } from "@/components/ui/card";

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { ConnectButton } from "@/components/connect-button";
 import { MobileNav } from "@/layouts/MobileNav";
 import { OlympusLogo } from "@/components/olympus-logo";
