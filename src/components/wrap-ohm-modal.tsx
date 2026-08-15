@@ -4,44 +4,100 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
 import { parseUnits, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
-import { trackWrapOhm, trackUnwrapGohm, trackTransactionFailed } from "@/lib/analytics";
+import {
+  trackWrapOhm,
+  trackWrapSohm,
+  trackUnwrapGohm,
+  trackUnstakeSohm,
+  trackTransactionFailed,
+} from "@/lib/analytics";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
 import { useWrapOhm } from "@/lib/hooks/useWrapOhm";
+import { useWrapSohm } from "@/lib/hooks/useWrapSohm";
 import { useUnwrapGohm } from "@/lib/hooks/useUnwrapGohm";
+import { useUnstakeSohm } from "@/lib/hooks/useUnstakeSohm";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import { TokenName, getTokenAddress } from "@/lib/tokens";
+import { TOKENS, getTokenAddress } from "@/lib/tokens";
 import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
+import {
+  FLOW_INPUT_TOKEN,
+  FLOW_OUTPUT_TOKEN,
+  type WrapFlow,
+} from "@/modules/ohm/components/wrap-flows";
 
 interface WrapOhmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  mode: "wrap" | "unwrap";
+  flow: WrapFlow;
   inputAmount: string;
   outputAmount: string;
 }
 
+/** Per-flow copy for the modal (input/output symbols come from the token registry). */
+const FLOW_COPY: Record<
+  WrapFlow,
+  { title: string; approveLabel: string; executeLabel: string; executingLabel: string }
+> = {
+  "wrap-ohm": {
+    title: "Wrap OHM",
+    approveLabel: "Approve Wrapping",
+    executeLabel: "Wrap OHM to gOHM",
+    executingLabel: "Wrapping",
+  },
+  "wrap-sohm": {
+    title: "Wrap sOHM",
+    approveLabel: "Approve Wrapping",
+    executeLabel: "Wrap sOHM to gOHM",
+    executingLabel: "Wrapping",
+  },
+  "unwrap-gohm": {
+    title: "Unwrap gOHM",
+    approveLabel: "Approve Unwrapping",
+    executeLabel: "Unwrap gOHM to OHM",
+    executingLabel: "Unwrapping",
+  },
+  "unstake-sohm": {
+    title: "Unstake sOHM",
+    approveLabel: "Approve Unstaking",
+    executeLabel: "Unstake sOHM to OHM",
+    executingLabel: "Unstaking",
+  },
+};
+
+const FLOW_TRACKING: Record<
+  WrapFlow,
+  { action: string; confirmed: (params: { amount: string; txHash?: string }) => void }
+> = {
+  "wrap-ohm": { action: "wrap", confirmed: trackWrapOhm },
+  "wrap-sohm": { action: "wrap_sohm", confirmed: trackWrapSohm },
+  "unwrap-gohm": { action: "unwrap", confirmed: trackUnwrapGohm },
+  "unstake-sohm": { action: "unstake_sohm", confirmed: trackUnstakeSohm },
+};
+
 export function WrapOhmModal({
   isOpen,
   onClose,
-  mode,
+  flow,
   inputAmount,
   outputAmount,
 }: WrapOhmModalProps) {
   const { address } = useAccount();
   const chainId = useChainId();
 
-  const stakingAddress = getContractAddress(ContractName.STAKING, chainId);
-  const tokenAddress =
-    mode === "wrap"
-      ? getTokenAddress(TokenName.OHM, chainId)
-      : getTokenAddress(TokenName.GOHM, chainId);
+  const inputTokenName = FLOW_INPUT_TOKEN[flow];
+  const inputTokenInfo = TOKENS[inputTokenName];
 
-  // Parse amount with correct decimals
+  const stakingAddress = getContractAddress(ContractName.STAKING, chainId);
+  const tokenAddress = getTokenAddress(inputTokenName, chainId);
+
+  // Parse amount with the input token's decimals (OHM/sOHM: 9, gOHM: 18)
   const amountBigInt = (() => {
     try {
-      return mode === "wrap" ? parseUnits(inputAmount || "0", 9) : parseEther(inputAmount || "0");
+      return inputTokenInfo.decimals === 18
+        ? parseEther(inputAmount || "0")
+        : parseUnits(inputAmount || "0", inputTokenInfo.decimals);
     } catch {
       return 0n;
     }
@@ -60,42 +116,33 @@ export function WrapOhmModal({
     hash: approvalHash,
   } = useTokenApproval();
 
-  // Wrap hook
-  const {
-    wrap,
-    isPending: isWrapping,
-    isSuccess: wrapSuccess,
-    error: wrapError,
-    hash: wrapHash,
-  } = useWrapOhm();
+  // One hook per flow (hooks must be called unconditionally); only the active one is used.
+  const wrapOhm = useWrapOhm();
+  const wrapSohm = useWrapSohm();
+  const unwrapGohm = useUnwrapGohm();
+  const unstakeSohm = useUnstakeSohm();
 
-  // Unwrap hook
-  const {
-    unwrap,
-    isPending: isUnwrapping,
-    isSuccess: unwrapSuccess,
-    error: unwrapError,
-    hash: unwrapHash,
-  } = useUnwrapGohm();
+  const execution = {
+    "wrap-ohm": { execute: wrapOhm.wrap, ...wrapOhm },
+    "wrap-sohm": { execute: wrapSohm.wrap, ...wrapSohm },
+    "unwrap-gohm": { execute: unwrapGohm.unwrap, ...unwrapGohm },
+    "unstake-sohm": { execute: unstakeSohm.unstake, ...unstakeSohm },
+  }[flow];
 
-  const isExecuting = mode === "wrap" ? isWrapping : isUnwrapping;
-  const executeSuccess = mode === "wrap" ? wrapSuccess : unwrapSuccess;
-  const executeHash = mode === "wrap" ? wrapHash : unwrapHash;
+  const isExecuting = execution.isPending;
+  const executeSuccess = execution.isSuccess;
+  const executeHash = execution.hash;
 
   useEffect(() => {
     if (!executeSuccess) return;
-    if (mode === "wrap") {
-      trackWrapOhm({ amount: inputAmount, txHash: executeHash });
-    } else {
-      trackUnwrapGohm({ amount: inputAmount, txHash: executeHash });
-    }
+    FLOW_TRACKING[flow].confirmed({ amount: inputAmount, txHash: executeHash });
   }, [executeSuccess]);
 
-  const executeError = mode === "wrap" ? wrapError : unwrapError;
+  const executeError = execution.error;
   useEffect(() => {
     if (!executeError) return;
     const reason = executeError.message?.includes("User rejected") ? "user_rejected" : "error";
-    trackTransactionFailed("ohm", mode === "wrap" ? "wrap" : "unwrap", { reason });
+    trackTransactionFailed("ohm", FLOW_TRACKING[flow].action, { reason });
   }, [executeError]);
 
   // Step logic
@@ -130,18 +177,12 @@ export function WrapOhmModal({
 
   const handleExecute = () => {
     if (!address) return;
-    if (mode === "wrap") {
-      wrap({ amount: amountBigInt, queryKey });
-    } else {
-      unwrap({ amount: amountBigInt, queryKey });
-    }
+    execution.execute({ amount: amountBigInt, queryKey });
   };
 
-  const inputSymbol = mode === "wrap" ? "OHM" : "gOHM";
-  const outputSymbol = mode === "wrap" ? "gOHM" : "OHM";
-  const approveLabel = mode === "wrap" ? "Approve Wrapping" : "Approve Unwrapping";
-  const executeLabel = mode === "wrap" ? "Wrap OHM to gOHM" : "Unwrap gOHM to OHM";
-  const modalTitle = mode === "wrap" ? "Wrap OHM" : "Unwrap gOHM";
+  const inputSymbol = inputTokenInfo.symbol;
+  const outputSymbol = TOKENS[FLOW_OUTPUT_TOKEN[flow]].symbol;
+  const { title: modalTitle, approveLabel, executeLabel, executingLabel } = FLOW_COPY[flow];
 
   const steps = [
     {
@@ -318,7 +359,7 @@ export function WrapOhmModal({
               ) : isExecuting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Confirming {mode === "wrap" ? "Wrapping" : "Unwrapping"} In Your Wallet
+                  Confirming {executingLabel} In Your Wallet
                 </>
               ) : currentStep === 2 ? (
                 executeLabel

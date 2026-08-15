@@ -7,21 +7,40 @@ import { WrapOhmModal } from "@/components/wrap-ohm-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useGohmConversion } from "@/lib/hooks/useGohmConversion";
 import { Card } from "@/components/ui/card";
+import { TokenName } from "@/lib/tokens";
+import {
+  FLOW_CONVERSION,
+  defaultSourceToken,
+  getWrapFlow,
+  type WrapMode,
+} from "../components/wrap-flows";
 
 export function WrapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialMode = searchParams.get("mode") === "unwrap" ? "unwrap" : "wrap";
-  const [mode, setMode] = useState<"wrap" | "unwrap">(initialMode);
+  const initialMode: WrapMode = searchParams.get("mode") === "unwrap" ? "unwrap" : "wrap";
+  const [mode, setMode] = useState<WrapMode>(initialMode);
+  // ?token=sOHM (e.g. the Balances page sOHM row) preselects sOHM as the source.
+  const [sourceToken, setSourceToken] = useState<TokenName>(() =>
+    searchParams.get("token") === "sOHM" ? TokenName.SOHM : defaultSourceToken(initialMode),
+  );
   const [inputAmount, setInputAmount] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Read conversion directly from gOHM contract to match actual output
-  const { outputAmount } = useGohmConversion(mode, inputAmount);
+  const flow = getWrapFlow(mode, sourceToken);
 
-  const handleModeChange = (newMode: "wrap" | "unwrap") => {
+  // Read conversion directly from gOHM contract to match actual output
+  const { outputAmount } = useGohmConversion(FLOW_CONVERSION[flow], inputAmount);
+
+  const handleModeChange = (newMode: WrapMode) => {
     setMode(newMode);
+    setSourceToken(defaultSourceToken(newMode));
     setInputAmount("");
     setSearchParams(newMode === "unwrap" ? { mode: "unwrap" } : {}, { replace: true });
+  };
+
+  const handleSourceTokenChange = (token: TokenName) => {
+    setSourceToken(token);
+    setInputAmount("");
   };
 
   const handleSubmit = () => {
@@ -30,11 +49,31 @@ export function WrapPage() {
     }
   };
 
+  const panel = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <WrapForm
+        mode={mode}
+        sourceToken={sourceToken}
+        onSourceTokenChange={handleSourceTokenChange}
+        inputAmount={inputAmount}
+        onInputAmountChange={setInputAmount}
+        outputAmount={outputAmount}
+        onSubmit={handleSubmit}
+      />
+      <WrapBalancePanel flow={flow} inputAmount={inputAmount} outputAmount={outputAmount} />
+    </div>
+  );
+
   return (
     <div className="mx-auto max-w-7xl">
       <WrapInfoCards />
 
-      <Tabs onValueChange={handleModeChange} defaultValue="wrap" variant="primary" className="mt-8">
+      <Tabs
+        onValueChange={(v) => handleModeChange(v as WrapMode)}
+        value={mode}
+        variant="primary"
+        className="mt-8"
+      >
         <TabsList variant="primary">
           <TabsTrigger value="wrap" variant="primary">
             Wrap
@@ -45,32 +84,10 @@ export function WrapPage() {
         </TabsList>
 
         <TabsContent value="wrap" className="">
-          <Card className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <WrapForm
-                mode={mode}
-                inputAmount={inputAmount}
-                onInputAmountChange={setInputAmount}
-                outputAmount={outputAmount}
-                onSubmit={handleSubmit}
-              />
-              <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
-            </div>
-          </Card>
+          <Card className="p-6">{panel}</Card>
         </TabsContent>
         <TabsContent value="unwrap" className="">
-          <Card className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <WrapForm
-                mode={mode}
-                inputAmount={inputAmount}
-                onInputAmountChange={setInputAmount}
-                outputAmount={outputAmount}
-                onSubmit={handleSubmit}
-              />
-              <WrapBalancePanel mode={mode} inputAmount={inputAmount} outputAmount={outputAmount} />
-            </div>
-          </Card>
+          <Card className="p-6">{panel}</Card>
         </TabsContent>
       </Tabs>
 
@@ -81,7 +98,7 @@ export function WrapPage() {
             setIsModalOpen(false);
             setInputAmount("");
           }}
-          mode={mode}
+          flow={flow}
           inputAmount={inputAmount}
           outputAmount={outputAmount}
         />

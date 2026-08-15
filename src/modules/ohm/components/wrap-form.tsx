@@ -5,50 +5,60 @@ import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
 import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
 import { useAccount } from "wagmi";
 import { TokenName } from "@/lib/tokens.ts";
-import { useToken } from "@/lib/hooks/useToken.tsx";
+import { useToken, type TokenWithBalance } from "@/lib/hooks/useToken.tsx";
 import { parseUnits, parseEther } from "viem";
+import { FLOW_OUTPUT_TOKEN, SOURCE_TOKENS, getWrapFlow, type WrapMode } from "./wrap-flows";
 
 interface WrapFormProps {
-  mode: "wrap" | "unwrap";
+  mode: WrapMode;
+  sourceToken: TokenName;
+  onSourceTokenChange: (token: TokenName) => void;
   inputAmount: string;
   onInputAmountChange: (amount: string) => void;
   outputAmount: string;
   onSubmit: () => void;
 }
 
+const SUBMIT_LABELS: Record<ReturnType<typeof getWrapFlow>, string> = {
+  "wrap-ohm": "Wrap OHM to gOHM",
+  "wrap-sohm": "Wrap sOHM to gOHM",
+  "unwrap-gohm": "Unwrap gOHM",
+  "unstake-sohm": "Unstake sOHM to OHM",
+};
+
 export function WrapForm({
   mode,
+  sourceToken,
+  onSourceTokenChange,
   inputAmount,
   onInputAmountChange,
   outputAmount,
   onSubmit,
 }: WrapFormProps) {
   const { address } = useAccount();
-  const GOHMToken = useToken(TokenName.GOHM);
+  const flow = getWrapFlow(mode, sourceToken);
+  const outputTokenName = FLOW_OUTPUT_TOKEN[flow];
+
   const OHMToken = useToken(TokenName.OHM);
+  const GOHMToken = useToken(TokenName.GOHM);
 
-  const inputTokenName = mode === "wrap" ? TokenName.OHM : TokenName.GOHM;
-  const outputTokenName = mode === "wrap" ? TokenName.GOHM : TokenName.OHM;
+  const ohmBase = useToken(TokenName.OHM, address);
+  const sohmBase = useToken(TokenName.SOHM, address);
+  const gohmBase = useToken(TokenName.GOHM, address);
 
-  const inputTokenBase = useToken(inputTokenName, address);
-  const outputTokenBase = useToken(outputTokenName, address);
-
-  // Enrich tokens with prices
-  const inputToken = useMemo(
+  // Enrich tokens with prices. sOHM is redeemable 1:1 for OHM, so it shares OHM's price.
+  const tokensByName = useMemo<Record<string, TokenWithBalance>>(
     () => ({
-      ...inputTokenBase,
-      price: mode === "wrap" ? OHMToken.price : GOHMToken.price,
+      [TokenName.OHM]: { ...ohmBase, price: OHMToken.price },
+      [TokenName.SOHM]: { ...sohmBase, price: OHMToken.price },
+      [TokenName.GOHM]: { ...gohmBase, price: GOHMToken.price },
     }),
-    [inputTokenBase, OHMToken.price, GOHMToken.price, mode],
+    [ohmBase, sohmBase, gohmBase, OHMToken.price, GOHMToken.price],
   );
 
-  const outputToken = useMemo(
-    () => ({
-      ...outputTokenBase,
-      price: mode === "wrap" ? GOHMToken.price : OHMToken.price,
-    }),
-    [outputTokenBase, OHMToken.price, GOHMToken.price, mode],
-  );
+  const inputToken = tokensByName[sourceToken];
+  const outputToken = tokensByName[outputTokenName];
+  const sourceOptions = SOURCE_TOKENS[mode].map((name) => tokensByName[name]);
 
   const form = useForm<{ inputAmount: string; outputAmount: string }>({
     defaultValues: { inputAmount: "", outputAmount: "" },
@@ -83,11 +93,8 @@ export function WrapForm({
     if (!inputAmount || parseFloat(inputAmount) === 0)
       return { disabled: true, label: "Enter Amount" };
     if (hasInsufficientBalance) return { disabled: true, label: "Insufficient Balance" };
-    return {
-      disabled: false,
-      label: mode === "wrap" ? "Wrap OHM to gOHM" : "Unwrap gOHM",
-    };
-  }, [address, inputAmount, hasInsufficientBalance, mode]);
+    return { disabled: false, label: SUBMIT_LABELS[flow] };
+  }, [address, inputAmount, hasInsufficientBalance, flow]);
 
   return (
     <div>
@@ -107,6 +114,16 @@ export function WrapForm({
                 <TokenBigInput
                   label={mode === "wrap" ? "Wrap" : "Unwrap"}
                   token={inputToken}
+                  tokenSelector={{
+                    tokens: sourceOptions,
+                    selectedToken: inputToken,
+                    onTokenChange: (token) => {
+                      const name = SOURCE_TOKENS[mode].find(
+                        (n) => tokensByName[n].symbol === token.symbol,
+                      );
+                      if (name) onSourceTokenChange(name);
+                    },
+                  }}
                   value={field.value}
                   onChange={(val) => {
                     field.onChange(val);

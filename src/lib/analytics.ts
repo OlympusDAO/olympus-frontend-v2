@@ -230,6 +230,14 @@ export function trackUnwrapGohm(params: { amount: string; txHash?: string }): vo
   trackTransaction("ohm", "unwrap", { amount: params.amount, tx_hash: params.txHash });
 }
 
+export function trackWrapSohm(params: { amount: string; txHash?: string }): void {
+  trackTransaction("ohm", "wrap_sohm", { amount: params.amount, tx_hash: params.txHash });
+}
+
+export function trackUnstakeSohm(params: { amount: string; txHash?: string }): void {
+  trackTransaction("ohm", "unstake_sohm", { amount: params.amount, tx_hash: params.txHash });
+}
+
 export function trackBridgeOhm(params: {
   amount: string;
   srcChain: string;

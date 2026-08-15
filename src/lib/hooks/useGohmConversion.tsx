@@ -34,13 +34,16 @@ export function useGohmIndex() {
 
 /**
  * Compute wrap/unwrap conversion using the gOHM index with client-side bigint math.
- * Matches gOHM.balanceTo / gOHM.balanceFrom exactly.
+ * Matches gOHM.balanceTo / gOHM.balanceFrom exactly. "identity" covers 1:1 paths
+ * (sOHM → OHM unstaking) and only normalizes formatting.
  */
-export function useGohmConversion(mode: "wrap" | "unwrap", inputAmount: string) {
+export function useGohmConversion(mode: "wrap" | "unwrap" | "identity", inputAmount: string) {
   const { index } = useGohmIndex();
 
   const outputAmount = useMemo(() => {
-    if (!inputAmount || !index || parseFloat(inputAmount) === 0) return "";
+    if (!inputAmount || parseFloat(inputAmount) === 0) return "";
+    if (mode === "identity") return trimDecimals(inputAmount, 4);
+    if (!index) return "";
 
     try {
       if (mode === "wrap") {
