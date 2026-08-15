@@ -51,9 +51,9 @@ export function getTokenAction(
         ? { label: "Wrap", to: "/ohm/wrap" }
         : { label: "Bridge", to: "/ohm/bridge" };
     case "sOHM":
-      // Preselects sOHM as the wrap source (staking.wrap → gOHM); the staking
-      // contract only exists on Ethereum.
-      return { label: "Wrap", to: "/ohm/wrap?token=sOHM" };
+      // ?token=<symbol> preselects the wrap source (see parseSourceTokenParam);
+      // sOHM → gOHM via staking.wrap. The staking contract only exists on Ethereum.
+      return { label: "Wrap", to: `/ohm/wrap?token=${symbol}` };
     case "gOHM":
       return isHomeChain
         ? { label: "Unwrap", to: "/ohm/wrap?mode=unwrap" }

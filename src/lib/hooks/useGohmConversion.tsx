@@ -16,7 +16,7 @@ function trimDecimals(value: string, maxDecimals: number, minDecimals = 2): stri
 }
 
 /** Read the gOHM contract's index (the source of truth for conversions). */
-export function useGohmIndex() {
+export function useGohmIndex({ enabled = true }: { enabled?: boolean } = {}) {
   const chainId = useChainId();
   const gohmAddress = getTokenAddress(TokenName.GOHM, chainId);
 
@@ -25,7 +25,7 @@ export function useGohmIndex() {
     abi: gOHMAbi,
     functionName: "index",
     query: {
-      enabled: !!gohmAddress,
+      enabled: enabled && !!gohmAddress,
     },
   });
 
@@ -33,12 +33,12 @@ export function useGohmIndex() {
 }
 
 /**
- * Compute wrap/unwrap conversion using the gOHM index with client-side bigint math.
- * Matches gOHM.balanceTo / gOHM.balanceFrom exactly. "identity" covers 1:1 paths
- * (sOHM → OHM unstaking) and only normalizes formatting.
+ * Compute the Wrap-page output amount for a given input. "wrap"/"unwrap" use the gOHM
+ * index with client-side bigint math (matches gOHM.balanceTo / gOHM.balanceFrom exactly).
+ * "identity" is the 1:1 sOHM → OHM path: no index read, formatting only.
  */
 export function useGohmConversion(mode: "wrap" | "unwrap" | "identity", inputAmount: string) {
-  const { index } = useGohmIndex();
+  const { index } = useGohmIndex({ enabled: mode !== "identity" });
 
   const outputAmount = useMemo(() => {
     if (!inputAmount || parseFloat(inputAmount) === 0) return "";

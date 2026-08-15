@@ -2,30 +2,17 @@ import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
-import { parseUnits, parseEther } from "viem";
 import { useAccount, useChainId } from "wagmi";
-import {
-  trackWrapOhm,
-  trackWrapSohm,
-  trackUnwrapGohm,
-  trackUnstakeSohm,
-  trackTransactionFailed,
-} from "@/lib/analytics";
+import { trackWrapFlow, trackTransactionFailed } from "@/lib/analytics";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval";
-import { useWrapOhm } from "@/lib/hooks/useWrapOhm";
-import { useWrapSohm } from "@/lib/hooks/useWrapSohm";
-import { useUnwrapGohm } from "@/lib/hooks/useUnwrapGohm";
-import { useUnstakeSohm } from "@/lib/hooks/useUnstakeSohm";
+import { useWrapFlowWrite } from "@/lib/hooks/useWrapFlowWrite";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { TOKENS, getTokenAddress } from "@/lib/tokens";
+import { parseTokenAmount } from "@/lib/utils/token-amount";
 import { Link } from "react-router";
 import { blockExplorerTxBaseUrl } from "@/lib/helpers";
-import {
-  FLOW_INPUT_TOKEN,
-  FLOW_OUTPUT_TOKEN,
-  type WrapFlow,
-} from "@/modules/ohm/components/wrap-flows";
+import { WRAP_FLOWS, type WrapFlow } from "@/modules/ohm/components/wrap-flows";
 
 interface WrapOhmModalProps {
   isOpen: boolean;
@@ -34,47 +21,6 @@ interface WrapOhmModalProps {
   inputAmount: string;
   outputAmount: string;
 }
-
-/** Per-flow copy for the modal (input/output symbols come from the token registry). */
-const FLOW_COPY: Record<
-  WrapFlow,
-  { title: string; approveLabel: string; executeLabel: string; executingLabel: string }
-> = {
-  "wrap-ohm": {
-    title: "Wrap OHM",
-    approveLabel: "Approve Wrapping",
-    executeLabel: "Wrap OHM to gOHM",
-    executingLabel: "Wrapping",
-  },
-  "wrap-sohm": {
-    title: "Wrap sOHM",
-    approveLabel: "Approve Wrapping",
-    executeLabel: "Wrap sOHM to gOHM",
-    executingLabel: "Wrapping",
-  },
-  "unwrap-gohm": {
-    title: "Unwrap gOHM",
-    approveLabel: "Approve Unwrapping",
-    executeLabel: "Unwrap gOHM to OHM",
-    executingLabel: "Unwrapping",
-  },
-  "unstake-sohm": {
-    title: "Unstake sOHM",
-    approveLabel: "Approve Unstaking",
-    executeLabel: "Unstake sOHM to OHM",
-    executingLabel: "Unstaking",
-  },
-};
-
-const FLOW_TRACKING: Record<
-  WrapFlow,
-  { action: string; confirmed: (params: { amount: string; txHash?: string }) => void }
-> = {
-  "wrap-ohm": { action: "wrap", confirmed: trackWrapOhm },
-  "wrap-sohm": { action: "wrap_sohm", confirmed: trackWrapSohm },
-  "unwrap-gohm": { action: "unwrap", confirmed: trackUnwrapGohm },
-  "unstake-sohm": { action: "unstake_sohm", confirmed: trackUnstakeSohm },
-};
 
 export function WrapOhmModal({
   isOpen,
@@ -86,22 +32,14 @@ export function WrapOhmModal({
   const { address } = useAccount();
   const chainId = useChainId();
 
-  const inputTokenName = FLOW_INPUT_TOKEN[flow];
-  const inputTokenInfo = TOKENS[inputTokenName];
+  const { input, output, copy, analyticsAction } = WRAP_FLOWS[flow];
+  const inputSymbol = TOKENS[input].symbol;
+  const outputSymbol = TOKENS[output].symbol;
 
   const stakingAddress = getContractAddress(ContractName.STAKING, chainId);
-  const tokenAddress = getTokenAddress(inputTokenName, chainId);
+  const tokenAddress = getTokenAddress(input, chainId);
 
-  // Parse amount with the input token's decimals (OHM/sOHM: 9, gOHM: 18)
-  const amountBigInt = (() => {
-    try {
-      return inputTokenInfo.decimals === 18
-        ? parseEther(inputAmount || "0")
-        : parseUnits(inputAmount || "0", inputTokenInfo.decimals);
-    } catch {
-      return 0n;
-    }
-  })();
+  const amountBigInt = parseTokenAmount(inputAmount, TOKENS[input].decimals);
 
   // Check allowance
   const { allowance, queryKey } = useTokenAllowance(tokenAddress!, address, stakingAddress);
@@ -116,33 +54,24 @@ export function WrapOhmModal({
     hash: approvalHash,
   } = useTokenApproval();
 
-  // One hook per flow (hooks must be called unconditionally); only the active one is used.
-  const wrapOhm = useWrapOhm();
-  const wrapSohm = useWrapSohm();
-  const unwrapGohm = useUnwrapGohm();
-  const unstakeSohm = useUnstakeSohm();
-
-  const execution = {
-    "wrap-ohm": { execute: wrapOhm.wrap, ...wrapOhm },
-    "wrap-sohm": { execute: wrapSohm.wrap, ...wrapSohm },
-    "unwrap-gohm": { execute: unwrapGohm.unwrap, ...unwrapGohm },
-    "unstake-sohm": { execute: unstakeSohm.unstake, ...unstakeSohm },
-  }[flow];
-
-  const isExecuting = execution.isPending;
-  const executeSuccess = execution.isSuccess;
-  const executeHash = execution.hash;
+  // Execution hook (staking-contract call for this flow)
+  const {
+    execute,
+    isPending: isExecuting,
+    isSuccess: executeSuccess,
+    error: executeError,
+    hash: executeHash,
+  } = useWrapFlowWrite(flow);
 
   useEffect(() => {
     if (!executeSuccess) return;
-    FLOW_TRACKING[flow].confirmed({ amount: inputAmount, txHash: executeHash });
+    trackWrapFlow({ action: analyticsAction, amount: inputAmount, txHash: executeHash });
   }, [executeSuccess]);
 
-  const executeError = execution.error;
   useEffect(() => {
     if (!executeError) return;
     const reason = executeError.message?.includes("User rejected") ? "user_rejected" : "error";
-    trackTransactionFailed("ohm", FLOW_TRACKING[flow].action, { reason });
+    trackTransactionFailed("ohm", analyticsAction, { reason });
   }, [executeError]);
 
   // Step logic
@@ -177,12 +106,11 @@ export function WrapOhmModal({
 
   const handleExecute = () => {
     if (!address) return;
-    execution.execute({ amount: amountBigInt, queryKey });
+    execute({ amount: amountBigInt, queryKey });
   };
 
-  const inputSymbol = inputTokenInfo.symbol;
-  const outputSymbol = TOKENS[FLOW_OUTPUT_TOKEN[flow]].symbol;
-  const { title: modalTitle, approveLabel, executeLabel, executingLabel } = FLOW_COPY[flow];
+  const { title: modalTitle, approve: approveLabel, action: executeLabel } = copy;
+  const executingLabel = WRAP_FLOWS[flow].toast.progressive;
 
   const steps = [
     {

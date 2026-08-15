@@ -1,12 +1,15 @@
 import { Fragment } from "react";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
 import { Separator } from "@/components/ui/separator";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { TokenName, getTokenAddress, TOKENS } from "@/lib/tokens";
 import { useAccount, useChainId } from "wagmi";
 import { formatUnits } from "viem";
 import { RiArrowRightLine } from "@remixicon/react";
-import { FLOW_INPUT_TOKEN, FLOW_OUTPUT_TOKEN, type WrapFlow } from "./wrap-flows";
+import { WRAP_FLOWS, type WrapFlow } from "./wrap-flows";
+
+type PanelToken = TokenName.OHM | TokenName.GOHM | TokenName.SOHM;
+const PANEL_TOKENS: readonly PanelToken[] = [TokenName.OHM, TokenName.GOHM, TokenName.SOHM];
 
 interface BalancePanelProps {
   flow: WrapFlow;
@@ -26,7 +29,7 @@ export function WrapBalancePanel({ flow, inputAmount, outputAmount }: BalancePan
   const { balance: sohmBalance } = useTokenBalance(sohmAddress, address);
   const { balance: gohmBalance } = useTokenBalance(gohmAddress, address);
 
-  const balances: Record<string, number> = {
+  const balances: Record<PanelToken, number> = {
     [TokenName.OHM]:
       ohmBalance != null ? parseFloat(formatUnits(ohmBalance, TOKENS.OHM.decimals)) : 0,
     [TokenName.SOHM]:
@@ -39,11 +42,10 @@ export function WrapBalancePanel({ flow, inputAmount, outputAmount }: BalancePan
   const outputNum = parseFloat(outputAmount) || 0;
   const showAfter = inputNum > 0;
 
-  const inputTokenName = FLOW_INPUT_TOKEN[flow];
-  const outputTokenName = FLOW_OUTPUT_TOKEN[flow];
+  const { input: inputTokenName, output: outputTokenName } = WRAP_FLOWS[flow];
 
   // Compute after-balances (no clamping — show theoretical values)
-  const afterFor = (name: TokenName) => {
+  const afterFor = (name: PanelToken) => {
     if (name === inputTokenName) return balances[name] - inputNum;
     if (name === outputTokenName) return balances[name] + outputNum;
     return balances[name];
@@ -51,7 +53,7 @@ export function WrapBalancePanel({ flow, inputAmount, outputAmount }: BalancePan
 
   // sOHM is a legacy position for most users — only surface its row when it's part of
   // the active flow or the wallet actually holds some.
-  const rows = [TokenName.OHM, TokenName.GOHM, TokenName.SOHM].filter(
+  const rows = PANEL_TOKENS.filter(
     (name) =>
       name !== TokenName.SOHM || inputTokenName === TokenName.SOHM || balances[TokenName.SOHM] > 0,
   );
@@ -68,7 +70,7 @@ export function WrapBalancePanel({ flow, inputAmount, outputAmount }: BalancePan
             <Fragment key={name}>
               {i > 0 && <Separator className="my-2" />}
               <BalanceRow
-                icon={icon as "OHMTokenIcon" | "GOHMTokenIcon"}
+                icon={icon}
                 symbol={symbol}
                 label={`${symbol} Balance`}
                 before={balances[name].toFixed(displayDecimals)}
@@ -91,7 +93,7 @@ function BalanceRow({
   after,
   decimals,
 }: {
-  icon: "OHMTokenIcon" | "GOHMTokenIcon";
+  icon: IconName;
   symbol: string;
   label: string;
   before: string;

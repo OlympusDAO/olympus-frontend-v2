@@ -7,11 +7,12 @@ import { WrapOhmModal } from "@/components/wrap-ohm-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useGohmConversion } from "@/lib/hooks/useGohmConversion";
 import { Card } from "@/components/ui/card";
-import { TokenName } from "@/lib/tokens";
+import { TOKENS, type TokenName } from "@/lib/tokens";
 import {
-  FLOW_CONVERSION,
+  WRAP_FLOWS,
   defaultSourceToken,
   getWrapFlow,
+  parseSourceTokenParam,
   type WrapMode,
 } from "../components/wrap-flows";
 
@@ -19,9 +20,11 @@ export function WrapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialMode: WrapMode = searchParams.get("mode") === "unwrap" ? "unwrap" : "wrap";
   const [mode, setMode] = useState<WrapMode>(initialMode);
-  // ?token=sOHM (e.g. the Balances page sOHM row) preselects sOHM as the source.
-  const [sourceToken, setSourceToken] = useState<TokenName>(() =>
-    searchParams.get("token") === "sOHM" ? TokenName.SOHM : defaultSourceToken(initialMode),
+  // ?token=<symbol> (e.g. the Balances page sOHM row links ?token=sOHM) preselects the source.
+  const [sourceToken, setSourceToken] = useState<TokenName>(
+    () =>
+      parseSourceTokenParam(initialMode, searchParams.get("token")) ??
+      defaultSourceToken(initialMode),
   );
   const [inputAmount, setInputAmount] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,18 +32,29 @@ export function WrapPage() {
   const flow = getWrapFlow(mode, sourceToken);
 
   // Read conversion directly from gOHM contract to match actual output
-  const { outputAmount } = useGohmConversion(FLOW_CONVERSION[flow], inputAmount);
+  const { outputAmount } = useGohmConversion(WRAP_FLOWS[flow].conversion, inputAmount);
+
+  const syncUrl = (nextMode: WrapMode, nextSource: TokenName) => {
+    const params: Record<string, string> = {};
+    if (nextMode === "unwrap") params.mode = "unwrap";
+    if (nextSource !== defaultSourceToken(nextMode)) params.token = TOKENS[nextSource].symbol;
+    setSearchParams(params, { replace: true });
+  };
 
   const handleModeChange = (newMode: WrapMode) => {
+    // Keep sOHM selected across tabs (it's a valid source on both); otherwise reset.
+    const nextSource =
+      parseSourceTokenParam(newMode, TOKENS[sourceToken].symbol) ?? defaultSourceToken(newMode);
     setMode(newMode);
-    setSourceToken(defaultSourceToken(newMode));
+    setSourceToken(nextSource);
     setInputAmount("");
-    setSearchParams(newMode === "unwrap" ? { mode: "unwrap" } : {}, { replace: true });
+    syncUrl(newMode, nextSource);
   };
 
   const handleSourceTokenChange = (token: TokenName) => {
     setSourceToken(token);
     setInputAmount("");
+    syncUrl(mode, token);
   };
 
   const handleSubmit = () => {
