@@ -128,7 +128,7 @@ export function ActivityV1DefaultedLoansTable() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const loans = useMemo(() => data?.pages.flatMap((page) => page.coolerLoans) ?? [], [data]);
+  const loans = useMemo(() => data?.pages.flatMap((page) => page) ?? [], [data]);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "currentExpiryTimestamp", desc: true },

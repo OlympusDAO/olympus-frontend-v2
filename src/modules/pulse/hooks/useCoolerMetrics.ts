@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { COOLER_SUBGRAPH_URL } from "@/lib/constants";
+import { fetchIndexerData } from "@/lib/indexer/client";
 
 interface CoolerMetrics {
   totalBorrowed: number;
@@ -10,54 +10,41 @@ interface CoolerMetrics {
   interestRate: number;
 }
 
+type LivenessResponse = {
+  snapshots: {
+    clearinghouse: { id: string };
+    principalReceivables: string;
+    interestReceivables: string;
+  }[];
+  monocooler: {
+    totalDebt: string;
+    totalCollateral: string;
+    interestRateWad: string;
+  } | null;
+};
+
+// Fallback annual rate, used only when MonoCooler has no state yet.
+const DEFAULT_INTEREST_RATE = 0.5;
+
 export function useCoolerMetrics() {
   return useQuery<CoolerMetrics>({
     queryKey: ["coolerMetrics"],
     queryFn: async () => {
-      // Query all 3 v1 clearinghouses (latest snapshot each) + MonoCooler + active loan counts
-      const query = `
-        query GetCoolerMetrics {
-          clearinghouseSnapshots(
-            orderBy: blockTimestamp
-            orderDirection: desc
-            first: 20
-          ) {
-            clearinghouse {
-              id
-            }
-            principalReceivables
-            interestReceivables
-            blockTimestamp
-          }
-          monoCoolerGlobalStates(first: 1) {
-            totalDebt
-            totalCollateral
-            interestRateWad
-          }
-        }
-      `;
+      // One request. The route exists for this poll: the latest clearinghouse
+      // snapshots and MonoCooler global state together, rather than a
+      // hand-assembled document fetching both and de-duplicating client-side.
+      const { snapshots, monocooler } =
+        await fetchIndexerData<LivenessResponse>("/v1/cooler/liveness");
 
-      const response = await fetch(COOLER_SUBGRAPH_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch cooler metrics");
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "Cooler subgraph error");
-
-      // Legacy clearinghouse: get latest snapshot per clearinghouse (3 total: v1.0, v1.1, v1.2)
-      // Values are BigDecimal (already human-readable, no /1e18)
-      const snapshots = data?.clearinghouseSnapshots ?? [];
+      // Newest first, so the first snapshot seen per clearinghouse is its
+      // latest. v1 values are already human-readable decimals — no 1e18 here.
       const latestPerClearinghouse = new Map<string, { principal: number; interest: number }>();
-      for (const snap of snapshots) {
-        const chId = snap.clearinghouse?.id;
-        if (chId && !latestPerClearinghouse.has(chId)) {
-          latestPerClearinghouse.set(chId, {
-            principal: parseFloat(snap.principalReceivables) || 0,
-            interest: parseFloat(snap.interestReceivables) || 0,
+      for (const snapshot of snapshots) {
+        const id = snapshot.clearinghouse?.id;
+        if (id && !latestPerClearinghouse.has(id)) {
+          latestPerClearinghouse.set(id, {
+            principal: Number.parseFloat(snapshot.principalReceivables) || 0,
+            interest: Number.parseFloat(snapshot.interestReceivables) || 0,
           });
         }
       }
@@ -69,21 +56,17 @@ export function useCoolerMetrics() {
         v1Interest += interest;
       }
 
-      // MonoCooler: values are BigInt WAD format (need /1e18)
-      // Matches cooler-metrics parseBigDecimal pattern
-      const monoState = data?.monoCoolerGlobalStates?.[0];
-      const monoDebt = monoState ? parseFloat(monoState.totalDebt) / 1e18 : 0;
-      const monoCollateralGohm = monoState ? parseFloat(monoState.totalCollateral) / 1e18 : 0;
-      // interestRateWad is annual rate in WAD: divide by 1e18, multiply by 100 for percent
-      const interestRate = monoState?.interestRateWad
-        ? (parseFloat(monoState.interestRateWad) / 1e18) * 100
-        : 0.5;
-
-      // Combine v1 + MonoCooler
-      const totalBorrowed = v1Principal + monoDebt;
+      // MonoCooler values are WAD (1e18), unlike the v1 snapshots above.
+      const monoDebt = monocooler ? Number.parseFloat(monocooler.totalDebt) / 1e18 : 0;
+      const monoCollateralGohm = monocooler
+        ? Number.parseFloat(monocooler.totalCollateral) / 1e18
+        : 0;
+      const interestRate = monocooler?.interestRateWad
+        ? (Number.parseFloat(monocooler.interestRateWad) / 1e18) * 100
+        : DEFAULT_INTEREST_RATE;
 
       return {
-        totalBorrowed,
+        totalBorrowed: v1Principal + monoDebt,
         totalCollateralGohm: monoCollateralGohm,
         v1Principal,
         v1Interest,

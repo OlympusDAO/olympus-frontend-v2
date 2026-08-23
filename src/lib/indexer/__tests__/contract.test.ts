@@ -110,3 +110,66 @@ describe.skipIf(!API)("governance hooks' contract with the indexer", () => {
     expect(Array.isArray(delegate.votesCasted)).toBe(true);
   });
 });
+
+describe.skipIf(!API)("cooler hooks' contract with the indexer", () => {
+  test("useCoolerMetrics: liveness carries snapshots and MonoCooler in one response", async () => {
+    const { data } = await get("/v1/cooler/liveness");
+    const liveness = data as {
+      snapshots: { clearinghouse: { id: string }; principalReceivables: string }[];
+      monocooler: { totalDebt: string; interestRateWad: string } | null;
+    };
+    expect(liveness.snapshots.length).toBeGreaterThan(0);
+    expect(liveness.snapshots[0].clearinghouse.id).toMatch(/^0x[0-9a-f]{40}$/);
+    // v1 receivables are human-readable decimals; MonoCooler is WAD. The hook
+    // divides one and not the other, so a change here is a 1e18 error in the UI.
+    expect(Number.parseFloat(liveness.snapshots[0].principalReceivables)).toBeLessThan(1e12);
+    if (liveness.monocooler) {
+      expect(Number.parseFloat(liveness.monocooler.totalDebt)).toBeGreaterThan(1e18);
+    }
+  });
+
+  test("useTopBorrow: loans can be ordered by principal", async () => {
+    const { data } = await get("/v1/cooler/loans?orderBy=principal&order=desc&limit=2");
+    const loans = data as { principal: string }[];
+    expect(loans.length).toBe(2);
+    expect(Number.parseFloat(loans[0].principal)).toBeGreaterThanOrEqual(
+      Number.parseFloat(loans[1].principal),
+    );
+  });
+
+  test("useActiveLoans / useDefaultedLoans: both lists come from one route", async () => {
+    const active = (await get("/v1/cooler/loans?minPrincipal=0&limit=2")).data as {
+      principal: string;
+    }[];
+    for (const loan of active) expect(Number.parseFloat(loan.principal)).toBeGreaterThan(0);
+
+    const defaulted = (await get("/v1/cooler/loans?defaulted=true&limit=2")).data as {
+      defaultedClaimEvents: unknown[];
+    }[];
+    for (const loan of defaulted) expect(loan.defaultedClaimEvents.length).toBeGreaterThan(0);
+  });
+
+  test("useProtocolIncome: three legacy collections arrive grouped", async () => {
+    const { data } = await get("/v1/cooler/daily/protocol-income?limit=2");
+    expect(Object.keys(data as object).sort()).toEqual(["defaults", "extensions", "repayments"]);
+  });
+
+  test("useUtilization: daily snapshots keep the legacy microsecond timestamp", async () => {
+    const { data } = await get("/v1/cooler/daily/clearinghouse-snapshots?limit=1");
+    const row = (data as { timestamp: string; clearinghouse: { address: string } }[])[0];
+    // formatDate() divides by 1000 to reach milliseconds. Seconds here would
+    // silently move every point on the utilisation chart.
+    expect(Number(row.timestamp)).toBeGreaterThan(1e15);
+    expect(row.clearinghouse.address).toMatch(/^0x[0-9a-f]{40}$/);
+  });
+
+  test("useV2AtRiskAccounts: the health-factor threshold is WAD", async () => {
+    const { data } = await get(
+      "/v1/cooler/monocooler/accounts?maxHealthFactor=1200000000000000000&limit=3",
+    );
+    const accounts = data as { healthFactor: string }[];
+    for (const account of accounts) {
+      expect(Number.parseFloat(account.healthFactor)).toBeLessThan(1.2e18);
+    }
+  });
+});
