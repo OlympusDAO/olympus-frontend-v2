@@ -118,12 +118,12 @@ export function useYrfHistory() {
 
       const yrfMarketIds: string[] = repoMarkets.map((m) => m.marketId);
 
-      // 2. Fetch actual OHM purchase amounts from bond market subgraph.
+      // 2. Fetch actual OHM purchase amounts from the bonds domain.
       //
-      // TODO(follow-up): OHM purchase amounts (amountInQuoteToken from bond
-      // purchases) should ideally be indexed directly in the YRF subgraph,
-      // removing the need to cross-reference the bond market subgraph.
-      // Bond subgraph: https://thegraph.com/explorer/subgraphs/E4Mikyz3ec1MGGFYNuEDQ3F1qtcLashFKwyTvnbfa9Ss
+      // TODO(follow-up): these amounts could be attributed to YRF in the
+      // indexer itself, which would remove this cross-domain join. Both
+      // domains now live in one indexer, so that is a handler change rather
+      // than a second subgraph.
       const ohmByWeek: Record<string, number> = {};
       const usdByWeek: Record<string, number> = {};
       let totalOhmBurned = 0;
