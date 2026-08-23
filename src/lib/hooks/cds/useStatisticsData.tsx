@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { cdsGraphqlClient } from "@/lib/graphql-client";
+import { fetchIndexerData } from "@/lib/indexer/client";
 import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 
 // Types for GraphQL responses
@@ -68,157 +68,59 @@ const TIME_RANGE_SECONDS: Record<TimeRange, number> = {
   "1y": 365 * 24 * 60 * 60,
 };
 
+// Every list route here windows on `sinceTimestamp` and returns rows whose
+// `timestamp` is a string; the UI types it as a number.
+type Timestamped = { timestamp: string };
+
+async function windowed<T extends Timestamped>(
+  path: string,
+  sinceTimestamp?: number,
+): Promise<(Omit<T, "timestamp"> & { timestamp: number })[]> {
+  const rows = await fetchIndexerData<T[]>(path, {
+    sinceTimestamp,
+    order: "asc",
+    limit: 1000,
+  });
+  return rows.map((row) => ({ ...row, timestamp: Number(row.timestamp) }));
+}
+
 export function useStatisticsData(timeRange: TimeRange = "7d") {
   const chainId = useChainId();
-
   const startTimestamp = Math.floor(Date.now() / 1000) - TIME_RANGE_SECONDS[timeRange];
 
   return useQuery<StatisticsData>({
     queryKey: ["statisticsData", chainId, timeRange],
     queryFn: async () => {
-      const query = `
-        query GetStatisticsData {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              totalDeposited
-              totalDepositedDecimal
-              claimableYield
-              claimableYieldDecimal
-              borrowedAmount
-              borrowedAmountDecimal
-              pendingRedemption
-              pendingRedemptionDecimal
-            }
-          }
+      // Five windowed lists, previously one Ponder document with five roots.
+      const [depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields] =
+        await Promise.all([
+          windowed<DepositSnapshot & Timestamped>(
+            "/v1/convertible-deposits/facility-snapshots",
+            startTimestamp,
+          ),
+          windowed<BidEvent & Timestamped>("/v1/convertible-deposits/bids", startTimestamp),
+          windowed<AuctioneerSnapshot & Timestamped>(
+            "/v1/convertible-deposits/auctioneer-snapshots",
+            startTimestamp,
+          ),
+          windowed<ConvertedDeposit & Timestamped>(
+            "/v1/convertible-deposits/converted-deposits",
+            startTimestamp,
+          ),
+          windowed<ClaimedYield & Timestamped>(
+            "/v1/convertible-deposits/claimed-yields",
+            startTimestamp,
+          ),
+        ]);
 
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-              tickPrice
-              tickPriceDecimal
-            }
-          }
-
-          auctioneerSnapshots(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              target
-              targetDecimal
-              ohmSold
-              ohmSoldDecimal
-              minPrice
-              minPriceDecimal
-            }
-          }
-
-          convertibleDepositFacilityConvertedDeposits(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-            }
-          }
-
-          convertibleDepositFacilityClaimedYields(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              amount
-              amountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      return {
-        depositSnapshots: (data?.depositFacilityAssetSnapshots?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        bids: (data?.convertibleDepositAuctioneerBids?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        auctioneerSnapshots: (data?.auctioneerSnapshots?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        convertedDeposits: (data?.convertibleDepositFacilityConvertedDeposits?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        claimedYields: (data?.convertibleDepositFacilityClaimedYields?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-      };
+      return { depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields };
     },
     staleTime: 30000,
     refetchInterval: 60000,
   });
 }
 
-// Hook to get current/latest snapshot data (for headline metrics)
+// Latest snapshot plus the one before it, for headline metrics and their delta.
 export function useCurrentStatistics() {
   const chainId = useChainId();
 
@@ -228,43 +130,13 @@ export function useCurrentStatistics() {
   }>({
     queryKey: ["currentStatistics", chainId],
     queryFn: async () => {
-      const query = `
-        query GetCurrentStatistics {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 2
-          ) {
-            items {
-              timestamp
-              totalDeposited
-              totalDepositedDecimal
-              claimableYield
-              claimableYieldDecimal
-              borrowedAmount
-              borrowedAmountDecimal
-              pendingRedemption
-              pendingRedemptionDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const snapshots = (data?.depositFacilityAssetSnapshots?.items || []).map(
-        (item: Record<string, string>) => ({
-          ...item,
-          timestamp: Number(item.timestamp),
-        }),
+      const snapshots = await fetchIndexerData<DepositSnapshot[]>(
+        "/v1/convertible-deposits/facility-snapshots",
+        { order: "desc", limit: 2 },
       );
-
       return {
-        latestSnapshot: snapshots[0] || null,
-        previousSnapshot: snapshots[1] || null,
+        latestSnapshot: snapshots[0] ?? null,
+        previousSnapshot: snapshots[1] ?? null,
       };
     },
     staleTime: 30000,
@@ -272,149 +144,62 @@ export function useCurrentStatistics() {
   });
 }
 
-// Hook to get all-time total deposits (sum of all bids)
 export function useAllTimeDeposits() {
   const chainId = useChainId();
 
   return useQuery<number>({
     queryKey: ["allTimeDeposits", chainId],
     queryFn: async () => {
-      // Fetch all bids (no time filter) to sum total deposits
-      const query = `
-        query GetAllTimeBids {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              depositAmountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const bids = data?.convertibleDepositAuctioneerBids?.items || [];
-      return bids.reduce(
-        (sum: number, bid: { depositAmountDecimal: string }) =>
-          sum + parseFloat(bid.depositAmountDecimal),
-        0,
+      const bids = await fetchIndexerData<{ depositAmountDecimal: string }[]>(
+        "/v1/convertible-deposits/bids",
+        { order: "asc", limit: 1000 },
       );
+      return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.depositAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,
   });
 }
 
-// Hook to get total convertible OHM (sum of convertedAmount from all bids)
-// This represents the OHM that will be minted based on each deposit's locked-in conversion price
 export function useAllTimeConvertibleOhm() {
   const chainId = useChainId();
 
   return useQuery<number>({
     queryKey: ["allTimeConvertibleOhm", chainId],
     queryFn: async () => {
-      const query = `
-        query GetAllTimeBidsWithConvertedAmount {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              convertedAmountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const bids = data?.convertibleDepositAuctioneerBids?.items || [];
-      return bids.reduce(
-        (sum: number, bid: { convertedAmountDecimal: string }) =>
-          sum + parseFloat(bid.convertedAmountDecimal),
-        0,
+      const bids = await fetchIndexerData<{ convertedAmountDecimal: string }[]>(
+        "/v1/convertible-deposits/bids",
+        { order: "asc", limit: 1000 },
       );
+      return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.convertedAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,
   });
 }
 
-// Hook to get current convertible deposits data
-// Returns both the total USD in deposits and the OHM that would be minted
+// Current convertible deposits: the USD in deposits and the OHM they would mint.
 export function useCurrentConvertibleOhm() {
   const chainId = useChainId();
 
   return useQuery<{ convertibleOhm: number; totalDepositsUsd: number }>({
     queryKey: ["currentConvertibleOhm", chainId],
     queryFn: async () => {
-      const query = `
-        query GetCurrentConvertibleData {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 1
-          ) {
-            items {
-              totalDepositedDecimal
-              borrowedAmountDecimal
-            }
-          }
-          convertibleDepositPositions(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              positionId
-              remainingAmountDecimal
-              conversionPriceDecimal
-            }
-          }
-          redemptions(
-            where: {
-              chainId: 1
-            }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              amountDecimal
-              loans {
-                items {
-                  status
-                }
-              }
-            }
-          }
-        }
-      `;
+      const [positions, redemptions] = await Promise.all([
+        fetchIndexerData<Parameters<typeof calculateConversionExposure>[0]>(
+          "/v1/convertible-deposits/positions",
+          { limit: 1000 },
+        ),
+        fetchIndexerData<Parameters<typeof calculateConversionExposure>[1]>(
+          "/v1/convertible-deposits/redemptions",
+          { limit: 1000 },
+        ),
+      ]);
 
-      const data = await cdsGraphqlClient.request(query);
-
-      const positions = data?.convertibleDepositPositions?.items || [];
-      const redemptions = data?.redemptions?.items || [];
       const { convertibleOhm, totalDepositsUsd } = calculateConversionExposure(
         positions,
         redemptions,
       );
-
       return { convertibleOhm, totalDepositsUsd };
     },
     staleTime: 60000,

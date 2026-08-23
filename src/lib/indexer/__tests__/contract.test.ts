@@ -173,3 +173,53 @@ describe.skipIf(!API)("cooler hooks' contract with the indexer", () => {
     }
   });
 });
+
+describe.skipIf(!API)("convertible-deposit hooks' contract with the indexer", () => {
+  test("useCdStatistics: the three singletons arrive together", async () => {
+    const { data } = await get("/v1/convertible-deposits/statistics");
+    expect(Object.keys(data as object).sort()).toEqual([
+      "auctioneerSnapshot",
+      "facilitySnapshot",
+      "redemptionConfig",
+    ]);
+  });
+
+  test("useHistoricalPriceData: three lists in one request, with the right primitive types", async () => {
+    const { data } = await get("/v1/convertible-deposits/price-history?limit=2");
+    const history = data as {
+      bids: { timestamp: string; depositPeriod: number; tickPriceDecimal: string }[];
+      auctioneerSnapshots: { isAuctionActive: boolean }[];
+      depositPeriodSnapshots: unknown[];
+    };
+    expect(Object.keys(history).sort()).toEqual([
+      "auctioneerSnapshots",
+      "bids",
+      "depositPeriodSnapshots",
+    ]);
+    // The hook converts the timestamp and the `*Decimal` fields but NOT
+    // depositPeriod or isAuctionActive — they must already be primitives.
+    if (history.bids.length > 0) {
+      expect(typeof history.bids[0].timestamp).toBe("string");
+      expect(typeof history.bids[0].depositPeriod).toBe("number");
+      expect(typeof history.bids[0].tickPriceDecimal).toBe("string");
+    }
+    if (history.auctioneerSnapshots.length > 0) {
+      expect(typeof history.auctioneerSnapshots[0].isAuctionActive).toBe("boolean");
+    }
+  });
+
+  test("useStatisticsData: every windowed list accepts sinceTimestamp and asc order", async () => {
+    for (const path of [
+      "facility-snapshots",
+      "bids",
+      "auctioneer-snapshots",
+      "converted-deposits",
+      "claimed-yields",
+    ]) {
+      const { data } = await get(
+        `/v1/convertible-deposits/${path}?sinceTimestamp=1&order=asc&limit=2`,
+      );
+      expect(Array.isArray(data), path).toBe(true);
+    }
+  });
+});

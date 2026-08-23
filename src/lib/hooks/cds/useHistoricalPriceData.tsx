@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { cdsGraphqlClient } from "@/lib/graphql-client";
+import { fetchIndexerData } from "@/lib/indexer/client";
 
 export interface HistoricalBid {
   timestamp: number;
@@ -32,6 +32,19 @@ export interface DepositPeriodSnapshot {
   depositPeriod: number;
 }
 
+// The wire shapes. Only the timestamp and the `*Decimal` fields the charts do
+// arithmetic on need converting — `depositPeriod` and `isAuctionActive` already
+// arrive as a number and a boolean.
+type RawBid = Omit<HistoricalBid, "timestamp" | "tickPriceDecimal"> & {
+  timestamp: string;
+  tickPriceDecimal: string;
+};
+type RawAuctioneerSnapshot = Omit<AuctioneerSnapshot, "timestamp"> & { timestamp: string };
+type RawDepositPeriodSnapshot = Omit<
+  DepositPeriodSnapshot,
+  "timestamp" | "currentTickPriceDecimal"
+> & { timestamp: string; currentTickPriceDecimal: string };
+
 interface HistoricalPriceData {
   bids: HistoricalBid[];
   snapshots: AuctioneerSnapshot[];
@@ -59,100 +72,38 @@ export function useHistoricalPriceData(
   return useQuery<HistoricalPriceData>({
     queryKey: ["historicalPriceData", chainId, depositPeriod, timeRange],
     queryFn: async () => {
-      // Build the deposit period filter
-      const depositPeriodFilter =
-        depositPeriod !== undefined ? `depositPeriod: ${depositPeriod},` : "";
-
-      const query = `
-        query GetHistoricalData {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1,
-              ${depositPeriodFilter}
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              tickPrice
-              tickPriceDecimal
-              tickCapacity
-              depositAmount
-              convertedAmount
-              depositPeriod
-            }
-          }
-
-          auctioneerSnapshots(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              target
-              targetDecimal
-              tickSize
-              minPrice
-              minPriceDecimal
-              ohmSold
-              ohmSoldDecimal
-              isAuctionActive
-            }
-          }
-
-          auctioneerDepositPeriodSnapshots(
-            where: {
-              chainId: 1,
-              ${depositPeriodFilter}
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              currentTickPrice
-              currentTickPriceDecimal
-              currentTickCapacity
-              depositPeriod
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
+      // One request. The Ponder version issued three roots — bids, auctioneer
+      // snapshots, and per-deposit-period tick snapshots — over the same
+      // window; this route exists to return them together.
+      const history = await fetchIndexerData<{
+        bids: RawBid[];
+        auctioneerSnapshots: RawAuctioneerSnapshot[];
+        depositPeriodSnapshots: RawDepositPeriodSnapshot[];
+      }>("/v1/convertible-deposits/price-history", {
+        // `from: 0` would be an unnecessary filter; "all" simply omits it.
+        from: startTimestamp > 0 ? startTimestamp : undefined,
+        depositPeriod,
+        limit: 1000,
+      });
 
       return {
-        bids: (data?.convertibleDepositAuctioneerBids?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-            tickPriceDecimal: Number(item.tickPriceDecimal),
-          }),
-        ),
-        snapshots: (data?.auctioneerSnapshots?.items || []).map((item: Record<string, string>) => ({
+        bids: history.bids.map((item) => ({
+          ...item,
+          timestamp: Number(item.timestamp),
+          tickPriceDecimal: Number(item.tickPriceDecimal),
+        })),
+        snapshots: history.auctioneerSnapshots.map((item) => ({
           ...item,
           timestamp: Number(item.timestamp),
         })),
-        depositPeriodSnapshots: (data?.auctioneerDepositPeriodSnapshots?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-            currentTickPriceDecimal: Number(item.currentTickPriceDecimal),
-          }),
-        ),
+        depositPeriodSnapshots: history.depositPeriodSnapshots.map((item) => ({
+          ...item,
+          timestamp: Number(item.timestamp),
+          currentTickPriceDecimal: Number(item.currentTickPriceDecimal),
+        })),
       };
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every minute
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 }
