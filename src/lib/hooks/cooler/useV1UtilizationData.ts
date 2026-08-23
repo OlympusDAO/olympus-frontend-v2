@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
-import { useClearinghouses, type UtilizationSnapshot } from "@/lib/hooks/cooler/useV1Data";
+import { getCoolerDailyClearinghouseSnapshots } from "@/generated/indexer";
+import { useClearinghouses } from "@/lib/hooks/cooler/useV1Data";
 
 function formatDate(timestamp: string): string {
   try {
@@ -48,10 +48,9 @@ export function useV1UtilizationData() {
     queries: clearinghouses.map((ch) => ({
       queryKey: ["cooler-v1-utilization", ch.address],
       queryFn: () =>
-        fetchIndexerData<UtilizationSnapshot[]>("/v1/cooler/daily/clearinghouse-snapshots", {
-          clearinghouse: ch.address,
-          limit: 1000,
-        }),
+        getCoolerDailyClearinghouseSnapshots({ clearinghouse: ch.address, limit: 1000 }).then(
+          (response) => response.data,
+        ),
       enabled: !clearinghousesLoading,
     })),
   });

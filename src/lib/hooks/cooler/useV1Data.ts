@@ -1,5 +1,12 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import {
+  getCoolerBorrowers,
+  getCoolerClearinghouses,
+  getCoolerDailyClearinghouseSnapshots,
+  getCoolerDailyProtocolIncome,
+  getCoolerLoans,
+  getCoolerStats,
+} from "@/generated/indexer";
 
 // Cooler v1 data from the protocol indexer.
 //
@@ -116,14 +123,14 @@ export interface UtilizationSnapshot {
 export function useClearinghouseStats() {
   return useQuery({
     queryKey: ["cooler-v1-clearinghouse-stats"],
-    queryFn: () => fetchIndexerData<ClearinghouseCumulativeStat[]>("/v1/cooler/stats"),
+    queryFn: () => getCoolerStats().then((response) => response.data),
   });
 }
 
 export function useClearinghouses() {
   return useQuery({
     queryKey: ["cooler-v1-clearinghouses"],
-    queryFn: () => fetchIndexerData<Clearinghouse[]>("/v1/cooler/clearinghouses"),
+    queryFn: () => getCoolerClearinghouses().then((response) => response.data),
   });
 }
 
@@ -136,13 +143,13 @@ export function useActiveLoans() {
   return useInfiniteQuery({
     queryKey: ["cooler-v1-active-loans"],
     queryFn: ({ pageParam = 0 }) =>
-      fetchIndexerData<ActiveLoan[]>("/v1/cooler/loans", {
+      getCoolerLoans({
         minPrincipal: "0",
         expiryAfter: nowTimestamp,
         order: "asc",
         limit: PAGE_SIZE,
         offset: pageParam,
-      }),
+      }).then((response) => response.data),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length * PAGE_SIZE,
     initialPageParam: 0,
@@ -153,12 +160,12 @@ export function useDefaultedLoans() {
   return useInfiniteQuery({
     queryKey: ["cooler-v1-defaulted-loans"],
     queryFn: ({ pageParam = 0 }) =>
-      fetchIndexerData<DefaultedLoan[]>("/v1/cooler/loans", {
+      getCoolerLoans({
         defaulted: true,
         order: "asc",
         limit: PAGE_SIZE,
         offset: pageParam,
-      }),
+      }).then((response) => response.data),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length * PAGE_SIZE,
     initialPageParam: 0,
@@ -169,11 +176,11 @@ export function useBorrowers() {
   return useInfiniteQuery({
     queryKey: ["cooler-v1-borrowers"],
     queryFn: ({ pageParam = 0 }) =>
-      fetchIndexerData<BorrowerStat[]>("/v1/cooler/borrowers", {
+      getCoolerBorrowers({
         orderBy: "lastUpdateTimestamp",
         limit: PAGE_SIZE,
         offset: pageParam,
-      }),
+      }).then((response) => response.data),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.length * PAGE_SIZE,
     initialPageParam: 0,
@@ -186,7 +193,7 @@ export function useProtocolIncome() {
     // One request. The subgraph needed three aggregation collections fetched
     // together and zipped by day; the route returns them already grouped.
     queryFn: () =>
-      fetchIndexerData<ProtocolIncome>("/v1/cooler/daily/protocol-income", { limit: PAGE_SIZE }),
+      getCoolerDailyProtocolIncome({ limit: PAGE_SIZE }).then((response) => response.data),
   });
 }
 
@@ -196,11 +203,9 @@ export function useTopBorrow() {
     // The largest single loan ever cleared. Ordering loans by principal is what
     // the subgraph did through a relation (`orderBy: loan__principal`).
     queryFn: () =>
-      fetchIndexerData<{ principal: string }[]>("/v1/cooler/loans", {
-        orderBy: "principal",
-        order: "desc",
-        limit: 1,
-      }),
+      getCoolerLoans({ orderBy: "principal", order: "desc", limit: 1 }).then(
+        (response) => response.data,
+      ),
   });
 }
 
@@ -208,11 +213,9 @@ export function useTopLooper() {
   return useQuery({
     queryKey: ["cooler-v1-top-looper"],
     queryFn: () =>
-      fetchIndexerData<BorrowerStat[]>("/v1/cooler/borrowers", {
-        orderBy: "maxActiveLoans",
-        order: "desc",
-        limit: 1,
-      }),
+      getCoolerBorrowers({ orderBy: "maxActiveLoans", order: "desc", limit: 1 }).then(
+        (response) => response.data,
+      ),
   });
 }
 
@@ -220,11 +223,9 @@ export function useTopTotalBorrows() {
   return useQuery({
     queryKey: ["cooler-v1-top-total-borrows"],
     queryFn: () =>
-      fetchIndexerData<BorrowerStat[]>("/v1/cooler/borrowers", {
-        orderBy: "maxBorrowedValue",
-        order: "desc",
-        limit: 1,
-      }),
+      getCoolerBorrowers({ orderBy: "maxBorrowedValue", order: "desc", limit: 1 }).then(
+        (response) => response.data,
+      ),
   });
 }
 
@@ -232,10 +233,10 @@ export function useUtilization(clearinghouseAddress: string) {
   return useQuery({
     queryKey: ["cooler-v1-utilization", clearinghouseAddress],
     queryFn: () =>
-      fetchIndexerData<UtilizationSnapshot[]>("/v1/cooler/daily/clearinghouse-snapshots", {
+      getCoolerDailyClearinghouseSnapshots({
         clearinghouse: clearinghouseAddress,
         limit: PAGE_SIZE,
-      }),
+      }).then((response) => response.data),
     enabled: !!clearinghouseAddress,
   });
 }

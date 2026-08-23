@@ -1,5 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData, IndexerError } from "@/lib/indexer/client";
+import {
+  getCoolerMonocoolerAccounts,
+  getCoolerMonocoolerActivity,
+  getCoolerMonocoolerDailyGlobal,
+  getCoolerMonocoolerGlobalLatest,
+} from "@/generated/indexer";
+import { IndexerError } from "@/api/indexerHttpClient";
 
 // Cooler v2 (MonoCooler) data from the protocol indexer.
 //
@@ -168,9 +174,7 @@ export function useV2ProtocolData() {
     queryFn: async (): Promise<V2ProtocolData | null> => {
       let globalState: MonoCoolerGlobalState;
       try {
-        globalState = await fetchIndexerData<MonoCoolerGlobalState>(
-          "/v1/cooler/monocooler/global/latest",
-        );
+        globalState = (await getCoolerMonocoolerGlobalLatest()).data;
       } catch (error) {
         // The singleton does not exist until MonoCooler has been touched once.
         if (error instanceof IndexerError && error.status === 404) return null;
@@ -199,10 +203,10 @@ export function useV2HistoricalData(days: number = 30) {
       // Query gets newest data first (desc) to ensure we get recent data
       // Component reverses this for chronological display
       // Newest first, as before; the component reverses for chronological display.
-      const rows = await fetchIndexerData<MonoCoolerGlobalStats[]>(
-        "/v1/cooler/monocooler/daily/global",
-        { order: "desc", limit: days },
-      );
+      const { data: rows } = await getCoolerMonocoolerDailyGlobal({
+        order: "desc",
+        limit: days,
+      });
 
       const result = rows.map((stats) => ({
         timestamp: parseTimestamp(stats.timestamp),
@@ -221,10 +225,7 @@ export function useV2Accounts(limit: number = 1000) {
   return useQuery({
     queryKey: ["v2-accounts", limit],
     queryFn: async (): Promise<V2Account[]> => {
-      const accounts = await fetchIndexerData<MonoCoolerAccount[]>(
-        "/v1/cooler/monocooler/accounts",
-        { order: "asc", limit },
-      );
+      const { data: accounts } = await getCoolerMonocoolerAccounts({ order: "asc", limit });
 
       return accounts.map((account) => ({
         address: account.address,
@@ -242,15 +243,12 @@ export function useV2AtRiskAccounts(limit: number = 20, threshold: number = 1.2)
   return useQuery({
     queryKey: ["v2-at-risk-accounts", limit, threshold],
     queryFn: async (): Promise<V2Account[]> => {
-      const accounts = await fetchIndexerData<MonoCoolerAccount[]>(
-        "/v1/cooler/monocooler/accounts",
-        {
-          // WAD, matching how the health factor is stored.
-          maxHealthFactor: BigInt(Math.round(threshold * 1e18)).toString(),
-          order: "asc",
-          limit,
-        },
-      );
+      const { data: accounts } = await getCoolerMonocoolerAccounts({
+        // WAD, matching how the health factor is stored.
+        maxHealthFactor: BigInt(Math.round(threshold * 1e18)).toString(),
+        order: "asc",
+        limit,
+      });
 
       return accounts.map((account) => ({
         address: account.address,
@@ -268,10 +266,7 @@ export function useV2RecentActivity(limit: number = 50) {
   return useQuery({
     queryKey: ["v2-recent-activity", limit],
     queryFn: async (): Promise<V2Activity[]> => {
-      const activities = await fetchIndexerData<MonoCoolerActivity[]>(
-        "/v1/cooler/monocooler/activity",
-        { limit },
-      );
+      const { data: activities } = await getCoolerMonocoolerActivity({ limit });
 
       return activities.map((activity) => ({
         id: activity.id,
@@ -291,10 +286,10 @@ export function useV2Liquidations(limit: number = 20) {
   return useQuery({
     queryKey: ["v2-liquidations", limit],
     queryFn: async (): Promise<V2Activity[]> => {
-      const activities = await fetchIndexerData<MonoCoolerActivity[]>(
-        "/v1/cooler/monocooler/activity",
-        { type: "liquidation", limit },
-      );
+      const { data: activities } = await getCoolerMonocoolerActivity({
+        type: "liquidation",
+        limit,
+      });
 
       return activities.map((activity) => ({
         id: activity.id,
