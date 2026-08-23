@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getEmissionManagerPulse } from "@/generated/indexer";
 
 export interface EmissionManagerState {
   isActive: boolean;
@@ -40,33 +40,8 @@ export function useEmissionManager() {
       // latest activation, latest deactivation, and the last 20 backing
       // updates — and this route exists to return exactly that set.
       const {
-        state: cs,
-        activation,
-        deactivation,
-        backingUpdates,
-      } = await fetchIndexerData<{
-        state: {
-          isActive: boolean;
-          isEnabled: boolean;
-          baseEmissionRateDecimal: string;
-          minimumPremiumDecimal: string;
-          backingDecimal: string;
-          beatCounter: number;
-          activeMarketId: string;
-          vestingPeriod: number;
-          restartTimeframe: number;
-          shutdownTimestamp: string;
-          blockTimestamp: string;
-        } | null;
-        activation: { blockTimestamp: string } | null;
-        deactivation: { blockTimestamp: string } | null;
-        backingUpdates: {
-          blockTimestamp: string;
-          newBackingDecimal: string;
-          supplyAddedDecimal: string;
-          reservesAddedDecimal: string;
-        }[];
-      }>("/v1/emission-manager/pulse");
+        data: { state: cs, activation, deactivation, backingUpdates },
+      } = await getEmissionManagerPulse();
 
       if (!cs) throw new Error("No contract state found");
 
@@ -81,8 +56,11 @@ export function useEmissionManager() {
         triggerPrice: backing * (1 + minimumPremium),
         beatCounter: cs.beatCounter,
         activeMarketId: cs.activeMarketId,
-        vestingPeriod: cs.vestingPeriod,
-        restartTimeframe: cs.restartTimeframe,
+        // Both are BigInt on the wire, i.e. strings — the hand-written type
+        // called them numbers and the cast hid it. Converted here so the
+        // exported shape stays numeric for the UI.
+        vestingPeriod: Number(cs.vestingPeriod),
+        restartTimeframe: Number(cs.restartTimeframe),
         shutdownTimestamp: Number(cs.shutdownTimestamp),
         lastUpdated: Number(cs.blockTimestamp),
       };

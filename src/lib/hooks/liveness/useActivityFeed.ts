@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import {
+  getBondsPurchases,
+  getConvertibleDepositsActivity,
+  getCoolerDefaultedLoanEvents,
+  getCoolerMonocoolerActivity,
+} from "@/generated/indexer";
 import { COOLER_APR } from "@/lib/constants";
 
 export type ActivityType =
@@ -45,16 +50,8 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       // claimed yield, redemption loans created and repaid, redemptions
       // started, and the interest-rate config the feed annotates loans with —
       // in one request. The route exists for this hook.
-      const data = await fetchIndexerData<{
-        bids: Record<string, string>[];
-        convertedDeposits: Record<string, string>[];
-        claimedYields: Record<string, string>[];
-        loansCreated: Record<string, string>[];
-        loansRepaid: Record<string, string>[];
-        redemptionsStarted: Record<string, string>[];
-        redemptionConfig: { interestRateDecimal: string } | null;
-      }>("/v1/convertible-deposits/activity", {
-        sinceTimestamp: thirtyDaysAgo,
+      const { data } = await getConvertibleDepositsActivity({
+        sinceTimestamp: String(thirtyDaysAgo),
         limit: 25,
       });
 
@@ -155,10 +152,11 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       try {
         // `marketIdGte` is the route's own filter; the subgraph needed it
         // interpolated into a where clause.
-        const bondPurchases = await fetchIndexerData<Record<string, string>[]>(
-          "/v1/bonds/purchases",
-          { marketIdGte: 650, order: "desc", limit: 25 },
-        );
+        const { data: bondPurchases } = await getBondsPurchases({
+          marketIdGte: "650",
+          order: "desc",
+          limit: 25,
+        });
         for (const purchase of bondPurchases) {
           const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
           const usdPayout = parseFloat(purchase.payoutInPayoutToken) || 0;
@@ -179,18 +177,12 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       try {
         // Two routes rather than one document: MonoCooler activity and the
         // defaulted-collateral claims, both newest first.
-        const [coolerActivities, defaultedClaims] = await Promise.all([
-          fetchIndexerData<(Record<string, string> & { account: { address: string } })[]>(
-            "/v1/cooler/monocooler/activity",
-            { limit: 25 },
-          ),
-          fetchIndexerData<
-            (Record<string, string> & { loan: { borrower: { id: string } } | null })[]
-          >("/v1/cooler/defaulted-loan-events", {
-            sinceTimestamp: thirtyDaysAgo,
-            order: "desc",
-            limit: 25,
-          }),
+        const [{ data: coolerActivities }, { data: defaultedClaims }] = await Promise.all([
+          getCoolerMonocoolerActivity({ limit: 25 }),
+          // No `order`: the route is newest-first by construction and rejects
+          // the parameter. Passing it 400d, and the catch below swallowed it —
+          // which silently removed the whole cooler section from the feed.
+          getCoolerDefaultedLoanEvents({ sinceTimestamp: String(thirtyDaysAgo), limit: 25 }),
         ]);
         for (const activity of coolerActivities) {
           const activityType = COOLER_TYPE_MAP[activity.type];

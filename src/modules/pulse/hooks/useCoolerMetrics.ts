@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getCoolerLiveness } from "@/generated/indexer";
 
 interface CoolerMetrics {
   totalBorrowed: number;
@@ -9,19 +9,6 @@ interface CoolerMetrics {
   monoDebt: number;
   interestRate: number;
 }
-
-type LivenessResponse = {
-  snapshots: {
-    clearinghouse: { id: string };
-    principalReceivables: string;
-    interestReceivables: string;
-  }[];
-  monocooler: {
-    totalDebt: string;
-    totalCollateral: string;
-    interestRateWad: string;
-  } | null;
-};
 
 // Fallback annual rate, used only when MonoCooler has no state yet.
 const DEFAULT_INTEREST_RATE = 0.5;
@@ -33,8 +20,9 @@ export function useCoolerMetrics() {
       // One request. The route exists for this poll: the latest clearinghouse
       // snapshots and MonoCooler global state together, rather than a
       // hand-assembled document fetching both and de-duplicating client-side.
-      const { snapshots, monocooler } =
-        await fetchIndexerData<LivenessResponse>("/v1/cooler/liveness");
+      const {
+        data: { snapshots, monocooler },
+      } = await getCoolerLiveness();
 
       // Newest first, so the first snapshot seen per clearinghouse is its
       // latest. v1 values are already human-readable decimals — no 1e18 here.
