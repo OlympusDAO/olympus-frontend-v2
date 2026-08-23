@@ -1,5 +1,5 @@
 import type { RedemptionExposure } from "@/lib/hooks/cds/conversion-exposure";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getConvertibleDepositsRedemptions } from "@/generated/indexer";
 
 // `/v1/convertible-deposits/redemptions` returns redemptions and their loans as
 // TWO FLAT LISTS. Ponder nested the loans inside each redemption
@@ -18,7 +18,7 @@ import { fetchIndexerData } from "@/lib/indexer/client";
 //     by ~9% (250,028 against the correct 229,249) while row counts still
 //     matched, which is exactly the kind of error a shape check does not catch.
 type RedemptionsPayload = {
-  redemptions: { id: string; positionId: string; amountDecimal: string }[];
+  redemptions: { id: string; positionId?: string; amountDecimal: string }[];
   loans: { id: string; status: string }[];
 };
 
@@ -38,7 +38,6 @@ export function toRedemptionExposure(payload: RedemptionsPayload): RedemptionExp
 }
 
 export async function fetchRedemptionExposure(limit = 1000): Promise<RedemptionExposure[]> {
-  return toRedemptionExposure(
-    await fetchIndexerData<RedemptionsPayload>("/v1/convertible-deposits/redemptions", { limit }),
-  );
+  const { data } = await getConvertibleDepositsRedemptions({ limit });
+  return toRedemptionExposure(data);
 }

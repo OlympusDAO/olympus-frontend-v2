@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getConvertibleDepositsPriceHistory } from "@/generated/indexer";
 
 export interface HistoricalBid {
   timestamp: number;
@@ -32,18 +32,10 @@ export interface DepositPeriodSnapshot {
   depositPeriod: number;
 }
 
-// The wire shapes. Only the timestamp and the `*Decimal` fields the charts do
-// arithmetic on need converting — `depositPeriod` and `isAuctionActive` already
-// arrive as a number and a boolean.
-type RawBid = Omit<HistoricalBid, "timestamp" | "tickPriceDecimal"> & {
-  timestamp: string;
-  tickPriceDecimal: string;
-};
-type RawAuctioneerSnapshot = Omit<AuctioneerSnapshot, "timestamp"> & { timestamp: string };
-type RawDepositPeriodSnapshot = Omit<
-  DepositPeriodSnapshot,
-  "timestamp" | "currentTickPriceDecimal"
-> & { timestamp: string; currentTickPriceDecimal: string };
+// Only the timestamp and the `*Decimal` fields the charts do arithmetic on
+// need converting — `depositPeriod` and `isAuctionActive` already arrive as a
+// number and a boolean. The wire shapes themselves come from the generated
+// types now, so the Raw* aliases that restated them are gone.
 
 interface HistoricalPriceData {
   bids: HistoricalBid[];
@@ -75,14 +67,10 @@ export function useHistoricalPriceData(
       // One request. The Ponder version issued three roots — bids, auctioneer
       // snapshots, and per-deposit-period tick snapshots — over the same
       // window; this route exists to return them together.
-      const history = await fetchIndexerData<{
-        bids: RawBid[];
-        auctioneerSnapshots: RawAuctioneerSnapshot[];
-        depositPeriodSnapshots: RawDepositPeriodSnapshot[];
-      }>("/v1/convertible-deposits/price-history", {
+      const { data: history } = await getConvertibleDepositsPriceHistory({
         // `from: 0` would be an unnecessary filter; "all" simply omits it.
-        from: startTimestamp > 0 ? startTimestamp : undefined,
-        depositPeriod,
+        from: startTimestamp > 0 ? String(startTimestamp) : undefined,
+        depositPeriod: depositPeriod === undefined ? undefined : String(depositPeriod),
         limit: 1000,
       });
 

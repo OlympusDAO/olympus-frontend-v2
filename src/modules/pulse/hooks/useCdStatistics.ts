@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  calculateConversionExposure,
-  type ConvertiblePositionExposure,
-} from "@/lib/hooks/cds/conversion-exposure";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { withNumericTimestamp } from "@/lib/indexer/rows";
+import {
+  getConvertibleDepositsBids,
+  getConvertibleDepositsConvertedDeposits,
+  getConvertibleDepositsPositions,
+  getConvertibleDepositsStatistics,
+} from "@/generated/indexer";
 
 export interface DepositSnapshot {
   timestamp: number;
@@ -58,35 +61,22 @@ export function useCdStatistics() {
       // snapshot, latest auctioneer snapshot, redemption-vault config); the
       // rest are windowed lists, fetched in parallel.
       const [statistics, bidRows, convertedRows, positions, redemptions] = await Promise.all([
-        fetchIndexerData<{
-          facilitySnapshot: (DepositSnapshot & { timestamp: string }) | null;
-          auctioneerSnapshot: { targetDecimal: string } | null;
-          redemptionConfig: { interestRateDecimal: string } | null;
-        }>("/v1/convertible-deposits/statistics"),
-        fetchIndexerData<(BidEvent & { timestamp: string })[]>("/v1/convertible-deposits/bids", {
-          sinceTimestamp: thirtyDaysAgo,
-          limit: 1000,
-        }),
-        fetchIndexerData<(ConvertedDeposit & { timestamp: string })[]>(
-          "/v1/convertible-deposits/converted-deposits",
-          { sinceTimestamp: thirtyDaysAgo, limit: 1000 },
+        getConvertibleDepositsStatistics().then((response) => response.data),
+        getConvertibleDepositsBids({ sinceTimestamp: String(thirtyDaysAgo), limit: 1000 }).then(
+          (response) => response.data,
         ),
-        fetchIndexerData<ConvertiblePositionExposure[]>("/v1/convertible-deposits/positions", {
+        getConvertibleDepositsConvertedDeposits({
+          sinceTimestamp: String(thirtyDaysAgo),
           limit: 1000,
-        }),
+        }).then((response) => response.data),
+        getConvertibleDepositsPositions({ limit: 1000 }).then((response) => response.data),
         fetchRedemptionExposure(),
       ]);
 
-      // Timestamps cross the wire as strings; the UI types them as numbers.
-      const toNumericTimestamp = <T extends { timestamp: string }>(row: T) => ({
-        ...row,
-        timestamp: Number(row.timestamp),
-      });
-
-      const bids = bidRows.map(toNumericTimestamp);
-      const convertedDeposits = convertedRows.map(toNumericTimestamp);
+      const bids = bidRows.map(withNumericTimestamp);
+      const convertedDeposits = convertedRows.map(withNumericTimestamp);
       const latestSnapshot = statistics.facilitySnapshot
-        ? toNumericTimestamp(statistics.facilitySnapshot)
+        ? withNumericTimestamp(statistics.facilitySnapshot)
         : null;
       const depositSnapshots = latestSnapshot ? [latestSnapshot] : [];
 

@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { fetchIndexerData } from "@/lib/indexer/client";
 import {
-  calculateConversionExposure,
-  type ConvertiblePositionExposure,
-} from "@/lib/hooks/cds/conversion-exposure";
+  getConvertibleDepositsAuctioneerSnapshots,
+  getConvertibleDepositsBids,
+  getConvertibleDepositsClaimedYields,
+  getConvertibleDepositsConvertedDeposits,
+  getConvertibleDepositsFacilitySnapshots,
+  getConvertibleDepositsPositions,
+} from "@/generated/indexer";
+import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
+import { windowed, withNumericTimestamp } from "@/lib/indexer/rows";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -72,22 +77,6 @@ const TIME_RANGE_SECONDS: Record<TimeRange, number> = {
   "1y": 365 * 24 * 60 * 60,
 };
 
-// Every list route here windows on `sinceTimestamp` and returns rows whose
-// `timestamp` is a string; the UI types it as a number.
-type Timestamped = { timestamp: string };
-
-async function windowed<T extends Timestamped>(
-  path: string,
-  sinceTimestamp?: number,
-): Promise<(Omit<T, "timestamp"> & { timestamp: number })[]> {
-  const rows = await fetchIndexerData<T[]>(path, {
-    sinceTimestamp,
-    order: "asc",
-    limit: 1000,
-  });
-  return rows.map((row) => ({ ...row, timestamp: Number(row.timestamp) }));
-}
-
 export function useStatisticsData(timeRange: TimeRange = "7d") {
   const chainId = useChainId();
   const startTimestamp = Math.floor(Date.now() / 1000) - TIME_RANGE_SECONDS[timeRange];
@@ -96,25 +85,14 @@ export function useStatisticsData(timeRange: TimeRange = "7d") {
     queryKey: ["statisticsData", chainId, timeRange],
     queryFn: async () => {
       // Five windowed lists, previously one Ponder document with five roots.
+      const window = { sinceTimestamp: String(startTimestamp), order: "asc", limit: 1000 } as const;
       const [depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields] =
         await Promise.all([
-          windowed<DepositSnapshot & Timestamped>(
-            "/v1/convertible-deposits/facility-snapshots",
-            startTimestamp,
-          ),
-          windowed<BidEvent & Timestamped>("/v1/convertible-deposits/bids", startTimestamp),
-          windowed<AuctioneerSnapshot & Timestamped>(
-            "/v1/convertible-deposits/auctioneer-snapshots",
-            startTimestamp,
-          ),
-          windowed<ConvertedDeposit & Timestamped>(
-            "/v1/convertible-deposits/converted-deposits",
-            startTimestamp,
-          ),
-          windowed<ClaimedYield & Timestamped>(
-            "/v1/convertible-deposits/claimed-yields",
-            startTimestamp,
-          ),
+          windowed(() => getConvertibleDepositsFacilitySnapshots(window)),
+          windowed(() => getConvertibleDepositsBids(window)),
+          windowed(() => getConvertibleDepositsAuctioneerSnapshots(window)),
+          windowed(() => getConvertibleDepositsConvertedDeposits(window)),
+          windowed(() => getConvertibleDepositsClaimedYields(window)),
         ]);
 
       return { depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields };
@@ -134,13 +112,13 @@ export function useCurrentStatistics() {
   }>({
     queryKey: ["currentStatistics", chainId],
     queryFn: async () => {
-      const snapshots = await fetchIndexerData<DepositSnapshot[]>(
-        "/v1/convertible-deposits/facility-snapshots",
-        { order: "desc", limit: 2 },
-      );
+      const { data: snapshots } = await getConvertibleDepositsFacilitySnapshots({
+        order: "desc",
+        limit: 2,
+      });
       return {
-        latestSnapshot: snapshots[0] ?? null,
-        previousSnapshot: snapshots[1] ?? null,
+        latestSnapshot: snapshots[0] ? withNumericTimestamp(snapshots[0]) : null,
+        previousSnapshot: snapshots[1] ? withNumericTimestamp(snapshots[1]) : null,
       };
     },
     staleTime: 30000,
@@ -154,10 +132,7 @@ export function useAllTimeDeposits() {
   return useQuery<number>({
     queryKey: ["allTimeDeposits", chainId],
     queryFn: async () => {
-      const bids = await fetchIndexerData<{ depositAmountDecimal: string }[]>(
-        "/v1/convertible-deposits/bids",
-        { order: "asc", limit: 1000 },
-      );
+      const { data: bids } = await getConvertibleDepositsBids({ order: "asc", limit: 1000 });
       return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.depositAmountDecimal), 0);
     },
     staleTime: 60000,
@@ -171,10 +146,7 @@ export function useAllTimeConvertibleOhm() {
   return useQuery<number>({
     queryKey: ["allTimeConvertibleOhm", chainId],
     queryFn: async () => {
-      const bids = await fetchIndexerData<{ convertedAmountDecimal: string }[]>(
-        "/v1/convertible-deposits/bids",
-        { order: "asc", limit: 1000 },
-      );
+      const { data: bids } = await getConvertibleDepositsBids({ order: "asc", limit: 1000 });
       return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.convertedAmountDecimal), 0);
     },
     staleTime: 60000,
@@ -190,9 +162,7 @@ export function useCurrentConvertibleOhm() {
     queryKey: ["currentConvertibleOhm", chainId],
     queryFn: async () => {
       const [positions, redemptions] = await Promise.all([
-        fetchIndexerData<ConvertiblePositionExposure[]>("/v1/convertible-deposits/positions", {
-          limit: 1000,
-        }),
+        getConvertibleDepositsPositions({ limit: 1000 }).then((response) => response.data),
         fetchRedemptionExposure(),
       ]);
 
