@@ -223,3 +223,50 @@ describe.skipIf(!API)("convertible-deposit hooks' contract with the indexer", ()
     }
   });
 });
+
+describe.skipIf(!API)("yrf and emission-manager hooks' contract with the indexer", () => {
+  test("useEmissionManager: four roots in one response", async () => {
+    const { data } = await get("/v1/emission-manager/pulse");
+    const pulse = data as { state: { activeMarketId: string } | null };
+    expect(Object.keys(data as object).sort()).toEqual([
+      "activation",
+      "backingUpdates",
+      "deactivation",
+      "state",
+    ]);
+    // schema.graphql declares activeMarketId non-null; the hook assigns it
+    // straight to a `string` field.
+    if (pulse.state) expect(typeof pulse.state.activeMarketId).toBe("string");
+  });
+
+  test("useYrfHistory: id-ordered cursors are stable", async () => {
+    for (const path of ["/v1/yrf/next-yield-sets", "/v1/yrf/repo-markets"]) {
+      const { data } = await get(`${path}?orderBy=id&order=asc&limit=3`);
+      const ids = (data as { id: string }[]).map((row) => row.id);
+      expect([...ids].sort(), path).toEqual(ids);
+    }
+  });
+
+  // YRF has ~700 markets and the filter is capped, so the hook chunks. Passing
+  // them all is a 400, not a silent truncation — worth pinning both halves.
+  test("useYrfHistory: the marketIds filter is bounded, and the bound is 200", async () => {
+    const markets = (await get("/v1/yrf/repo-markets?limit=1000")).data as {
+      marketId: string;
+    }[];
+    expect(markets.length).toBeGreaterThan(200);
+
+    const ids = markets
+      .slice(0, 200)
+      .map((m) => m.marketId)
+      .join(",");
+    const response = await fetch(`${API}/v1/bonds/purchases?marketIds=${ids}&limit=5`);
+    expect(response.status).toBe(200);
+
+    const tooMany = markets
+      .slice(0, 201)
+      .map((m) => m.marketId)
+      .join(",");
+    const rejected = await fetch(`${API}/v1/bonds/purchases?marketIds=${tooMany}&limit=5`);
+    expect(rejected.status).toBe(400);
+  });
+});
