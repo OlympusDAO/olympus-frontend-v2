@@ -344,8 +344,8 @@ export type GetRbsCushionDepletion200DataLowItem = {
 };
 
 export type GetRbsCushionDepletion200Data = {
-  high?: GetRbsCushionDepletion200DataHighItem[];
-  low?: GetRbsCushionDepletion200DataLowItem[];
+  high: GetRbsCushionDepletion200DataHighItem[];
+  low: GetRbsCushionDepletion200DataLowItem[];
 };
 
 export type GetRbsCushionDepletion200 = {
@@ -421,8 +421,8 @@ export type GetRbsSpreadChanges200DataThresholdFactorsItem = {
 };
 
 export type GetRbsSpreadChanges200Data = {
-  spreads?: GetRbsSpreadChanges200DataSpreadsItem[];
-  thresholdFactors?: GetRbsSpreadChanges200DataThresholdFactorsItem[];
+  spreads: GetRbsSpreadChanges200DataSpreadsItem[];
+  thresholdFactors: GetRbsSpreadChanges200DataThresholdFactorsItem[];
 };
 
 export type GetRbsSpreadChanges200 = {
@@ -596,8 +596,8 @@ export type GetBondsMarketEvents200DataClosedItem = {
 };
 
 export type GetBondsMarketEvents200Data = {
-  created?: GetBondsMarketEvents200DataCreatedItem[];
-  closed?: GetBondsMarketEvents200DataClosedItem[];
+  created: GetBondsMarketEvents200DataCreatedItem[];
+  closed: GetBondsMarketEvents200DataClosedItem[];
 };
 
 export type GetBondsMarketEvents200 = {
@@ -932,7 +932,7 @@ export type GetCoolerLiveness200DataMonocooler = {
 };
 
 export type GetCoolerLiveness200Data = {
-  snapshots?: GetCoolerLiveness200DataSnapshotsItem[];
+  snapshots: GetCoolerLiveness200DataSnapshotsItem[];
   monocooler?: GetCoolerLiveness200DataMonocooler;
 };
 
@@ -1259,9 +1259,9 @@ export type GetCoolerDailyProtocolIncome200DataRepaymentsItem = {
 };
 
 export type GetCoolerDailyProtocolIncome200Data = {
-  defaults?: GetCoolerDailyProtocolIncome200DataDefaultsItem[];
-  extensions?: GetCoolerDailyProtocolIncome200DataExtensionsItem[];
-  repayments?: GetCoolerDailyProtocolIncome200DataRepaymentsItem[];
+  defaults: GetCoolerDailyProtocolIncome200DataDefaultsItem[];
+  extensions: GetCoolerDailyProtocolIncome200DataExtensionsItem[];
+  repayments: GetCoolerDailyProtocolIncome200DataRepaymentsItem[];
 };
 
 export type GetCoolerDailyProtocolIncome200 = {
@@ -1722,12 +1722,12 @@ export type GetGovernorProposalEvents200DataVotingStartedItem = {
 };
 
 export type GetGovernorProposalEvents200Data = {
-  created?: GetGovernorProposalEvents200DataCreatedItem[];
-  canceled?: GetGovernorProposalEvents200DataCanceledItem[];
-  executed?: GetGovernorProposalEvents200DataExecutedItem[];
-  queued?: GetGovernorProposalEvents200DataQueuedItem[];
-  vetoed?: GetGovernorProposalEvents200DataVetoedItem[];
-  votingStarted?: GetGovernorProposalEvents200DataVotingStartedItem[];
+  created: GetGovernorProposalEvents200DataCreatedItem[];
+  canceled: GetGovernorProposalEvents200DataCanceledItem[];
+  executed: GetGovernorProposalEvents200DataExecutedItem[];
+  queued: GetGovernorProposalEvents200DataQueuedItem[];
+  vetoed: GetGovernorProposalEvents200DataVetoedItem[];
+  votingStarted: GetGovernorProposalEvents200DataVotingStartedItem[];
 };
 
 export type GetGovernorProposalEvents200 = {
@@ -1921,10 +1921,10 @@ export type GetGovernorProposalsByIdTimeline200DataVetoedItem = {
 };
 
 export type GetGovernorProposalsByIdTimeline200Data = {
-  queued?: GetGovernorProposalsByIdTimeline200DataQueuedItem[];
-  executed?: GetGovernorProposalsByIdTimeline200DataExecutedItem[];
-  canceled?: GetGovernorProposalsByIdTimeline200DataCanceledItem[];
-  vetoed?: GetGovernorProposalsByIdTimeline200DataVetoedItem[];
+  queued: GetGovernorProposalsByIdTimeline200DataQueuedItem[];
+  executed: GetGovernorProposalsByIdTimeline200DataExecutedItem[];
+  canceled: GetGovernorProposalsByIdTimeline200DataCanceledItem[];
+  vetoed: GetGovernorProposalsByIdTimeline200DataVetoedItem[];
 };
 
 export type GetGovernorProposalsByIdTimeline200 = {
@@ -2323,7 +2323,7 @@ export type GetEmissionManagerPulse200Data = {
   state?: GetEmissionManagerPulse200DataState;
   activation?: GetEmissionManagerPulse200DataActivation;
   deactivation?: GetEmissionManagerPulse200DataDeactivation;
-  backingUpdates?: GetEmissionManagerPulse200DataBackingUpdatesItem[];
+  backingUpdates: GetEmissionManagerPulse200DataBackingUpdatesItem[];
 };
 
 export type GetEmissionManagerPulse200 = {
@@ -2980,9 +2980,9 @@ export type GetConvertibleDepositsPriceHistory200DataDepositPeriodSnapshotsItem 
 };
 
 export type GetConvertibleDepositsPriceHistory200Data = {
-  bids?: GetConvertibleDepositsPriceHistory200DataBidsItem[];
-  auctioneerSnapshots?: GetConvertibleDepositsPriceHistory200DataAuctioneerSnapshotsItem[];
-  depositPeriodSnapshots?: GetConvertibleDepositsPriceHistory200DataDepositPeriodSnapshotsItem[];
+  bids: GetConvertibleDepositsPriceHistory200DataBidsItem[];
+  auctioneerSnapshots: GetConvertibleDepositsPriceHistory200DataAuctioneerSnapshotsItem[];
+  depositPeriodSnapshots: GetConvertibleDepositsPriceHistory200DataDepositPeriodSnapshotsItem[];
 };
 
 export type GetConvertibleDepositsPriceHistory200 = {
@@ -3053,8 +3053,8 @@ export type GetConvertibleDepositsRedemptions200DataLoansItem = {
 };
 
 export type GetConvertibleDepositsRedemptions200Data = {
-  redemptions?: GetConvertibleDepositsRedemptions200DataRedemptionsItem[];
-  loans?: GetConvertibleDepositsRedemptions200DataLoansItem[];
+  redemptions: GetConvertibleDepositsRedemptions200DataRedemptionsItem[];
+  loans: GetConvertibleDepositsRedemptions200DataLoansItem[];
 };
 
 export type GetConvertibleDepositsRedemptions200 = {
@@ -3229,12 +3229,12 @@ export type GetConvertibleDepositsActivity200DataRedemptionConfig = {
 };
 
 export type GetConvertibleDepositsActivity200Data = {
-  bids?: GetConvertibleDepositsActivity200DataBidsItem[];
-  convertedDeposits?: GetConvertibleDepositsActivity200DataConvertedDepositsItem[];
-  claimedYields?: GetConvertibleDepositsActivity200DataClaimedYieldsItem[];
-  loansCreated?: GetConvertibleDepositsActivity200DataLoansCreatedItem[];
-  loansRepaid?: GetConvertibleDepositsActivity200DataLoansRepaidItem[];
-  redemptionsStarted?: GetConvertibleDepositsActivity200DataRedemptionsStartedItem[];
+  bids: GetConvertibleDepositsActivity200DataBidsItem[];
+  convertedDeposits: GetConvertibleDepositsActivity200DataConvertedDepositsItem[];
+  claimedYields: GetConvertibleDepositsActivity200DataClaimedYieldsItem[];
+  loansCreated: GetConvertibleDepositsActivity200DataLoansCreatedItem[];
+  loansRepaid: GetConvertibleDepositsActivity200DataLoansRepaidItem[];
+  redemptionsStarted: GetConvertibleDepositsActivity200DataRedemptionsStartedItem[];
   redemptionConfig?: GetConvertibleDepositsActivity200DataRedemptionConfig;
 };
 
@@ -3304,8 +3304,8 @@ export type GetConvertibleDepositsAuctionEvents200DataResultsItem = {
 };
 
 export type GetConvertibleDepositsAuctionEvents200Data = {
-  parametersUpdated?: GetConvertibleDepositsAuctionEvents200DataParametersUpdatedItem[];
-  results?: GetConvertibleDepositsAuctionEvents200DataResultsItem[];
+  parametersUpdated: GetConvertibleDepositsAuctionEvents200DataParametersUpdatedItem[];
+  results: GetConvertibleDepositsAuctionEvents200DataResultsItem[];
 };
 
 export type GetConvertibleDepositsAuctionEvents200 = {
@@ -3355,8 +3355,8 @@ export type GetConvertibleDepositsFailures200DataBondMarketCreationFailedItem = 
 };
 
 export type GetConvertibleDepositsFailures200Data = {
-  claimAllYieldFailed?: GetConvertibleDepositsFailures200DataClaimAllYieldFailedItem[];
-  bondMarketCreationFailed?: GetConvertibleDepositsFailures200DataBondMarketCreationFailedItem[];
+  claimAllYieldFailed: GetConvertibleDepositsFailures200DataClaimAllYieldFailedItem[];
+  bondMarketCreationFailed: GetConvertibleDepositsFailures200DataBondMarketCreationFailedItem[];
 };
 
 export type GetConvertibleDepositsFailures200 = {
