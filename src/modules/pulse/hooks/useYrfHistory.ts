@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getBondsPurchases, getYrfNextYieldSets, getYrfRepoMarkets } from "@/generated/indexer";
 import { fetchAllPages } from "@/lib/indexer/paginate";
 import { getWeekStartUTC } from "@/lib/liveness/epoch";
+import { unwrap } from "@/lib/indexer/rows";
 
 export interface YrfWeeklyYield {
   weekLabel: string;
@@ -61,9 +62,7 @@ export function useYrfHistory() {
         fetchAllPages((cursor) => getYrfRepoMarkets({ orderBy: "id", order: "asc", ...cursor })),
         // Latest 25 by time. The id-paginated fetch above is id-ordered, which
         // is not strictly time-ordered, so its tail is not the most recent.
-        getYrfNextYieldSets({ orderBy: "blockTimestamp", order: "desc", limit: 25 }).then(
-          (response) => response.data,
-        ),
+        unwrap(getYrfNextYieldSets({ orderBy: "blockTimestamp", order: "desc", limit: 25 })),
       ]);
 
       const yrfMarketIds: string[] = repoMarkets.map((m) => m.marketId);

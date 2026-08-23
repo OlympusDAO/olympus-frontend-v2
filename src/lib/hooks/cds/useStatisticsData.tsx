@@ -10,7 +10,7 @@ import {
 } from "@/generated/indexer";
 import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
-import { windowed, withNumericTimestamp } from "@/lib/indexer/rows";
+import { windowed, withNumericTimestamp, unwrap } from "@/lib/indexer/rows";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -162,7 +162,7 @@ export function useCurrentConvertibleOhm() {
     queryKey: ["currentConvertibleOhm", chainId],
     queryFn: async () => {
       const [positions, redemptions] = await Promise.all([
-        getConvertibleDepositsPositions({ limit: 1000 }).then((response) => response.data),
+        unwrap(getConvertibleDepositsPositions({ limit: 1000 })),
         fetchRedemptionExposure(),
       ]);
 

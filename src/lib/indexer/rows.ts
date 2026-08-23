@@ -5,6 +5,17 @@
  * schema — while the UI types them as numbers. Converting in one place keeps
  * the per-hook copies of this map from drifting.
  */
+/**
+ * Takes the `data` member out of the `{ data, meta }` envelope.
+ *
+ * Every route answers in that envelope, and most callers want the rows. The
+ * generated fetchers return the whole envelope, so without this each call site
+ * carries a `.then((response) => response.data)` that says nothing.
+ */
+export function unwrap<T>(response: Promise<{ data: T }>): Promise<T> {
+  return response.then((envelope) => envelope.data);
+}
+
 export type Timestamped = { timestamp: string };
 
 export type WithNumericTimestamp<T extends Timestamped> = Omit<T, "timestamp"> & {

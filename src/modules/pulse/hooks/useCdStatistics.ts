@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
 import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
-import { withNumericTimestamp } from "@/lib/indexer/rows";
+import { withNumericTimestamp, unwrap } from "@/lib/indexer/rows";
 import {
   getConvertibleDepositsBids,
   getConvertibleDepositsConvertedDeposits,
@@ -61,15 +61,15 @@ export function useCdStatistics() {
       // snapshot, latest auctioneer snapshot, redemption-vault config); the
       // rest are windowed lists, fetched in parallel.
       const [statistics, bidRows, convertedRows, positions, redemptions] = await Promise.all([
-        getConvertibleDepositsStatistics().then((response) => response.data),
-        getConvertibleDepositsBids({ sinceTimestamp: String(thirtyDaysAgo), limit: 1000 }).then(
-          (response) => response.data,
+        unwrap(getConvertibleDepositsStatistics()),
+        unwrap(getConvertibleDepositsBids({ sinceTimestamp: String(thirtyDaysAgo), limit: 1000 })),
+        unwrap(
+          getConvertibleDepositsConvertedDeposits({
+            sinceTimestamp: String(thirtyDaysAgo),
+            limit: 1000,
+          }),
         ),
-        getConvertibleDepositsConvertedDeposits({
-          sinceTimestamp: String(thirtyDaysAgo),
-          limit: 1000,
-        }).then((response) => response.data),
-        getConvertibleDepositsPositions({ limit: 1000 }).then((response) => response.data),
+        unwrap(getConvertibleDepositsPositions({ limit: 1000 })),
         fetchRedemptionExposure(),
       ]);
 
