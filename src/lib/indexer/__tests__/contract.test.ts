@@ -270,3 +270,33 @@ describe.skipIf(!API)("yrf and emission-manager hooks' contract with the indexer
     expect(rejected.status).toBe(400);
   });
 });
+
+describe.skipIf(!API)("the redemptions payload shape", () => {
+  // This route is the one that does NOT return a bare array, and the exposure
+  // helper iterates what it is given. A shape assertion here is the difference
+  // between a caught contract change and a TypeError in the Pulse card.
+  test("returns an object of two flat lists, not an array", async () => {
+    const { data } = await get("/v1/convertible-deposits/redemptions?limit=5");
+    expect(Array.isArray(data)).toBe(false);
+    const payload = data as { redemptions: unknown[]; loans: unknown[] };
+    expect(Array.isArray(payload.redemptions)).toBe(true);
+    expect(Array.isArray(payload.loans)).toBe(true);
+  });
+
+  test("loans join to redemptions on the composite id, not redemptionId", async () => {
+    const { data } = await get("/v1/convertible-deposits/redemptions?limit=1000");
+    const payload = data as {
+      redemptions: { id: string; redemptionId: number }[];
+      loans: { id: string }[];
+    };
+
+    // Every loan id must be a redemption id — that is what makes the join exact.
+    const redemptionIds = new Set(payload.redemptions.map((r) => r.id));
+    const unmatched = payload.loans.filter((loan) => !redemptionIds.has(loan.id));
+    expect(unmatched).toEqual([]);
+
+    // And redemptionId is NOT unique, which is why it cannot be the key.
+    const distinct = new Set(payload.redemptions.map((r) => r.redemptionId));
+    expect(distinct.size).toBeLessThan(payload.redemptions.length);
+  });
+});

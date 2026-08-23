@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
 import { fetchIndexerData } from "@/lib/indexer/client";
-import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import {
+  calculateConversionExposure,
+  type ConvertiblePositionExposure,
+} from "@/lib/hooks/cds/conversion-exposure";
+import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -186,14 +190,10 @@ export function useCurrentConvertibleOhm() {
     queryKey: ["currentConvertibleOhm", chainId],
     queryFn: async () => {
       const [positions, redemptions] = await Promise.all([
-        fetchIndexerData<Parameters<typeof calculateConversionExposure>[0]>(
-          "/v1/convertible-deposits/positions",
-          { limit: 1000 },
-        ),
-        fetchIndexerData<Parameters<typeof calculateConversionExposure>[1]>(
-          "/v1/convertible-deposits/redemptions",
-          { limit: 1000 },
-        ),
+        fetchIndexerData<ConvertiblePositionExposure[]>("/v1/convertible-deposits/positions", {
+          limit: 1000,
+        }),
+        fetchRedemptionExposure(),
       ]);
 
       const { convertibleOhm, totalDepositsUsd } = calculateConversionExposure(
