@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData, IndexerError } from "@/lib/indexer/client";
-import type { Voter } from "@/modules/governance/hooks/useDelegates";
+import { getGovernorDelegatesByAddress } from "@/generated/indexer";
+import { IndexerError } from "@/api/indexerHttpClient";
 
 /**
  * Fetches a single delegate by address, with voting power, votes cast and
@@ -11,7 +11,8 @@ export function useDelegate({ id }: { id: string }) {
     queryKey: ["governance", "delegate", id],
     queryFn: async () => {
       try {
-        return await fetchIndexerData<Voter>(`/v1/governor/delegates/${encodeURIComponent(id)}`);
+        const { data } = await getGovernorDelegatesByAddress(id);
+        return data;
       } catch (error) {
         if (error instanceof IndexerError && error.status === 404) return undefined;
         console.error("useDelegate", error);

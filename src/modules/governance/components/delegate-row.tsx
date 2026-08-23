@@ -1,18 +1,18 @@
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { GOHMTokenIcon } from "@/icons";
-import type { Voter } from "@/modules/governance/hooks/useDelegates";
+import type { DelegateListRow } from "@/modules/governance/hooks/useDelegates";
 
 export function DelegateRow({
   delegate,
   onDelegate,
   onClick,
 }: {
-  delegate: Voter;
+  delegate: DelegateListRow;
   onDelegate: (address: string) => void;
   onClick: () => void;
 }) {
-  const votingPower = Number(delegate.latestVotingPowerSnapshot.votingPower);
+  const votingPower = Number(delegate.latestVotingPowerSnapshot?.votingPower ?? 0);
   const delegationCount = delegate.delegators.length;
 
   return (

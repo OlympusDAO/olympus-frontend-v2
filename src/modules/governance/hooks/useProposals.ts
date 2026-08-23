@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
-import {
-  normalizeProposal,
-  type SubgraphProposal,
-} from "@/modules/governance/helpers/normalize-proposal";
+import { getGovernorProposals } from "@/generated/indexer";
+import { normalizeProposal } from "@/modules/governance/helpers/normalize-proposal";
 
 /**
  * Fetches all proposals from the protocol indexer, normalized for UI consumption.
@@ -16,10 +13,8 @@ export function useProposals() {
     queryKey: ["governance", "proposals"],
     queryFn: async () => {
       try {
-        const proposals = await fetchIndexerData<SubgraphProposal[]>("/v1/governor/proposals", {
-          limit: 1000,
-        });
-        return proposals.map(normalizeProposal);
+        const { data } = await getGovernorProposals({ limit: 1000 });
+        return data.map(normalizeProposal);
       } catch (error) {
         console.error("useProposals", error);
         return [];

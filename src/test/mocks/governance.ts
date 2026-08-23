@@ -1,6 +1,6 @@
-import type { SubgraphProposal } from "@/modules/governance/helpers/normalize-proposal";
+import type { IndexerProposal } from "@/modules/governance/helpers/normalize-proposal";
 
-export const mockSubgraphProposal: SubgraphProposal = {
+export const mockIndexerProposal: IndexerProposal = {
   proposalId: "1",
   proposer: "0x1234567890123456789012345678901234567890",
   targets: ["0xaabbccdd00000000000000000000000000000001"],

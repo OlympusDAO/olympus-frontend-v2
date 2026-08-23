@@ -1,13 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
-
-export type VoteCast = {
-  votes: string;
-  voter: { address: string };
-  reason: string;
-  support: number;
-  transactionHash: string;
-};
+import { getGovernorVotes } from "@/generated/indexer";
 
 /**
  * Fetches individual vote records for a proposal, filtered by support type
@@ -25,13 +17,14 @@ export function useProposalVotes({
     queryFn: async () => {
       // `orderBy: votes` / `order: desc` are the route's defaults; stated here
       // because the UI depends on the ordering.
-      return fetchIndexerData<VoteCast[]>("/v1/governor/votes", {
+      const { data } = await getGovernorVotes({
         proposalId,
-        support,
+        support: String(support),
         orderBy: "votes",
         order: "desc",
         limit: 1000,
       });
+      return data;
     },
     enabled: !!proposalId && support != null,
   });

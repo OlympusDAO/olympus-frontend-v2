@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getGovernorProposalsByIdTimeline } from "@/generated/indexer";
 import type { ProposalStatus } from "@/modules/governance/helpers/proposal-status";
 
 type TimelineEvent = {
@@ -14,17 +14,10 @@ export type ProposalTimeline = {
   vetoed: TimelineEvent;
 };
 
-type TimelineMarker = {
-  blockTimestamp: string;
-  transactionHash: string;
-};
-
-type TimelineResponse = {
-  queued: TimelineMarker[];
-  executed: TimelineMarker[];
-  canceled: TimelineMarker[];
-  vetoed: TimelineMarker[];
-};
+// Every marker list carries these two fields; the generated per-list types
+// differ only in the extras (queued also has `eta`), so the reader takes the
+// common shape.
+type TimelineMarker = { blockTimestamp: string; transactionHash: string };
 
 const emptyEvent: TimelineEvent = { date: undefined, txHash: undefined };
 
@@ -57,9 +50,7 @@ export function useProposalTimeline({
     queryKey: ["governance", "proposalTimeline", proposalId, status],
     queryFn: async (): Promise<ProposalTimeline> => {
       try {
-        const timeline = await fetchIndexerData<TimelineResponse>(
-          `/v1/governor/proposals/${encodeURIComponent(String(proposalId))}/timeline`,
-        );
+        const { data: timeline } = await getGovernorProposalsByIdTimeline(String(proposalId));
         return {
           queued: toEvent(timeline.queued),
           executed: toEvent(timeline.executed),

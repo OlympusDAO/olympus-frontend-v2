@@ -1,21 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIndexerData } from "@/lib/indexer/client";
+import { getGovernorDelegates, type GetGovernorDelegates200DataItem } from "@/generated/indexer";
 
-export type Voter = {
-  id: string;
-  address: string;
-  latestVotingPowerSnapshot: {
-    votingPower: string;
-  };
-  votesCasted: {
-    proposalId: string;
-    reason: string;
-    support: number;
-  }[];
-  delegators: {
-    id: string;
-  }[];
-};
+// The list route does NOT project `votesCasted` — only the by-address route
+// does. The hand-written type used to claim both, so a component rendering a
+// list row could type-check a read that is always undefined at runtime.
+export type DelegateListRow = GetGovernorDelegates200DataItem;
 
 // Voting power below this is dust and clutters the delegate list. Applied by
 // the API rather than after the fact, so the page limit is spent on rows the
@@ -30,10 +19,11 @@ export function useDelegates() {
     queryKey: ["governance", "delegates"],
     queryFn: async () => {
       try {
-        return await fetchIndexerData<Voter[]>("/v1/governor/delegates", {
+        const { data } = await getGovernorDelegates({
           minVotingPower: MIN_VOTING_POWER,
           limit: 1000,
         });
+        return data;
       } catch (error) {
         console.error("useDelegates", error);
         return [];
