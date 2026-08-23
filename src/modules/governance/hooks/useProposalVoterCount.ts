@@ -1,48 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
-import request, { gql } from "graphql-request";
-import { getGovernanceSubgraphUrl } from "@/modules/governance/hooks/useGovernanceSubgraph";
-
-type VoterCountResponse = {
-  voteCasts: { id: string }[];
-};
+import { fetchIndexerData } from "@/lib/indexer/client";
 
 const PAGE_SIZE = 1000;
 
-const VOTER_COUNT_QUERY = gql`
-  query VoterCount($proposalId: BigInt!, $first: Int!, $idGt: String!) {
-    voteCasts(
-      first: $first
-      orderBy: id
-      orderDirection: asc
-      where: { proposalId: $proposalId, id_gt: $idGt }
-    ) {
-      id
-    }
-  }
-`;
-
 /**
  * Counts vote records (each address votes at most once) for a proposal.
- * Pages through the subgraph in batches of PAGE_SIZE so proposals with more
- * than 1000 voters are not silently undercounted.
+ *
+ * Pages by id so a proposal with more than PAGE_SIZE voters is not silently
+ * undercounted — `sinceId` is the route's cursor, and id-ordering is what makes
+ * the cursor stable.
  */
 export function useProposalVoterCount({ proposalId }: { proposalId?: number | string }) {
   return useQuery({
     queryKey: ["governance", "proposalVoterCount", proposalId],
     queryFn: async () => {
-      const subgraphUrl = getGovernanceSubgraphUrl();
       let total = 0;
-      let idGt = "";
+      let sinceId: string | undefined;
+
       while (true) {
-        const { voteCasts } = await request<VoterCountResponse>(subgraphUrl, VOTER_COUNT_QUERY, {
+        const page = await fetchIndexerData<{ id: string }[]>("/v1/governor/votes", {
           proposalId: String(proposalId),
-          first: PAGE_SIZE,
-          idGt,
+          orderBy: "id",
+          order: "asc",
+          limit: PAGE_SIZE,
+          sinceId,
         });
-        total += voteCasts.length;
-        if (voteCasts.length < PAGE_SIZE) break;
-        idGt = voteCasts[voteCasts.length - 1].id;
+        total += page.length;
+        if (page.length < PAGE_SIZE) break;
+        sinceId = page[page.length - 1].id;
       }
+
       return total;
     },
     enabled: proposalId != null,

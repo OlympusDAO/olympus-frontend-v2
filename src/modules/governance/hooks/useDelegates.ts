@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import request, { gql } from "graphql-request";
-import { getGovernanceSubgraphUrl } from "@/modules/governance/hooks/useGovernanceSubgraph";
+import { fetchIndexerData } from "@/lib/indexer/client";
 
 export type Voter = {
   id: string;
@@ -18,38 +17,23 @@ export type Voter = {
   }[];
 };
 
-const DELEGATES_QUERY = gql`
-  query {
-    voters(
-      first: 1000
-      orderBy: latestVotingPowerSnapshot__votingPower
-      orderDirection: desc
-      where: { latestVotingPowerSnapshot_not: null, latestVotingPowerSnapshot_: { votingPower_gt: 0.0001 } }
-    ) {
-      id
-      address
-      latestVotingPowerSnapshot {
-        votingPower
-      }
-      delegators {
-        id
-      }
-    }
-  }
-`;
+// Voting power below this is dust and clutters the delegate list. Applied by
+// the API rather than after the fact, so the page limit is spent on rows the
+// UI will actually show.
+const MIN_VOTING_POWER = "0.0001";
 
 /**
- * Fetches all voters from the governance subgraph, ordered by voting power.
- * Filters out voters with negligible voting power (< 0.0001).
+ * Fetches delegates ordered by voting power, strongest first.
  */
 export function useDelegates() {
   return useQuery({
     queryKey: ["governance", "delegates"],
     queryFn: async () => {
       try {
-        const subgraphUrl = getGovernanceSubgraphUrl();
-        const response = await request<{ voters: Voter[] }>(subgraphUrl, DELEGATES_QUERY);
-        return response.voters;
+        return await fetchIndexerData<Voter[]>("/v1/governor/delegates", {
+          minVotingPower: MIN_VOTING_POWER,
+          limit: 1000,
+        });
       } catch (error) {
         console.error("useDelegates", error);
         return [];

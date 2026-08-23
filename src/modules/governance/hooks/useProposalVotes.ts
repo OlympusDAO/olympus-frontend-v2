@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import request, { gql } from "graphql-request";
-import { getGovernanceSubgraphUrl } from "@/modules/governance/hooks/useGovernanceSubgraph";
+import { fetchIndexerData } from "@/lib/indexer/client";
 
 export type VoteCast = {
   votes: string;
@@ -10,14 +9,9 @@ export type VoteCast = {
   transactionHash: string;
 };
 
-type VotesResponse = {
-  voteCasts: VoteCast[];
-};
-
 /**
- * Fetches individual vote records for a proposal from the governance subgraph.
- * Filters by support type (0 = Against, 1 = For, 2 = Abstain).
- * Results are ordered by vote weight descending.
+ * Fetches individual vote records for a proposal, filtered by support type
+ * (0 = Against, 1 = For, 2 = Abstain), heaviest vote first.
  */
 export function useProposalVotes({
   proposalId,
@@ -29,27 +23,15 @@ export function useProposalVotes({
   return useQuery({
     queryKey: ["governance", "proposalVotes", proposalId, support],
     queryFn: async () => {
-      const query = gql`
-        query {
-          voteCasts(
-            orderBy: votes
-            orderDirection: desc
-            where: { proposalId: ${proposalId}, support: ${support} }
-          ) {
-            votes
-            voter {
-              address
-            }
-            reason
-            support
-            transactionHash
-          }
-        }
-      `;
-
-      const subgraphUrl = getGovernanceSubgraphUrl();
-      const response = await request<VotesResponse>(subgraphUrl, query);
-      return response.voteCasts || [];
+      // `orderBy: votes` / `order: desc` are the route's defaults; stated here
+      // because the UI depends on the ordering.
+      return fetchIndexerData<VoteCast[]>("/v1/governor/votes", {
+        proposalId,
+        support,
+        orderBy: "votes",
+        order: "desc",
+        limit: 1000,
+      });
     },
     enabled: !!proposalId && support != null,
   });
