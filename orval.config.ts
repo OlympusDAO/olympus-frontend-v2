@@ -1,5 +1,6 @@
 import { defineConfig } from "orval";
 import { config } from "dotenv";
+import { DEFAULT_INDEXER_API } from "./src/lib/indexer/api-url";
 
 config();
 

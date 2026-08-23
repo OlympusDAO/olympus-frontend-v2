@@ -1,3 +1,5 @@
+import { DEFAULT_INDEXER_API } from "@/lib/indexer/api-url";
+
 // Transport for the generated protocol-indexer client (src/generated/indexer.ts).
 //
 // Deliberately NOT customHttpClient: that one targets the Olympus Units API and
@@ -12,10 +14,8 @@
 //   * numerics cross the wire as strings, because the indexer stores
 //     uint256-derived values that do not survive a JSON number.
 
-const DEFAULT_BASE_URL = "https://api-production-ca6c.up.railway.app";
-
 export const indexerBaseUrl = (
-  import.meta.env.VITE_PROTOCOL_INDEXER_API?.trim() || DEFAULT_BASE_URL
+  import.meta.env.VITE_PROTOCOL_INDEXER_API?.trim() || DEFAULT_INDEXER_API
 ).replace(/\/+$/, "");
 
 export class IndexerError extends Error {
@@ -30,10 +30,14 @@ export class IndexerError extends Error {
 }
 
 export const indexerHttpClient = async <T>(url: string, options?: RequestInit): Promise<T> => {
-  const response = await fetch(`${indexerBaseUrl}${url}`, {
-    ...options,
-    headers: { accept: "application/json", ...(options?.headers ?? {}) },
-  });
+  // Built through Headers rather than object spread: `options.headers` is a
+  // RequestInit, so it may be a Headers instance or an array of tuples, and
+  // spreading either of those yields {} — silently dropping every header the
+  // caller set.
+  const headers = new Headers(options?.headers);
+  if (!headers.has("accept")) headers.set("accept", "application/json");
+
+  const response = await fetch(`${indexerBaseUrl}${url}`, { ...options, headers });
 
   if (!response.ok) {
     let code = "http_error";

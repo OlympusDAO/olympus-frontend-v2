@@ -39,5 +39,20 @@ export function toRedemptionExposure(payload: RedemptionsPayload): RedemptionExp
 
 export async function fetchRedemptionExposure(limit = 1000): Promise<RedemptionExposure[]> {
   const { data } = await getConvertibleDepositsRedemptions({ limit });
+
+  // The route applies `limit` to the two collections INDEPENDENTLY, and both
+  // are id-ordered ascending. Once either fills its page the two cover
+  // different id ranges, so the join below starts missing loans and quietly
+  // under-reports convertible OHM — the same silent-wrong-number failure the
+  // redemptionId join had. 156 redemptions and 90 loans live today, so this is
+  // headroom, not a current defect; if it is ever reached the number must not
+  // be trusted, hence a throw rather than a partial answer.
+  if (data.redemptions.length >= limit || data.loans.length >= limit) {
+    throw new Error(
+      `redemptions page is full (${data.redemptions.length} redemptions, ${data.loans.length} loans, limit ${limit}); ` +
+        "the two collections are paged independently, so the id join is no longer complete",
+    );
+  }
+
   return toRedemptionExposure(data);
 }
