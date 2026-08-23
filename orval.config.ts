@@ -47,7 +47,11 @@ export default defineConfig({
     },
     output: {
       target: "src/generated/indexer.ts",
-      client: "react-query",
+      // `fetch`, not `react-query`: the hooks in this repo wrap these calls in
+      // their own useQuery with their own keys, staleTime and refetch cadence,
+      // so orval's generated hooks, query keys and options builders were 8k
+      // lines of committed code nothing imported.
+      client: "fetch",
       // NOT `clean`: both targets write into src/generated, and cleaning the
       // folder deletes the other target's output.
       clean: false,
@@ -57,11 +61,6 @@ export default defineConfig({
           name: "indexerHttpClient",
         },
         useTypeOverInterfaces: true,
-        query: {
-          useQuery: true,
-          useMutation: false,
-          useInfinite: false,
-        },
         // Matches the olympusUnits target: the mutator returns the parsed body,
         // not orval's { data, status, headers } wrapper.
         fetch: {
