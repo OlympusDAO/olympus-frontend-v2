@@ -11,7 +11,7 @@ const API_URL =
 // emissions and convertible deposits. Public and unauthenticated, so it has its
 // own http client rather than the auth-injecting one.
 const INDEXER_API_URL =
-  process.env.PROTOCOL_INDEXER_API_URL ?? "https://api-production-ca6c.up.railway.app/openapi.json";
+  process.env.PROTOCOL_INDEXER_API_URL ?? `${DEFAULT_INDEXER_API}/openapi.json`;
 
 export default defineConfig({
   olympusUnits: {
