@@ -68,10 +68,17 @@ export interface ConversionExposure {
   /**
    * How much of what the position table claims is actually still on deposit, in
    * [0, 1]. Below 1 because the indexer does not decrement a position's
-   * remainingAmount when the deposit leaves through a receipt-token redemption, and
-   * because position 0 kept its full remainingAmount through a finished redemption.
+   * remainingAmount when the deposit leaves through a receipt-token redemption.
    * Strike amounts and the OHM legs are scaled by it so every figure ties back to
    * the ledger.
+   *
+   * TODO(OlympusDAO/olympus-protocol-indexer#34): remove this once the indexer
+   * decrements the position. At that point remainingAmount can be trusted again,
+   * so grossDepositsUsd goes back to summing it directly, the ratio and the
+   * scaling of `strikes` / the OHM legs all come out, and the ledger inputs
+   * (initialAmountDecimal, finished redemptions, convertedDepositsUsd) are no
+   * longer needed. Check the ratio is ~1.0 against live data before removing:
+   * anything materially below means the defect is still there.
    */
   positionReflectionRatio: number;
   /** Per-claim strikes, for moneyness. Scaled by positionReflectionRatio. */
@@ -125,6 +132,12 @@ const isFinished = (redemption: RedemptionExposure) => hasEvents(redemption.fini
  * A redemption still in flight — neither completed nor reversed. Loans keep a stale
  * "active" status after their redemption finishes, so the lifecycle, not the loan
  * status, decides what is really outstanding.
+ *
+ * TODO(OlympusDAO/olympus-protocol-indexer#33): loan status is the signal this
+ * should be able to use. It currently reports ~94 loans active against ~10 that
+ * really are, and flips to "repaid" on a partial repayment, so neither direction
+ * is trustworthy. Once that is fixed this gate can go and the loan status can be
+ * read directly.
  */
 const isPending = (redemption: RedemptionExposure) =>
   !isFinished(redemption) && !hasEvents(redemption.cancelledEvents);
@@ -173,7 +186,8 @@ export function calculateConversionExposure({
 
     if (isFinished(redemption)) {
       // The deposit left the facility. The position it came from may still show its
-      // full remainingAmount, which is exactly what positionReflectionRatio corrects.
+      // full remainingAmount (OlympusDAO/olympus-protocol-indexer#34), which is
+      // exactly what positionReflectionRatio corrects for.
       finishedRedemptionsUsd += amount;
       continue;
     }
