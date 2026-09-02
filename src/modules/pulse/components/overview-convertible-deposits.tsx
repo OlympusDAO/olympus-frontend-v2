@@ -47,7 +47,9 @@ export function OverviewConvertibleDeposits() {
       <Separator className="w-full my-4" />
       {/* Body */}
       <div>
-        <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+        <TooltipInfo title="Deposits still held by the facility, net of principal borrowed back out against pending redemptions.">
+          <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+        </TooltipInfo>
         <NumberFlow
           value={totalDepositsUsd}
           className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"

@@ -13,29 +13,40 @@ interface PagedResponse<T> {
 
 type PagedData<T> = Record<string, PagedResponse<T> | undefined>;
 
+const MAX_PAGES = 200;
+
 /**
  * The indexer caps a page at 1000 rows and truncates silently past it, so any
  * collection we total has to be walked to the end rather than read in one shot.
+ *
+ * Both exhaustion cases throw rather than returning a short list. A partial total
+ * is indistinguishable from a real one by the time it reaches a card, so it would
+ * quietly under-report treasury growth and revenue instead of failing.
  */
 async function fetchAllPages<T>(
   buildQuery: (after: string | null) => string,
   select: (data: PagedData<T>) => PagedResponse<T> | undefined,
 ): Promise<T[]> {
   const items: T[] = [];
+  const seenCursors = new Set<string>();
   let after: string | null = null;
 
-  // Bounded so a repeating cursor can't spin forever.
-  for (let page = 0; page < 50; page++) {
+  for (let page = 0; page < MAX_PAGES; page++) {
     const data = await cdsGraphqlClient.request<PagedData<T>>(buildQuery(after));
     const result = select(data);
     items.push(...(result?.items ?? []));
 
     const pageInfo = result?.pageInfo;
-    if (!pageInfo?.hasNextPage || !pageInfo.endCursor) break;
+    if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return items;
+
+    if (seenCursors.has(pageInfo.endCursor)) {
+      throw new Error("CD indexer returned a repeating page cursor; refusing a partial total");
+    }
+    seenCursors.add(pageInfo.endCursor);
     after = pageInfo.endCursor;
   }
 
-  return items;
+  throw new Error(`CD indexer paged past ${MAX_PAGES} pages; refusing a truncated total`);
 }
 
 const afterArg = (after: string | null) => (after ? `, after: "${after}"` : "");
@@ -47,6 +58,7 @@ const afterArg = (after: string | null) => (after ? `, after: "${after}"` : "");
 export async function fetchConversionExposure(): Promise<ConversionExposure> {
   const positions = await fetchAllPages<{
     positionId: string;
+    initialAmountDecimal: string;
     remainingAmountDecimal: string;
     conversionPriceDecimal: string;
   }>(
@@ -60,6 +72,7 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
         ) {
           items {
             positionId
+            initialAmountDecimal
             remainingAmountDecimal
             conversionPriceDecimal
           }
@@ -106,7 +119,29 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
     (data) => data?.redemptions,
   );
 
-  return calculateConversionExposure({ positions, redemptions });
+  // Converted deposits are no longer redeemable, so they leave the base alongside
+  // finished redemptions.
+  const conversions = await fetchAllPages<{ depositAmountDecimal: string }>(
+    (after) => `
+      query GetConvertedDepositTotals {
+        convertibleDepositFacilityConvertedDeposits(
+          where: { chainId: 1 }
+          limit: 1000${afterArg(after)}
+        ) {
+          items { depositAmountDecimal }
+          pageInfo { hasNextPage endCursor }
+        }
+      }
+    `,
+    (data) => data?.convertibleDepositFacilityConvertedDeposits,
+  );
+
+  const convertedDepositsUsd = conversions.reduce((total, item) => {
+    const parsed = Number(item.depositAmountDecimal);
+    return total + (Number.isFinite(parsed) ? parsed : 0);
+  }, 0);
+
+  return calculateConversionExposure({ positions, redemptions, convertedDepositsUsd });
 }
 
 /** Interest on redemption-vault loans plus deposit yield swept to the treasury. */

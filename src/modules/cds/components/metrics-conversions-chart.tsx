@@ -89,6 +89,9 @@ const CustomTooltip = ({
       <p className="text-xs text-secondary-t mt-0.5">
         {formatOhm(data.cumulativeOhmMinted)} OHM minted
       </p>
+      <p className="text-xs text-tertiary-t mt-0.5">
+        {formatCurrency(data.dailyConverted)} on this day
+      </p>
     </div>
   );
 };
@@ -113,13 +116,16 @@ const Stat: React.FC<StatProps> = ({ label, value, tooltip }) => (
 
 export const MetricsConversionsChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-  const { data: conversions, isLoading } = useConversions(timeRange);
+  const { data: conversions, isLoading, isError } = useConversions(timeRange);
   const { data: exposure } = useConversionExposure();
 
   const chainId = useChainId();
   const { price: ohmPrice } = useTokenPrice(chainId, getTokenAddress(TokenName.OHM, chainId));
 
   const chartData = conversions?.dataPoints ?? [];
+  // Zero is what useTokenPrice reports while the read is pending or has failed, so
+  // the moneyness context line has to stay off until a real price arrives.
+  const hasOhmPrice = ohmPrice > 0;
   const moneyness = summarizeMoneyness(exposure?.strikes ?? [], ohmPrice);
 
   if (isLoading) {
@@ -135,6 +141,21 @@ export const MetricsConversionsChart: React.FC = () => {
           <div className="w-24 h-12 bg-surface-a5 rounded animate-pulse" />
         </div>
         <div className="w-full h-[220px] bg-surface-a5 rounded-xl animate-pulse" />
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="p-6 flex flex-col gap-3">
+        <h3 className="text-xl font-semibold text-primary-t tracking-[0.2px]">Conversions</h3>
+        <div className="w-full h-55 flex flex-col items-center justify-center gap-1 text-center">
+          <p className="text-sm text-secondary-t">Conversion data unavailable</p>
+          <p className="text-xs text-tertiary-t max-w-xs">
+            The convertible deposit indexer could not be reached. Showing nothing rather than an
+            empty chart, which would read as "no conversions".
+          </p>
+        </div>
       </Card>
     );
   }
@@ -175,11 +196,11 @@ export const MetricsConversionsChart: React.FC = () => {
       {chartData.length === 0 ? (
         <div className="w-full h-55 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">No conversions in this period</p>
-          {moneyness.totalCount > 0 && (
+          {hasOhmPrice && moneyness.totalCount > 0 && (
             <p className="text-xs text-tertiary-t max-w-xs">
               {moneyness.inTheMoneyCount > 0
                 ? `${moneyness.inTheMoneyCount} of ${moneyness.totalCount} positions are in the money — ${formatCurrency(moneyness.inTheMoneyUsd)} could convert at today's price.`
-                : `OHM is ${moneyness.breakevenMovePercent.toFixed(1)}% below the average conversion price, so no position is currently worth converting.`}
+                : `OHM is ${Math.abs(moneyness.breakevenMovePercent).toFixed(1)}% below the average conversion price, so no position is currently worth converting.`}
             </p>
           )}
         </div>
@@ -193,8 +214,16 @@ export const MetricsConversionsChart: React.FC = () => {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+            {/*
+              A time scale, not the default category scale. summarizeConversions only
+              emits days that had a conversion, so on a category axis a Jan -> Mar gap
+              would render the same width as one day and every range would look alike.
+            */}
             <XAxis
               dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
               tickFormatter={formatUtcAxis}
               stroke="transparent"
               tick={{ fill: CHART_COLORS.text, fontSize: 12 }}

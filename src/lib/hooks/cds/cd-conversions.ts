@@ -19,8 +19,6 @@ export interface ConversionSummary {
   totalConverted: number;
   totalOhmMinted: number;
   conversionCount: number;
-  /** Amount-weighted conversion price actually realised, or 0 with no conversions. */
-  averageRealisedPrice: number;
 }
 
 const parseDecimal = (value: string | null | undefined): number => {
@@ -91,6 +89,5 @@ export function summarizeConversions(
     totalConverted,
     totalOhmMinted,
     conversionCount,
-    averageRealisedPrice: totalOhmMinted > 0 ? totalConverted / totalOhmMinted : 0,
   };
 }

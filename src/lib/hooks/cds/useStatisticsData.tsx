@@ -357,6 +357,17 @@ export function useAllTimeConvertibleOhm() {
   });
 }
 
+/**
+ * Single cache entry for conversion exposure. Every consumer must go through this
+ * key, otherwise two callers fetch the same quantity on different cadences and the
+ * CD screen and the Pulse card can show different numbers at the same moment.
+ */
+export const conversionExposureQuery = (chainId: number) => ({
+  queryKey: ["conversionExposure", chainId] as const,
+  queryFn: fetchConversionExposure,
+  staleTime: 60000,
+});
+
 // Hook for the conversion exposure the treasury carries: gross (every deposit
 // converts), net of the principal already borrowed back out, and the per-claim
 // strikes behind both.
@@ -364,9 +375,7 @@ export function useConversionExposure() {
   const chainId = useChainId();
 
   return useQuery<ConversionExposure>({
-    queryKey: ["conversionExposure", chainId],
-    queryFn: fetchConversionExposure,
-    staleTime: 60000,
+    ...conversionExposureQuery(chainId),
     refetchInterval: 120000,
   });
 }

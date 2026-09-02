@@ -77,16 +77,47 @@ const LoadingCards: React.FC<{ count: number }> = ({ count }) => (
   </>
 );
 
+/**
+ * A failed indexer read must not render as zeros: "+$0.00" and "0 of 0 in the money"
+ * are indistinguishable from a protocol with no deposits.
+ */
+const ErrorCards: React.FC<{ count: number }> = ({ count }) => (
+  <>
+    {Array.from({ length: count }, (_, i) => i + 1).map((slot) => (
+      <Card key={slot} className="p-4">
+        <p className="text-sm font-medium text-secondary-t mb-2">Data unavailable</p>
+        <p className="text-xs text-tertiary-t">
+          The convertible deposit indexer could not be reached. Figures are hidden rather than shown
+          as zero.
+        </p>
+      </Card>
+    ))}
+  </>
+);
+
 export const MetricsConversionStats: React.FC = () => {
-  const { data: treasuryMetrics, isLoading: isLoadingTreasury } = useTreasuryMetrics();
-  const { data: exposure, isLoading: isLoadingExposure } = useConversionExposure();
-  const { data: revenue, isLoading: isLoadingRevenue } = useCdRevenue();
+  const {
+    data: treasuryMetrics,
+    isLoading: isLoadingTreasury,
+    isError: isTreasuryError,
+  } = useTreasuryMetrics();
+  const {
+    data: exposure,
+    isLoading: isLoadingExposure,
+    isError: isExposureError,
+  } = useConversionExposure();
+  const { data: revenue, isLoading: isLoadingRevenue, isError: isRevenueError } = useCdRevenue();
   // Moneyness is a "right now" question, so it needs the live PRICE module rather
   // than treasuryMetrics.ohmPrice, which is a daily series published up to a day late.
   const chainId = useChainId();
   const { price: ohmPrice } = useTokenPrice(chainId, getTokenAddress(TokenName.OHM, chainId));
 
   const isLoading = isLoadingTreasury || isLoadingExposure;
+  const isError = isTreasuryError || isExposureError;
+  // useTokenPrice reports 0 while the contract read is in flight, on an unsupported
+  // chain, and on failure. Treating that as a real price would mark the whole book
+  // out of the money, so moneyness has to sit out until a price actually arrives.
+  const hasOhmPrice = ohmPrice > 0;
 
   const backedSupply = treasuryMetrics?.ohmBackedSupply || 0;
   const liquidBacking = treasuryMetrics?.treasuryLiquidBacking || 0;
@@ -121,6 +152,8 @@ export const MetricsConversionStats: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {isLoading ? (
           <LoadingCards count={3} />
+        ) : isError ? (
+          <ErrorCards count={3} />
         ) : (
           <>
             <StatCard
@@ -150,6 +183,15 @@ export const MetricsConversionStats: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {isLoading ? (
           <LoadingCards count={1} />
+        ) : isError ? (
+          <ErrorCards count={1} />
+        ) : !hasOhmPrice ? (
+          <StatCard
+            title="Position Moneyness"
+            value="OHM price unavailable"
+            tooltip="Moneyness compares each claim's locked-in conversion price against the live OHM price from the on-chain PRICE module. That read is unavailable, so no claim can be classified."
+            subtitle="Waiting on the on-chain price feed"
+          />
         ) : (
           <StatCard
             title="Position Moneyness"
@@ -176,7 +218,9 @@ export const MetricsConversionStats: React.FC = () => {
                     ? "OHM move to break even"
                     : "OHM above average conversion price by"
                 }
-                value={`${moneyness.breakevenMovePercent > 0 ? "+" : ""}${moneyness.breakevenMovePercent.toFixed(1)}%`}
+                // The label already carries the direction, so the value is the size of
+                // the move either way. Signing it here read as "above ... by -1.5%".
+                value={`${moneyness.breakevenMovePercent > 0 ? "+" : ""}${Math.abs(moneyness.breakevenMovePercent).toFixed(1)}%`}
               />
             </div>
           </StatCard>
@@ -184,6 +228,8 @@ export const MetricsConversionStats: React.FC = () => {
 
         {isLoadingRevenue ? (
           <LoadingCards count={1} />
+        ) : isRevenueError ? (
+          <ErrorCards count={1} />
         ) : (
           <StatCard
             title="Revenue from Interest & Fees"

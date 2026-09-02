@@ -13,7 +13,6 @@ describe("summarizeConversions", () => {
     expect(summary.totalConverted).toBe(0);
     expect(summary.totalOhmMinted).toBe(0);
     expect(summary.conversionCount).toBe(0);
-    expect(summary.averageRealisedPrice).toBe(0);
   });
 
   it("buckets same-day conversions together and runs a cumulative total", () => {
@@ -57,12 +56,14 @@ describe("summarizeConversions", () => {
     expect(summary.totalConverted).toBe(1000);
   });
 
-  it("reports the realised conversion price", () => {
+  it("keeps the daily amount alongside the running total, for the tooltip", () => {
     const summary = summarizeConversions([
-      { timestamp: JAN_3, depositAmountDecimal: "250.40", convertedAmountDecimal: "9.60" },
+      { timestamp: JAN_3, depositAmountDecimal: "400", convertedAmountDecimal: "20" },
+      { timestamp: JAN_3 + DAY, depositAmountDecimal: "600", convertedAmountDecimal: "30" },
     ]);
 
-    expect(summary.averageRealisedPrice).toBeCloseTo(26.0833, 4);
+    expect(summary.dataPoints[1].dailyConverted).toBe(600);
+    expect(summary.dataPoints[1].cumulativeConverted).toBe(1000);
   });
 
   it("ignores malformed decimals from the indexer", () => {

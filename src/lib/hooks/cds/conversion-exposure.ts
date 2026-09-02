@@ -1,5 +1,6 @@
 export interface ConvertiblePositionExposure {
   positionId: string;
+  initialAmountDecimal: string;
   remainingAmountDecimal: string;
   conversionPriceDecimal: string;
 }
@@ -24,19 +25,24 @@ export interface RedemptionExposure {
 
 /** One convertible claim on the treasury: USD in, at the price it converts at. */
 export interface ConversionStrike {
+  positionId: string | null;
   amountUsd: number;
   conversionPrice: number;
 }
 
 export interface ConversionExposure {
   /**
-   * Every outstanding deposit converts. Levered positions can only do that if their
-   * borrower repays the loan out of outside capital, so this is the ceiling, not the
-   * expected case.
+   * Deposits still held by the facility: everything ever deposited, less what has
+   * finished redeeming or already converted. Derived from the deposit ledger rather
+   * than from summed remainingAmount, which overstates (see positionReflectionRatio).
    */
   grossDepositsUsd: number;
   grossConvertibleOhm: number;
-  /** The levered leg of the gross figure: deposits sitting behind an active loan. */
+  /** Everything ever deposited, at position face value. */
+  totalDepositedUsd: number;
+  /** Deposits that completed a redemption and left the facility. */
+  finishedRedemptionsUsd: number;
+  /** The levered leg: collateral behind a pending redemption that has drawn a loan. */
   leveredDepositsUsd: number;
   /**
    * Principal already paid out of the vault against pending redemptions — through
@@ -59,13 +65,24 @@ export interface ConversionExposure {
    * OHM-per-dollar rather than to specific positions — an aggregate approximation.
    */
   netConvertibleOhm: number;
-  /** Per-claim strikes, for moneyness. Covers the same deposits as the gross figure. */
+  /**
+   * How much of what the position table claims is actually still on deposit, in
+   * [0, 1]. Below 1 because the indexer does not decrement a position's
+   * remainingAmount when the deposit leaves through a receipt-token redemption, and
+   * because position 0 kept its full remainingAmount through a finished redemption.
+   * Strike amounts and the OHM legs are scaled by it so every figure ties back to
+   * the ledger.
+   */
+  positionReflectionRatio: number;
+  /** Per-claim strikes, for moneyness. Scaled by positionReflectionRatio. */
   strikes: ConversionStrike[];
 }
 
 export interface ConversionExposureInput {
   positions: ConvertiblePositionExposure[];
   redemptions: RedemptionExposure[];
+  /** Deposits that have already converted to OHM, so are no longer redeemable. */
+  convertedDepositsUsd?: number;
 }
 
 export interface MoneynessSummary {
@@ -100,28 +117,35 @@ const parseDecimal = (value: string | null | undefined): number => {
 
 const isActive = (loan: RedemptionLoanExposure) => loan.status === "active";
 
+const hasEvents = (events?: { items?: unknown[] }) => (events?.items?.length ?? 0) > 0;
+
+const isFinished = (redemption: RedemptionExposure) => hasEvents(redemption.finishedEvents);
+
 /**
  * A redemption still in flight — neither completed nor reversed. Loans keep a stale
  * "active" status after their redemption finishes, so the lifecycle, not the loan
  * status, decides what is really outstanding.
  */
 const isPending = (redemption: RedemptionExposure) =>
-  (redemption.finishedEvents?.items?.length ?? 0) === 0 &&
-  (redemption.cancelledEvents?.items?.length ?? 0) === 0;
+  !isFinished(redemption) && !hasEvents(redemption.cancelledEvents);
 
 export function calculateConversionExposure({
   positions,
   redemptions,
+  convertedDepositsUsd = 0,
 }: ConversionExposureInput): ConversionExposure {
   const positionPrices = new Map<string, number>();
-  const strikes: ConversionStrike[] = [];
+  const rawStrikes: ConversionStrike[] = [];
 
+  let totalDepositedUsd = 0;
   let openDepositsUsd = 0;
   let openConvertibleOhm = 0;
 
   for (const position of positions) {
     const price = parseDecimal(position.conversionPriceDecimal);
     const remaining = parseDecimal(position.remainingAmountDecimal);
+
+    totalDepositedUsd += parseDecimal(position.initialAmountDecimal);
 
     if (price > 0) {
       positionPrices.set(position.positionId, price);
@@ -130,7 +154,11 @@ export function calculateConversionExposure({
     if (remaining > 0 && price > 0) {
       openDepositsUsd += remaining;
       openConvertibleOhm += remaining / price;
-      strikes.push({ amountUsd: remaining, conversionPrice: price });
+      rawStrikes.push({
+        positionId: position.positionId,
+        amountUsd: remaining,
+        conversionPrice: price,
+      });
     }
   }
 
@@ -138,17 +166,24 @@ export function calculateConversionExposure({
   let leveredConvertibleOhm = 0;
   let borrowedPrincipalUsd = 0;
   let encumberedDepositsUsd = 0;
+  let finishedRedemptionsUsd = 0;
 
   for (const redemption of redemptions) {
-    // A finished redemption already left the protocol; a cancelled one handed the
-    // position back, where it is counted via remainingAmount.
+    const amount = parseDecimal(redemption.amountDecimal);
+
+    if (isFinished(redemption)) {
+      // The deposit left the facility. The position it came from may still show its
+      // full remainingAmount, which is exactly what positionReflectionRatio corrects.
+      finishedRedemptionsUsd += amount;
+      continue;
+    }
+
+    // A cancelled redemption handed the position back, where it is counted via
+    // remainingAmount.
     if (!isPending(redemption)) continue;
 
     const activeLoans = (redemption.loans?.items ?? []).filter(isActive);
-    if (activeLoans.length === 0) continue;
-
-    const amount = parseDecimal(redemption.amountDecimal);
-    if (amount <= 0) continue;
+    if (activeLoans.length === 0 || amount <= 0) continue;
 
     // Every dollar lent out is netted, whichever route collateralised it, and the
     // deposit behind it is spoken for either way.
@@ -157,27 +192,42 @@ export function calculateConversionExposure({
       borrowedPrincipalUsd += parseDecimal(loan.principalDecimal);
     }
 
-    // ...but only a redemption started against a specific position adds to the base.
+    // ...but only a redemption started against a specific position adds a strike.
     // A redemption taken through the fungible receipt token carries no positionId,
     // and the indexer does NOT decrement the underlying position's remainingAmount
     // when it happens — so adding it here would count the same deposit twice.
-    // Verified against depositor 0xda715761, whose receipt-token redemptions match
-    // its still-open positions to the cent.
     const price = redemption.positionId ? (positionPrices.get(redemption.positionId) ?? 0) : 0;
     if (price <= 0) continue;
 
     leveredDepositsUsd += amount;
     leveredConvertibleOhm += amount / price;
-    strikes.push({ amountUsd: amount, conversionPrice: price });
+    rawStrikes.push({
+      positionId: redemption.positionId ?? null,
+      amountUsd: amount,
+      conversionPrice: price,
+    });
   }
 
-  const grossDepositsUsd = openDepositsUsd + leveredDepositsUsd;
-  const grossConvertibleOhm = openConvertibleOhm + leveredConvertibleOhm;
+  // The ledger, not the position table, decides how much is still on deposit.
+  const grossDepositsUsd = Math.max(
+    0,
+    totalDepositedUsd - finishedRedemptionsUsd - convertedDepositsUsd,
+  );
+
+  const rawClaimedUsd = openDepositsUsd + leveredDepositsUsd;
+  const positionReflectionRatio =
+    rawClaimedUsd > 0 ? Math.min(1, grossDepositsUsd / rawClaimedUsd) : 0;
+
+  const grossConvertibleOhm =
+    (openConvertibleOhm + leveredConvertibleOhm) * positionReflectionRatio;
+
   const unencumberedDepositsUsd = Math.max(0, grossDepositsUsd - encumberedDepositsUsd);
 
   return {
     grossDepositsUsd,
     grossConvertibleOhm,
+    totalDepositedUsd,
+    finishedRedemptionsUsd,
     leveredDepositsUsd,
     borrowedPrincipalUsd,
     encumberedDepositsUsd,
@@ -186,7 +236,11 @@ export function calculateConversionExposure({
     netDepositsUsd: Math.max(0, grossDepositsUsd - borrowedPrincipalUsd),
     netConvertibleOhm:
       grossDepositsUsd > 0 ? grossConvertibleOhm * (unencumberedDepositsUsd / grossDepositsUsd) : 0,
-    strikes,
+    positionReflectionRatio,
+    strikes: rawStrikes.map((strike) => ({
+      ...strike,
+      amountUsd: strike.amountUsd * positionReflectionRatio,
+    })),
   };
 }
 
@@ -195,24 +249,30 @@ export function summarizeMoneyness(
   ohmPrice: number,
 ): MoneynessSummary {
   let inTheMoneyUsd = 0;
-  let inTheMoneyCount = 0;
   let outOfTheMoneyUsd = 0;
-  let outOfTheMoneyCount = 0;
   let unrealizedGainUsd = 0;
   let weightedTotal = 0;
   let weight = 0;
 
-  for (const { amountUsd, conversionPrice } of strikes) {
+  // Counted per position, not per claim: one position can contribute both a residual
+  // remainingAmount and a pending redemption, and it is still one position.
+  const inTheMoney = new Set<string>();
+  const outOfTheMoney = new Set<string>();
+  let anonymous = 0;
+
+  for (const { positionId, amountUsd, conversionPrice } of strikes) {
     if (amountUsd <= 0 || conversionPrice <= 0) continue;
+
+    const key = positionId ?? `anonymous-${anonymous++}`;
 
     if (ohmPrice > conversionPrice) {
       inTheMoneyUsd += amountUsd;
-      inTheMoneyCount += 1;
+      inTheMoney.add(key);
       // Converting turns amountUsd into amountUsd/strike OHM, worth that much at spot.
       unrealizedGainUsd += amountUsd * (ohmPrice / conversionPrice - 1);
     } else {
       outOfTheMoneyUsd += amountUsd;
-      outOfTheMoneyCount += 1;
+      outOfTheMoney.add(key);
     }
 
     weightedTotal += amountUsd * conversionPrice;
@@ -223,11 +283,11 @@ export function summarizeMoneyness(
 
   return {
     inTheMoneyUsd,
-    inTheMoneyCount,
+    inTheMoneyCount: inTheMoney.size,
     outOfTheMoneyUsd,
-    outOfTheMoneyCount,
+    outOfTheMoneyCount: outOfTheMoney.size,
     totalUsd: inTheMoneyUsd + outOfTheMoneyUsd,
-    totalCount: inTheMoneyCount + outOfTheMoneyCount,
+    totalCount: new Set([...inTheMoney, ...outOfTheMoney]).size,
     unrealizedGainUsd,
     weightedConversionPrice,
     breakevenMovePercent:
