@@ -29,7 +29,8 @@ import { TransferPositionModal } from "@/components/transfer-position-modal";
 import { RedeemPositionModal } from "@/components/redeem-position-modal";
 import { useUserPositions, type UserPosition } from "@/lib/hooks/cds/useUserPositions";
 import { formatEther } from "viem";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useToken } from "@/lib/hooks/useToken.tsx";
 import { TokenName } from "@/lib/tokens.ts";
 
@@ -53,11 +54,27 @@ declare module "@tanstack/react-table" {
 
 // ─── Helper functions ─────────────────────────────────────────────────────────
 
+/** Threshold above which a figure is abbreviated. Below it, exact reads fine and fits. */
+const COMPACT_FROM = 1_000_000;
+
+function formatExact(value: number) {
+  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * Abbreviates figures at or above a million (`2.96M`), exact below. The row has a
+ * hard 1000px frame — the content column is capped, so it does not grow with the
+ * viewport — and at full precision the row crosses that around 296M and scrolls.
+ * Abbreviating makes the width independent of deposit size: 963px today, 923px at
+ * billions. The exact figure is never lost, every pill carries it in a tooltip.
+ */
+function formatCompact(value: number) {
+  if (Math.abs(value) < COMPACT_FROM) return formatExact(value);
+  return value.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 2 });
+}
+
 function formatPositionAmount(remainingDeposit: bigint) {
-  return parseFloat(formatEther(remainingDeposit)).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatExact(parseFloat(formatEther(remainingDeposit)));
 }
 
 function formatExpiryDate(expiry: number) {
@@ -79,52 +96,71 @@ function calculateOhmReceived(remainingDeposit: bigint, conversionPrice: bigint)
 }
 
 function formatUsd(value: number) {
-  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${formatExact(value)}`;
 }
 
-function formatOhm(value: number) {
-  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatUsdCompact(value: number) {
+  return `$${formatCompact(value)}`;
 }
 
 // ─── Cell components ──────────────────────────────────────────────────────────
 
+/** Pill body: abbreviated figures on screen, the exact ones behind a tooltip. */
+const AmountPill = ({
+  icon,
+  primary,
+  secondary,
+  exact,
+}: {
+  icon: IconName;
+  primary: string;
+  secondary: string;
+  exact: React.ReactNode;
+}) => (
+  <div className="border border-a10-b rounded-full pl-[6px] pr-3 py-[6px] flex items-center gap-2 shrink-0">
+    <Icon name={icon} size={32} className="text-a10-b" />
+    <Tooltip title={exact}>
+      <div className="flex flex-col cursor-default">
+        <span className="text-xs font-semibold whitespace-nowrap">{primary}</span>
+        <span className="text-xs font-normal text-secondary-t">{secondary}</span>
+      </div>
+    </Tooltip>
+  </div>
+);
+
 const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice: number }) => {
   if (!position.data) return null;
-  const amount = formatPositionAmount(position.data.remainingDeposit);
+  const deposit = parseFloat(formatEther(position.data.remainingDeposit));
   const ohmReceived = calculateOhmReceived(
     position.data.remainingDeposit,
     position.data.conversionPrice,
   );
-  // The USD value of the OHM, to mirror the deposit pill. Rendering `ohmPrice`
-  // raw put an unformatted unit price (`20.177940934581386`) under every row —
+  // The USD value of the OHM, mirroring the deposit pill. Rendering `ohmPrice`
+  // raw put an unformatted unit price (`20.177940934581386`) under every row,
   // the same number on all of them, and ~90px of width the column cannot spare.
-  const ohmUsd = ohmPrice > 0 ? formatUsd(ohmReceived * ohmPrice) : null;
+  const ohmUsd = ohmPrice > 0 ? ohmReceived * ohmPrice : null;
 
   return (
     <div className="flex items-center gap-1">
-      {/* cdUSDS pill */}
-      <div className="border border-a10-b rounded-full pl-[6px] pr-3 py-[6px] flex items-center gap-2 shrink-0">
-        <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold whitespace-nowrap">
-            {amount} {position.displayName}
-          </span>
-          <span className="text-xs font-normal text-secondary-t">${amount}</span>
-        </div>
-      </div>
+      <AmountPill
+        icon="cdUSDSIcon"
+        primary={`${formatCompact(deposit)} ${position.displayName}`}
+        secondary={formatUsdCompact(deposit)}
+        exact={`${formatExact(deposit)} ${position.displayName} (${formatUsd(deposit)})`}
+      />
 
       <RiArrowRightSLine className="size-4 text-secondary-t shrink-0" />
 
-      {/* OHM pill */}
-      <div className="border border-a10-b rounded-full pl-[6px] pr-3 py-[6px] flex items-center gap-2 shrink-0">
-        <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold whitespace-nowrap">
-            {formatOhm(ohmReceived)} OHM
-          </span>
-          {ohmUsd && <span className="text-xs font-normal text-secondary-t">{ohmUsd}</span>}
-        </div>
-      </div>
+      <AmountPill
+        icon="OHMTokenIcon"
+        primary={`${formatCompact(ohmReceived)} OHM`}
+        secondary={ohmUsd !== null ? formatUsdCompact(ohmUsd) : ""}
+        exact={
+          ohmUsd !== null
+            ? `${formatExact(ohmReceived)} OHM (${formatUsd(ohmUsd)})`
+            : `${formatExact(ohmReceived)} OHM`
+        }
+      />
     </div>
   );
 };
@@ -428,7 +464,7 @@ export const DepositActivePositions = () => {
                     <RiArrowRightSLine className="size-4 text-secondary-t mx-1" />
                     <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
                     <div>
-                      <div className="text-sm font-semibold">{formatOhm(ohmReceived)} OHM</div>
+                      <div className="text-sm font-semibold">{formatExact(ohmReceived)} OHM</div>
                       {ohmPrice > 0 && (
                         <div className="text-xs text-secondary-t">
                           {formatUsd(ohmReceived * ohmPrice)}
