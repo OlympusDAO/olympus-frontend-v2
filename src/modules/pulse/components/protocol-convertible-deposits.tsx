@@ -66,6 +66,8 @@ export function ProtocolConvertibleDeposits() {
   const latestBid = cd.bids[0];
   const latestTickPrice = latestBid ? parseFloat(latestBid.tickPriceDecimal) : 0;
 
+  // Net of principal borrowed back out against pending redemptions: that cash is
+  // routinely redeposited as a new position, so the gross figure counts it twice.
   const supplyGrowthOhm = cd.supplyGrowthOhm;
   const treasuryGrowthUsd = cd.totalDepositsUsd;
   const backingGrowthPercent = (() => {
@@ -114,7 +116,9 @@ export function ProtocolConvertibleDeposits() {
       {/* Hero: TVL + Deposit button */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-normal text-secondary-t">Total Value Locked</p>
+          <TooltipInfo title="Deposits still held by the facility, net of principal borrowed back out against pending redemptions.">
+            <p className="text-sm font-normal text-secondary-t">Total Value Locked</p>
+          </TooltipInfo>
           <NumberFlow
             value={cd.totalDepositsUsd}
             format={{
@@ -128,6 +132,20 @@ export function ProtocolConvertibleDeposits() {
           <p className="mt-0.5 text-xs font-normal text-secondary-t">
             {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
             premium
+          </p>
+          <p className="mt-0.5 text-xs font-normal text-tertiary-t">
+            Net of{" "}
+            <NumberFlow
+              value={cd.borrowedAmount}
+              format={{
+                style: "currency",
+                currency: "USD",
+                notation: "compact",
+                maximumFractionDigits: 1,
+              }}
+              className="text-xs font-normal text-tertiary-t"
+            />{" "}
+            borrowed against pending redemptions
           </p>
           {!cd.isMarketActive && reopenPrice && (
             <p className="mt-0.5 text-xs font-normal text-secondary-t">
@@ -193,7 +211,7 @@ export function ProtocolConvertibleDeposits() {
       {/* If All CDs Convert */}
       <div>
         <div className="mb-3">
-          <TooltipInfo title="Projected impact if all outstanding convertible deposits convert to OHM at their locked conversion prices.">
+          <TooltipInfo title="Projected impact if outstanding convertible deposits convert to OHM at their locked conversion prices, net of principal already borrowed back out. Deposits behind an active loan only convert if the borrower repays out of outside capital.">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary-t">
               If All CDs Convert
             </p>

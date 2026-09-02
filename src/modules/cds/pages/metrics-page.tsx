@@ -2,6 +2,7 @@ import type React from "react";
 import { MetricsUserDepositsChart } from "../components/metrics-user-deposits-chart.tsx";
 import { MetricsCumulativeYieldChart } from "../components/metrics-cumulative-yield-chart.tsx";
 import { MetricsConversionStats } from "../components/metrics-conversion-stats.tsx";
+import { MetricsConversionsChart } from "../components/metrics-conversions-chart.tsx";
 
 export const CDMetricsPage: React.FC = () => {
   return (
@@ -12,6 +13,8 @@ export const CDMetricsPage: React.FC = () => {
       </div>
 
       <MetricsConversionStats />
+
+      <MetricsConversionsChart />
     </div>
   );
 };
