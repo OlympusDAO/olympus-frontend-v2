@@ -16,7 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RiArrowRightSLine } from "@remixicon/react";
+import { RiArrowRightSLine, RiMoreFill } from "@remixicon/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ConvertToOHMModal } from "@/components/convert-to-ohm-modal";
 import { WrapPositionModal } from "@/components/wrap-position-modal";
 import { TransferPositionModal } from "@/components/transfer-position-modal";
@@ -48,7 +54,10 @@ declare module "@tanstack/react-table" {
 // ─── Helper functions ─────────────────────────────────────────────────────────
 
 function formatPositionAmount(remainingDeposit: bigint) {
-  return parseFloat(formatEther(remainingDeposit)).toFixed(2);
+  return parseFloat(formatEther(remainingDeposit)).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function formatExpiryDate(expiry: number) {
@@ -66,7 +75,15 @@ function getDaysUntilExpiry(expiry: number) {
 
 function calculateOhmReceived(remainingDeposit: bigint, conversionPrice: bigint) {
   const ohmAmount = (remainingDeposit * BigInt(1e9)) / conversionPrice;
-  return (Number(ohmAmount) / 1e9).toFixed(2);
+  return Number(ohmAmount) / 1e9;
+}
+
+function formatUsd(value: number) {
+  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatOhm(value: number) {
+  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // ─── Cell components ──────────────────────────────────────────────────────────
@@ -78,14 +95,18 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
     position.data.remainingDeposit,
     position.data.conversionPrice,
   );
+  // The USD value of the OHM, to mirror the deposit pill. Rendering `ohmPrice`
+  // raw put an unformatted unit price (`20.177940934581386`) under every row —
+  // the same number on all of them, and ~90px of width the column cannot spare.
+  const ohmUsd = ohmPrice > 0 ? formatUsd(ohmReceived * ohmPrice) : null;
 
   return (
     <div className="flex items-center gap-1">
       {/* cdUSDS pill */}
-      <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
+      <div className="border border-a10-b rounded-full pl-[6px] pr-3 py-[6px] flex items-center gap-2 shrink-0">
         <Icon name="cdUSDSIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
-          <span className="text-xs font-semibold">
+          <span className="text-xs font-semibold whitespace-nowrap">
             {amount} {position.displayName}
           </span>
           <span className="text-xs font-normal text-secondary-t">${amount}</span>
@@ -95,11 +116,13 @@ const ConvertibleCell = ({ position, ohmPrice }: { position: Position; ohmPrice:
       <RiArrowRightSLine className="size-4 text-secondary-t shrink-0" />
 
       {/* OHM pill */}
-      <div className="border border-a10-b rounded-full pl-[6px] pr-4 py-[6px] flex items-center gap-2 shrink-0">
+      <div className="border border-a10-b rounded-full pl-[6px] pr-3 py-[6px] flex items-center gap-2 shrink-0">
         <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
         <div className="flex flex-col">
-          <span className="text-xs font-semibold">{ohmReceived} OHM</span>
-          {ohmPrice && <span className="text-xs font-normal text-secondary-t">{ohmPrice}</span>}
+          <span className="text-xs font-semibold whitespace-nowrap">
+            {formatOhm(ohmReceived)} OHM
+          </span>
+          {ohmUsd && <span className="text-xs font-normal text-secondary-t">{ohmUsd}</span>}
         </div>
       </div>
     </div>
@@ -159,6 +182,12 @@ const ActionsCell = ({
   if (!position.data || !meta) return null;
   const { wrapped } = position.data;
 
+  // Convert and Redeem stay inline; the wrapping actions go behind the overflow
+  // menu, the same shape Active Loans uses. Four inline buttons (which is what a
+  // wrapped position rendered) took the row's intrinsic width to 1111px against
+  // a frame that is capped at 1000px on every desktop size, so the table could
+  // not fit no matter how wide the window was. This makes the column's width
+  // constant instead of dependent on whether the position happens to be wrapped.
   return (
     <div className="flex items-center gap-2 justify-end">
       <Button size="sm" onClick={() => meta.onConvert?.(position)}>
@@ -167,24 +196,25 @@ const ActionsCell = ({
       <Button size="sm" variant="secondary" onClick={() => meta.onRedeem?.(position)}>
         Redeem
       </Button>
-      {wrapped && (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => meta.onTransfer?.(position, position.displayName)}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button size="sm" variant="secondary" className="size-8 p-0" />}
         >
-          Transfer
-        </Button>
-      )}
-      {!wrapped ? (
-        <Button size="sm" variant="secondary" onClick={() => meta.onWrap?.(position)}>
-          Wrap
-        </Button>
-      ) : (
-        <Button size="sm" variant="secondary" onClick={() => meta.onUnwrap?.(position)}>
-          Unwrap
-        </Button>
-      )}
+          <RiMoreFill className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {wrapped && (
+            <DropdownMenuItem onClick={() => meta.onTransfer?.(position, position.displayName)}>
+              Transfer
+            </DropdownMenuItem>
+          )}
+          {wrapped ? (
+            <DropdownMenuItem onClick={() => meta.onUnwrap?.(position)}>Unwrap</DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={() => meta.onWrap?.(position)}>Wrap</DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
@@ -349,9 +379,6 @@ export const DepositActivePositions = () => {
     },
   });
 
-  const formatPositionAmountLocal = (remainingDeposit: bigint) =>
-    parseFloat(formatEther(remainingDeposit)).toFixed(2);
-
   return (
     <>
       {isLoadingPositions || positionsError || positions.length === 0 ? (
@@ -374,7 +401,7 @@ export const DepositActivePositions = () => {
           <div className="block md:hidden space-y-4">
             {positions.map((position) => {
               if (!position.data) return null;
-              const amount = formatPositionAmountLocal(position.data.remainingDeposit);
+              const amount = formatPositionAmount(position.data.remainingDeposit);
               const expiryDate = formatExpiryDate(position.data.expiry);
               const daysLeft = getDaysUntilExpiry(position.data.expiry);
               const conversionPrice = parseFloat(
@@ -401,7 +428,12 @@ export const DepositActivePositions = () => {
                     <RiArrowRightSLine className="size-4 text-secondary-t mx-1" />
                     <Icon name="OHMTokenIcon" size={32} className="text-a10-b" />
                     <div>
-                      <div className="text-sm font-semibold">{ohmReceived} OHM</div>
+                      <div className="text-sm font-semibold">{formatOhm(ohmReceived)} OHM</div>
+                      {ohmPrice > 0 && (
+                        <div className="text-xs text-secondary-t">
+                          {formatUsd(ohmReceived * ohmPrice)}
+                        </div>
+                      )}
                     </div>
                   </div>
 
