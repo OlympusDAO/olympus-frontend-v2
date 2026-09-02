@@ -1,10 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
-import { coolerGraphqlClient } from "@/lib/graphql-client";
-import {
-  useClearinghouses,
-  UTILIZATION_QUERY,
-  type UtilizationResponse,
-} from "@/lib/hooks/cooler/useV1Data";
+import { getCoolerDailyClearinghouseSnapshots } from "@/generated/indexer";
+import { useClearinghouses } from "@/lib/hooks/cooler/useV1Data";
+import { unwrap } from "@/lib/indexer/rows";
 
 function formatDate(timestamp: string): string {
   try {
@@ -46,17 +43,13 @@ export interface V1UtilizationDataPoint {
 
 export function useV1UtilizationData() {
   const { data: clearinghousesData, isLoading: clearinghousesLoading } = useClearinghouses();
-  const clearinghouses = clearinghousesData?.clearinghouses ?? [];
+  const clearinghouses = clearinghousesData ?? [];
 
   const utilizationQueries = useQueries({
     queries: clearinghouses.map((ch) => ({
       queryKey: ["cooler-v1-utilization", ch.address],
-      queryFn: async () => {
-        const data = await coolerGraphqlClient.request<UtilizationResponse>(UTILIZATION_QUERY, {
-          clearinghouseAddress: ch.address,
-        });
-        return data;
-      },
+      queryFn: () =>
+        unwrap(getCoolerDailyClearinghouseSnapshots({ clearinghouse: ch.address, limit: 1000 })),
       enabled: !clearinghousesLoading,
     })),
   });
@@ -95,7 +88,7 @@ export function useV1UtilizationData() {
     const clearinghouse = clearinghouses[index];
     if (!clearinghouse?.address || !query.data) return;
 
-    const snapshots = query.data.clearinghouseSnapshotStats_collection;
+    const snapshots = query.data;
     snapshots.forEach((snapshot) => {
       const date = formatDate(snapshot.timestamp.toString());
       if (!date) return;

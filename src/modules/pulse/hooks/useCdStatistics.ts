@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { CD_SUBGRAPH_URL } from "@/lib/constants";
 import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
+import { withNumericTimestamp, unwrap } from "@/lib/indexer/rows";
+import {
+  getConvertibleDepositsBids,
+  getConvertibleDepositsConvertedDeposits,
+  getConvertibleDepositsPositions,
+  getConvertibleDepositsStatistics,
+} from "@/generated/indexer";
 
 export interface DepositSnapshot {
   timestamp: number;
@@ -49,162 +56,47 @@ export function useCdStatistics() {
     queryFn: async () => {
       const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
 
-      const query = `
-        query GetCdStatistics {
-          depositFacilityAssetSnapshots(
-            where: { chainId: 1 }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 1
-          ) {
-            items {
-              timestamp
-              totalDeposited
-              totalDepositedDecimal
-              borrowedAmount
-              borrowedAmountDecimal
-            }
-          }
+      // The Ponder version issued one document with seven roots. `statistics`
+      // collapses the three singletons the card reads (latest facility
+      // snapshot, latest auctioneer snapshot, redemption-vault config); the
+      // rest are windowed lists, fetched in parallel.
+      const [statistics, bidRows, convertedRows, positions, redemptions] = await Promise.all([
+        unwrap(getConvertibleDepositsStatistics()),
+        unwrap(getConvertibleDepositsBids({ sinceTimestamp: String(thirtyDaysAgo), limit: 1000 })),
+        unwrap(
+          getConvertibleDepositsConvertedDeposits({
+            sinceTimestamp: String(thirtyDaysAgo),
+            limit: 1000,
+          }),
+        ),
+        unwrap(getConvertibleDepositsPositions({ limit: 1000 })),
+        fetchRedemptionExposure(),
+      ]);
 
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 50
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-              tickPrice
-              tickPriceDecimal
-            }
-          }
+      const bids = bidRows.map(withNumericTimestamp);
+      const convertedDeposits = convertedRows.map(withNumericTimestamp);
+      const latestSnapshot = statistics.facilitySnapshot
+        ? withNumericTimestamp(statistics.facilitySnapshot)
+        : null;
+      const depositSnapshots = latestSnapshot ? [latestSnapshot] : [];
 
-          convertibleDepositFacilityConvertedDeposits(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 50
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-            }
-          }
-
-          depositRedemptionVaultAssetConfigurations(limit: 1) {
-            items {
-              interestRateDecimal
-            }
-          }
-
-          auctioneerSnapshots(
-            where: { chainId: 1 }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 1
-          ) {
-            items {
-              timestamp
-              targetDecimal
-            }
-          }
-
-          convertibleDepositPositions(
-            where: { chainId: 1 }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              remainingAmountDecimal
-              conversionPriceDecimal
-            }
-          }
-
-          redemptions(
-            where: { chainId: 1 }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              amountDecimal
-              loans {
-                items {
-                  status
-                }
-              }
-            }
-          }
-        }
-      `;
-
-      const response = await fetch(CD_SUBGRAPH_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch CD statistics");
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "CD subgraph error");
-
-      const depositSnapshots = (data?.depositFacilityAssetSnapshots?.items || []).map(
-        (item: Record<string, string>) => ({
-          ...item,
-          timestamp: Number(item.timestamp),
-        }),
-      );
-
-      const bids = (data?.convertibleDepositAuctioneerBids?.items || []).map(
-        (item: Record<string, string>) => ({
-          ...item,
-          timestamp: Number(item.timestamp),
-        }),
-      );
-
-      const convertedDeposits = (
-        data?.convertibleDepositFacilityConvertedDeposits?.items || []
-      ).map((item: Record<string, string>) => ({
-        ...item,
-        timestamp: Number(item.timestamp),
-      }));
-
-      const latestSnapshot = depositSnapshots[0] || null;
       const totalDepositsUsd = latestSnapshot
-        ? parseFloat(latestSnapshot.totalDepositedDecimal) +
-          parseFloat(latestSnapshot.borrowedAmountDecimal)
+        ? Number.parseFloat(latestSnapshot.totalDepositedDecimal) +
+          Number.parseFloat(latestSnapshot.borrowedAmountDecimal)
         : 0;
 
       const borrowedAmount = latestSnapshot
-        ? parseFloat(latestSnapshot.borrowedAmountDecimal) || 0
+        ? Number.parseFloat(latestSnapshot.borrowedAmountDecimal) || 0
         : 0;
 
-      const rateConfig = data?.depositRedemptionVaultAssetConfigurations?.items?.[0];
-      const annualInterestRate = rateConfig ? parseFloat(rateConfig.interestRateDecimal) || 0 : 0;
+      const annualInterestRate = statistics.redemptionConfig
+        ? Number.parseFloat(statistics.redemptionConfig.interestRateDecimal) || 0
+        : 0;
 
-      // Market status
-      const latestAuctioneerSnapshot = data?.auctioneerSnapshots?.items?.[0];
-      const isMarketActive = latestAuctioneerSnapshot
-        ? parseFloat(latestAuctioneerSnapshot.targetDecimal) > 0
+      const isMarketActive = statistics.auctioneerSnapshot
+        ? Number.parseFloat(statistics.auctioneerSnapshot.targetDecimal) > 0
         : false;
 
-      const positions = data?.convertibleDepositPositions?.items || [];
-      const redemptions = data?.redemptions?.items || [];
       const { convertibleOhm: supplyGrowthOhm } = calculateConversionExposure(
         positions,
         redemptions,

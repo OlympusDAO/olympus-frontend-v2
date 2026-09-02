@@ -1,7 +1,8 @@
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useProposalVotes, type VoteCast } from "@/modules/governance/hooks/useProposalVotes";
+import { useProposalVotes } from "@/modules/governance/hooks/useProposalVotes";
+import type { GetGovernorVotes200DataItem } from "@/generated/indexer";
 import { abbreviateNumber } from "@/modules/governance/helpers/format";
 import { shortenAddress } from "@/lib/helpers";
 import { RiThumbUpLine, RiThumbDownLine, RiEyeCloseLine } from "@remixicon/react";
@@ -10,7 +11,7 @@ function VoteTableBody({
   votes,
   isLoading,
 }: {
-  votes: VoteCast[] | undefined;
+  votes: GetGovernorVotes200DataItem[] | undefined;
   isLoading: boolean;
 }) {
   if (isLoading) {

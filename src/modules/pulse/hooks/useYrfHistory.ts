@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { YRF_SUBGRAPH_URL, BOND_SUBGRAPH_URL } from "@/lib/constants";
+import { getBondsPurchases, getYrfNextYieldSets, getYrfRepoMarkets } from "@/generated/indexer";
+import { fetchAllPages } from "@/lib/indexer/paginate";
 import { getWeekStartUTC } from "@/lib/liveness/epoch";
+import { unwrap } from "@/lib/indexer/rows";
 
 export interface YrfWeeklyYield {
   weekLabel: string;
@@ -46,66 +48,9 @@ function formatWeekLabel(monday: string): string {
   });
 }
 
-const PAGE_SIZE = 1000;
-
-// Cursor-paginate a subgraph entity using the `id_gt` pattern so we get the
-// full history instead of being capped at a single 1000-row page.
-async function runSubgraphQuery<T>(
-  url: string,
-  query: string,
-  extract: (data: Record<string, unknown>) => T[] | undefined,
-): Promise<T[]> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-  if (!response.ok) throw new Error("Subgraph fetch failed");
-  const { data, errors } = (await response.json()) as {
-    data?: Record<string, unknown>;
-    errors?: Array<{ message?: string }>;
-  };
-  if (errors) throw new Error(errors[0]?.message || "Subgraph query error");
-  return (data && extract(data)) ?? [];
-}
-
-async function fetchAllPages<T extends { id: string }>(
-  url: string,
-  buildQuery: (idGt: string, first: number) => string,
-  extractPage: (data: Record<string, unknown>) => T[] | undefined,
-): Promise<T[]> {
-  const all: T[] = [];
-  let lastId = "";
-  for (;;) {
-    const page = await runSubgraphQuery(url, buildQuery(lastId, PAGE_SIZE), extractPage);
-    all.push(...page);
-    if (page.length < PAGE_SIZE) break;
-    lastId = page[page.length - 1].id;
-  }
-  return all;
-}
-
-interface NextYieldSetRow {
-  id: string;
-  nextYieldDecimal: string;
-  blockTimestamp: string;
-  contract: { version: string };
-}
-
-interface RepoMarketRow {
-  id: string;
-  marketId: string;
-  blockTimestamp: string;
-  bidAmountDecimal: string;
-}
-
-interface BondPurchaseRow {
-  id: string;
-  timestamp: string;
-  amountInQuoteToken: string;
-  payoutInPayoutToken: string;
-  marketId: string;
-}
+// The `marketIds` filter is bounded by the API; YRF has more markets than that,
+// so the ids are requested in chunks.
+const MARKET_IDS_PER_REQUEST = 200;
 
 export function useYrfHistory() {
   return useQuery<YrfHistory>({
@@ -113,75 +58,21 @@ export function useYrfHistory() {
     queryFn: async () => {
       // 1. Fetch yield events and market IDs from YRF subgraph (paginated)
       const [nextYieldSets, repoMarkets, latestNextYieldSets] = await Promise.all([
-        fetchAllPages<NextYieldSetRow>(
-          YRF_SUBGRAPH_URL,
-          (idGt, first) => `
-            {
-              nextYieldSets(
-                first: ${first}
-                where: { id_gt: "${idGt}" }
-                orderBy: id
-                orderDirection: asc
-              ) {
-                id
-                nextYieldDecimal
-                blockTimestamp
-                contract { version }
-              }
-            }
-          `,
-          (d) => d.nextYieldSets as NextYieldSetRow[] | undefined,
-        ),
-        fetchAllPages<RepoMarketRow>(
-          YRF_SUBGRAPH_URL,
-          (idGt, first) => `
-            {
-              repoMarkets(
-                first: ${first}
-                where: { id_gt: "${idGt}" }
-                orderBy: id
-                orderDirection: asc
-              ) {
-                id
-                marketId
-                blockTimestamp
-                bidAmountDecimal
-              }
-            }
-          `,
-          (d) => d.repoMarkets as RepoMarketRow[] | undefined,
-        ),
-        // Latest 25 events ordered by timestamp. The full id-paginated fetch above is sorted by
-        // id, which is not strictly time-ordered, so its tail is not guaranteed to be the most
-        // recent events.
-        runSubgraphQuery<NextYieldSetRow>(
-          YRF_SUBGRAPH_URL,
-          `
-            {
-              nextYieldSets(
-                first: 25
-                orderBy: blockTimestamp
-                orderDirection: desc
-              ) {
-                id
-                nextYieldDecimal
-                blockTimestamp
-                contract { version }
-              }
-            }
-          `,
-          (d) => d.nextYieldSets as NextYieldSetRow[] | undefined,
-        ),
+        fetchAllPages((cursor) => getYrfNextYieldSets({ orderBy: "id", order: "asc", ...cursor })),
+        fetchAllPages((cursor) => getYrfRepoMarkets({ orderBy: "id", order: "asc", ...cursor })),
+        // Latest 25 by time. The id-paginated fetch above is id-ordered, which
+        // is not strictly time-ordered, so its tail is not the most recent.
+        unwrap(getYrfNextYieldSets({ orderBy: "blockTimestamp", order: "desc", limit: 25 })),
       ]);
 
       const yrfMarketIds: string[] = repoMarkets.map((m) => m.marketId);
 
-      // 2. Fetch actual OHM purchase amounts from bond market subgraph.
+      // 2. Fetch actual OHM purchase amounts from the bonds domain.
       //
-      // TODO(follow-up): OHM purchase amounts (amountInQuoteToken from bond
-      // purchases) should ideally be indexed directly in the YRF subgraph,
-      // removing the need to cross-reference the bond market subgraph.
-      // Bond subgraph: https://thegraph.com/explorer/subgraphs/E4Mikyz3ec1MGGFYNuEDQ3F1qtcLashFKwyTvnbfa9Ss
+      // TODO(follow-up): these amounts could be attributed to YRF in the
+      // indexer itself, which would remove this cross-domain join. Both
+      // domains now live in one indexer, so that is a handler change rather
+      // than a second subgraph.
       const ohmByWeek: Record<string, number> = {};
       const usdByWeek: Record<string, number> = {};
       let totalOhmBurned = 0;
@@ -189,27 +80,26 @@ export function useYrfHistory() {
 
       if (yrfMarketIds.length > 0) {
         try {
-          const marketIdList = yrfMarketIds.map((id) => `"${id}"`).join(",");
-          const bondPurchases = await fetchAllPages<BondPurchaseRow>(
-            BOND_SUBGRAPH_URL,
-            (idGt, first) => `
-              {
-                bondPurchases(
-                  first: ${first}
-                  where: { marketId_in: [${marketIdList}], id_gt: "${idGt}" }
-                  orderBy: id
-                  orderDirection: asc
-                ) {
-                  id
-                  timestamp
-                  amountInQuoteToken
-                  payoutInPayoutToken
-                  marketId
-                }
-              }
-            `,
-            (d) => d.bondPurchases as BondPurchaseRow[] | undefined,
-          );
+          // `marketIds` accepts at most MARKET_IDS_PER_REQUEST values, and YRF
+          // has ~700 markets — passing them all is a 400, not a truncation.
+          const chunks: string[][] = [];
+          for (let i = 0; i < yrfMarketIds.length; i += MARKET_IDS_PER_REQUEST) {
+            chunks.push(yrfMarketIds.slice(i, i + MARKET_IDS_PER_REQUEST));
+          }
+          const bondPurchases = (
+            await Promise.all(
+              chunks.map((chunk) =>
+                fetchAllPages((cursor) =>
+                  getBondsPurchases({
+                    marketIds: chunk.join(","),
+                    orderBy: "id",
+                    order: "asc",
+                    ...cursor,
+                  }),
+                ),
+              ),
+            )
+          ).flat();
 
           for (const purchase of bondPurchases) {
             const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;

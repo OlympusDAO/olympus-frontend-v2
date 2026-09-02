@@ -1,5 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { coolerGraphqlClient } from "@/lib/graphql-client";
+import {
+  getCoolerMonocoolerAccounts,
+  getCoolerMonocoolerActivity,
+  getCoolerMonocoolerDailyGlobal,
+  getCoolerMonocoolerGlobalLatest,
+} from "@/generated/indexer";
+import { IndexerError } from "@/api/indexerHttpClient";
+
+// Cooler v2 (MonoCooler) data from the protocol indexer.
+//
+// The API returns the same RAW WAD values the subgraph did — collateral, debt,
+// ltv and healthFactor are all 1e18-scaled — so the parsing below is unchanged
+// and `maxHealthFactor` is still expressed in WAD.
 
 // TypeScript interfaces matching the MonoCooler subgraph schema
 export interface MonoCoolerGlobalState {
@@ -155,134 +167,19 @@ function parseTimestamp(value: string): number {
   }
 }
 
-// GraphQL query imports
-const MONOCOOLER_GLOBAL_STATE_QUERY = `
-  query MonoCoolerGlobalState {
-    monoCoolerGlobalStates(first: 1) {
-      id
-      totalCollateral
-      totalDebt
-      interestAccumulatorRay
-      interestRateWad
-      ltvOracle
-      liquidationPaused
-      borrowsPaused
-      treasuryBorrower
-      updatedAt
-    }
-  }
-`;
-
-const MONOCOOLER_HISTORICAL_DATA_QUERY = `
-  query MonoCoolerHistoricalData($first: Int = 100, $interval: String = "day") {
-    monoCoolerGlobalStats_collection(
-      first: $first
-      interval: $interval
-      orderBy: timestamp
-      orderDirection: desc
-    ) {
-      id
-      timestamp
-      totalCollateral
-      totalDebt
-      interestRateWad
-      maxOriginationLtv
-      liquidationLtv
-      snapshotCount
-    }
-  }
-`;
-
-const MONOCOOLER_ACCOUNTS_QUERY = `
-  query MonoCoolerAccounts($first: Int = 100, $orderBy: String = "healthFactor", $orderDirection: String = "asc") {
-    monoCoolerAccounts(
-      first: $first
-      orderBy: $orderBy
-      orderDirection: $orderDirection
-    ) {
-      id
-      address
-      collateral
-      debt
-      ltv
-      healthFactor
-      updatedAt
-    }
-  }
-`;
-
-const MONOCOOLER_AT_RISK_ACCOUNTS_QUERY = `
-  query MonoCoolerAtRiskAccounts($first: Int = 20, $healthFactorThreshold: BigInt = "1200000000000000000") {
-    monoCoolerAccounts(
-      first: $first
-      where: { healthFactor_lt: $healthFactorThreshold }
-      orderBy: healthFactor
-      orderDirection: asc
-    ) {
-      id
-      address
-      collateral
-      debt
-      ltv
-      healthFactor
-      updatedAt
-    }
-  }
-`;
-
-const MONOCOOLER_RECENT_ACTIVITY_QUERY = `
-  query MonoCoolerRecentActivity($first: Int = 50) {
-    monoCoolerActivities(
-      first: $first
-      orderBy: timestamp
-      orderDirection: desc
-    ) {
-      id
-      type
-      account {
-        address
-      }
-      amount
-      collateral
-      debt
-      txHash
-      timestamp
-    }
-  }
-`;
-
-const MONOCOOLER_LIQUIDATIONS_QUERY = `
-  query MonoCoolerLiquidations($first: Int = 20) {
-    monoCoolerActivities(
-      first: $first
-      where: { type: "liquidation" }
-      orderBy: timestamp
-      orderDirection: desc
-    ) {
-      id
-      type
-      account {
-        address
-      }
-      amount
-      collateral
-      debt
-      txHash
-      timestamp
-    }
-  }
-`;
-
-// Hooks with actual GraphQL queries
+// Hooks
 export function useV2ProtocolData() {
   return useQuery({
     queryKey: ["v2-protocol-data"],
     queryFn: async (): Promise<V2ProtocolData | null> => {
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerGlobalStates: MonoCoolerGlobalState[];
-      }>(MONOCOOLER_GLOBAL_STATE_QUERY);
-
-      const globalState = response.monoCoolerGlobalStates[0];
+      let globalState: MonoCoolerGlobalState;
+      try {
+        globalState = (await getCoolerMonocoolerGlobalLatest()).data;
+      } catch (error) {
+        // The singleton does not exist until MonoCooler has been touched once.
+        if (error instanceof IndexerError && error.status === 404) return null;
+        throw error;
+      }
       if (!globalState) return null;
 
       return {
@@ -305,11 +202,13 @@ export function useV2HistoricalData(days: number = 30) {
     queryFn: async (): Promise<V2HistoricalDataPoint[]> => {
       // Query gets newest data first (desc) to ensure we get recent data
       // Component reverses this for chronological display
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerGlobalStats_collection: MonoCoolerGlobalStats[];
-      }>(MONOCOOLER_HISTORICAL_DATA_QUERY, { first: days, interval: "day" });
+      // Newest first, as before; the component reverses for chronological display.
+      const { data: rows } = await getCoolerMonocoolerDailyGlobal({
+        order: "desc",
+        limit: days,
+      });
 
-      const result = response.monoCoolerGlobalStats_collection.map((stats) => ({
+      const result = rows.map((stats) => ({
         timestamp: parseTimestamp(stats.timestamp),
         totalCollateral: parseBigDecimal(stats.totalCollateral),
         totalDebt: parseBigDecimal(stats.totalDebt),
@@ -326,11 +225,9 @@ export function useV2Accounts(limit: number = 1000) {
   return useQuery({
     queryKey: ["v2-accounts", limit],
     queryFn: async (): Promise<V2Account[]> => {
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerAccounts: MonoCoolerAccount[];
-      }>(MONOCOOLER_ACCOUNTS_QUERY, { first: limit });
+      const { data: accounts } = await getCoolerMonocoolerAccounts({ order: "asc", limit });
 
-      return response.monoCoolerAccounts.map((account) => ({
+      return accounts.map((account) => ({
         address: account.address,
         collateral: parseBigDecimal(account.collateral),
         debt: parseBigDecimal(account.debt),
@@ -346,14 +243,14 @@ export function useV2AtRiskAccounts(limit: number = 20, threshold: number = 1.2)
   return useQuery({
     queryKey: ["v2-at-risk-accounts", limit, threshold],
     queryFn: async (): Promise<V2Account[]> => {
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerAccounts: MonoCoolerAccount[];
-      }>(MONOCOOLER_AT_RISK_ACCOUNTS_QUERY, {
-        first: limit,
-        healthFactorThreshold: (threshold * 1e18).toString(),
+      const { data: accounts } = await getCoolerMonocoolerAccounts({
+        // WAD, matching how the health factor is stored.
+        maxHealthFactor: BigInt(Math.round(threshold * 1e18)).toString(),
+        order: "asc",
+        limit,
       });
 
-      return response.monoCoolerAccounts.map((account) => ({
+      return accounts.map((account) => ({
         address: account.address,
         collateral: parseBigDecimal(account.collateral),
         debt: parseBigDecimal(account.debt),
@@ -369,11 +266,9 @@ export function useV2RecentActivity(limit: number = 50) {
   return useQuery({
     queryKey: ["v2-recent-activity", limit],
     queryFn: async (): Promise<V2Activity[]> => {
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerActivities: MonoCoolerActivity[];
-      }>(MONOCOOLER_RECENT_ACTIVITY_QUERY, { first: limit });
+      const { data: activities } = await getCoolerMonocoolerActivity({ limit });
 
-      return response.monoCoolerActivities.map((activity) => ({
+      return activities.map((activity) => ({
         id: activity.id,
         type: activity.type,
         account: activity.account.address,
@@ -391,11 +286,12 @@ export function useV2Liquidations(limit: number = 20) {
   return useQuery({
     queryKey: ["v2-liquidations", limit],
     queryFn: async (): Promise<V2Activity[]> => {
-      const response = await coolerGraphqlClient.request<{
-        monoCoolerActivities: MonoCoolerActivity[];
-      }>(MONOCOOLER_LIQUIDATIONS_QUERY, { first: limit });
+      const { data: activities } = await getCoolerMonocoolerActivity({
+        type: "liquidation",
+        limit,
+      });
 
-      return response.monoCoolerActivities.map((activity) => ({
+      return activities.map((activity) => ({
         id: activity.id,
         type: activity.type,
         account: activity.account.address,
