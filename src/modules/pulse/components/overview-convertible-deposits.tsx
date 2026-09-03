@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { PulseDot } from "@/components/pulse-dot.tsx";
 
 export function OverviewConvertibleDeposits() {
-  const { data: cd } = useCdStatistics();
+  const { data: cd, isError: cdError } = useCdStatistics();
   const { data: treasury } = useTreasuryMetrics();
   const { data: price } = useOhmPrice();
 
@@ -47,11 +47,21 @@ export function OverviewConvertibleDeposits() {
       <Separator className="w-full my-4" />
       {/* Body */}
       <div>
-        <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
-        <NumberFlow
-          value={totalDepositsUsd}
-          className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
-        />
+        <TooltipInfo title="Deposits still held by the facility, net of principal borrowed back out against pending redemptions.">
+          <p className="text-sm/5 text-secondary-t font-normal">Total Value Locked</p>
+        </TooltipInfo>
+        {/* A failed read must not render as $0.00, which is indistinguishable from an
+            empty facility. */}
+        {cdError || !cd ? (
+          <p className="mt-1 block text-[32px]/[40px] font-semibold text-secondary-t">
+            Unavailable
+          </p>
+        ) : (
+          <NumberFlow
+            value={totalDepositsUsd}
+            className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
+          />
+        )}
         <div className="mt-0.5 flex items-center gap-x-0.5">
           <NumberFlow
             suffix="recent bids ·"

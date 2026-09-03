@@ -19,10 +19,27 @@ import iconDark from "@/assets/protocol-4-l.webp";
 import iconLight from "@/assets/protocol-4-b.webp";
 
 export function ProtocolConvertibleDeposits() {
-  const { data: cd, isLoading: cdLoading } = useCdStatistics();
+  const { data: cd, isLoading: cdLoading, isError: cdError } = useCdStatistics();
   const { data: price } = useOhmPrice();
   const { data: treasury } = useTreasuryMetrics();
   const { reopenPrice } = useCdReopenPrice(mainnet.id);
+
+  // The exposure read can throw (fetchAllPages refuses to report a truncated total),
+  // which fails the whole query. Without this the card sits in its skeleton forever,
+  // which reads as "still loading" rather than "we don't know".
+  if (cdError || (!cdLoading && !cd)) {
+    return (
+      <Card className="p-5 flex flex-col">
+        <p className="text-sm font-semibold text-primary-t">Convertible Deposits</p>
+        <Separator className="my-4" />
+        <p className="text-sm text-secondary-t">Data unavailable</p>
+        <p className="mt-1 text-xs text-tertiary-t">
+          The convertible deposit indexer could not be reached. Figures are hidden rather than shown
+          as zero.
+        </p>
+      </Card>
+    );
+  }
 
   if (cdLoading || !cd) {
     return (
@@ -66,13 +83,19 @@ export function ProtocolConvertibleDeposits() {
   const latestBid = cd.bids[0];
   const latestTickPrice = latestBid ? parseFloat(latestBid.tickPriceDecimal) : 0;
 
+  // Net of principal borrowed back out against pending redemptions: that cash is
+  // routinely redeposited as a new position, so the gross figure counts it twice.
   const supplyGrowthOhm = cd.supplyGrowthOhm;
   const treasuryGrowthUsd = cd.totalDepositsUsd;
   const backingGrowthPercent = (() => {
     const b = treasury?.treasuryLiquidBacking ?? 0;
     const supply = treasury?.ohmBackedSupply ?? 0;
     const currentBacking = treasury?.treasuryLiquidBackingPerOhmBacked ?? 0;
-    if (supply <= 0 || currentBacking <= 0 || supplyGrowthOhm <= 0) return 0;
+    // supplyGrowthOhm is now netConvertibleOhm, which is legitimately 0 when every
+    // deposit is encumbered. That is peak backing accretion, so it must not short
+    // out the calculation the way a missing denominator would.
+    if (supply <= 0 || currentBacking <= 0) return 0;
+    if (supplyGrowthOhm <= 0 && treasuryGrowthUsd <= 0) return 0;
     const newBacking = (b + treasuryGrowthUsd) / (supply + supplyGrowthOhm);
     return ((newBacking - currentBacking) / currentBacking) * 100;
   })();
@@ -114,7 +137,9 @@ export function ProtocolConvertibleDeposits() {
       {/* Hero: TVL + Deposit button */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-normal text-secondary-t">Total Value Locked</p>
+          <TooltipInfo title="Deposits still held by the facility, net of principal borrowed back out against pending redemptions.">
+            <p className="text-sm font-normal text-secondary-t">Total Value Locked</p>
+          </TooltipInfo>
           <NumberFlow
             value={cd.totalDepositsUsd}
             format={{
@@ -128,6 +153,20 @@ export function ProtocolConvertibleDeposits() {
           <p className="mt-0.5 text-xs font-normal text-secondary-t">
             {cd.activeBidsCount} recent bids, {premiumPct > 0 ? `+${premiumPct.toFixed(0)}%` : "0%"}{" "}
             premium
+          </p>
+          <p className="mt-0.5 text-xs font-normal text-tertiary-t">
+            Net of{" "}
+            <NumberFlow
+              value={cd.borrowedAmount}
+              format={{
+                style: "currency",
+                currency: "USD",
+                notation: "compact",
+                maximumFractionDigits: 1,
+              }}
+              className="text-xs font-normal text-tertiary-t"
+            />{" "}
+            borrowed against pending redemptions
           </p>
           {!cd.isMarketActive && reopenPrice && (
             <p className="mt-0.5 text-xs font-normal text-secondary-t">
@@ -193,7 +232,7 @@ export function ProtocolConvertibleDeposits() {
       {/* If All CDs Convert */}
       <div>
         <div className="mb-3">
-          <TooltipInfo title="Projected impact if all outstanding convertible deposits convert to OHM at their locked conversion prices.">
+          <TooltipInfo title="Projected impact if outstanding convertible deposits convert to OHM at their locked conversion prices, net of principal already borrowed back out. Deposits behind an active loan only convert if the borrower repays out of outside capital.">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary-t">
               If All CDs Convert
             </p>
