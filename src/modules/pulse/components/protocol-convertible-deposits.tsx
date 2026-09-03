@@ -27,7 +27,7 @@ export function ProtocolConvertibleDeposits() {
   // The exposure read can throw (fetchAllPages refuses to report a truncated total),
   // which fails the whole query. Without this the card sits in its skeleton forever,
   // which reads as "still loading" rather than "we don't know".
-  if (cdError) {
+  if (cdError || (!cdLoading && !cd)) {
     return (
       <Card className="p-5 flex flex-col">
         <p className="text-sm font-semibold text-primary-t">Convertible Deposits</p>

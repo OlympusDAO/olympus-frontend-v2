@@ -84,6 +84,9 @@ const LadderTooltip = ({
 
 export const MetricsConversionLadder: React.FC = () => {
   const { data: exposure, isLoading, isError } = useConversionExposure();
+  // React Query pauses rather than errors when a fetch fails, so isError alone
+  // is not enough: absence of data is the real signal. See metrics-conversion-stats.
+  const isUnavailable = isError || !exposure;
   const chainId = useChainId();
   const { price: ohmPrice } = useTokenPrice(chainId, getTokenAddress(TokenName.OHM, chainId));
   const hasOhmPrice = ohmPrice > 0;
@@ -100,7 +103,7 @@ export const MetricsConversionLadder: React.FC = () => {
       return <div className="w-full h-60 bg-surface-a5 rounded-xl animate-pulse" />;
     }
 
-    if (isError) {
+    if (isUnavailable) {
       return (
         <div className="w-full h-60 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">Conversion data unavailable</p>
@@ -196,7 +199,7 @@ export const MetricsConversionLadder: React.FC = () => {
           </div>
           <p className="text-sm text-secondary-t mt-0.5">Deposits that convert at each OHM price</p>
         </div>
-        {hasOhmPrice && !isLoading && !isError && (
+        {hasOhmPrice && !isLoading && !isUnavailable && (
           <div className="flex gap-6 shrink-0">
             <div className="text-right">
               <p className="text-xs text-secondary-t">Convertible now</p>
@@ -216,7 +219,7 @@ export const MetricsConversionLadder: React.FC = () => {
 
       {body}
 
-      {hasOhmPrice && !isLoading && !isError && rows.length > 0 && (
+      {hasOhmPrice && !isLoading && !isUnavailable && rows.length > 0 && (
         <div className="border-t border-a10-b pt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
           <span className="text-tertiary-t">
             <span className="text-secondary-t">In the money</span> {moneyness.inTheMoneyCount} of{" "}

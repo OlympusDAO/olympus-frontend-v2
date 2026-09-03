@@ -117,6 +117,8 @@ const Stat: React.FC<StatProps> = ({ label, value, tooltip }) => (
 export const MetricsConversionsChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const { data: conversions, isLoading, isError } = useConversions(timeRange);
+  // Paused queries never set isError, so gate on missing data too.
+  const isUnavailable = isError || !conversions;
   const { data: exposure } = useConversionExposure();
 
   const chainId = useChainId();
@@ -145,7 +147,7 @@ export const MetricsConversionsChart: React.FC = () => {
     );
   }
 
-  if (isError) {
+  if (isUnavailable) {
     return (
       <Card className="p-6 flex flex-col gap-3">
         <h3 className="text-xl font-semibold text-primary-t tracking-[0.2px]">Conversions</h3>

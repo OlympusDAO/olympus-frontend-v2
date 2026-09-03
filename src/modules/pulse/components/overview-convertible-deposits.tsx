@@ -52,7 +52,7 @@ export function OverviewConvertibleDeposits() {
         </TooltipInfo>
         {/* A failed read must not render as $0.00, which is indistinguishable from an
             empty facility. */}
-        {cdError ? (
+        {cdError || !cd ? (
           <p className="mt-1 block text-[32px]/[40px] font-semibold text-secondary-t">
             Unavailable
           </p>

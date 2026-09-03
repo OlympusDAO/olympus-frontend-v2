@@ -105,7 +105,16 @@ export const MetricsConversionStats: React.FC = () => {
   const { data: revenue, isLoading: isLoadingRevenue, isError: isRevenueError } = useCdRevenue();
 
   const isLoading = isLoadingTreasury || isLoadingExposure;
-  const isError = isTreasuryError || isExposureError;
+  /**
+   * Absence of data, not `isError`, is what gates the numbers.
+   *
+   * React Query's default `networkMode: "online"` treats a failed fetch as going
+   * offline and *pauses* the query: status stays `pending`, `isError` never becomes
+   * true, and `isLoading` is false because nothing is in flight. Gating on isError
+   * alone left every card rendering "+$0.00" against a dead indexer, which is
+   * indistinguishable from an empty facility.
+   */
+  const isUnavailable = isTreasuryError || isExposureError || !treasuryMetrics || !exposure;
 
   const backedSupply = treasuryMetrics?.ohmBackedSupply || 0;
   const liquidBacking = treasuryMetrics?.treasuryLiquidBacking || 0;
@@ -141,7 +150,7 @@ export const MetricsConversionStats: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {isLoading ? (
           <LoadingCards count={3} />
-        ) : isError ? (
+        ) : isUnavailable ? (
           <ErrorCards count={3} />
         ) : (
           <>
@@ -172,7 +181,7 @@ export const MetricsConversionStats: React.FC = () => {
       <div className="grid grid-cols-1 gap-4">
         {isLoadingRevenue ? (
           <LoadingCards count={1} />
-        ) : isRevenueError ? (
+        ) : isRevenueError || !revenue ? (
           <ErrorCards count={1} />
         ) : (
           <StatCard
