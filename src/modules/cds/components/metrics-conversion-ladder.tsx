@@ -226,15 +226,6 @@ export const MetricsConversionLadder: React.FC = () => {
             <span className="text-secondary-t">Gain if converted now</span>{" "}
             {formatCurrency(moneyness.unrealizedGainUsd)}
           </span>
-          <span className="text-tertiary-t">
-            <span className="text-secondary-t">
-              {moneyness.breakevenMovePercent > 0
-                ? "OHM to break even"
-                : "OHM above average strike"}
-            </span>{" "}
-            {moneyness.breakevenMovePercent > 0 ? "+" : ""}
-            {Math.abs(moneyness.breakevenMovePercent).toFixed(1)}%
-          </span>
           {ladder.nextUnlockUsd > 0 && (
             <span className="text-tertiary-t">
               <span className="text-secondary-t">Next tranche</span>{" "}

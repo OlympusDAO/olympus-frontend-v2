@@ -106,10 +106,18 @@ export interface MoneynessSummary {
   totalCount: number;
   /** What holders of in-the-money claims would gain by converting at spot. */
   unrealizedGainUsd: number;
-  /** Amount-weighted conversion price across every outstanding claim. */
+  /** Amount-weighted (arithmetic) conversion price across every outstanding claim. */
   weightedConversionPrice: number;
-  /** Percent OHM has to move for the average claim to break even. */
-  breakevenMovePercent: number;
+  /**
+   * Percent OHM has to rise to reach that average strike.
+   *
+   * Deliberately not called a break-even. The price at which the book actually
+   * breaks even — deposits in equal to OHM value out — is the amount-weighted
+   * *harmonic* mean (grossDepositsUsd / grossConvertibleOhm), which is always
+   * lower. On live data that is $20.45 against this figure's $20.48. Naming this
+   * "breakeven" overstated the move, so the card that displayed it was dropped.
+   */
+  movePercentToAverageStrike: number;
 }
 
 /**
@@ -304,7 +312,7 @@ export function summarizeMoneyness(
     totalCount: new Set([...inTheMoney, ...outOfTheMoney]).size,
     unrealizedGainUsd,
     weightedConversionPrice,
-    breakevenMovePercent:
+    movePercentToAverageStrike:
       ohmPrice > 0 && weightedConversionPrice > 0
         ? (weightedConversionPrice / ohmPrice - 1) * 100
         : 0,

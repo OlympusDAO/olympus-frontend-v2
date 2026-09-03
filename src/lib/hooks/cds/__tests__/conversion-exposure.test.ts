@@ -188,7 +188,7 @@ describe("summarizeMoneyness", () => {
     // Deposit value is 1000; the gain is only 1000 * (22/20 - 1).
     expect(summary.unrealizedGainUsd).toBeCloseTo(100, 9);
     expect(summary.weightedConversionPrice).toBeCloseTo(21.6667, 4);
-    expect(summary.breakevenMovePercent).toBeCloseTo(-1.5152, 4);
+    expect(summary.movePercentToAverageStrike).toBeCloseTo(-1.5152, 4);
   });
 
   it("counts one position once even when it contributes two strikes", () => {
@@ -212,7 +212,7 @@ describe("summarizeMoneyness", () => {
     expect(summary.inTheMoneyCount).toBe(0);
     expect(summary.outOfTheMoneyCount).toBe(1);
     expect(summary.unrealizedGainUsd).toBe(0);
-    expect(summary.breakevenMovePercent).toBeCloseTo(10, 6);
+    expect(summary.movePercentToAverageStrike).toBeCloseTo(10, 6);
   });
 
   it("treats a claim at exactly the current price as out of the money", () => {
@@ -220,13 +220,13 @@ describe("summarizeMoneyness", () => {
 
     expect(summary.outOfTheMoneyCount).toBe(1);
     expect(summary.unrealizedGainUsd).toBe(0);
-    expect(summary.breakevenMovePercent).toBe(0);
+    expect(summary.movePercentToAverageStrike).toBe(0);
   });
 
   it("returns zeroes rather than NaN without an OHM price", () => {
     const summary = summarizeMoneyness([strike(1000, 20)], 0);
 
-    expect(summary.breakevenMovePercent).toBe(0);
+    expect(summary.movePercentToAverageStrike).toBe(0);
     expect(summary.totalUsd).toBe(1000);
   });
 });
