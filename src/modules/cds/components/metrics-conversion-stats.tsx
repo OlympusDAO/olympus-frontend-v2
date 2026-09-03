@@ -3,11 +3,7 @@ import { Card } from "@/components/ui/card.tsx";
 import { Tooltip as InfoTooltip } from "@/components/ui/tooltip.tsx";
 import { RiInformationFill } from "@remixicon/react";
 import { useConversionExposure, useCdRevenue } from "@/lib/hooks/cds/useStatisticsData.tsx";
-import { summarizeMoneyness } from "@/lib/hooks/cds/conversion-exposure.ts";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics.ts";
-import { useTokenPrice } from "@/lib/hooks/useTokenPrice.tsx";
-import { getTokenAddress, TokenName } from "@/lib/tokens.ts";
-import { useChainId } from "wagmi";
 
 interface StatCardProps {
   title: string;
@@ -107,17 +103,9 @@ export const MetricsConversionStats: React.FC = () => {
     isError: isExposureError,
   } = useConversionExposure();
   const { data: revenue, isLoading: isLoadingRevenue, isError: isRevenueError } = useCdRevenue();
-  // Moneyness is a "right now" question, so it needs the live PRICE module rather
-  // than treasuryMetrics.ohmPrice, which is a daily series published up to a day late.
-  const chainId = useChainId();
-  const { price: ohmPrice } = useTokenPrice(chainId, getTokenAddress(TokenName.OHM, chainId));
 
   const isLoading = isLoadingTreasury || isLoadingExposure;
   const isError = isTreasuryError || isExposureError;
-  // useTokenPrice reports 0 while the contract read is in flight, on an unsupported
-  // chain, and on failure. Treating that as a real price would mark the whole book
-  // out of the money, so moneyness has to sit out until a price actually arrives.
-  const hasOhmPrice = ohmPrice > 0;
 
   const backedSupply = treasuryMetrics?.ohmBackedSupply || 0;
   const liquidBacking = treasuryMetrics?.treasuryLiquidBacking || 0;
@@ -144,8 +132,6 @@ export const MetricsConversionStats: React.FC = () => {
 
   const backingGrowthPercent =
     currentBackingPerOhm > 0 ? (backingPerOhmIncrease / currentBackingPerOhm) * 100 : 0;
-
-  const moneyness = summarizeMoneyness(exposure?.strikes ?? [], ohmPrice);
 
   return (
     <div className="flex flex-col gap-4">
@@ -180,52 +166,7 @@ export const MetricsConversionStats: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {isLoading ? (
-          <LoadingCards count={1} />
-        ) : isError ? (
-          <ErrorCards count={1} />
-        ) : !hasOhmPrice ? (
-          <StatCard
-            title="Position Moneyness"
-            value="OHM price unavailable"
-            tooltip="Moneyness compares each claim's locked-in conversion price against the live OHM price from the on-chain PRICE module. That read is unavailable, so no claim can be classified."
-            subtitle="Waiting on the on-chain price feed"
-          />
-        ) : (
-          <StatCard
-            title="Position Moneyness"
-            value={`${moneyness.inTheMoneyCount} of ${moneyness.totalCount} in the money`}
-            tooltip="A claim is in the money when OHM trades above its locked-in conversion price. The amounts below are deposit value, not gain. Out-of-the-money deposits get redeemed rather than converted, so they are unexercised optionality rather than a loss."
-            subtitle={`OHM at $${ohmPrice.toFixed(2)} vs. a $${moneyness.weightedConversionPrice.toFixed(2)} average conversion price`}
-          >
-            <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-a10-b">
-              <StatRow
-                label={`In the money (${moneyness.inTheMoneyCount})`}
-                value={formatCurrency(moneyness.inTheMoneyUsd)}
-              />
-              <StatRow
-                label={`Out of the money (${moneyness.outOfTheMoneyCount})`}
-                value={formatCurrency(moneyness.outOfTheMoneyUsd)}
-              />
-              <StatRow
-                label="Gain if converted now"
-                value={formatCurrency(moneyness.unrealizedGainUsd)}
-              />
-              <StatRow
-                label={
-                  moneyness.breakevenMovePercent > 0
-                    ? "OHM move to break even"
-                    : "OHM above average conversion price by"
-                }
-                // The label already carries the direction, so the value is the size of
-                // the move either way. Signing it here read as "above ... by -1.5%".
-                value={`${moneyness.breakevenMovePercent > 0 ? "+" : ""}${Math.abs(moneyness.breakevenMovePercent).toFixed(1)}%`}
-              />
-            </div>
-          </StatCard>
-        )}
-
+      <div className="grid grid-cols-1 gap-4">
         {isLoadingRevenue ? (
           <LoadingCards count={1} />
         ) : isRevenueError ? (
