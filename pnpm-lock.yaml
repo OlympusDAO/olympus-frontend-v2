@@ -17,6 +17,7 @@ overrides:
   esbuild@<0.28.1: 0.28.1
   form-data@<4.0.6: ^4.0.6
   fast-uri@<3.1.6: ^3.1.6
+  fflate@<0.4.9: ^0.4.9
   h3@<1.15.11: 1.15.11
   hono@<4.12.34: ^4.12.34
   js-yaml@<4.3.1: ^4.3.1
@@ -3163,8 +3164,8 @@ packages:
       picomatch:
         optional: true
 
-  fflate@0.4.8:
-    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
+  fflate@0.4.9:
+    resolution: {integrity: sha512-zdxgIEddhfsyCaWpJ2SdXEP8ZMrKJ6+5jl4OupODcywU0IhRk6gdXuVGcPICyfx2H97hVK7xmJtRLPjkxAX8Vw==}
 
   figures@6.1.0:
     resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
@@ -9047,7 +9048,7 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.4
 
-  fflate@0.4.8: {}
+  fflate@0.4.9: {}
 
   figures@6.1.0:
     dependencies:
@@ -10310,7 +10311,7 @@ snapshots:
       '@posthog/types': 1.365.4
       core-js: 3.49.0
       dompurify: 3.4.13
-      fflate: 0.4.8
+      fflate: 0.4.9
       preact: 10.28.4
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
