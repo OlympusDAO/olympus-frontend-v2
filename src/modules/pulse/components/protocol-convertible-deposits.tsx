@@ -19,10 +19,27 @@ import iconDark from "@/assets/protocol-4-l.webp";
 import iconLight from "@/assets/protocol-4-b.webp";
 
 export function ProtocolConvertibleDeposits() {
-  const { data: cd, isLoading: cdLoading } = useCdStatistics();
+  const { data: cd, isLoading: cdLoading, isError: cdError } = useCdStatistics();
   const { data: price } = useOhmPrice();
   const { data: treasury } = useTreasuryMetrics();
   const { reopenPrice } = useCdReopenPrice(mainnet.id);
+
+  // The exposure read can throw (fetchAllPages refuses to report a truncated total),
+  // which fails the whole query. Without this the card sits in its skeleton forever,
+  // which reads as "still loading" rather than "we don't know".
+  if (cdError) {
+    return (
+      <Card className="p-5 flex flex-col">
+        <p className="text-sm font-semibold text-primary-t">Convertible Deposits</p>
+        <Separator className="my-4" />
+        <p className="text-sm text-secondary-t">Data unavailable</p>
+        <p className="mt-1 text-xs text-tertiary-t">
+          The convertible deposit indexer could not be reached. Figures are hidden rather than shown
+          as zero.
+        </p>
+      </Card>
+    );
+  }
 
   if (cdLoading || !cd) {
     return (
@@ -74,7 +91,11 @@ export function ProtocolConvertibleDeposits() {
     const b = treasury?.treasuryLiquidBacking ?? 0;
     const supply = treasury?.ohmBackedSupply ?? 0;
     const currentBacking = treasury?.treasuryLiquidBackingPerOhmBacked ?? 0;
-    if (supply <= 0 || currentBacking <= 0 || supplyGrowthOhm <= 0) return 0;
+    // supplyGrowthOhm is now netConvertibleOhm, which is legitimately 0 when every
+    // deposit is encumbered. That is peak backing accretion, so it must not short
+    // out the calculation the way a missing denominator would.
+    if (supply <= 0 || currentBacking <= 0) return 0;
+    if (supplyGrowthOhm <= 0 && treasuryGrowthUsd <= 0) return 0;
     const newBacking = (b + treasuryGrowthUsd) / (supply + supplyGrowthOhm);
     return ((newBacking - currentBacking) / currentBacking) * 100;
   })();

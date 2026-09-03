@@ -200,7 +200,10 @@ export const MetricsConversionsChart: React.FC = () => {
             <p className="text-xs text-tertiary-t max-w-xs">
               {moneyness.inTheMoneyCount > 0
                 ? `${moneyness.inTheMoneyCount} of ${moneyness.totalCount} positions are in the money — ${formatCurrency(moneyness.inTheMoneyUsd)} could convert at today's price.`
-                : `OHM is ${Math.abs(moneyness.breakevenMovePercent).toFixed(1)}% below the average conversion price, so no position is currently worth converting.`}
+                : // breakevenMovePercent is the rise OHM needs, not how far below it
+                  // sits. Those differ (spot $20 vs a $25 strike is +25% to reach,
+                  // but only 20% below), so the wording has to match the maths.
+                  `OHM needs to rise ${Math.abs(moneyness.breakevenMovePercent).toFixed(1)}% to reach the average conversion price, so no position is currently worth converting.`}
             </p>
           )}
         </div>

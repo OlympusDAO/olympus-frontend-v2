@@ -180,7 +180,7 @@ export function useCdStatistics() {
       //
       // Routed through the shared cache entry so this and the CD metrics screen read
       // one value rather than fetching the same thing twice on different cadences.
-      const exposure = await queryClient.fetchQuery(conversionExposureQuery(1));
+      const exposure = await queryClient.fetchQuery(conversionExposureQuery);
 
       return {
         depositSnapshots,

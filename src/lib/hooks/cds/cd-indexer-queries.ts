@@ -56,7 +56,9 @@ const afterArg = (after: string | null) => (after ? `, after: "${after}"` : "");
  * the principal already borrowed back out, and the per-claim strikes behind both.
  */
 export async function fetchConversionExposure(): Promise<ConversionExposure> {
-  const positions = await fetchAllPages<{
+  // The three collections are independent, so they page in parallel rather than
+  // serialising three full walks on every refetch.
+  const positionsPromise = fetchAllPages<{
     positionId: string;
     initialAmountDecimal: string;
     remainingAmountDecimal: string;
@@ -83,7 +85,7 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
     (data) => data?.convertibleDepositPositions,
   );
 
-  const redemptions = await fetchAllPages<{
+  const redemptionsPromise = fetchAllPages<{
     positionId: string | null;
     receiptTokenId: string | null;
     amountDecimal: string;
@@ -121,7 +123,7 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
 
   // Converted deposits are no longer redeemable, so they leave the base alongside
   // finished redemptions.
-  const conversions = await fetchAllPages<{ depositAmountDecimal: string }>(
+  const conversionsPromise = fetchAllPages<{ depositAmountDecimal: string }>(
     (after) => `
       query GetConvertedDepositTotals {
         convertibleDepositFacilityConvertedDeposits(
@@ -136,6 +138,12 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
     (data) => data?.convertibleDepositFacilityConvertedDeposits,
   );
 
+  const [positions, redemptions, conversions] = await Promise.all([
+    positionsPromise,
+    redemptionsPromise,
+    conversionsPromise,
+  ]);
+
   const convertedDepositsUsd = conversions.reduce((total, item) => {
     const parsed = Number(item.depositAmountDecimal);
     return total + (Number.isFinite(parsed) ? parsed : 0);
@@ -146,7 +154,8 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
 
 /** Interest on redemption-vault loans plus deposit yield swept to the treasury. */
 export async function fetchCdRevenue(): Promise<CdRevenue> {
-  const repaidLoans = await fetchAllPages<{ interestDecimal: string }>(
+  // Four independent collections; page them together.
+  const repaidLoansPromise = fetchAllPages<{ interestDecimal: string }>(
     (after) => `
       query GetLoanRepayments {
         depositRedemptionVaultLoanRepaids(
@@ -161,7 +170,7 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
     (data) => data?.depositRedemptionVaultLoanRepaids,
   );
 
-  const defaultedLoans = await fetchAllPages<{ interestDecimal: string }>(
+  const defaultedLoansPromise = fetchAllPages<{ interestDecimal: string }>(
     (after) => `
       query GetLoanDefaults {
         depositRedemptionVaultLoanDefaulteds(
@@ -176,7 +185,7 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
     (data) => data?.depositRedemptionVaultLoanDefaulteds,
   );
 
-  const openLoans = await fetchAllPages<{
+  const openLoansPromise = fetchAllPages<{
     status: string;
     interestDecimal: string;
     createdAt: string;
@@ -201,7 +210,7 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
     (data) => data?.redemptionLoans,
   );
 
-  const claimedYields = await fetchAllPages<{ amountDecimal: string }>(
+  const claimedYieldsPromise = fetchAllPages<{ amountDecimal: string }>(
     (after) => `
       query GetClaimedYields {
         convertibleDepositFacilityClaimedYields(
@@ -215,6 +224,13 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
     `,
     (data) => data?.convertibleDepositFacilityClaimedYields,
   );
+
+  const [repaidLoans, defaultedLoans, openLoans, claimedYields] = await Promise.all([
+    repaidLoansPromise,
+    defaultedLoansPromise,
+    openLoansPromise,
+    claimedYieldsPromise,
+  ]);
 
   return calculateCdRevenue({ repaidLoans, defaultedLoans, openLoans, claimedYields });
 }

@@ -10,6 +10,13 @@ import {
   fetchConversions,
 } from "@/lib/hooks/cds/cd-indexer-queries";
 
+/**
+ * Every CD indexer query below filters on `chainId: 1`. Cache keys use this rather
+ * than the connected chain so testnet mode does not cache mainnet payloads under a
+ * Sepolia key.
+ */
+const CD_INDEXER_CHAIN_ID = 1;
+
 // Types for GraphQL responses
 export interface DepositSnapshot {
   timestamp: number;
@@ -361,21 +368,23 @@ export function useAllTimeConvertibleOhm() {
  * Single cache entry for conversion exposure. Every consumer must go through this
  * key, otherwise two callers fetch the same quantity on different cadences and the
  * CD screen and the Pulse card can show different numbers at the same moment.
+ *
+ * Deliberately not keyed on the connected chain. Every CD indexer query is hardcoded
+ * to `chainId: 1`, so keying on useChainId() would file the same mainnet payload
+ * under a Sepolia identity in testnet mode and split the cache in two.
  */
-export const conversionExposureQuery = (chainId: number) => ({
-  queryKey: ["conversionExposure", chainId] as const,
+export const conversionExposureQuery = {
+  queryKey: ["conversionExposure", CD_INDEXER_CHAIN_ID] as const,
   queryFn: fetchConversionExposure,
   staleTime: 60000,
-});
+};
 
 // Hook for the conversion exposure the treasury carries: gross (every deposit
 // converts), net of the principal already borrowed back out, and the per-claim
 // strikes behind both.
 export function useConversionExposure() {
-  const chainId = useChainId();
-
   return useQuery<ConversionExposure>({
-    ...conversionExposureQuery(chainId),
+    ...conversionExposureQuery,
     refetchInterval: 120000,
   });
 }
@@ -383,10 +392,8 @@ export function useConversionExposure() {
 // Hook for CD revenue: interest on redemption-vault loans plus deposit yield
 // swept to the treasury.
 export function useCdRevenue() {
-  const chainId = useChainId();
-
   return useQuery<CdRevenue>({
-    queryKey: ["cdRevenue", chainId],
+    queryKey: ["cdRevenue", CD_INDEXER_CHAIN_ID],
     queryFn: fetchCdRevenue,
     staleTime: 60000,
     refetchInterval: 120000,
@@ -395,11 +402,10 @@ export function useCdRevenue() {
 
 // Hook for realised conversions: deposits that actually became OHM.
 export function useConversions(timeRange: TimeRange = "30d") {
-  const chainId = useChainId();
   const windowStart = Math.floor(Date.now() / 1000) - TIME_RANGE_SECONDS[timeRange];
 
   return useQuery<ConversionSummary>({
-    queryKey: ["cdConversions", chainId, timeRange],
+    queryKey: ["cdConversions", CD_INDEXER_CHAIN_ID, timeRange],
     queryFn: () => fetchConversions(windowStart),
     staleTime: 60000,
     refetchInterval: 120000,

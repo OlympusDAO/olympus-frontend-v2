@@ -126,7 +126,28 @@ export function buildConversionLadder(
     pendingUsd: totalUsd - convertibleUsd,
     totalUsd,
     nextUnlockUsd: nextUnlock?.amountUsd ?? 0,
-    nextUnlockMovePercent:
-      nextUnlock && ohmPrice > 0 ? Math.max(0, (nextUnlock.priceCeiling / ohmPrice - 1) * 100) : 0,
+    nextUnlockMovePercent: nextUnlock ? unlockMovePercent(nextUnlock, ohmPrice, bucketSize) : 0,
   };
+}
+
+/**
+ * How far OHM has to rise for a bucket to start converting.
+ *
+ * A normal bucket clears at its ceiling. The overflow bar's ceiling is the top of
+ * the whole collapsed tail, which can be many dollars away, so it clears at the top
+ * of its first slice instead — otherwise a tail running to $37 reports the move as
+ * +86% when the next tranche actually unlocks at +26%.
+ */
+export function unlockMovePercent(
+  bucket: ConversionLadderBucket,
+  ohmPrice: number,
+  bucketSize: number,
+): number {
+  if (ohmPrice <= 0) return 0;
+
+  const clearsAt = bucket.isOverflow
+    ? Math.min(bucket.priceCeiling, bucket.priceFloor + bucketSize)
+    : bucket.priceCeiling;
+
+  return Math.max(0, (clearsAt / ohmPrice - 1) * 100);
 }

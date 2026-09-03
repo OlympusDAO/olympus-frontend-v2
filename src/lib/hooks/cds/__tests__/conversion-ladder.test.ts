@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildConversionLadder } from "@/lib/hooks/cds/conversion-ladder";
+import { buildConversionLadder, unlockMovePercent } from "@/lib/hooks/cds/conversion-ladder";
 import type { ConversionStrike } from "@/lib/hooks/cds/conversion-exposure";
 
 const strike = (
@@ -94,6 +94,36 @@ describe("buildConversionLadder", () => {
     expect(ladder.nextUnlockUsd).toBe(5000);
     // The 20.25-20.50 bucket clears once OHM reaches 20.50, which is +2.5%.
     expect(ladder.nextUnlockMovePercent).toBeCloseTo(2.5, 6);
+  });
+
+  it("measures the overflow bar's unlock from its first slice, not the top of the tail", () => {
+    const ladder = buildConversionLadder(
+      [strike(9500, 20.1), strike(200, 25.1), strike(200, 30.1), strike(100, 37.1)],
+      20,
+      { coverage: 0.95 },
+    );
+
+    const overflow = ladder.buckets[1];
+    expect(overflow.isOverflow).toBe(true);
+    // The bar spans 25.00-37.25, but its cheapest claims convert at 25.25, so the
+    // move is +26.25% rather than the +86% the far edge would imply.
+    expect(unlockMovePercent(overflow, 20, ladder.bucketSize)).toBeCloseTo(26.25, 6);
+  });
+
+  it("measures a normal bucket's unlock from its own ceiling", () => {
+    const ladder = buildConversionLadder([strike(1000, 20.4)], 20);
+
+    expect(unlockMovePercent(ladder.buckets[0], 20, ladder.bucketSize)).toBeCloseTo(2.5, 6);
+  });
+
+  it("reports the next unlock off the overflow bar's first slice too", () => {
+    const ladder = buildConversionLadder(
+      [strike(9500, 19.5), strike(200, 25.1), strike(200, 30.1), strike(100, 37.1)],
+      20,
+      { coverage: 0.95 },
+    );
+
+    expect(ladder.nextUnlockMovePercent).toBeCloseTo(26.25, 6);
   });
 
   it("returns an empty ladder rather than NaN with no strikes or no price", () => {

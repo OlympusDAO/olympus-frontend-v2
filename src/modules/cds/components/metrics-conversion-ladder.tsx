@@ -17,6 +17,7 @@ import { useChainId } from "wagmi";
 import { useConversionExposure } from "@/lib/hooks/cds/useStatisticsData.tsx";
 import {
   buildConversionLadder,
+  unlockMovePercent,
   type ConversionLadderBucket,
 } from "@/lib/hooks/cds/conversion-ladder.ts";
 import { summarizeMoneyness } from "@/lib/hooks/cds/conversion-exposure.ts";
@@ -48,10 +49,12 @@ const LadderTooltip = ({
   active,
   payload,
   ohmPrice,
+  bucketSize,
 }: {
   active?: boolean;
   payload?: Array<{ payload: Row }>;
   ohmPrice: number;
+  bucketSize: number;
 }) => {
   if (!active || !payload || payload.length === 0) return null;
 
@@ -59,7 +62,7 @@ const LadderTooltip = ({
   const range = bucket.isOverflow
     ? `$${bucket.priceFloor.toFixed(2)} and above`
     : `$${bucket.priceFloor.toFixed(2)} to $${bucket.priceCeiling.toFixed(2)}`;
-  const movePercent = ohmPrice > 0 ? (bucket.priceCeiling / ohmPrice - 1) * 100 : 0;
+  const movePercent = unlockMovePercent(bucket, ohmPrice, bucketSize);
 
   return (
     <div className="bg-surface-tooltip border border-a10-b rounded-2xl px-3 py-2 shadow-[0px_1px_4px_0px_var(--slate-a10)]">
@@ -149,7 +152,7 @@ export const MetricsConversionLadder: React.FC = () => {
             width={48}
           />
           <Tooltip
-            content={<LadderTooltip ohmPrice={ohmPrice} />}
+            content={<LadderTooltip ohmPrice={ohmPrice} bucketSize={ladder.bucketSize} />}
             cursor={{ fill: "var(--surface-a5)" }}
           />
           {spotRow && (

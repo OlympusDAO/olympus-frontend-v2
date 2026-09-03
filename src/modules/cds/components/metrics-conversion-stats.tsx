@@ -122,8 +122,11 @@ export const MetricsConversionStats: React.FC = () => {
   const borrowedPrincipalUsd = exposure?.borrowedPrincipalUsd ?? 0;
 
   const backingPerOhmIncrease = (() => {
-    if (backedSupply <= 0 || liquidBacking <= 0 || supplyGrowthOhm <= 0 || treasuryGrowthUsd <= 0)
-      return 0;
+    // Only the denominator inputs have to be positive. supplyGrowthOhm of 0 is a real
+    // outcome — every deposit encumbered, so the treasury keeps collateral without
+    // minting — and it is the *largest* backing accretion, not a reason to show zero.
+    if (backedSupply <= 0 || liquidBacking <= 0) return 0;
+    if (supplyGrowthOhm <= 0 && treasuryGrowthUsd <= 0) return 0;
 
     const newBackingPerOhm = (liquidBacking + treasuryGrowthUsd) / (backedSupply + supplyGrowthOhm);
 
