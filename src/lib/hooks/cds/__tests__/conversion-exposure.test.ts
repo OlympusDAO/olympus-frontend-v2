@@ -156,6 +156,33 @@ describe("calculateConversionExposure", () => {
     expect(exposure.grossDepositsUsd).toBe(8100);
   });
 
+  it("gives the same answer once the indexer starts decrementing itself", () => {
+    // Same facts either way: 1000 deposited, 400 redeemed through the receipt token.
+    // Only remainingAmount differs, depending on whether the indexer applied it.
+    const redemptions = [
+      {
+        positionId: null,
+        receiptTokenId: "rt-1",
+        amountDecimal: "400",
+        finishedEvents: { items: [{}] },
+      },
+    ];
+
+    const today = calculateConversionExposure({
+      positions: [position("1", "1000", "1000", "20")],
+      redemptions,
+    });
+    const afterTheFix = calculateConversionExposure({
+      positions: [position("1", "1000", "600", "20")],
+      redemptions,
+    });
+
+    // Phantom is measured as the excess over what the position should show, not
+    // subtracted outright, so the workaround cannot double-count once #34 ships.
+    expect(today.strikes[0].amountUsd).toBeCloseTo(600, 9);
+    expect(afterTheFix.strikes[0].amountUsd).toBeCloseTo(600, 9);
+  });
+
   it("removes converted deposits from the base", () => {
     const exposure = calculateConversionExposure({
       positions: [position("1", "1000", "1000", "20")],

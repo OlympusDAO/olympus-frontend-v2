@@ -195,19 +195,21 @@ export function calculateConversionExposure({
   let encumberedDepositsUsd = 0;
   let finishedRedemptionsUsd = 0;
   /**
-   * Deposits that left the facility while their position kept its balance
+   * Balance the position table still shows for deposits that have already left
    * (OlympusDAO/olympus-protocol-indexer#34), keyed by receipt token.
    *
-   * Attributed per token rather than spread across the book, because it is not
-   * spread across the book: today every dollar of it sits in one deposit term whose
-   * strikes are the highest in the book. Scaling globally shrank near-spot buckets
-   * that have no phantom at all and left the tail more than 20x overstated.
+   * Kept per token rather than spread across the book, because it is not spread
+   * across the book: today every dollar of it sits in one deposit term whose strikes
+   * are the highest in the book. Scaling globally shrank near-spot buckets carrying
+   * no phantom at all and left the tail more than 20x overstated.
    */
   const phantomByToken = new Map<string, number>();
   const addPhantom = (token: string | null | undefined, amount: number) => {
     if (!token || amount <= 0) return;
     phantomByToken.set(token, (phantomByToken.get(token) ?? 0) + amount);
   };
+  /** Finished receipt-token redemptions per token, which carry no positionId. */
+  const receiptFinishedByToken = new Map<string, number>();
   /** Position-linked redemptions per position, used to spot one that never applied. */
   const redeemedByPosition = new Map<string, number>();
 
@@ -223,10 +225,12 @@ export function calculateConversionExposure({
 
     if (isFinished(redemption)) {
       finishedRedemptionsUsd += amount;
-      // Receipt-token redemptions never decrement their position, so the whole
-      // amount is phantom. The position-linked ones are checked after this loop,
-      // where the position's full redemption history is known.
-      if (!redemption.positionId) addPhantom(redemption.receiptTokenId, amount);
+      if (!redemption.positionId && redemption.receiptTokenId && amount > 0) {
+        receiptFinishedByToken.set(
+          redemption.receiptTokenId,
+          (receiptFinishedByToken.get(redemption.receiptTokenId) ?? 0) + amount,
+        );
+      }
       continue;
     }
 
@@ -262,19 +266,32 @@ export function calculateConversionExposure({
     });
   }
 
-  // A position that has been redeemed against should show initial minus what was
-  // redeemed. Anything it still shows above that never got applied, which is the
-  // position 0 case. Comparing against expected rather than just "has a balance"
-  // matters because a partial redemption legitimately leaves one.
+  // What each token's positions *should* show: face value less everything redeemed
+  // against them. Position-linked redemptions attribute exactly; receipt-token ones
+  // only to the token, so they come off the total.
+  const expectedOpenByToken = new Map<string, number>();
   for (const position of positions) {
-    const remaining = parseDecimal(position.remainingAmountDecimal);
-    if (remaining <= 0) continue;
+    const token = position.receiptTokenId;
+    if (!token || parseDecimal(position.conversionPriceDecimal) <= 0) continue;
+    // Only positions that still show a balance. A fully converted one contributes
+    // nothing to the open total, so counting its face value here would inflate the
+    // expectation and mask that much phantom elsewhere in the token.
+    if (parseDecimal(position.remainingAmountDecimal) <= 0) continue;
 
     const redeemed = redeemedByPosition.get(position.positionId) ?? 0;
-    if (redeemed <= 0) continue;
-
     const expected = Math.max(0, parseDecimal(position.initialAmountDecimal) - redeemed);
-    addPhantom(position.receiptTokenId, remaining - expected);
+    expectedOpenByToken.set(token, (expectedOpenByToken.get(token) ?? 0) + expected);
+  }
+  for (const [token, receiptFinished] of receiptFinishedByToken) {
+    expectedOpenByToken.set(token, (expectedOpenByToken.get(token) ?? 0) - receiptFinished);
+  }
+
+  // Phantom is the excess of what the table claims over that, measured rather than
+  // assumed. This matters for more than tidiness: subtracting the receipt-token
+  // redemptions outright would keep subtracting them once the indexer starts
+  // applying them itself (#34), silently under-reporting instead of self-healing.
+  for (const [token, open] of openByToken) {
+    addPhantom(token, open - Math.max(0, expectedOpenByToken.get(token) ?? open));
   }
 
   // The ledger, not the position table, decides how much is still on deposit.
