@@ -60,6 +60,7 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
   // serialising three full walks on every refetch.
   const positionsPromise = fetchAllPages<{
     positionId: string;
+    receiptTokenId: string | null;
     initialAmountDecimal: string;
     remainingAmountDecimal: string;
     conversionPriceDecimal: string;
@@ -74,6 +75,7 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
         ) {
           items {
             positionId
+            receiptTokenId
             initialAmountDecimal
             remainingAmountDecimal
             conversionPriceDecimal

@@ -5,8 +5,17 @@ import {
   type ConversionStrike,
 } from "@/lib/hooks/cds/conversion-exposure";
 
-const position = (positionId: string, initial: string, remaining: string, price = "20") => ({
+// Every real position belongs to a receipt token (one per deposit term), so the
+// fixtures default to one rather than leaving it unset.
+const position = (
+  positionId: string,
+  initial: string,
+  remaining: string,
+  price = "20",
+  receiptTokenId: string | null = "rt-1",
+) => ({
   positionId,
+  receiptTokenId,
   initialAmountDecimal: initial,
   remainingAmountDecimal: remaining,
   conversionPriceDecimal: price,
@@ -104,6 +113,47 @@ describe("calculateConversionExposure", () => {
     expect(exposure.grossDepositsUsd).toBe(0);
     expect(exposure.positionReflectionRatio).toBe(0);
     expect(exposure.grossConvertibleOhm).toBe(0);
+  });
+
+  it("leaves a correctly decremented partial redemption alone", () => {
+    const exposure = calculateConversionExposure({
+      // 400 of the 1000 was redeemed and the indexer applied it, so the 600 left is
+      // real. Treating "has a balance after a finished redemption" as phantom would
+      // wrongly wipe it.
+      positions: [position("1", "1000", "600", "20")],
+      redemptions: [{ positionId: "1", amountDecimal: "400", finishedEvents: { items: [{}] } }],
+    });
+
+    expect(exposure.strikes[0].amountUsd).toBeCloseTo(600, 9);
+    expect(exposure.grossDepositsUsd).toBe(600);
+  });
+
+  it("charges phantom to its own receipt token, not across the book", () => {
+    const exposure = calculateConversionExposure({
+      positions: [
+        // A term with no phantom at all. Must not be discounted.
+        position("1", "8000", "8000", "20", "rt-clean"),
+        // A term where nearly everything has already left.
+        position("2", "1000", "1000", "30", "rt-phantom"),
+      ],
+      redemptions: [
+        {
+          positionId: null,
+          receiptTokenId: "rt-phantom",
+          amountDecimal: "900",
+          finishedEvents: { items: [{}] },
+        },
+      ],
+    });
+
+    const byPrice = Object.fromEntries(
+      exposure.strikes.map((s) => [s.conversionPrice, s.amountUsd]),
+    );
+    // Spreading the 900 globally would have shaved ~8% off the clean term and left
+    // the other one 10x overstated. Each term now carries its own.
+    expect(byPrice[20]).toBeCloseTo(8000, 9);
+    expect(byPrice[30]).toBeCloseTo(100, 9);
+    expect(exposure.grossDepositsUsd).toBe(8100);
   });
 
   it("removes converted deposits from the base", () => {

@@ -1,5 +1,7 @@
 export interface ConvertiblePositionExposure {
   positionId: string;
+  /** Groups positions by deposit term. Phantom balances are attributed per token. */
+  receiptTokenId?: string | null;
   initialAmountDecimal: string;
   remainingAmountDecimal: string;
   conversionPriceDecimal: string;
@@ -69,16 +71,16 @@ export interface ConversionExposure {
    * How much of what the position table claims is actually still on deposit, in
    * [0, 1]. Below 1 because the indexer does not decrement a position's
    * remainingAmount when the deposit leaves through a receipt-token redemption.
-   * Strike amounts and the OHM legs are scaled by it so every figure ties back to
-   * the ledger.
+   *
+   * Reporting only. The correction is applied per receipt token, not with this
+   * aggregate, because the phantom is not spread evenly across the book.
    *
    * TODO(OlympusDAO/olympus-protocol-indexer#34): remove this once the indexer
    * decrements the position. At that point remainingAmount can be trusted again,
-   * so grossDepositsUsd goes back to summing it directly, the ratio and the
-   * scaling of `strikes` / the OHM legs all come out, and the ledger inputs
-   * (initialAmountDecimal, finished redemptions, convertedDepositsUsd) are no
-   * longer needed. Check the ratio is ~1.0 against live data before removing:
-   * anything materially below means the defect is still there.
+   * so grossDepositsUsd goes back to summing it directly, the per-token phantom
+   * accounting comes out, and the ledger inputs (initialAmountDecimal, finished
+   * redemptions, convertedDepositsUsd) are no longer needed. Check this reads
+   * ~1.0 against live data first: materially below means the defect is still there.
    */
   positionReflectionRatio: number;
   /** Per-claim strikes, for moneyness. Scaled by positionReflectionRatio. */
@@ -156,17 +158,21 @@ export function calculateConversionExposure({
   convertedDepositsUsd = 0,
 }: ConversionExposureInput): ConversionExposure {
   const positionPrices = new Map<string, number>();
-  const rawStrikes: ConversionStrike[] = [];
+  const positionsById = new Map<string, ConvertiblePositionExposure>();
+  const rawStrikes: Array<ConversionStrike & { receiptTokenId: string | null }> = [];
+  /** Open remaining per receipt token, the denominator of that token's phantom share. */
+  const openByToken = new Map<string, number>();
 
   let totalDepositedUsd = 0;
   let openDepositsUsd = 0;
-  let openConvertibleOhm = 0;
 
   for (const position of positions) {
     const price = parseDecimal(position.conversionPriceDecimal);
     const remaining = parseDecimal(position.remainingAmountDecimal);
+    const token = position.receiptTokenId ?? null;
 
     totalDepositedUsd += parseDecimal(position.initialAmountDecimal);
+    positionsById.set(position.positionId, position);
 
     if (price > 0) {
       positionPrices.set(position.positionId, price);
@@ -174,9 +180,10 @@ export function calculateConversionExposure({
 
     if (remaining > 0 && price > 0) {
       openDepositsUsd += remaining;
-      openConvertibleOhm += remaining / price;
+      if (token) openByToken.set(token, (openByToken.get(token) ?? 0) + remaining);
       rawStrikes.push({
         positionId: position.positionId,
+        receiptTokenId: token,
         amountUsd: remaining,
         conversionPrice: price,
       });
@@ -184,19 +191,42 @@ export function calculateConversionExposure({
   }
 
   let leveredDepositsUsd = 0;
-  let leveredConvertibleOhm = 0;
   let borrowedPrincipalUsd = 0;
   let encumberedDepositsUsd = 0;
   let finishedRedemptionsUsd = 0;
+  /**
+   * Deposits that left the facility while their position kept its balance
+   * (OlympusDAO/olympus-protocol-indexer#34), keyed by receipt token.
+   *
+   * Attributed per token rather than spread across the book, because it is not
+   * spread across the book: today every dollar of it sits in one deposit term whose
+   * strikes are the highest in the book. Scaling globally shrank near-spot buckets
+   * that have no phantom at all and left the tail more than 20x overstated.
+   */
+  const phantomByToken = new Map<string, number>();
+  const addPhantom = (token: string | null | undefined, amount: number) => {
+    if (!token || amount <= 0) return;
+    phantomByToken.set(token, (phantomByToken.get(token) ?? 0) + amount);
+  };
+  /** Position-linked redemptions per position, used to spot one that never applied. */
+  const redeemedByPosition = new Map<string, number>();
 
   for (const redemption of redemptions) {
     const amount = parseDecimal(redemption.amountDecimal);
 
+    if (redemption.positionId && !hasEvents(redemption.cancelledEvents) && amount > 0) {
+      redeemedByPosition.set(
+        redemption.positionId,
+        (redeemedByPosition.get(redemption.positionId) ?? 0) + amount,
+      );
+    }
+
     if (isFinished(redemption)) {
-      // The deposit left the facility. The position it came from may still show its
-      // full remainingAmount (OlympusDAO/olympus-protocol-indexer#34), which is
-      // exactly what positionReflectionRatio corrects for.
       finishedRedemptionsUsd += amount;
+      // Receipt-token redemptions never decrement their position, so the whole
+      // amount is phantom. The position-linked ones are checked after this loop,
+      // where the position's full redemption history is known.
+      if (!redemption.positionId) addPhantom(redemption.receiptTokenId, amount);
       continue;
     }
 
@@ -222,12 +252,29 @@ export function calculateConversionExposure({
     if (price <= 0) continue;
 
     leveredDepositsUsd += amount;
-    leveredConvertibleOhm += amount / price;
+    // Its position already shows a zero balance, so there is no phantom to net off
+    // and the strike is carried at face value.
     rawStrikes.push({
       positionId: redemption.positionId ?? null,
+      receiptTokenId: null,
       amountUsd: amount,
       conversionPrice: price,
     });
+  }
+
+  // A position that has been redeemed against should show initial minus what was
+  // redeemed. Anything it still shows above that never got applied, which is the
+  // position 0 case. Comparing against expected rather than just "has a balance"
+  // matters because a partial redemption legitimately leaves one.
+  for (const position of positions) {
+    const remaining = parseDecimal(position.remainingAmountDecimal);
+    if (remaining <= 0) continue;
+
+    const redeemed = redeemedByPosition.get(position.positionId) ?? 0;
+    if (redeemed <= 0) continue;
+
+    const expected = Math.max(0, parseDecimal(position.initialAmountDecimal) - redeemed);
+    addPhantom(position.receiptTokenId, remaining - expected);
   }
 
   // The ledger, not the position table, decides how much is still on deposit.
@@ -236,13 +283,27 @@ export function calculateConversionExposure({
     totalDepositedUsd - finishedRedemptionsUsd - convertedDepositsUsd,
   );
 
+  // Each token's open balance is discounted by its own phantom, so a term carrying
+  // none is left untouched. Strikes with no token (the levered leg) pass through.
+  const tokenRatio = (token: string | null) => {
+    if (!token) return 1;
+    const open = openByToken.get(token) ?? 0;
+    if (open <= 0) return 1;
+    return Math.min(1, Math.max(0, (open - (phantomByToken.get(token) ?? 0)) / open));
+  };
+
+  const strikes: ConversionStrike[] = rawStrikes.map(({ receiptTokenId, ...strike }) => ({
+    ...strike,
+    amountUsd: strike.amountUsd * tokenRatio(receiptTokenId),
+  }));
+
+  const grossConvertibleOhm = strikes.reduce(
+    (total, strike) => total + strike.amountUsd / strike.conversionPrice,
+    0,
+  );
+
   const rawClaimedUsd = openDepositsUsd + leveredDepositsUsd;
-  const positionReflectionRatio =
-    rawClaimedUsd > 0 ? Math.min(1, grossDepositsUsd / rawClaimedUsd) : 0;
-
-  const grossConvertibleOhm =
-    (openConvertibleOhm + leveredConvertibleOhm) * positionReflectionRatio;
-
+  const reflectedUsd = strikes.reduce((total, strike) => total + strike.amountUsd, 0);
   const unencumberedDepositsUsd = Math.max(0, grossDepositsUsd - encumberedDepositsUsd);
 
   return {
@@ -258,11 +319,8 @@ export function calculateConversionExposure({
     netDepositsUsd: Math.max(0, grossDepositsUsd - borrowedPrincipalUsd),
     netConvertibleOhm:
       grossDepositsUsd > 0 ? grossConvertibleOhm * (unencumberedDepositsUsd / grossDepositsUsd) : 0,
-    positionReflectionRatio,
-    strikes: rawStrikes.map((strike) => ({
-      ...strike,
-      amountUsd: strike.amountUsd * positionReflectionRatio,
-    })),
+    positionReflectionRatio: rawClaimedUsd > 0 ? reflectedUsd / rawClaimedUsd : 0,
+    strikes,
   };
 }
 
