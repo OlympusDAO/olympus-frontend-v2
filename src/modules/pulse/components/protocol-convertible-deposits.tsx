@@ -19,15 +19,18 @@ import iconDark from "@/assets/protocol-4-l.webp";
 import iconLight from "@/assets/protocol-4-b.webp";
 
 export function ProtocolConvertibleDeposits() {
-  const { data: cd, isLoading: cdLoading, isError: cdError } = useCdStatistics();
+  const { data: cd, isLoading: cdLoading } = useCdStatistics();
   const { data: price } = useOhmPrice();
   const { data: treasury } = useTreasuryMetrics();
   const { reopenPrice } = useCdReopenPrice(mainnet.id);
 
-  // The exposure read can throw (fetchAllPages refuses to report a truncated total),
-  // which fails the whole query. Without this the card sits in its skeleton forever,
-  // which reads as "still loading" rather than "we don't know".
-  if (cdError || (!cdLoading && !cd)) {
+  // Keyed on missing data, not on cdError. The query refetches every 30s, and a
+  // failed background refetch sets isError while the cached data is still good, so
+  // gating on the error would blank a working card. Without any gate at all it sits
+  // in its skeleton forever, which reads as "still loading" rather than "we don't
+  // know" — the exposure read can throw, since fetchAllPages refuses to report a
+  // truncated total.
+  if (!cdLoading && !cd) {
     return (
       <Card className="p-5 flex flex-col">
         <p className="text-sm font-semibold text-primary-t">Convertible Deposits</p>

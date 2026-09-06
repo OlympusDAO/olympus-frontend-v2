@@ -1,7 +1,10 @@
 import { cdsGraphqlClient } from "@/lib/graphql-client";
-import { calculateConversionExposure, type ConversionExposure } from "./conversion-exposure";
-import { calculateCdRevenue, type CdRevenue } from "./cd-revenue";
-import { summarizeConversions, type ConversionSummary } from "./cd-conversions";
+import {
+  calculateConversionExposure,
+  type ConversionExposure,
+} from "@/lib/hooks/cds/conversion-exposure";
+import { calculateCdRevenue, type CdRevenue } from "@/lib/hooks/cds/cd-revenue";
+import { summarizeConversions, type ConversionSummary } from "@/lib/hooks/cds/cd-conversions";
 
 interface PagedResponse<T> {
   items: T[];

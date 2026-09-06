@@ -52,7 +52,12 @@ export function summarizeConversions(
   for (const event of sorted) {
     const converted = parseDecimal(event.depositAmountDecimal);
     const ohm = parseDecimal(event.convertedAmountDecimal);
-    if (converted <= 0 && ohm <= 0) continue;
+    // Both legs have to be real. Requiring only one meant a record with a negative
+    // deposit and a positive OHM amount counted as a conversion and subtracted from
+    // the running total. Timestamps are checked here too, because a non-finite one
+    // buckets to a NaN day that is dropped from the series while its amounts still
+    // land in the totals.
+    if (converted <= 0 || ohm <= 0 || !Number.isFinite(event.timestamp)) continue;
 
     conversionCount += 1;
     totalConverted += converted;

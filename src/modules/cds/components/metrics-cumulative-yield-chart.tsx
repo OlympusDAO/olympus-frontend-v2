@@ -39,7 +39,7 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
 
   const { data: statisticsData, isLoading } = useStatisticsData(timeRange);
   const { data: currentStats } = useCurrentStatistics();
-  const { data: exposure } = useConversionExposure();
+  const { data: exposure, isLoading: isLoadingExposure } = useConversionExposure();
 
   const chartData = useMemo((): YieldDataPoint[] => {
     if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0) return [];
@@ -108,7 +108,7 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
    */
   const yieldRate = useMemo(() => {
     const earningDeposits = exposure?.grossDepositsUsd ?? 0;
-    if (earningDeposits <= 0 || avgYieldPerDay <= 0) return 0;
+    if (earningDeposits <= 0 || avgYieldPerDay <= 0) return null;
 
     return (avgYieldPerDay / earningDeposits) * 365 * 100;
   }, [exposure, avgYieldPerDay]);
@@ -211,7 +211,15 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
               <RiInformationFill size={16} className="text-tertiary-t" />
             </InfoTooltip>
           </div>
-          <p className="text-lg font-semibold text-primary-t">{yieldRate.toFixed(2)}%</p>
+          {/* The exposure query paginates, so it can resolve after this card's own
+              data. A 0.00% placeholder in the meantime looks like a real rate. */}
+          {yieldRate === null ? (
+            <p className="text-lg font-semibold text-secondary-t">
+              {isLoadingExposure ? "—" : "Unavailable"}
+            </p>
+          ) : (
+            <p className="text-lg font-semibold text-primary-t">{yieldRate.toFixed(2)}%</p>
+          )}
         </div>
       </div>
 

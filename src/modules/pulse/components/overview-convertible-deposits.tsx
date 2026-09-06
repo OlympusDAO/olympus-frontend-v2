@@ -14,7 +14,10 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { PulseDot } from "@/components/pulse-dot.tsx";
 
 export function OverviewConvertibleDeposits() {
-  const { data: cd, isError: cdError } = useCdStatistics();
+  const { data: cd, isLoading: cdLoading } = useCdStatistics();
+  // Keyed on missing data rather than isError: the query refetches every 30s, and a
+  // failed background refetch would otherwise blank a card whose cached data is fine.
+  const cdUnavailable = !cdLoading && !cd;
   const { data: treasury } = useTreasuryMetrics();
   const { data: price } = useOhmPrice();
 
@@ -28,8 +31,8 @@ export function OverviewConvertibleDeposits() {
   const backing = treasury?.treasuryLiquidBackingPerOhmBacked ?? 0;
   const premiumPct = calcOhmPremiumPct(ohmPrice, backing);
 
-  const statusLabel = isMarketActive ? "Active" : "Paused";
-  const statusColor = isMarketActive ? "green" : "yellow";
+  const statusLabel = cdUnavailable ? "Unknown" : isMarketActive ? "Active" : "Paused";
+  const statusColor = cdUnavailable ? "yellow" : isMarketActive ? "green" : "yellow";
 
   return (
     <Card className="p-5">
@@ -52,7 +55,7 @@ export function OverviewConvertibleDeposits() {
         </TooltipInfo>
         {/* A failed read must not render as $0.00, which is indistinguishable from an
             empty facility. */}
-        {cdError || !cd ? (
+        {cdUnavailable ? (
           <p className="mt-1 block text-[32px]/[40px] font-semibold text-secondary-t">
             Unavailable
           </p>
@@ -62,21 +65,25 @@ export function OverviewConvertibleDeposits() {
             className="mt-1 block text-[32px]/[40px] font-semibold [--number-flow-char-height:1.25em]"
           />
         )}
-        <div className="mt-0.5 flex items-center gap-x-0.5">
-          <NumberFlow
-            suffix="recent bids ·"
-            format={{ style: "decimal" }}
-            value={activeBidsCount}
-            className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
-          />
-          <NumberFlow
-            suffix="premium"
-            prefix="+"
-            format={{ style: "percent", maximumFractionDigits: 0 }}
-            value={premiumPct / 100}
-            className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
-          />
-        </div>
+        {/* The bid count falls back to 0, which reads as "no recent bids" rather than
+            "we could not load it", so the whole line goes when the data is missing. */}
+        {!cdUnavailable && (
+          <div className="mt-0.5 flex items-center gap-x-0.5">
+            <NumberFlow
+              suffix="recent bids ·"
+              format={{ style: "decimal" }}
+              value={activeBidsCount}
+              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
+            />
+            <NumberFlow
+              suffix="premium"
+              prefix="+"
+              format={{ style: "percent", maximumFractionDigits: 0 }}
+              value={premiumPct / 100}
+              className="text-secondary-t text-xs/4 font-normal [--number-flow-char-height:1.3333em]"
+            />
+          </div>
+        )}
         {!isMarketActive && reopenPrice && (
           <p className="mt-0.5 text-xs/4 font-normal text-secondary-t">
             Market will reopen at{" "}

@@ -66,6 +66,33 @@ describe("summarizeConversions", () => {
     expect(summary.dataPoints[1].cumulativeConverted).toBe(1000);
   });
 
+  it("rejects a record where either leg is non-positive", () => {
+    // A negative deposit against a positive OHM amount would otherwise count as a
+    // conversion and subtract from the running total.
+    const summary = summarizeConversions([
+      { timestamp: JAN_3, depositAmountDecimal: "-10", convertedAmountDecimal: "1" },
+      { timestamp: JAN_3, depositAmountDecimal: "100", convertedAmountDecimal: "0" },
+      { timestamp: JAN_3, depositAmountDecimal: "400", convertedAmountDecimal: "20" },
+    ]);
+
+    expect(summary.conversionCount).toBe(1);
+    expect(summary.totalConverted).toBe(400);
+  });
+
+  it("rejects a record with a non-finite timestamp", () => {
+    // It buckets to a NaN day that never reaches dataPoints, so counting its amounts
+    // would leave the totals disagreeing with the series.
+    const summary = summarizeConversions([
+      { timestamp: Number.NaN, depositAmountDecimal: "400", convertedAmountDecimal: "20" },
+      { timestamp: JAN_3, depositAmountDecimal: "100", convertedAmountDecimal: "5" },
+    ]);
+
+    expect(summary.conversionCount).toBe(1);
+    expect(summary.totalConverted).toBe(100);
+    expect(summary.dataPoints).toHaveLength(1);
+    expect(summary.dataPoints[0].cumulativeConverted).toBe(100);
+  });
+
   it("ignores malformed decimals from the indexer", () => {
     const summary = summarizeConversions([
       {

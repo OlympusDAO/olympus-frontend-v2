@@ -1,4 +1,4 @@
-import type { ConversionStrike } from "./conversion-exposure";
+import type { ConversionStrike } from "@/lib/hooks/cds/conversion-exposure";
 
 export interface ConversionLadderBucket {
   /** Lower edge, inclusive. */

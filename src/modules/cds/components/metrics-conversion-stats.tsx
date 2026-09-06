@@ -42,6 +42,10 @@ const StatRow: React.FC<StatRowProps> = ({ label, value, muted }) => (
   </div>
 );
 
+/** Keeps the sign on the outside so a negative never renders as "+$-0.03". */
+const signed = (value: number, format: (magnitude: number) => string) =>
+  `${value < 0 ? "-" : "+"}${format(Math.abs(value))}`;
+
 const formatCurrency = (value: number) => {
   if (Math.abs(value) >= 1000000) {
     return `$${(value / 1000000).toFixed(2)}M`;
@@ -156,9 +160,9 @@ export const MetricsConversionStats: React.FC = () => {
           <>
             <StatCard
               title="Backing Growth on Conversion"
-              value={`+${backingGrowthPercent.toFixed(2)}%`}
+              value={signed(backingGrowthPercent, (v) => `${v.toFixed(2)}%`)}
               tooltip="Percentage increase in liquid backing per OHM if outstanding convertible deposits convert. Uses the same leverage-unwind scenario as Treasury and Supply Growth, so all three describe one outcome."
-              subtitle={`+$${backingPerOhmIncrease.toFixed(2)} per OHM`}
+              subtitle={`${signed(backingPerOhmIncrease, (v) => `$${v.toFixed(2)}`)} per OHM`}
             />
 
             <StatCard
