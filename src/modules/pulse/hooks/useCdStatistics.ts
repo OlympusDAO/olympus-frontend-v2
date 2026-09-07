@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CD_SUBGRAPH_URL } from "@/lib/constants";
-import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import { conversionExposureQuery } from "@/lib/hooks/cds/useStatisticsData";
 
 export interface DepositSnapshot {
   timestamp: number;
@@ -35,15 +35,20 @@ export interface CdStatistics {
   bids: BidEvent[];
   convertedDeposits: ConvertedDeposit[];
   latestSnapshot: DepositSnapshot | null;
+  /** Deposits still in the protocol, net of principal borrowed back out. */
   totalDepositsUsd: number;
   activeBidsCount: number;
+  /** Outstanding loan principal against pending redemptions. */
   borrowedAmount: number;
   annualInterestRate: number;
   isMarketActive: boolean;
+  /** OHM minted if leverage unwinds and only unlevered positions convert. */
   supplyGrowthOhm: number;
 }
 
 export function useCdStatistics() {
+  const queryClient = useQueryClient();
+
   return useQuery<CdStatistics>({
     queryKey: ["cdStatistics"],
     queryFn: async () => {
@@ -123,32 +128,6 @@ export function useCdStatistics() {
               targetDecimal
             }
           }
-
-          convertibleDepositPositions(
-            where: { chainId: 1 }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              remainingAmountDecimal
-              conversionPriceDecimal
-            }
-          }
-
-          redemptions(
-            where: { chainId: 1 }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              amountDecimal
-              loans {
-                items {
-                  status
-                }
-              }
-            }
-          }
         }
       `;
 
@@ -185,14 +164,6 @@ export function useCdStatistics() {
       }));
 
       const latestSnapshot = depositSnapshots[0] || null;
-      const totalDepositsUsd = latestSnapshot
-        ? parseFloat(latestSnapshot.totalDepositedDecimal) +
-          parseFloat(latestSnapshot.borrowedAmountDecimal)
-        : 0;
-
-      const borrowedAmount = latestSnapshot
-        ? parseFloat(latestSnapshot.borrowedAmountDecimal) || 0
-        : 0;
 
       const rateConfig = data?.depositRedemptionVaultAssetConfigurations?.items?.[0];
       const annualInterestRate = rateConfig ? parseFloat(rateConfig.interestRateDecimal) || 0 : 0;
@@ -203,24 +174,25 @@ export function useCdStatistics() {
         ? parseFloat(latestAuctioneerSnapshot.targetDecimal) > 0
         : false;
 
-      const positions = data?.convertibleDepositPositions?.items || [];
-      const redemptions = data?.redemptions?.items || [];
-      const { convertibleOhm: supplyGrowthOhm } = calculateConversionExposure(
-        positions,
-        redemptions,
-      );
+      // Derived from positions and loans rather than the facility snapshot: the
+      // snapshot's totalDeposited is emitted as a malformed negative decimal, and its
+      // borrowedAmount tracks principal at origination rather than what is outstanding.
+      //
+      // Routed through the shared cache entry so this and the CD metrics screen read
+      // one value rather than fetching the same thing twice on different cadences.
+      const exposure = await queryClient.fetchQuery(conversionExposureQuery);
 
       return {
         depositSnapshots,
         bids,
         convertedDeposits,
         latestSnapshot,
-        totalDepositsUsd,
+        totalDepositsUsd: exposure.netDepositsUsd,
         activeBidsCount: bids.length,
-        borrowedAmount,
+        borrowedAmount: exposure.borrowedPrincipalUsd,
         annualInterestRate,
         isMarketActive,
-        supplyGrowthOhm,
+        supplyGrowthOhm: exposure.netConvertibleOhm,
       };
     },
     staleTime: 30_000,

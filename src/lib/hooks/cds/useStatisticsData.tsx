@@ -1,7 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
 import { cdsGraphqlClient } from "@/lib/graphql-client";
-import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import type { ConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import type { CdRevenue } from "@/lib/hooks/cds/cd-revenue";
+import type { ConversionSummary } from "@/lib/hooks/cds/cd-conversions";
+import {
+  fetchConversionExposure,
+  fetchCdRevenue,
+  fetchConversions,
+} from "@/lib/hooks/cds/cd-indexer-queries";
+
+/**
+ * Every CD indexer query below filters on `chainId: 1`. Cache keys use this rather
+ * than the connected chain so testnet mode does not cache mainnet payloads under a
+ * Sepolia key.
+ */
+const CD_INDEXER_CHAIN_ID = 1;
 
 // Types for GraphQL responses
 export interface DepositSnapshot {
@@ -350,73 +364,49 @@ export function useAllTimeConvertibleOhm() {
   });
 }
 
-// Hook to get current convertible deposits data
-// Returns both the total USD in deposits and the OHM that would be minted
-export function useCurrentConvertibleOhm() {
-  const chainId = useChainId();
+/**
+ * Single cache entry for conversion exposure. Every consumer must go through this
+ * key, otherwise two callers fetch the same quantity on different cadences and the
+ * CD screen and the Pulse card can show different numbers at the same moment.
+ *
+ * Deliberately not keyed on the connected chain. Every CD indexer query is hardcoded
+ * to `chainId: 1`, so keying on useChainId() would file the same mainnet payload
+ * under a Sepolia identity in testnet mode and split the cache in two.
+ */
+export const conversionExposureQuery = {
+  queryKey: ["conversionExposure", CD_INDEXER_CHAIN_ID] as const,
+  queryFn: fetchConversionExposure,
+  staleTime: 60000,
+};
 
-  return useQuery<{ convertibleOhm: number; totalDepositsUsd: number }>({
-    queryKey: ["currentConvertibleOhm", chainId],
-    queryFn: async () => {
-      const query = `
-        query GetCurrentConvertibleData {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 1
-          ) {
-            items {
-              totalDepositedDecimal
-              borrowedAmountDecimal
-            }
-          }
-          convertibleDepositPositions(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              positionId
-              remainingAmountDecimal
-              conversionPriceDecimal
-            }
-          }
-          redemptions(
-            where: {
-              chainId: 1
-            }
-            limit: 1000
-          ) {
-            items {
-              positionId
-              amountDecimal
-              loans {
-                items {
-                  status
-                }
-              }
-            }
-          }
-        }
-      `;
+// Hook for the conversion exposure the treasury carries: gross (every deposit
+// converts), net of the principal already borrowed back out, and the per-claim
+// strikes behind both.
+export function useConversionExposure() {
+  return useQuery<ConversionExposure>({
+    ...conversionExposureQuery,
+    refetchInterval: 120000,
+  });
+}
 
-      const data = await cdsGraphqlClient.request(query);
+// Hook for CD revenue: interest on redemption-vault loans plus deposit yield
+// swept to the treasury.
+export function useCdRevenue() {
+  return useQuery<CdRevenue>({
+    queryKey: ["cdRevenue", CD_INDEXER_CHAIN_ID],
+    queryFn: fetchCdRevenue,
+    staleTime: 60000,
+    refetchInterval: 120000,
+  });
+}
 
-      const positions = data?.convertibleDepositPositions?.items || [];
-      const redemptions = data?.redemptions?.items || [];
-      const { convertibleOhm, totalDepositsUsd } = calculateConversionExposure(
-        positions,
-        redemptions,
-      );
+// Hook for realised conversions: deposits that actually became OHM.
+export function useConversions(timeRange: TimeRange = "30d") {
+  const windowStart = Math.floor(Date.now() / 1000) - TIME_RANGE_SECONDS[timeRange];
 
-      return { convertibleOhm, totalDepositsUsd };
-    },
+  return useQuery<ConversionSummary>({
+    queryKey: ["cdConversions", CD_INDEXER_CHAIN_ID, timeRange],
+    queryFn: () => fetchConversions(windowStart),
     staleTime: 60000,
     refetchInterval: 120000,
   });
