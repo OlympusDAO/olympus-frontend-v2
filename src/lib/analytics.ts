@@ -222,12 +222,9 @@ export function trackWalletDisconnect(): void {
 
 // ─── OHM ─────────────────────────────────────────────────────────────────────
 
-export function trackWrapOhm(params: { amount: string; txHash?: string }): void {
-  trackTransaction("ohm", "wrap", { amount: params.amount, tx_hash: params.txHash });
-}
-
-export function trackUnwrapGohm(params: { amount: string; txHash?: string }): void {
-  trackTransaction("ohm", "unwrap", { amount: params.amount, tx_hash: params.txHash });
+/** Wrap-page conversions (wrap / wrap_sohm / unwrap / unstake_sohm). */
+export function trackWrapFlow(params: { action: string; amount: string; txHash?: string }): void {
+  trackTransaction("ohm", params.action, { amount: params.amount, tx_hash: params.txHash });
 }
 
 export function trackBridgeOhm(params: {

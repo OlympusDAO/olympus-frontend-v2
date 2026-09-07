@@ -5,50 +5,56 @@ import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
 import { TokenBigInput } from "@/components/ui/token-big-input.tsx";
 import { useAccount } from "wagmi";
 import { TokenName } from "@/lib/tokens.ts";
-import { useToken } from "@/lib/hooks/useToken.tsx";
-import { parseUnits, parseEther } from "viem";
+import { useToken, type TokenWithBalance } from "@/lib/hooks/useToken.tsx";
+import { parseTokenAmount } from "@/lib/utils/token-amount";
+import { SOURCE_TOKENS, WRAP_FLOWS, getWrapFlow, type WrapMode } from "./wrap-flows";
 
 interface WrapFormProps {
-  mode: "wrap" | "unwrap";
+  mode: WrapMode;
+  sourceToken: TokenName;
+  onSourceTokenChange: (token: TokenName) => void;
   inputAmount: string;
   onInputAmountChange: (amount: string) => void;
   outputAmount: string;
   onSubmit: () => void;
 }
 
+/** Tokens the Wrap page can show. Prices: sOHM is redeemable 1:1 for OHM, so it shares OHM's price. */
+type WrapPageToken = TokenName.OHM | TokenName.SOHM | TokenName.GOHM;
+
 export function WrapForm({
   mode,
+  sourceToken,
+  onSourceTokenChange,
   inputAmount,
   onInputAmountChange,
   outputAmount,
   onSubmit,
 }: WrapFormProps) {
   const { address } = useAccount();
-  const GOHMToken = useToken(TokenName.GOHM);
+  const flow = getWrapFlow(mode, sourceToken);
+  const { output: outputTokenName, copy } = WRAP_FLOWS[flow];
+
   const OHMToken = useToken(TokenName.OHM);
+  const GOHMToken = useToken(TokenName.GOHM);
 
-  const inputTokenName = mode === "wrap" ? TokenName.OHM : TokenName.GOHM;
-  const outputTokenName = mode === "wrap" ? TokenName.GOHM : TokenName.OHM;
+  const ohmBase = useToken(TokenName.OHM, address);
+  const sohmBase = useToken(TokenName.SOHM, address);
+  const gohmBase = useToken(TokenName.GOHM, address);
 
-  const inputTokenBase = useToken(inputTokenName, address);
-  const outputTokenBase = useToken(outputTokenName, address);
-
-  // Enrich tokens with prices
-  const inputToken = useMemo(
+  const tokensByName = useMemo<Record<WrapPageToken, TokenWithBalance>>(
     () => ({
-      ...inputTokenBase,
-      price: mode === "wrap" ? OHMToken.price : GOHMToken.price,
+      [TokenName.OHM]: { ...ohmBase, price: OHMToken.price },
+      [TokenName.SOHM]: { ...sohmBase, price: OHMToken.price },
+      [TokenName.GOHM]: { ...gohmBase, price: GOHMToken.price },
     }),
-    [inputTokenBase, OHMToken.price, GOHMToken.price, mode],
+    [ohmBase, sohmBase, gohmBase, OHMToken.price, GOHMToken.price],
   );
 
-  const outputToken = useMemo(
-    () => ({
-      ...outputTokenBase,
-      price: mode === "wrap" ? GOHMToken.price : OHMToken.price,
-    }),
-    [outputTokenBase, OHMToken.price, GOHMToken.price, mode],
-  );
+  const inputToken = tokensByName[sourceToken as WrapPageToken];
+  const outputToken = tokensByName[outputTokenName as WrapPageToken];
+  const sourceNames = SOURCE_TOKENS[mode] as readonly WrapPageToken[];
+  const sourceOptions = sourceNames.map((name) => tokensByName[name]);
 
   const form = useForm<{ inputAmount: string; outputAmount: string }>({
     defaultValues: { inputAmount: "", outputAmount: "" },
@@ -63,31 +69,18 @@ export function WrapForm({
     form.setValue("outputAmount", outputAmount);
   }, [outputAmount, form]);
 
-  // Check insufficient balance
   const hasInsufficientBalance = useMemo(() => {
     if (!inputAmount || !inputToken.balance) return false;
-    try {
-      const amountBigInt =
-        inputToken.decimals === 18
-          ? parseEther(inputAmount)
-          : parseUnits(inputAmount, inputToken.decimals);
-      return amountBigInt > inputToken.balance;
-    } catch {
-      return false;
-    }
+    return parseTokenAmount(inputAmount, inputToken.decimals) > inputToken.balance;
   }, [inputAmount, inputToken.balance, inputToken.decimals]);
 
-  // Button state
   const buttonState = useMemo(() => {
     if (!address) return { disabled: true, label: "Connect Wallet" };
     if (!inputAmount || parseFloat(inputAmount) === 0)
       return { disabled: true, label: "Enter Amount" };
     if (hasInsufficientBalance) return { disabled: true, label: "Insufficient Balance" };
-    return {
-      disabled: false,
-      label: mode === "wrap" ? "Wrap OHM to gOHM" : "Unwrap gOHM",
-    };
-  }, [address, inputAmount, hasInsufficientBalance, mode]);
+    return { disabled: false, label: copy.action };
+  }, [address, inputAmount, hasInsufficientBalance, copy.action]);
 
   return (
     <div>
@@ -105,8 +98,16 @@ export function WrapForm({
             render={({ field }) => (
               <FormItem>
                 <TokenBigInput
-                  label={mode === "wrap" ? "Wrap" : "Unwrap"}
+                  label={copy.inputLabel}
                   token={inputToken}
+                  tokenSelector={{
+                    tokens: sourceOptions,
+                    selectedToken: inputToken,
+                    onTokenChange: (token) => {
+                      const name = sourceNames.find((n) => tokensByName[n].symbol === token.symbol);
+                      if (name) onSourceTokenChange(name);
+                    },
+                  }}
                   value={field.value}
                   onChange={(val) => {
                     field.onChange(val);

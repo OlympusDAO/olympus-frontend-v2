@@ -14,6 +14,11 @@ import {
   useAnnualInterestRate,
 } from "@/lib/hooks/cds/useBorrowConfiguration";
 import { useBorrowAgainstRedemption } from "@/lib/hooks/cds/useBorrowAgainstRedemption";
+import {
+  selectBorrowableRedemptions,
+  type ContractRead,
+  type LoanSlot,
+} from "@/lib/hooks/cds/borrowable-redemptions";
 import { trackBorrowCreate } from "@/lib/analytics";
 import { useReadContracts } from "wagmi";
 import DepositRedemptionVaultABI from "@/abis/DepositRedemptionVault";
@@ -82,52 +87,17 @@ export const BorrowPage = () => {
 
   const { data: borrowConfigData } = useReadContracts({ contracts: borrowConfigContracts });
 
-  const redemptionStatus = useMemo(() => {
-    if (!loansData || !borrowConfigData || redemptions.length === 0) {
-      return {
-        hasRedemptions: redemptions.length > 0,
-        hasNoActiveLoans: false,
-        hasBorrowEnabled: false,
-        availableCount: 0,
-      };
-    }
+  const redemptionStatus = useMemo(
+    () =>
+      selectBorrowableRedemptions(
+        redemptions,
+        loansData as ContractRead<LoanSlot>[] | undefined,
+        borrowConfigData as ContractRead<bigint>[] | undefined,
+      ),
+    [redemptions, loansData, borrowConfigData],
+  );
 
-    let noActiveLoansCount = 0;
-    let borrowEnabledCount = 0;
-
-    const available = redemptions
-      .map((redemption, index) => ({ redemption, originalIndex: index }))
-      .filter(({ originalIndex }) => {
-        const loanResult = loansData[originalIndex];
-        if (loanResult?.status !== "success") return false;
-
-        const loan = loanResult.result as unknown as { dueDate: number };
-        const hasNoActiveLoan = !loan || loan.dueDate === 0;
-
-        const borrowConfigResult = borrowConfigData[originalIndex];
-        const isBorrowEnabled =
-          borrowConfigResult?.status === "success" && Number(borrowConfigResult.result) > 0;
-
-        if (hasNoActiveLoan) {
-          noActiveLoansCount++;
-          if (isBorrowEnabled) {
-            borrowEnabledCount++;
-            return true;
-          }
-        }
-        return false;
-      });
-
-    return {
-      hasRedemptions: redemptions.length > 0,
-      hasNoActiveLoans: noActiveLoansCount > 0,
-      hasBorrowEnabled: borrowEnabledCount > 0,
-      availableCount: available.length,
-      availableRedemptions: available,
-    };
-  }, [redemptions, loansData, borrowConfigData]);
-
-  const availableRedemptions = redemptionStatus.availableRedemptions || [];
+  const availableRedemptions = redemptionStatus.available;
 
   // Auto-select redemption from URL parameter
   useMemo(() => {
@@ -282,7 +252,7 @@ export const BorrowPage = () => {
             <p className="text-sm/5 font-semibold text-secondary-t text-center">
               {!isGlobalBorrowEnabled
                 ? "Borrowing is currently disabled."
-                : !redemptionStatus.hasRedemptions
+                : !redemptionStatus.hasFundedRedemptions
                   ? "You don't have any convertible deposit tokens to use as collateral."
                   : !redemptionStatus.hasNoActiveLoans
                     ? "All your redemptions already have active loans."
@@ -389,7 +359,7 @@ export const BorrowPage = () => {
                       <Icon name="cdUSDSIcon" className="size-4" />
                       <span className="text-xs font-semibold">
                         {parseFloat(collateralAmount || "0").toFixed(2)}{" "}
-                        {selectedRedemptionToken?.symbol || "cdUSDS-3m"}
+                        {selectedRedemptionToken?.symbol ?? "cdUSDS"}
                       </span>
                     </div>
                   </div>

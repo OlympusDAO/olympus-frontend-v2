@@ -1,63 +1,85 @@
-import { Icon } from "@/components/icon";
+import { Fragment } from "react";
+import { Icon, type IconName } from "@/components/icon";
 import { Separator } from "@/components/ui/separator";
 import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
 import { TokenName, getTokenAddress, TOKENS } from "@/lib/tokens";
 import { useAccount, useChainId } from "wagmi";
 import { formatUnits } from "viem";
 import { RiArrowRightLine } from "@remixicon/react";
+import { WRAP_FLOWS, type WrapFlow } from "./wrap-flows";
+
+type PanelToken = TokenName.OHM | TokenName.GOHM | TokenName.SOHM;
+const PANEL_TOKENS: readonly PanelToken[] = [TokenName.OHM, TokenName.GOHM, TokenName.SOHM];
 
 interface BalancePanelProps {
-  mode: "wrap" | "unwrap";
+  flow: WrapFlow;
   inputAmount: string;
   outputAmount: string;
 }
 
-export function WrapBalancePanel({ mode, inputAmount, outputAmount }: BalancePanelProps) {
+export function WrapBalancePanel({ flow, inputAmount, outputAmount }: BalancePanelProps) {
   const { address } = useAccount();
   const chainId = useChainId();
 
   const ohmAddress = getTokenAddress(TokenName.OHM, chainId);
+  const sohmAddress = getTokenAddress(TokenName.SOHM, chainId);
   const gohmAddress = getTokenAddress(TokenName.GOHM, chainId);
 
   const { balance: ohmBalance } = useTokenBalance(ohmAddress, address);
+  const { balance: sohmBalance } = useTokenBalance(sohmAddress, address);
   const { balance: gohmBalance } = useTokenBalance(gohmAddress, address);
 
-  const ohmBalanceNum =
-    ohmBalance != null ? parseFloat(formatUnits(ohmBalance, TOKENS.OHM.decimals)) : 0;
-  const gohmBalanceNum =
-    gohmBalance != null ? parseFloat(formatUnits(gohmBalance, TOKENS.GOHM.decimals)) : 0;
+  const balances: Record<PanelToken, number> = {
+    [TokenName.OHM]:
+      ohmBalance != null ? parseFloat(formatUnits(ohmBalance, TOKENS.OHM.decimals)) : 0,
+    [TokenName.SOHM]:
+      sohmBalance != null ? parseFloat(formatUnits(sohmBalance, TOKENS.SOHM.decimals)) : 0,
+    [TokenName.GOHM]:
+      gohmBalance != null ? parseFloat(formatUnits(gohmBalance, TOKENS.GOHM.decimals)) : 0,
+  };
 
   const inputNum = parseFloat(inputAmount) || 0;
   const outputNum = parseFloat(outputAmount) || 0;
+  const showAfter = inputNum > 0;
+
+  const { input: inputTokenName, output: outputTokenName } = WRAP_FLOWS[flow];
 
   // Compute after-balances (no clamping — show theoretical values)
-  const afterOhm = mode === "wrap" ? ohmBalanceNum - inputNum : ohmBalanceNum + outputNum;
-  const afterGohm = mode === "wrap" ? gohmBalanceNum + outputNum : gohmBalanceNum - inputNum;
+  const afterFor = (name: PanelToken) => {
+    if (name === inputTokenName) return balances[name] - inputNum;
+    if (name === outputTokenName) return balances[name] + outputNum;
+    return balances[name];
+  };
 
-  const showAfter = inputNum > 0;
+  // sOHM is a legacy position for most users — only surface its row when it's part of
+  // the active flow or the wallet actually holds some.
+  const rows = PANEL_TOKENS.filter(
+    (name) =>
+      name !== TokenName.SOHM || inputTokenName === TokenName.SOHM || balances[TokenName.SOHM] > 0,
+  );
 
   return (
     <div className="rounded-2xl bg-surface-a3 px-4 py-4 border border-a3-b">
       <h3 className="mb-4 text-[14px]/[20px] font-semibold text-primary-t">My Balances</h3>
 
       <div>
-        <BalanceRow
-          icon="OHMTokenIcon"
-          symbol="OHM"
-          label="OHM Balance"
-          before={ohmBalanceNum.toFixed(2)}
-          after={showAfter ? afterOhm : undefined}
-          decimals={2}
-        />
-        <Separator className="my-2" />
-        <BalanceRow
-          icon="GOHMTokenIcon"
-          symbol="gOHM"
-          label="gOHM Balance"
-          before={gohmBalanceNum.toFixed(4)}
-          after={showAfter ? afterGohm : undefined}
-          decimals={4}
-        />
+        {rows.map((name, i) => {
+          const { symbol, icon, decimals } = TOKENS[name];
+          const displayDecimals = decimals === 18 ? 4 : 2;
+          return (
+            <Fragment key={name}>
+              {i > 0 && <Separator className="my-2" />}
+              <BalanceRow
+                icon={icon}
+                symbol={symbol}
+                label={`${symbol} Balance`}
+                before={balances[name].toFixed(displayDecimals)}
+                after={showAfter ? afterFor(name) : undefined}
+                decimals={displayDecimals}
+              />
+            </Fragment>
+          );
+        })}
       </div>
     </div>
   );
@@ -71,7 +93,7 @@ function BalanceRow({
   after,
   decimals,
 }: {
-  icon: "OHMTokenIcon" | "GOHMTokenIcon";
+  icon: IconName;
   symbol: string;
   label: string;
   before: string;
