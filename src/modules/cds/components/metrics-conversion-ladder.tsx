@@ -100,12 +100,12 @@ export const MetricsConversionLadder: React.FC = () => {
 
   const body = (() => {
     if (isLoading) {
-      return <div className="w-full h-60 bg-surface-a5 rounded-xl animate-pulse" />;
+      return <div className="w-full h-50 sm:h-60 bg-surface-a5 rounded-xl animate-pulse" />;
     }
 
     if (isUnavailable) {
       return (
-        <div className="w-full h-60 flex flex-col items-center justify-center gap-1 text-center">
+        <div className="w-full h-50 sm:h-60 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">Conversion data unavailable</p>
           <p className="text-xs text-tertiary-t max-w-xs">
             The convertible deposit indexer could not be reached.
@@ -116,7 +116,7 @@ export const MetricsConversionLadder: React.FC = () => {
 
     if (!hasOhmPrice) {
       return (
-        <div className="w-full h-60 flex flex-col items-center justify-center gap-1 text-center">
+        <div className="w-full h-50 sm:h-60 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">OHM price unavailable</p>
           <p className="text-xs text-tertiary-t max-w-xs">
             The ladder needs the live on-chain price to place the conversion threshold.
@@ -127,87 +127,104 @@ export const MetricsConversionLadder: React.FC = () => {
 
     if (rows.length === 0) {
       return (
-        <div className="w-full h-60 flex items-center justify-center text-secondary-t text-sm">
+        <div className="w-full h-50 sm:h-60 flex items-center justify-center text-secondary-t text-sm">
           No outstanding convertible deposits
         </div>
       );
     }
 
     return (
-      <ResponsiveContainer width="100%" height={240}>
-        {/* Top margin leaves room for the spot marker's label, which sits above the plot. */}
-        <BarChart data={rows} margin={{ top: 20, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-          <XAxis
-            dataKey="label"
-            stroke="transparent"
-            tick={{ fill: CHART_COLORS.text, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            interval={0}
-          />
-          <YAxis
-            tickFormatter={formatCurrency}
-            stroke="transparent"
-            tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-            width={48}
-          />
-          <Tooltip
-            content={<LadderTooltip ohmPrice={ohmPrice} bucketSize={ladder.bucketSize} />}
-            cursor={{ fill: "var(--surface-a5)" }}
-          />
-          {spotRow && (
-            <ReferenceLine
-              x={spotRow.label}
-              stroke={CHART_COLORS.spot}
-              strokeDasharray="4 4"
-              label={{
-                value: `OHM $${ohmPrice.toFixed(2)}`,
-                position: "top",
-                fill: "var(--text-secondary)",
-                fontSize: 11,
-                offset: 8,
-              }}
+      // A CSS breakpoint rather than useIsMobile, so the chart is the right height on
+      // the very first paint. useIsMobile reports false until its effect runs, which
+      // would mount every phone at the desktop height and then resize it.
+      <div className="w-full h-50 sm:h-60">
+        <ResponsiveContainer width="100%" height="100%">
+          {/* Top margin leaves room for the spot marker's label, which sits above the plot. */}
+          <BarChart data={rows} margin={{ top: 20, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+            {/*
+              A phone has ~270px of plot for labels $6 wide, so labelling every bucket
+              there runs them into one unreadable smear. preserveStartEnd measures the
+              space it actually has, so it keeps every label on a wide card and thins
+              them only where they would collide.
+            */}
+            <XAxis
+              dataKey="label"
+              stroke="transparent"
+              tick={{ fill: CHART_COLORS.text, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              interval="preserveStartEnd"
+              minTickGap={8}
             />
-          )}
-          <Bar dataKey="amountUsd" radius={[4, 4, 0, 0]}>
-            {rows.map((row) => (
-              <Cell
-                key={row.label}
-                fill={row.convertible ? CHART_COLORS.convertible : CHART_COLORS.pending}
+            <YAxis
+              tickFormatter={formatCurrency}
+              stroke="transparent"
+              tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              width={48}
+            />
+            <Tooltip
+              content={<LadderTooltip ohmPrice={ohmPrice} bucketSize={ladder.bucketSize} />}
+              cursor={{ fill: "var(--surface-a5)" }}
+            />
+            {spotRow && (
+              <ReferenceLine
+                x={spotRow.label}
+                stroke={CHART_COLORS.spot}
+                strokeDasharray="4 4"
+                label={{
+                  value: `OHM $${ohmPrice.toFixed(2)}`,
+                  position: "top",
+                  fill: "var(--text-secondary)",
+                  fontSize: 11,
+                  offset: 8,
+                }}
               />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            )}
+            <Bar dataKey="amountUsd" radius={[4, 4, 0, 0]}>
+              {rows.map((row) => (
+                <Cell
+                  key={row.label}
+                  fill={row.convertible ? CHART_COLORS.convertible : CHART_COLORS.pending}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     );
   })();
 
   return (
-    <Card className="p-6 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <Card className="p-4 sm:p-6 flex flex-col gap-3">
+      {/*
+        The stats cannot share a row with the title on a phone: held at their natural
+        width they push past the card edge, and shrunk they wrap the heading to three
+        lines. They drop below the title instead, and only sit beside it from sm up.
+      */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="text-xl font-semibold text-primary-t tracking-[0.2px]">
               Conversion Ladder
             </h3>
             <InfoTooltip title="Outstanding deposits grouped by the OHM price they convert at. Bars left of the marker can convert today; the rest need OHM to rise. Amounts are deposit value, not gain.">
-              <RiInformationFill size={16} className="text-tertiary-t" />
+              <RiInformationFill size={16} className="text-tertiary-t shrink-0" />
             </InfoTooltip>
           </div>
           <p className="text-sm text-secondary-t mt-0.5">Deposits that convert at each OHM price</p>
         </div>
         {hasOhmPrice && !isLoading && !isUnavailable && (
-          <div className="flex gap-6 shrink-0">
-            <div className="text-right">
+          <div className="flex gap-6 sm:shrink-0">
+            <div className="sm:text-right">
               <p className="text-xs text-secondary-t">Convertible now</p>
               <p className="text-lg font-semibold text-primary-t">
                 {formatCurrency(ladder.convertibleUsd)}
               </p>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="text-xs text-secondary-t">Needs a higher price</p>
               <p className="text-lg font-semibold text-primary-t">
                 {formatCurrency(ladder.pendingUsd)}
