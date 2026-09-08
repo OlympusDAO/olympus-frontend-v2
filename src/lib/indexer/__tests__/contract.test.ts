@@ -300,3 +300,60 @@ describe.skipIf(!API)("the redemptions payload shape", () => {
     expect(distinct.size).toBeLessThan(payload.redemptions.length);
   });
 });
+
+describe.skipIf(!API)("CD revenue's contract with the indexer", () => {
+  // `fetchCdRevenue` is the only caller of this route, and its two halves are
+  // the realised-interest figure on the Pulse card. Added because the route
+  // shipped in OlympusDAO/olympus-protocol-indexer#37 and returned 502 in
+  // production -- the `gateway` role had no select grant on
+  // `DepositRedemptionVaultLoanDefaulted`, so every request failed while this
+  // suite stayed green. A route the hooks call and no test calls is how that
+  // reaches a user first.
+  test("loan-events returns both halves, each carrying the interest revenue reads", async () => {
+    const { data } = await get("/v1/convertible-deposits/loan-events?limit=5");
+    const payload = data as {
+      repaid: Record<string, unknown>[];
+      defaulted: Record<string, unknown>[];
+    };
+    expect(Array.isArray(payload.repaid)).toBe(true);
+    expect(Array.isArray(payload.defaulted)).toBe(true);
+
+    // Interest is what `calculateCdRevenue` sums; a default also writes off the
+    // collateral the protocol repossessed, which only that half carries.
+    for (const row of payload.repaid) expect(row).toHaveProperty("interestDecimal");
+    for (const row of payload.defaulted) {
+      expect(row).toHaveProperty("interestDecimal");
+      expect(row).toHaveProperty("remainingCollateralDecimal");
+    }
+  });
+
+  // `openLoans` is filtered on `status === "active"`, and the accrual is
+  // pro-rated between these two timestamps. All three come from the redemptions
+  // route rather than this one.
+  test("open loans carry the status and term the accrual is pro-rated over", async () => {
+    const { data } = await get("/v1/convertible-deposits/redemptions?limit=1000");
+    const { loans } = data as {
+      loans: { status: string; interestDecimal: string; createdAt: string; dueDate: string }[];
+    };
+    expect(loans.length).toBeGreaterThan(0);
+    for (const field of ["status", "interestDecimal", "createdAt", "dueDate"]) {
+      expect(loans[0], field).toHaveProperty(field);
+    }
+    expect(loans.some((loan) => loan.status === "active")).toBe(true);
+  });
+
+  // Lifecycle landed in OlympusDAO/olympus-protocol-indexer#36. The exposure
+  // predicates switched from nested event arrays to this one string, so an
+  // unrecognised value silently drops a redemption out of convertible OHM
+  // rather than erroring.
+  test("every redemption carries a lifecycle status the exposure predicates know", async () => {
+    const { data } = await get("/v1/convertible-deposits/redemptions?limit=1000");
+    const { redemptions } = data as { redemptions: { status: string }[] };
+    expect(redemptions.length).toBeGreaterThan(0);
+    const seen = new Set(redemptions.map((r) => r.status));
+    expect([...seen].sort()).toEqual(
+      [...seen].filter((s) => ["pending", "finished", "cancelled"].includes(s)).sort(),
+    );
+    expect(seen.has("pending")).toBe(true);
+  });
+});
