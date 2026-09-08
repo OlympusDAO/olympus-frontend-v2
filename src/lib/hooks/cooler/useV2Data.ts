@@ -271,7 +271,7 @@ export function useV2RecentActivity(limit: number = 50) {
       return activities.map((activity) => ({
         id: activity.id,
         type: activity.type,
-        account: activity.account.address,
+        account: activity.account?.address ?? "",
         amount: parseBigDecimal(activity.amount),
         collateral: activity.collateral ? parseBigDecimal(activity.collateral) : undefined,
         debt: activity.debt ? parseBigDecimal(activity.debt) : undefined,
@@ -294,7 +294,7 @@ export function useV2Liquidations(limit: number = 20) {
       return activities.map((activity) => ({
         id: activity.id,
         type: activity.type,
-        account: activity.account.address,
+        account: activity.account?.address ?? "",
         amount: parseBigDecimal(activity.amount),
         collateral: activity.collateral ? parseBigDecimal(activity.collateral) : undefined,
         debt: activity.debt ? parseBigDecimal(activity.debt) : undefined,

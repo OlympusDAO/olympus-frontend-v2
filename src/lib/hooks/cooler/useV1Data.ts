@@ -43,32 +43,6 @@ export interface Clearinghouse {
   address: string;
 }
 
-export interface ActiveLoan {
-  id: string;
-  borrower: { id: string };
-  cooler: string;
-  principal: string;
-  currentExpiryTimestamp: string;
-  interest: string;
-  collateral: string;
-  loanId: string;
-  defaultedClaimEvents: { collateralPrice: string }[];
-  extendEvents: { expiryTimestamp: string }[];
-}
-
-export interface DefaultedLoan {
-  id: string;
-  borrower: { id: string };
-  loanId: string;
-  cooler: string;
-  currentExpiryTimestamp: string;
-  defaultedClaimEvents: {
-    defaultedPrincipal: string;
-    collateralValueClaimed: string;
-    collateralQuantityClaimed: string;
-  }[];
-}
-
 export interface BorrowerStat {
   borrower: string;
   currentInterestDue: string;

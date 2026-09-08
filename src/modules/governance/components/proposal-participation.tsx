@@ -36,12 +36,12 @@ function VoteTableBody({
             <TableRow key={vote.transactionHash}>
               <TableCell>
                 <a
-                  href={`https://etherscan.io/address/${vote.voter.address}`}
+                  href={`https://etherscan.io/address/${vote.voter?.address ?? ""}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm/5 font-semibold text-primary-t hover:text-secondary-t"
                 >
-                  {shortenAddress(vote.voter.address as `0x${string}`)}
+                  {shortenAddress((vote.voter?.address ?? "") as `0x${string}`)}
                 </a>
               </TableCell>
               <TableCell className="text-right">

@@ -17,6 +17,7 @@ import { RiInformationFill } from "@remixicon/react";
 import {
   useStatisticsData,
   useCurrentStatistics,
+  useConversionExposure,
   type TimeRange,
 } from "@/lib/hooks/cds/useStatisticsData.tsx";
 
@@ -38,6 +39,7 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
 
   const { data: statisticsData, isLoading } = useStatisticsData(timeRange);
   const { data: currentStats } = useCurrentStatistics();
+  const { data: exposure, isLoading: isLoadingExposure } = useConversionExposure();
 
   const chartData = useMemo((): YieldDataPoint[] => {
     if (!statisticsData?.claimedYields || statisticsData.claimedYields.length === 0) return [];
@@ -96,14 +98,20 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
     return totalCumulativeYield / daysDiff;
   }, [statisticsData, totalCumulativeYield]);
 
+  /**
+   * Annualised against the deposits actually earning the yield.
+   *
+   * Was divided by the facility snapshot's `totalDeposited`, which is neither. That
+   * field was emitting a malformed negative decimal, so `totalDeposits <= 0` held and
+   * the rate silently read 0.00% for as long as it did; even well-formed it reads
+   * ~$664k against a $15.26M book, so the rate would have come back ~23x too high.
+   */
   const yieldRate = useMemo(() => {
-    if (!currentStats?.latestSnapshot) return 0;
+    const earningDeposits = exposure?.grossDepositsUsd ?? 0;
+    if (earningDeposits <= 0 || avgYieldPerDay <= 0) return null;
 
-    const totalDeposits = parseFloat(currentStats.latestSnapshot.totalDepositedDecimal);
-    if (totalDeposits <= 0 || avgYieldPerDay <= 0) return 0;
-
-    return (avgYieldPerDay / totalDeposits) * 365 * 100;
-  }, [currentStats, avgYieldPerDay]);
+    return (avgYieldPerDay / earningDeposits) * 365 * 100;
+  }, [exposure, avgYieldPerDay]);
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -203,7 +211,15 @@ export const MetricsCumulativeYieldChart: React.FC = () => {
               <RiInformationFill size={16} className="text-tertiary-t" />
             </InfoTooltip>
           </div>
-          <p className="text-lg font-semibold text-primary-t">{yieldRate.toFixed(2)}%</p>
+          {/* The exposure query paginates, so it can resolve after this card's own
+              data. A 0.00% placeholder in the meantime looks like a real rate. */}
+          {yieldRate === null ? (
+            <p className="text-lg font-semibold text-secondary-t">
+              {isLoadingExposure ? "—" : "Unavailable"}
+            </p>
+          ) : (
+            <p className="text-lg font-semibold text-primary-t">{yieldRate.toFixed(2)}%</p>
+          )}
         </div>
       </div>
 

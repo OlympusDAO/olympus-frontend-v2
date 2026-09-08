@@ -1,13 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { calculateConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
-import { fetchRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
-import { withNumericTimestamp, unwrap } from "@/lib/indexer/rows";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConvertibleDepositsBids,
   getConvertibleDepositsConvertedDeposits,
-  getConvertibleDepositsPositions,
   getConvertibleDepositsStatistics,
 } from "@/generated/indexer";
+import { conversionExposureQuery } from "@/lib/hooks/cds/useStatisticsData";
+import { unwrap, withNumericTimestamp } from "@/lib/indexer/rows";
 
 export interface DepositSnapshot {
   timestamp: number;
@@ -42,15 +40,20 @@ export interface CdStatistics {
   bids: BidEvent[];
   convertedDeposits: ConvertedDeposit[];
   latestSnapshot: DepositSnapshot | null;
+  /** Deposits still in the protocol, net of principal borrowed back out. */
   totalDepositsUsd: number;
   activeBidsCount: number;
+  /** Outstanding loan principal against pending redemptions. */
   borrowedAmount: number;
   annualInterestRate: number;
   isMarketActive: boolean;
+  /** OHM minted if leverage unwinds and only unlevered positions convert. */
   supplyGrowthOhm: number;
 }
 
 export function useCdStatistics() {
+  const queryClient = useQueryClient();
+
   return useQuery<CdStatistics>({
     queryKey: ["cdStatistics"],
     queryFn: async () => {
@@ -60,7 +63,7 @@ export function useCdStatistics() {
       // collapses the three singletons the card reads (latest facility
       // snapshot, latest auctioneer snapshot, redemption-vault config); the
       // rest are windowed lists, fetched in parallel.
-      const [statistics, bidRows, convertedRows, positions, redemptions] = await Promise.all([
+      const [statistics, bidRows, convertedRows] = await Promise.all([
         unwrap(getConvertibleDepositsStatistics()),
         unwrap(getConvertibleDepositsBids({ sinceTimestamp: String(thirtyDaysAgo), limit: 1000 })),
         unwrap(
@@ -69,8 +72,6 @@ export function useCdStatistics() {
             limit: 1000,
           }),
         ),
-        unwrap(getConvertibleDepositsPositions({ limit: 1000 })),
-        fetchRedemptionExposure(),
       ]);
 
       const bids = bidRows.map(withNumericTimestamp);
@@ -80,15 +81,6 @@ export function useCdStatistics() {
         : null;
       const depositSnapshots = latestSnapshot ? [latestSnapshot] : [];
 
-      const totalDepositsUsd = latestSnapshot
-        ? Number.parseFloat(latestSnapshot.totalDepositedDecimal) +
-          Number.parseFloat(latestSnapshot.borrowedAmountDecimal)
-        : 0;
-
-      const borrowedAmount = latestSnapshot
-        ? Number.parseFloat(latestSnapshot.borrowedAmountDecimal) || 0
-        : 0;
-
       const annualInterestRate = statistics.redemptionConfig
         ? Number.parseFloat(statistics.redemptionConfig.interestRateDecimal) || 0
         : 0;
@@ -97,22 +89,25 @@ export function useCdStatistics() {
         ? Number.parseFloat(statistics.auctioneerSnapshot.targetDecimal) > 0
         : false;
 
-      const { convertibleOhm: supplyGrowthOhm } = calculateConversionExposure(
-        positions,
-        redemptions,
-      );
+      // Derived from positions and loans rather than the facility snapshot: the
+      // snapshot's totalDeposited is emitted as a malformed negative decimal, and its
+      // borrowedAmount tracks principal at origination rather than what is outstanding.
+      //
+      // Routed through the shared cache entry so this and the CD metrics screen read
+      // one value rather than fetching the same thing twice on different cadences.
+      const exposure = await queryClient.fetchQuery(conversionExposureQuery);
 
       return {
         depositSnapshots,
         bids,
         convertedDeposits,
         latestSnapshot,
-        totalDepositsUsd,
+        totalDepositsUsd: exposure.netDepositsUsd,
         activeBidsCount: bids.length,
-        borrowedAmount,
+        borrowedAmount: exposure.borrowedPrincipalUsd,
         annualInterestRate,
         isMarketActive,
-        supplyGrowthOhm,
+        supplyGrowthOhm: exposure.netConvertibleOhm,
       };
     },
     staleTime: 30_000,

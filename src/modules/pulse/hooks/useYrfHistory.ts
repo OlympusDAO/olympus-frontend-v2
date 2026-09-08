@@ -123,7 +123,7 @@ export function useYrfHistory() {
       }> = nextYieldSets.map((e) => ({
         timestamp: Number(e.blockTimestamp),
         yield: parseFloat(e.nextYieldDecimal) || 0,
-        version: e.contract.version,
+        version: e.contract?.version ?? "",
       }));
 
       // Sort ascending for chart

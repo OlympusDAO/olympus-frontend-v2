@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
-import { useDefaultedLoans, type DefaultedLoan } from "@/lib/hooks/cooler/useV1Data.ts";
+import type { GetCoolerLoans200DataItem } from "@/generated/indexer";
+import { useDefaultedLoans } from "@/lib/hooks/cooler/useV1Data.ts";
 import { formatUSD, formatAddress } from "@/lib/hooks/cooler/utils.ts";
 
 function formatCollateral(value: string): string {
@@ -34,19 +35,19 @@ function getEtherscanUrl(address: string): string {
   return `https://etherscan.io/address/${address}`;
 }
 
-const columns: ColumnDef<DefaultedLoan>[] = [
+const columns: ColumnDef<GetCoolerLoans200DataItem>[] = [
   {
     id: "borrower",
     header: "Wallet",
-    accessorFn: (row) => row.borrower.id,
+    accessorFn: (row) => row.borrower?.id ?? "",
     cell: ({ row }) => (
       <a
-        href={getEtherscanUrl(row.original.borrower.id)}
+        href={getEtherscanUrl(row.original.borrower?.id ?? "")}
         target="_blank"
         rel="noopener noreferrer"
         className="font-mono text-secondary-t hover:text-primary-t transition-colors"
       >
-        {formatAddress(row.original.borrower.id)}
+        {formatAddress(row.original.borrower?.id ?? "")}
       </a>
     ),
   },
