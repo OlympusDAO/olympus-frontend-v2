@@ -12,7 +12,7 @@ import {
   type ConversionExposure,
 } from "@/lib/hooks/cds/conversion-exposure";
 import { toRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
-import { unwrap } from "@/lib/indexer/rows";
+import { parseDecimal, unwrap } from "@/lib/indexer/rows";
 
 /**
  * Every route here caps a page at 1000 rows.
@@ -58,16 +58,19 @@ export async function fetchConversionExposure(): Promise<ConversionExposure> {
   ]);
 
   assertComplete(redemptionsPayload.redemptions, "redemptions");
+  // The route caps its two collections independently, so a full `loans` page
+  // under-reports borrowed principal even when `redemptions` came back short.
+  assertComplete(redemptionsPayload.loans, "redemption loans");
   assertComplete(conversions, "converted deposits");
 
   // Joins the two flat lists on their composite `id`; see the note there for
   // why `redemptionId` is the wrong key.
   const redemptions = toRedemptionExposure(redemptionsPayload);
 
-  const convertedDepositsUsd = conversions.reduce((total, item) => {
-    const parsed = Number(item.depositAmountDecimal);
-    return total + (Number.isFinite(parsed) ? parsed : 0);
-  }, 0);
+  const convertedDepositsUsd = conversions.reduce(
+    (total, item) => total + parseDecimal(item.depositAmountDecimal),
+    0,
+  );
 
   return calculateConversionExposure({ positions, redemptions, convertedDepositsUsd });
 }
@@ -84,6 +87,7 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
 
   assertComplete(loanEvents.repaid, "loan repayments");
   assertComplete(loanEvents.defaulted, "loan defaults");
+  assertComplete(redemptionsPayload.loans, "redemption loans");
   assertComplete(claimedYields, "claimed yields");
 
   // Loan status is trustworthy again as of

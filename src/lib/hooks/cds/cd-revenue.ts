@@ -1,3 +1,5 @@
+import { parseDecimal } from "@/lib/indexer/rows";
+
 export interface SettledLoanEvent {
   interestDecimal: string;
 }
@@ -33,11 +35,6 @@ export interface CdRevenueInput {
   claimedYields: ClaimedYieldEvent[];
   nowSeconds?: number;
 }
-
-const parseDecimal = (value: string | null | undefined): number => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const sumInterest = (events: SettledLoanEvent[]) =>
   events.reduce((total, event) => total + parseDecimal(event.interestDecimal), 0);

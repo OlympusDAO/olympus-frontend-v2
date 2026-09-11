@@ -1,4 +1,8 @@
-import type { RedemptionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import {
+  REDEMPTION_STATUSES,
+  type RedemptionExposure,
+  type RedemptionStatus,
+} from "@/lib/hooks/cds/conversion-exposure";
 
 // `/v1/convertible-deposits/redemptions` returns redemptions and their loans as
 // TWO FLAT LISTS. Ponder nested the loans inside each redemption
@@ -40,7 +44,20 @@ export function toRedemptionExposure(payload: RedemptionsPayload): RedemptionExp
     positionId: redemption.positionId,
     receiptTokenId: redemption.receiptTokenId,
     amountDecimal: redemption.amountDecimal,
-    status: redemption.status,
+    status: toRedemptionStatus(redemption.status, redemption.id),
     loans: { items: loansByRedemption.get(redemption.id) ?? [] },
   }));
+}
+
+/**
+ * The wire types `status` as a plain string, so a status added upstream would
+ * reach the exposure maths and be silently dropped by every lifecycle
+ * predicate — the same class of quiet shortfall the join key above caused.
+ */
+function toRedemptionStatus(status: string, id: string): RedemptionStatus {
+  const known = REDEMPTION_STATUSES.find((candidate) => candidate === status);
+  if (!known) {
+    throw new Error(`Redemption ${id} has unrecognised status "${status}"`);
+  }
+  return known;
 }

@@ -1,3 +1,5 @@
+import { parseDecimal } from "@/lib/indexer/rows";
+
 export interface ConvertiblePositionExposure {
   positionId: string;
   /** Groups positions by deposit term. Phantom balances are attributed per token. */
@@ -15,6 +17,25 @@ export interface RedemptionLoanExposure {
   principalDecimal?: string;
 }
 
+/**
+ * The redemption lifecycle the indexer reports, as of
+ * OlympusDAO/olympus-protocol-indexer#36.
+ *
+ * Enumerated rather than left as the wire's `string`, because every predicate
+ * below is an equality test: an unrecognised status would quietly fail all
+ * three and drop the redemption from the book after it had already moved
+ * `redeemedByPosition`. `toRedemptionExposure` rejects anything else at the
+ * boundary, so a new status upstream surfaces as an error rather than a total
+ * that is short by exactly those rows.
+ */
+export type RedemptionStatus = "pending" | "finished" | "cancelled";
+
+export const REDEMPTION_STATUSES: readonly RedemptionStatus[] = [
+  "pending",
+  "finished",
+  "cancelled",
+];
+
 export interface RedemptionExposure {
   // Nullable on the wire: it comes from an on-chain read that returns empty for
   // a redemption with no linked position, and 92 of 156 live redemptions have
@@ -24,15 +45,13 @@ export interface RedemptionExposure {
   receiptTokenId?: string | null;
   amountDecimal: string;
   /**
-   * "pending" | "finished" | "cancelled", from the indexer.
-   *
    * This used to be inferred from nested `finishedEvents` / `cancelledEvents`
    * collections. Those do not exist over REST, and the inference was the thing
    * that made a pending receipt-token redemption look finished — see
    * OlympusDAO/olympus-protocol-indexer#34, where three redemptions dated 170
    * days out were counted as spent.
    */
-  status?: string;
+  status: RedemptionStatus;
   loans?: {
     items?: RedemptionLoanExposure[];
   };
@@ -134,16 +153,6 @@ export interface MoneynessSummary {
    */
   movePercentToAverageStrike: number;
 }
-
-/**
- * `Number` rather than `parseFloat`: the indexer emits malformed negative decimals
- * (e.g. "-302475.-729379175798898337") that parseFloat happily truncates to a
- * plausible-looking number.
- */
-const parseDecimal = (value: string | null | undefined): number => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const isActive = (loan: RedemptionLoanExposure) => loan.status === "active";
 

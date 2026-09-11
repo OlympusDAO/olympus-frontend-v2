@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { getConvertibleDepositsPriceHistory } from "@/generated/indexer";
+import { fetchAllPriceHistory } from "@/lib/hooks/cds/cd-price-history";
 
 export interface HistoricalBid {
   timestamp: number;
@@ -64,14 +64,13 @@ export function useHistoricalPriceData(
   return useQuery<HistoricalPriceData>({
     queryKey: ["historicalPriceData", chainId, depositPeriod, timeRange],
     queryFn: async () => {
-      // One request. The Ponder version issued three roots — bids, auctioneer
+      // One route. The Ponder version issued three roots — bids, auctioneer
       // snapshots, and per-deposit-period tick snapshots — over the same
       // window; this route exists to return them together.
-      const { data: history } = await getConvertibleDepositsPriceHistory({
+      const history = await fetchAllPriceHistory({
         // `from: 0` would be an unnecessary filter; "all" simply omits it.
         from: startTimestamp > 0 ? String(startTimestamp) : undefined,
         depositPeriod: depositPeriod === undefined ? undefined : String(depositPeriod),
-        limit: 1000,
       });
 
       return {

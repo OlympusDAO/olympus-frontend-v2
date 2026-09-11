@@ -38,3 +38,16 @@ export async function windowed<T extends Timestamped>(
   const { data } = await fetchRows();
   return data.map(withNumericTimestamp);
 }
+
+/**
+ * Parses a wire decimal, treating anything non-finite as zero.
+ *
+ * `Number` rather than `parseFloat`: the indexer emits malformed negative
+ * decimals (e.g. "-302475.-729379175798898337") that parseFloat happily
+ * truncates to a plausible-looking number, and a missing field parses to `NaN`
+ * that then poisons a whole reduce.
+ */
+export function parseDecimal(value: string | null | undefined): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}

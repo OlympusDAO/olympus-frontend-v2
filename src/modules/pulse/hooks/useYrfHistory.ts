@@ -65,7 +65,10 @@ export function useYrfHistory() {
         unwrap(getYrfNextYieldSets({ orderBy: "blockTimestamp", order: "desc", limit: 25 })),
       ]);
 
-      const yrfMarketIds: string[] = repoMarkets.map((m) => m.marketId);
+      // Deduped: the ids are chunked across separate requests, and a marketId
+      // landing in two chunks would have both responses return its purchases,
+      // which `.flat()` keeps — inflating burn totals rather than erroring.
+      const yrfMarketIds: string[] = [...new Set(repoMarkets.map((m) => m.marketId))];
 
       // 2. Fetch actual OHM purchase amounts from the bonds domain.
       //

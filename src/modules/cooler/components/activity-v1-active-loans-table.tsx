@@ -40,16 +40,23 @@ const columns: ColumnDef<GetCoolerLoans200DataItem>[] = [
     id: "borrower",
     header: "Wallet",
     accessorFn: (row) => row.borrower?.id ?? "",
-    cell: ({ row }) => (
-      <a
-        href={getEtherscanUrl(row.original.borrower?.id ?? "")}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-mono text-secondary-t hover:text-primary-t transition-colors"
-      >
-        {formatAddress(row.original.borrower?.id ?? "")}
-      </a>
-    ),
+    // `borrower` is a nullable relation on the wire and these rows reach the
+    // table unfiltered, so a missing one would otherwise render a link to
+    // `etherscan.io/address/` with no text and no accessible name.
+    cell: ({ row }) => {
+      const borrower = row.original.borrower?.id;
+      if (!borrower) return <span className="font-mono text-tertiary-t">—</span>;
+      return (
+        <a
+          href={getEtherscanUrl(borrower)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-secondary-t hover:text-primary-t transition-colors"
+        >
+          {formatAddress(borrower)}
+        </a>
+      );
+    },
   },
   {
     accessorKey: "cooler",

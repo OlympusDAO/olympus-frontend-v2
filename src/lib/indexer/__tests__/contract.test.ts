@@ -94,9 +94,11 @@ describe.skipIf(!API)("governance hooks' contract with the indexer", () => {
     }[];
     expect(delegates.length).toBeGreaterThan(0);
     for (const delegate of delegates) {
-      expect(Number.parseFloat(delegate.latestVotingPowerSnapshot.votingPower)).toBeGreaterThan(
-        0.0001,
-      );
+      // `minVotingPower` is inclusive, so a delegate sitting exactly on the
+      // floor satisfies the filter.
+      expect(
+        Number.parseFloat(delegate.latestVotingPowerSnapshot.votingPower),
+      ).toBeGreaterThanOrEqual(0.0001);
       expect(Array.isArray(delegate.delegators)).toBe(true);
     }
   });
@@ -138,10 +140,12 @@ describe.skipIf(!API)("cooler hooks' contract with the indexer", () => {
   });
 
   test("useActiveLoans / useDefaultedLoans: both lists come from one route", async () => {
-    const active = (await get("/v1/cooler/loans?minPrincipal=0&limit=2")).data as {
+    // A positive floor, because `minPrincipal=0` is inclusive and a fully
+    // repaid loan carries a principal of exactly 0.
+    const active = (await get("/v1/cooler/loans?minPrincipal=1&limit=2")).data as {
       principal: string;
     }[];
-    for (const loan of active) expect(Number.parseFloat(loan.principal)).toBeGreaterThan(0);
+    for (const loan of active) expect(Number.parseFloat(loan.principal)).toBeGreaterThanOrEqual(1);
 
     const defaulted = (await get("/v1/cooler/loans?defaulted=true&limit=2")).data as {
       defaultedClaimEvents: unknown[];
@@ -169,7 +173,8 @@ describe.skipIf(!API)("cooler hooks' contract with the indexer", () => {
     );
     const accounts = data as { healthFactor: string }[];
     for (const account of accounts) {
-      expect(Number.parseFloat(account.healthFactor)).toBeLessThan(1.2e18);
+      // `maxHealthFactor` is inclusive, and the bound parses to exactly 1.2e18.
+      expect(Number.parseFloat(account.healthFactor)).toBeLessThanOrEqual(1.2e18);
     }
   });
 });

@@ -15,7 +15,7 @@ import {
 } from "@/lib/hooks/cds/cd-indexer-queries";
 import type { CdRevenue } from "@/lib/hooks/cds/cd-revenue";
 import type { ConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
-import { windowed, withNumericTimestamp } from "@/lib/indexer/rows";
+import { parseDecimal, windowed, withNumericTimestamp } from "@/lib/indexer/rows";
 
 /**
  * The CD routes are mainnet-only, so cache keys use this rather than the
@@ -138,14 +138,39 @@ export function useCurrentStatistics() {
   });
 }
 
+/**
+ * Every bid the auctioneer has recorded, for the two "all time" totals below.
+ *
+ * The bids route caps a page at 1000 and offers neither an offset nor a
+ * `sinceId`, so a full page cannot be walked — and a total built from one is
+ * indistinguishable from a real one by the time it reaches a card. It throws
+ * instead, matching the policy in `cd-indexer-queries.ts`. At 275 bids today
+ * there is plenty of headroom; if this ever trips, the fix is a cursor on the
+ * route rather than a larger constant here.
+ */
+const BIDS_PAGE_LIMIT = 1000;
+
+async function fetchAllTimeBids() {
+  const { data: bids } = await getConvertibleDepositsBids({
+    order: "asc",
+    limit: BIDS_PAGE_LIMIT,
+  });
+  if (bids.length >= BIDS_PAGE_LIMIT) {
+    throw new Error(
+      `CD bids filled a ${BIDS_PAGE_LIMIT}-row page; refusing a partial all-time total`,
+    );
+  }
+  return bids;
+}
+
 export function useAllTimeDeposits() {
   const chainId = useChainId();
 
   return useQuery<number>({
     queryKey: ["allTimeDeposits", chainId],
     queryFn: async () => {
-      const { data: bids } = await getConvertibleDepositsBids({ order: "asc", limit: 1000 });
-      return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.depositAmountDecimal), 0);
+      const bids = await fetchAllTimeBids();
+      return bids.reduce((sum, bid) => sum + parseDecimal(bid.depositAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,
@@ -158,8 +183,8 @@ export function useAllTimeConvertibleOhm() {
   return useQuery<number>({
     queryKey: ["allTimeConvertibleOhm", chainId],
     queryFn: async () => {
-      const { data: bids } = await getConvertibleDepositsBids({ order: "asc", limit: 1000 });
-      return bids.reduce((sum, bid) => sum + Number.parseFloat(bid.convertedAmountDecimal), 0);
+      const bids = await fetchAllTimeBids();
+      return bids.reduce((sum, bid) => sum + parseDecimal(bid.convertedAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,

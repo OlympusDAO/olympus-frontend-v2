@@ -219,8 +219,13 @@ describe("calculateConversionExposure", () => {
     const exposure = calculateConversionExposure({
       positions: [position("1", "1000", "1000", "20")],
       redemptions: [
-        { positionId: "1", amountDecimal: "400", loans: { items: [{ status: "repaid" }] } },
-        { positionId: "1", amountDecimal: "200", loans: { items: [] } },
+        {
+          positionId: "1",
+          amountDecimal: "400",
+          status: "pending",
+          loans: { items: [{ status: "repaid" }] },
+        },
+        { positionId: "1", amountDecimal: "200", status: "pending", loans: { items: [] } },
       ],
     });
 
