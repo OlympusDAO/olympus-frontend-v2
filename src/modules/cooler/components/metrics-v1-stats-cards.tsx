@@ -25,7 +25,7 @@ export const MetricsV1StatsCards: React.FC = () => {
   const defaultingStats = useMemo(() => {
     if (!activeLoansData?.pages) return { count: 0, value: 0 };
 
-    const allLoans = activeLoansData.pages.flatMap((page) => page.coolerLoans);
+    const allLoans = activeLoansData.pages.flatMap((page) => page);
     let count = 0;
     let value = 0;
 
@@ -54,7 +54,7 @@ export const MetricsV1StatsCards: React.FC = () => {
     );
   }
 
-  const cumulativeStats = stats?.clearinghouseCumulativeStats_collection ?? [];
+  const cumulativeStats = stats ?? [];
 
   const totalBorrowers = cumulativeStats.reduce((acc, curr) => acc + curr.totalUniqueBorrowers, 0);
   const activeLoopers = cumulativeStats.reduce((acc, curr) => acc + curr.currentActiveLoopers, 0);
@@ -62,12 +62,10 @@ export const MetricsV1StatsCards: React.FC = () => {
   const totalActiveLoans = cumulativeStats.reduce((acc, curr) => acc + curr.currentActiveLoans, 0);
   const totalDefaults = cumulativeStats.reduce((acc, curr) => acc + curr.totalDefaultedLoans, 0);
 
-  const highestLoop = topLooperData?.borrowerStats_collection?.[0]?.maxActiveLoans ?? 0;
-  const highestBorrow = topBorrowData?.clearLoanRequestEvents?.[0]?.loan?.principal
-    ? Number(topBorrowData.clearLoanRequestEvents[0].loan.principal)
-    : 0;
-  const highestTotalBorrow = topTotalBorrowsData?.borrowerStats_collection?.[0]?.maxBorrowedValue
-    ? Number(topTotalBorrowsData.borrowerStats_collection[0].maxBorrowedValue)
+  const highestLoop = topLooperData?.[0]?.maxActiveLoans ?? 0;
+  const highestBorrow = topBorrowData?.[0]?.principal ? Number(topBorrowData[0].principal) : 0;
+  const highestTotalBorrow = topTotalBorrowsData?.[0]?.maxBorrowedValue
+    ? Number(topTotalBorrowsData[0].maxBorrowedValue)
     : 0;
 
   const cards = [

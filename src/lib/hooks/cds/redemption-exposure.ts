@@ -1,0 +1,63 @@
+import {
+  REDEMPTION_STATUSES,
+  type RedemptionExposure,
+  type RedemptionStatus,
+} from "@/lib/hooks/cds/conversion-exposure";
+
+// `/v1/convertible-deposits/redemptions` returns redemptions and their loans as
+// TWO FLAT LISTS. Ponder nested the loans inside each redemption
+// (`redemption.loans.items[]`), which is the shape `calculateConversionExposure`
+// reads, so the join happens here.
+//
+// Two things this gets right that are easy to get wrong:
+//
+//   * The payload is an OBJECT, not an array. Passing it straight to the
+//     exposure helper is not a type error, it is a `for...of` over a
+//     non-iterable — a crash.
+//   * The join key is the composite `id`, NOT `redemptionId`. `redemptionId` is
+//     scoped per depositor and vault: 156 redemptions carry only 80 distinct
+//     values, so joining on it attaches every depositor's loans to every other
+//     depositor's redemption of the same number. That inflated convertible OHM
+//     by ~9% (250,028 against the correct 229,249) while row counts still
+//     matched, which is exactly the kind of error a shape check does not catch.
+type RedemptionsPayload = {
+  redemptions: {
+    id: string;
+    positionId?: string | null;
+    receiptTokenId?: string | null;
+    amountDecimal: string;
+    status: string;
+  }[];
+  loans: { id: string; status: string; principalDecimal?: string }[];
+};
+
+export function toRedemptionExposure(payload: RedemptionsPayload): RedemptionExposure[] {
+  const loansByRedemption = new Map<string, { status: string; principalDecimal?: string }[]>();
+  for (const loan of payload.loans) {
+    const entry = { status: loan.status, principalDecimal: loan.principalDecimal };
+    const existing = loansByRedemption.get(loan.id);
+    if (existing) existing.push(entry);
+    else loansByRedemption.set(loan.id, [entry]);
+  }
+
+  return payload.redemptions.map((redemption) => ({
+    positionId: redemption.positionId,
+    receiptTokenId: redemption.receiptTokenId,
+    amountDecimal: redemption.amountDecimal,
+    status: toRedemptionStatus(redemption.status, redemption.id),
+    loans: { items: loansByRedemption.get(redemption.id) ?? [] },
+  }));
+}
+
+/**
+ * The wire types `status` as a plain string, so a status added upstream would
+ * reach the exposure maths and be silently dropped by every lifecycle
+ * predicate — the same class of quiet shortfall the join key above caused.
+ */
+function toRedemptionStatus(status: string, id: string): RedemptionStatus {
+  const known = REDEMPTION_STATUSES.find((candidate) => candidate === status);
+  if (!known) {
+    throw new Error(`Redemption ${id} has unrecognised status "${status}"`);
+  }
+  return known;
+}

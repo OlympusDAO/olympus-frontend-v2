@@ -1,10 +1,15 @@
+import { parseDecimal } from "@/lib/indexer/rows";
+
 export interface ConvertiblePositionExposure {
   positionId: string;
   /** Groups positions by deposit term. Phantom balances are attributed per token. */
   receiptTokenId?: string | null;
   initialAmountDecimal: string;
   remainingAmountDecimal: string;
-  conversionPriceDecimal: string;
+  // Nullable in the indexer schema, so the generated position type declares it
+  // optional. Never null across the 270 live positions, but `parseDecimal`
+  // already returns 0 for a missing value and a price of 0 is skipped below.
+  conversionPriceDecimal?: string;
 }
 
 export interface RedemptionLoanExposure {
@@ -12,17 +17,44 @@ export interface RedemptionLoanExposure {
   principalDecimal?: string;
 }
 
+/**
+ * The redemption lifecycle the indexer reports, as of
+ * OlympusDAO/olympus-protocol-indexer#36.
+ *
+ * Enumerated rather than left as the wire's `string`, because every predicate
+ * below is an equality test: an unrecognised status would quietly fail all
+ * three and drop the redemption from the book after it had already moved
+ * `redeemedByPosition`. `toRedemptionExposure` rejects anything else at the
+ * boundary, so a new status upstream surfaces as an error rather than a total
+ * that is short by exactly those rows.
+ */
+export type RedemptionStatus = "pending" | "finished" | "cancelled";
+
+export const REDEMPTION_STATUSES: readonly RedemptionStatus[] = [
+  "pending",
+  "finished",
+  "cancelled",
+];
+
 export interface RedemptionExposure {
+  // Nullable on the wire: it comes from an on-chain read that returns empty for
+  // a redemption with no linked position, and 92 of 156 live redemptions have
+  // none. Those cannot be priced, so they are skipped below — which is what the
+  // legacy Ponder-backed numbers did too.
   positionId?: string | null;
   receiptTokenId?: string | null;
   amountDecimal: string;
+  /**
+   * This used to be inferred from nested `finishedEvents` / `cancelledEvents`
+   * collections. Those do not exist over REST, and the inference was the thing
+   * that made a pending receipt-token redemption look finished — see
+   * OlympusDAO/olympus-protocol-indexer#34, where three redemptions dated 170
+   * days out were counted as spent.
+   */
+  status: RedemptionStatus;
   loans?: {
     items?: RedemptionLoanExposure[];
   };
-  /** Present once the redemption completed and the deposit left the protocol. */
-  finishedEvents?: { items?: unknown[] };
-  /** Present once the redemption was reversed and the position came back. */
-  cancelledEvents?: { items?: unknown[] };
 }
 
 /** One convertible claim on the treasury: USD in, at the price it converts at. */
@@ -122,35 +154,21 @@ export interface MoneynessSummary {
   movePercentToAverageStrike: number;
 }
 
-/**
- * `Number` rather than `parseFloat`: the indexer emits malformed negative decimals
- * (e.g. "-302475.-729379175798898337") that parseFloat happily truncates to a
- * plausible-looking number.
- */
-const parseDecimal = (value: string | null | undefined): number => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 const isActive = (loan: RedemptionLoanExposure) => loan.status === "active";
 
-const hasEvents = (events?: { items?: unknown[] }) => (events?.items?.length ?? 0) > 0;
+const isFinished = (redemption: RedemptionExposure) => redemption.status === "finished";
 
-const isFinished = (redemption: RedemptionExposure) => hasEvents(redemption.finishedEvents);
+const isCancelled = (redemption: RedemptionExposure) => redemption.status === "cancelled";
 
 /**
- * A redemption still in flight — neither completed nor reversed. Loans keep a stale
- * "active" status after their redemption finishes, so the lifecycle, not the loan
- * status, decides what is really outstanding.
+ * A redemption still in flight — neither completed nor reversed.
  *
- * TODO(OlympusDAO/olympus-protocol-indexer#33): loan status is the signal this
- * should be able to use. It currently reports ~94 loans active against ~10 that
- * really are, and flips to "repaid" on a partial repayment, so neither direction
- * is trustworthy. Once that is fixed this gate can go and the loan status can be
- * read directly.
+ * The redemption's own lifecycle decides this rather than its loan's status.
+ * Loan status is trustworthy again as of
+ * OlympusDAO/olympus-protocol-indexer#35, but it answers a different question:
+ * whether the LOAN is settled, not whether the deposit has left.
  */
-const isPending = (redemption: RedemptionExposure) =>
-  !isFinished(redemption) && !hasEvents(redemption.cancelledEvents);
+const isPending = (redemption: RedemptionExposure) => redemption.status === "pending";
 
 export function calculateConversionExposure({
   positions,
@@ -216,7 +234,7 @@ export function calculateConversionExposure({
   for (const redemption of redemptions) {
     const amount = parseDecimal(redemption.amountDecimal);
 
-    if (redemption.positionId && !hasEvents(redemption.cancelledEvents) && amount > 0) {
+    if (redemption.positionId && !isCancelled(redemption) && amount > 0) {
       redeemedByPosition.set(
         redemption.positionId,
         (redeemedByPosition.get(redemption.positionId) ?? 0) + amount,

@@ -1,18 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
-import { cdsGraphqlClient } from "@/lib/graphql-client";
-import type { ConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
-import type { CdRevenue } from "@/lib/hooks/cds/cd-revenue";
+import {
+  getConvertibleDepositsAuctioneerSnapshots,
+  getConvertibleDepositsBids,
+  getConvertibleDepositsClaimedYields,
+  getConvertibleDepositsConvertedDeposits,
+  getConvertibleDepositsFacilitySnapshots,
+} from "@/generated/indexer";
 import type { ConversionSummary } from "@/lib/hooks/cds/cd-conversions";
 import {
-  fetchConversionExposure,
   fetchCdRevenue,
+  fetchConversionExposure,
   fetchConversions,
 } from "@/lib/hooks/cds/cd-indexer-queries";
+import type { CdRevenue } from "@/lib/hooks/cds/cd-revenue";
+import type { ConversionExposure } from "@/lib/hooks/cds/conversion-exposure";
+import { parseDecimal, windowed, withNumericTimestamp } from "@/lib/indexer/rows";
 
 /**
- * Every CD indexer query below filters on `chainId: 1`. Cache keys use this rather
- * than the connected chain so testnet mode does not cache mainnet payloads under a
+ * The CD routes are mainnet-only, so cache keys use this rather than the
+ * connected chain — otherwise testnet mode caches mainnet payloads under a
  * Sepolia key.
  */
 const CD_INDEXER_CHAIN_ID = 1;
@@ -84,155 +91,30 @@ const TIME_RANGE_SECONDS: Record<TimeRange, number> = {
 
 export function useStatisticsData(timeRange: TimeRange = "7d") {
   const chainId = useChainId();
-
   const startTimestamp = Math.floor(Date.now() / 1000) - TIME_RANGE_SECONDS[timeRange];
 
   return useQuery<StatisticsData>({
     queryKey: ["statisticsData", chainId, timeRange],
     queryFn: async () => {
-      const query = `
-        query GetStatisticsData {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              totalDeposited
-              totalDepositedDecimal
-              claimableYield
-              claimableYieldDecimal
-              borrowedAmount
-              borrowedAmountDecimal
-              pendingRedemption
-              pendingRedemptionDecimal
-            }
-          }
+      // Five windowed lists, previously one Ponder document with five roots.
+      const window = { sinceTimestamp: String(startTimestamp), order: "asc", limit: 1000 } as const;
+      const [depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields] =
+        await Promise.all([
+          windowed(() => getConvertibleDepositsFacilitySnapshots(window)),
+          windowed(() => getConvertibleDepositsBids(window)),
+          windowed(() => getConvertibleDepositsAuctioneerSnapshots(window)),
+          windowed(() => getConvertibleDepositsConvertedDeposits(window)),
+          windowed(() => getConvertibleDepositsClaimedYields(window)),
+        ]);
 
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-              tickPrice
-              tickPriceDecimal
-            }
-          }
-
-          auctioneerSnapshots(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              target
-              targetDecimal
-              ohmSold
-              ohmSoldDecimal
-              minPrice
-              minPriceDecimal
-            }
-          }
-
-          convertibleDepositFacilityConvertedDeposits(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              depositor
-              depositAmount
-              depositAmountDecimal
-              convertedAmount
-              convertedAmountDecimal
-            }
-          }
-
-          convertibleDepositFacilityClaimedYields(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${startTimestamp}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              timestamp
-              amount
-              amountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      return {
-        depositSnapshots: (data?.depositFacilityAssetSnapshots?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        bids: (data?.convertibleDepositAuctioneerBids?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        auctioneerSnapshots: (data?.auctioneerSnapshots?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        convertedDeposits: (data?.convertibleDepositFacilityConvertedDeposits?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-        claimedYields: (data?.convertibleDepositFacilityClaimedYields?.items || []).map(
-          (item: Record<string, string>) => ({
-            ...item,
-            timestamp: Number(item.timestamp),
-          }),
-        ),
-      };
+      return { depositSnapshots, bids, auctioneerSnapshots, convertedDeposits, claimedYields };
     },
     staleTime: 30000,
     refetchInterval: 60000,
   });
 }
 
-// Hook to get current/latest snapshot data (for headline metrics)
+// Latest snapshot plus the one before it, for headline metrics and their delta.
 export function useCurrentStatistics() {
   const chainId = useChainId();
 
@@ -242,43 +124,13 @@ export function useCurrentStatistics() {
   }>({
     queryKey: ["currentStatistics", chainId],
     queryFn: async () => {
-      const query = `
-        query GetCurrentStatistics {
-          depositFacilityAssetSnapshots(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 2
-          ) {
-            items {
-              timestamp
-              totalDeposited
-              totalDepositedDecimal
-              claimableYield
-              claimableYieldDecimal
-              borrowedAmount
-              borrowedAmountDecimal
-              pendingRedemption
-              pendingRedemptionDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const snapshots = (data?.depositFacilityAssetSnapshots?.items || []).map(
-        (item: Record<string, string>) => ({
-          ...item,
-          timestamp: Number(item.timestamp),
-        }),
-      );
-
+      const { data: snapshots } = await getConvertibleDepositsFacilitySnapshots({
+        order: "desc",
+        limit: 2,
+      });
       return {
-        latestSnapshot: snapshots[0] || null,
-        previousSnapshot: snapshots[1] || null,
+        latestSnapshot: snapshots[0] ? withNumericTimestamp(snapshots[0]) : null,
+        previousSnapshot: snapshots[1] ? withNumericTimestamp(snapshots[1]) : null,
       };
     },
     staleTime: 30000,
@@ -286,78 +138,53 @@ export function useCurrentStatistics() {
   });
 }
 
-// Hook to get all-time total deposits (sum of all bids)
+/**
+ * Every bid the auctioneer has recorded, for the two "all time" totals below.
+ *
+ * The bids route caps a page at 1000 and offers neither an offset nor a
+ * `sinceId`, so a full page cannot be walked — and a total built from one is
+ * indistinguishable from a real one by the time it reaches a card. It throws
+ * instead, matching the policy in `cd-indexer-queries.ts`. At 275 bids today
+ * there is plenty of headroom; if this ever trips, the fix is a cursor on the
+ * route rather than a larger constant here.
+ */
+const BIDS_PAGE_LIMIT = 1000;
+
+async function fetchAllTimeBids() {
+  const { data: bids } = await getConvertibleDepositsBids({
+    order: "asc",
+    limit: BIDS_PAGE_LIMIT,
+  });
+  if (bids.length >= BIDS_PAGE_LIMIT) {
+    throw new Error(
+      `CD bids filled a ${BIDS_PAGE_LIMIT}-row page; refusing a partial all-time total`,
+    );
+  }
+  return bids;
+}
+
 export function useAllTimeDeposits() {
   const chainId = useChainId();
 
   return useQuery<number>({
     queryKey: ["allTimeDeposits", chainId],
     queryFn: async () => {
-      // Fetch all bids (no time filter) to sum total deposits
-      const query = `
-        query GetAllTimeBids {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              depositAmountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const bids = data?.convertibleDepositAuctioneerBids?.items || [];
-      return bids.reduce(
-        (sum: number, bid: { depositAmountDecimal: string }) =>
-          sum + parseFloat(bid.depositAmountDecimal),
-        0,
-      );
+      const bids = await fetchAllTimeBids();
+      return bids.reduce((sum, bid) => sum + parseDecimal(bid.depositAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,
   });
 }
 
-// Hook to get total convertible OHM (sum of convertedAmount from all bids)
-// This represents the OHM that will be minted based on each deposit's locked-in conversion price
 export function useAllTimeConvertibleOhm() {
   const chainId = useChainId();
 
   return useQuery<number>({
     queryKey: ["allTimeConvertibleOhm", chainId],
     queryFn: async () => {
-      const query = `
-        query GetAllTimeBidsWithConvertedAmount {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1
-            }
-            orderBy: "timestamp"
-            orderDirection: "asc"
-            limit: 1000
-          ) {
-            items {
-              convertedAmountDecimal
-            }
-          }
-        }
-      `;
-
-      const data = await cdsGraphqlClient.request(query);
-
-      const bids = data?.convertibleDepositAuctioneerBids?.items || [];
-      return bids.reduce(
-        (sum: number, bid: { convertedAmountDecimal: string }) =>
-          sum + parseFloat(bid.convertedAmountDecimal),
-        0,
-      );
+      const bids = await fetchAllTimeBids();
+      return bids.reduce((sum, bid) => sum + parseDecimal(bid.convertedAmountDecimal), 0);
     },
     staleTime: 60000,
     refetchInterval: 120000,

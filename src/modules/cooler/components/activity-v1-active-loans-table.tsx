@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
-import { useActiveLoans, type ActiveLoan } from "@/lib/hooks/cooler/useV1Data.ts";
+import type { GetCoolerLoans200DataItem } from "@/generated/indexer";
+import { useActiveLoans } from "@/lib/hooks/cooler/useV1Data.ts";
 import { formatUSD, formatAddress, calculateDaysUntilDefault } from "@/lib/hooks/cooler/utils.ts";
 
 function formatCollateral(value: string): string {
@@ -34,21 +35,28 @@ function getEtherscanUrl(address: string): string {
   return `https://etherscan.io/address/${address}`;
 }
 
-const columns: ColumnDef<ActiveLoan>[] = [
+const columns: ColumnDef<GetCoolerLoans200DataItem>[] = [
   {
     id: "borrower",
     header: "Wallet",
-    accessorFn: (row) => row.borrower.id,
-    cell: ({ row }) => (
-      <a
-        href={getEtherscanUrl(row.original.borrower.id)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-mono text-secondary-t hover:text-primary-t transition-colors"
-      >
-        {formatAddress(row.original.borrower.id)}
-      </a>
-    ),
+    accessorFn: (row) => row.borrower?.id ?? "",
+    // `borrower` is a nullable relation on the wire and these rows reach the
+    // table unfiltered, so a missing one would otherwise render a link to
+    // `etherscan.io/address/` with no text and no accessible name.
+    cell: ({ row }) => {
+      const borrower = row.original.borrower?.id;
+      if (!borrower) return <span className="font-mono text-tertiary-t">—</span>;
+      return (
+        <a
+          href={getEtherscanUrl(borrower)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-secondary-t hover:text-primary-t transition-colors"
+        >
+          {formatAddress(borrower)}
+        </a>
+      );
+    },
   },
   {
     accessorKey: "cooler",
@@ -129,7 +137,7 @@ export function ActivityV1ActiveLoansTable() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const loans = useMemo(() => data?.pages.flatMap((page) => page.coolerLoans) ?? [], [data]);
+  const loans = useMemo(() => data?.pages.flatMap((page) => page) ?? [], [data]);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "currentExpiryTimestamp", desc: false },
