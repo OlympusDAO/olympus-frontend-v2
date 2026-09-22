@@ -14,6 +14,7 @@ import BaseIcon from "@/icons/chains/base.svg?react";
 import BerachainIcon from "@/icons/chains/berachain.svg?react";
 import robinhoodIcon from "@/icons/chains/robinhood.jpg";
 
+/** Render the official, unmodified Robinhood Chain avatar at the registry's icon size. */
 const RobinhoodIcon: FC<SVGProps<SVGSVGElement>> = ({ width, height }) => (
   <img src={robinhoodIcon} alt="" width={Number(width)} height={Number(height)} />
 );
