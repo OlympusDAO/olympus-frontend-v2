@@ -12,6 +12,11 @@ import BobaIcon from "@/icons/chains/boba.svg?react";
 import FantomIcon from "@/icons/chains/fantom.svg?react";
 import BaseIcon from "@/icons/chains/base.svg?react";
 import BerachainIcon from "@/icons/chains/berachain.svg?react";
+import robinhoodIcon from "@/icons/chains/robinhood.jpg";
+
+const RobinhoodIcon: FC<SVGProps<SVGSVGElement>> = ({ width, height }) => (
+  <img src={robinhoodIcon} alt="" width={Number(width)} height={Number(height)} />
+);
 
 type ChainMeta = {
   label: string;
@@ -29,6 +34,7 @@ const CHAIN_META: Record<number, ChainMeta> = {
   250: { label: "Fantom", Icon: FantomIcon },
   8453: { label: "Base", Icon: BaseIcon },
   80094: { label: "Berachain", Icon: BerachainIcon },
+  4663: { label: "Robinhood Chain", Icon: RobinhoodIcon },
 };
 
 type ChainIconProps = {

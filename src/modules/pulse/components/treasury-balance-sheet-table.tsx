@@ -227,9 +227,16 @@ export function TreasuryBalanceSheetTable() {
                 <td className="py-2 pr-3">
                   <div className="flex min-w-0 items-center gap-1.5 text-xs text-secondary-t">
                     {CHAIN_NAME_TO_ID[row.blockchain] ? (
-                      <ChainIcon chainId={CHAIN_NAME_TO_ID[row.blockchain]} size={16} />
+                      <ChainIcon
+                        chainId={CHAIN_NAME_TO_ID[row.blockchain]}
+                        size={CHAIN_NAME_TO_ID[row.blockchain] === 4663 ? 20 : 16}
+                      />
                     ) : null}
-                    <span className="truncate">{row.blockchain}</span>
+                    <span className="truncate">
+                      {CHAIN_NAME_TO_ID[row.blockchain] === 4663
+                        ? "Robinhood Chain"
+                        : row.blockchain}
+                    </span>
                   </div>
                 </td>
                 <td className="py-2 pr-3 pl-3 text-xs font-semibold text-primary-t">

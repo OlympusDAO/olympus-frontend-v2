@@ -71,6 +71,8 @@ export const CHAIN_NAME_TO_ID: Record<string, number> = {
   Fantom: fantom.id,
   Base: base.id,
   Berachain: berachain.id,
+  Robinhood: 4663,
+  "Robinhood Chain": 4663,
   BSC: 56,
 };
 
