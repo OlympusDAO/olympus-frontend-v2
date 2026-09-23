@@ -6,7 +6,7 @@ import { NumberFlow } from "@/components/ui/number-flow.tsx";
 import { useTreasuryMetrics } from "@/modules/pulse/hooks/useTreasuryMetrics";
 import { useReserveBalances } from "@/modules/pulse/hooks/useReserveBalances";
 import { ProtocolDataSource } from "@/modules/pulse/components/protocol-data-source.tsx";
-import { ChainIcon } from "@/components/chain-icon";
+import { ChainIcon, getChainLabel } from "@/components/chain-icon";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CHAIN_NAME_TO_ID } from "@/modules/ohm/utils/defi-llama";
@@ -227,15 +227,10 @@ export function TreasuryBalanceSheetTable() {
                 <td className="py-2 pr-3">
                   <div className="flex min-w-0 items-center gap-1.5 text-xs text-secondary-t">
                     {CHAIN_NAME_TO_ID[row.blockchain] ? (
-                      <ChainIcon
-                        chainId={CHAIN_NAME_TO_ID[row.blockchain]}
-                        size={CHAIN_NAME_TO_ID[row.blockchain] === 4663 ? 20 : 16}
-                      />
+                      <ChainIcon chainId={CHAIN_NAME_TO_ID[row.blockchain]} size={16} />
                     ) : null}
                     <span className="truncate">
-                      {CHAIN_NAME_TO_ID[row.blockchain] === 4663
-                        ? "Robinhood Chain"
-                        : row.blockchain}
+                      {getChainLabel(CHAIN_NAME_TO_ID[row.blockchain]) ?? row.blockchain}
                     </span>
                   </div>
                 </td>

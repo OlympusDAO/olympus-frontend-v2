@@ -1,6 +1,19 @@
-import type { SVGProps, FC } from "react";
+import type { FC } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  arbitrum,
+  avalanche,
+  base,
+  berachain,
+  boba,
+  fantom,
+  mainnet,
+  optimism,
+  polygon,
+  robinhood,
+  sepolia,
+} from "@/lib/chains";
 
 import EthereumIcon from "@/icons/chains/ethereum.svg?react";
 import SepoliaIcon from "@/icons/chains/sepolia.svg?react";
@@ -12,31 +25,38 @@ import BobaIcon from "@/icons/chains/boba.svg?react";
 import FantomIcon from "@/icons/chains/fantom.svg?react";
 import BaseIcon from "@/icons/chains/base.svg?react";
 import BerachainIcon from "@/icons/chains/berachain.svg?react";
-import robinhoodIcon from "@/icons/chains/robinhood.jpg";
+import robinhoodIcon from "@/icons/chains/robinhood.png";
 
-/** Render the official, unmodified Robinhood Chain avatar at the registry's icon size. */
-const RobinhoodIcon: FC<SVGProps<SVGSVGElement>> = ({ width, height }) => (
-  <img src={robinhoodIcon} alt="" width={Number(width)} height={Number(height)} />
+type ChainIconComponent = FC<{ width: number; height: number }>;
+
+/** Robinhood ships a raster brand mark, so render it as an image instead of an SVG component. */
+const RobinhoodIcon: ChainIconComponent = ({ width, height }) => (
+  <img src={robinhoodIcon} alt="" width={width} height={height} />
 );
 
 type ChainMeta = {
   label: string;
-  Icon: FC<SVGProps<SVGSVGElement>>;
+  Icon: ChainIconComponent;
 };
 
 const CHAIN_META: Record<number, ChainMeta> = {
-  1: { label: "Ethereum", Icon: EthereumIcon },
-  11155111: { label: "Sepolia", Icon: SepoliaIcon },
-  42161: { label: "Arbitrum", Icon: ArbitrumIcon },
-  137: { label: "Polygon", Icon: PolygonIcon },
-  10: { label: "Optimism", Icon: OptimismIcon },
-  43114: { label: "Avalanche", Icon: AvalancheIcon },
-  288: { label: "Boba", Icon: BobaIcon },
-  250: { label: "Fantom", Icon: FantomIcon },
-  8453: { label: "Base", Icon: BaseIcon },
-  80094: { label: "Berachain", Icon: BerachainIcon },
-  4663: { label: "Robinhood Chain", Icon: RobinhoodIcon },
+  [mainnet.id]: { label: mainnet.name, Icon: EthereumIcon },
+  [sepolia.id]: { label: sepolia.name, Icon: SepoliaIcon },
+  [arbitrum.id]: { label: arbitrum.name, Icon: ArbitrumIcon },
+  [polygon.id]: { label: polygon.name, Icon: PolygonIcon },
+  [optimism.id]: { label: optimism.name, Icon: OptimismIcon },
+  [avalanche.id]: { label: avalanche.name, Icon: AvalancheIcon },
+  [boba.id]: { label: boba.name, Icon: BobaIcon },
+  [fantom.id]: { label: fantom.name, Icon: FantomIcon },
+  [base.id]: { label: base.name, Icon: BaseIcon },
+  [berachain.id]: { label: berachain.name, Icon: BerachainIcon },
+  [robinhood.id]: { label: robinhood.name, Icon: RobinhoodIcon },
 };
+
+/** Display name for a chain ID, or undefined when the chain has no registry entry. */
+export function getChainLabel(chainId: number): string | undefined {
+  return CHAIN_META[chainId]?.label;
+}
 
 type ChainIconProps = {
   chainId: number;

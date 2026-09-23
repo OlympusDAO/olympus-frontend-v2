@@ -7,6 +7,7 @@ import {
   fantom,
   base,
   berachain,
+  robinhood,
 } from "@/lib/chains.ts";
 import type { IconName } from "@/components/icon.tsx";
 
@@ -71,8 +72,9 @@ export const CHAIN_NAME_TO_ID: Record<string, number> = {
   Fantom: fantom.id,
   Base: base.id,
   Berachain: berachain.id,
-  Robinhood: 4663,
-  "Robinhood Chain": 4663,
+  // The treasury indexer and DefiLlama name this chain differently.
+  Robinhood: robinhood.id, // Treasury indexer
+  "Robinhood Chain": robinhood.id, // DefiLlama yields
   BSC: 56,
 };
 
