@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { SVGProps, FC } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
@@ -25,18 +25,11 @@ import BobaIcon from "@/icons/chains/boba.svg?react";
 import FantomIcon from "@/icons/chains/fantom.svg?react";
 import BaseIcon from "@/icons/chains/base.svg?react";
 import BerachainIcon from "@/icons/chains/berachain.svg?react";
-import robinhoodIcon from "@/icons/chains/robinhood.png";
-
-type ChainIconComponent = FC<{ width: number; height: number }>;
-
-/** Robinhood ships a raster brand mark, so render it as an image instead of an SVG component. */
-const RobinhoodIcon: ChainIconComponent = ({ width, height }) => (
-  <img src={robinhoodIcon} alt="" width={width} height={height} />
-);
+import RobinhoodIcon from "@/icons/chains/robinhood.svg?react";
 
 type ChainMeta = {
   label: string;
-  Icon: ChainIconComponent;
+  Icon: FC<SVGProps<SVGSVGElement>>;
 };
 
 const CHAIN_META: Record<number, ChainMeta> = {
