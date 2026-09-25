@@ -1,3 +1,5 @@
+import { parseDecimal } from "@/lib/indexer/rows";
+
 export interface ConversionEvent {
   timestamp: number;
   depositAmountDecimal: string;
@@ -20,11 +22,6 @@ export interface ConversionSummary {
   totalOhmMinted: number;
   conversionCount: number;
 }
-
-const parseDecimal = (value: string | null | undefined): number => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const startOfUtcDay = (timestampSeconds: number): number => {
   const date = new Date(timestampSeconds * 1000);

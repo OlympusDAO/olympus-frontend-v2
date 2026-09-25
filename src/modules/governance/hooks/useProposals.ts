@@ -1,44 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import request, { gql } from "graphql-request";
-import {
-  normalizeProposal,
-  type SubgraphProposal,
-} from "@/modules/governance/helpers/normalize-proposal";
-import { getGovernanceSubgraphUrl } from "@/modules/governance/hooks/useGovernanceSubgraph";
-
-type ProposalsResponse = {
-  proposalCreateds: SubgraphProposal[];
-};
-
-const PROPOSALS_QUERY = gql`
-  query {
-    proposalCreateds(first: 1000, orderBy: proposalId, orderDirection: desc) {
-      proposalId
-      proposer
-      targets
-      signatures
-      calldatas
-      transactionHash
-      description
-      blockTimestamp
-      blockNumber
-      startBlock
-      values
-    }
-  }
-`;
+import { getGovernorProposals } from "@/generated/indexer";
+import { normalizeProposal } from "@/modules/governance/helpers/normalize-proposal";
 
 /**
- * Fetches all proposals from the governance subgraph, normalized for UI consumption.
+ * Fetches all proposals from the protocol indexer, normalized for UI consumption.
+ *
+ * The route returns newest proposal id first and its rows carry every field
+ * `normalizeProposal` reads, so the normalizer is unchanged from the subgraph era.
  */
 export function useProposals() {
   return useQuery({
     queryKey: ["governance", "proposals"],
     queryFn: async () => {
       try {
-        const subgraphUrl = getGovernanceSubgraphUrl();
-        const response = await request<ProposalsResponse>(subgraphUrl, PROPOSALS_QUERY);
-        return response.proposalCreateds.map(normalizeProposal);
+        const { data } = await getGovernorProposals({ limit: 1000 });
+        return data.map(normalizeProposal);
       } catch (error) {
         console.error("useProposals", error);
         return [];

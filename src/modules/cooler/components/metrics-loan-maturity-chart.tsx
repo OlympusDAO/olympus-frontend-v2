@@ -44,7 +44,7 @@ export const MetricsLoanMaturityChart: React.FC = () => {
   const chartData = useMemo((): MaturityDataPoint[] => {
     if (!activeLoansData?.pages) return [];
 
-    const allLoans = activeLoansData.pages.flatMap((page) => page.coolerLoans);
+    const allLoans = activeLoansData.pages.flatMap((page) => page);
     const today = startOfDay(new Date());
 
     return Array.from({ length: 121 }).map((_, i) => {
