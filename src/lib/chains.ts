@@ -9,7 +9,7 @@ import {
   base,
   sepolia,
 } from "viem/chains";
-import { berachain } from "viem/chains";
+import { berachain, robinhood } from "viem/chains";
 import { http, type Transport } from "viem";
 import ethereumIcon from "@/icons/chains/ethereum.svg";
 import arbitrumIcon from "@/icons/chains/arbitrum.svg";
@@ -89,4 +89,16 @@ export const transports: Record<number, Transport> = {
 };
 
 // Re-export chain objects for convenience
-export { mainnet, arbitrum, polygon, optimism, avalanche, boba, fantom, base, berachain, sepolia };
+export {
+  mainnet,
+  arbitrum,
+  polygon,
+  optimism,
+  avalanche,
+  boba,
+  fantom,
+  base,
+  berachain,
+  robinhood,
+  sepolia,
+};

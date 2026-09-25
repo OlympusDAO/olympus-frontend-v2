@@ -1,6 +1,19 @@
 import type { SVGProps, FC } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  arbitrum,
+  avalanche,
+  base,
+  berachain,
+  boba,
+  fantom,
+  mainnet,
+  optimism,
+  polygon,
+  robinhood,
+  sepolia,
+} from "@/lib/chains";
 
 import EthereumIcon from "@/icons/chains/ethereum.svg?react";
 import SepoliaIcon from "@/icons/chains/sepolia.svg?react";
@@ -12,6 +25,7 @@ import BobaIcon from "@/icons/chains/boba.svg?react";
 import FantomIcon from "@/icons/chains/fantom.svg?react";
 import BaseIcon from "@/icons/chains/base.svg?react";
 import BerachainIcon from "@/icons/chains/berachain.svg?react";
+import RobinhoodIcon from "@/icons/chains/robinhood.svg?react";
 
 type ChainMeta = {
   label: string;
@@ -19,17 +33,23 @@ type ChainMeta = {
 };
 
 const CHAIN_META: Record<number, ChainMeta> = {
-  1: { label: "Ethereum", Icon: EthereumIcon },
-  11155111: { label: "Sepolia", Icon: SepoliaIcon },
-  42161: { label: "Arbitrum", Icon: ArbitrumIcon },
-  137: { label: "Polygon", Icon: PolygonIcon },
-  10: { label: "Optimism", Icon: OptimismIcon },
-  43114: { label: "Avalanche", Icon: AvalancheIcon },
-  288: { label: "Boba", Icon: BobaIcon },
-  250: { label: "Fantom", Icon: FantomIcon },
-  8453: { label: "Base", Icon: BaseIcon },
-  80094: { label: "Berachain", Icon: BerachainIcon },
+  [mainnet.id]: { label: mainnet.name, Icon: EthereumIcon },
+  [sepolia.id]: { label: sepolia.name, Icon: SepoliaIcon },
+  [arbitrum.id]: { label: arbitrum.name, Icon: ArbitrumIcon },
+  [polygon.id]: { label: polygon.name, Icon: PolygonIcon },
+  [optimism.id]: { label: optimism.name, Icon: OptimismIcon },
+  [avalanche.id]: { label: avalanche.name, Icon: AvalancheIcon },
+  [boba.id]: { label: boba.name, Icon: BobaIcon },
+  [fantom.id]: { label: fantom.name, Icon: FantomIcon },
+  [base.id]: { label: base.name, Icon: BaseIcon },
+  [berachain.id]: { label: berachain.name, Icon: BerachainIcon },
+  [robinhood.id]: { label: robinhood.name, Icon: RobinhoodIcon },
 };
+
+/** Display name for a chain ID, or undefined when the chain has no registry entry. */
+export function getChainLabel(chainId: number): string | undefined {
+  return CHAIN_META[chainId]?.label;
+}
 
 type ChainIconProps = {
   chainId: number;
