@@ -43,9 +43,10 @@ export function DelegateDetailPage() {
 
   const displayName = ensName ?? (id ? truncateAddress(id) : "...");
 
-  const votingPower = delegate
-    ? Number(delegate.latestVotingPowerSnapshot.votingPower).toFixed(4)
-    : "0";
+  // A Voter with no VotingPowerSnapshot yet — someone who has been delegated
+  // to but never had power recorded — has no snapshot at all. Reachable: the
+  // delegates LIST filters those out, but this page is addressed directly.
+  const votingPower = Number(delegate?.latestVotingPowerSnapshot?.votingPower ?? 0).toFixed(4);
 
   const voteCount = delegate?.votesCasted?.length ?? 0;
   const delegationCount = delegate?.delegators?.length ?? 0;

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import request, { gql } from "graphql-request";
-import { getGovernanceSubgraphUrl } from "@/modules/governance/hooks/useGovernanceSubgraph";
+import { getGovernorProposalsByIdTimeline } from "@/generated/indexer";
 import type { ProposalStatus } from "@/modules/governance/helpers/proposal-status";
 
 type TimelineEvent = {
@@ -15,44 +14,30 @@ export type ProposalTimeline = {
   vetoed: TimelineEvent;
 };
 
-type QueuedEvent = {
-  proposalQueueds: {
-    id: string;
-    blockTimestamp: string;
-    transactionHash: string;
-  }[];
-};
-
-type ExecutedEvent = {
-  proposalExecuteds: {
-    id: string;
-    blockTimestamp: string;
-    transactionHash: string;
-  }[];
-};
-
-type CanceledEvent = {
-  proposalCanceleds: {
-    id: string;
-    blockTimestamp: string;
-    transactionHash: string;
-  }[];
-};
-
-type VetoedEvent = {
-  proposalVetoeds: {
-    id: string;
-    blockTimestamp: string;
-    transactionHash: string;
-  }[];
-};
+// Every marker list carries these two fields; the generated per-list types
+// differ only in the extras (queued also has `eta`), so the reader takes the
+// common shape.
+type TimelineMarker = { blockTimestamp: string; transactionHash: string };
 
 const emptyEvent: TimelineEvent = { date: undefined, txHash: undefined };
 
+function toEvent(markers: TimelineMarker[] | undefined): TimelineEvent {
+  const marker = markers?.[0];
+  if (!marker) return { ...emptyEvent };
+  return {
+    date: new Date(Number(marker.blockTimestamp) * 1000),
+    txHash: marker.transactionHash,
+  };
+}
+
 /**
- * Consolidated hook for fetching proposal lifecycle timestamps from the subgraph.
- * Queries queued, executed, canceled, and vetoed events for a specific proposal.
- * Only fetches events that are relevant to the current proposal status.
+ * Proposal lifecycle timestamps: queued, executed, canceled, vetoed.
+ *
+ * One request. The subgraph version fired up to four queries and gated each on
+ * the proposal's status to avoid the round trips; the route returns all four
+ * markers together, so the status gate is gone and a proposal that changed
+ * status between render and fetch no longer returns a partially-filled
+ * timeline.
  */
 export function useProposalTimeline({
   proposalId,
@@ -64,103 +49,23 @@ export function useProposalTimeline({
   return useQuery({
     queryKey: ["governance", "proposalTimeline", proposalId, status],
     queryFn: async (): Promise<ProposalTimeline> => {
-      const subgraphUrl = getGovernanceSubgraphUrl();
-      const result: ProposalTimeline = {
-        queued: { ...emptyEvent },
-        executed: { ...emptyEvent },
-        canceled: { ...emptyEvent },
-        vetoed: { ...emptyEvent },
-      };
-
       try {
-        // Fetch queued time if proposal was queued or later
-        if (status === "Queued" || status === "Executed" || status === "Expired") {
-          const queuedQuery = gql`
-            query {
-              proposalQueueds(where: { proposalId: ${proposalId} }) {
-                id
-                blockTimestamp
-                transactionHash
-              }
-            }
-          `;
-          const queuedResponse = await request<QueuedEvent>(subgraphUrl, queuedQuery);
-          const queuedEvent = queuedResponse.proposalQueueds[0];
-          if (queuedEvent) {
-            result.queued = {
-              date: new Date(Number(queuedEvent.blockTimestamp) * 1000),
-              txHash: queuedEvent.transactionHash,
-            };
-          }
-        }
-
-        // Fetch executed time
-        if (status === "Executed") {
-          const executedQuery = gql`
-            query {
-              proposalExecuteds(where: { proposalId: ${proposalId} }) {
-                id
-                blockTimestamp
-                transactionHash
-              }
-            }
-          `;
-          const executedResponse = await request<ExecutedEvent>(subgraphUrl, executedQuery);
-          const executedEvent = executedResponse.proposalExecuteds[0];
-          if (executedEvent) {
-            result.executed = {
-              date: new Date(Number(executedEvent.blockTimestamp) * 1000),
-              txHash: executedEvent.transactionHash,
-            };
-          }
-        }
-
-        // Fetch canceled time
-        if (status === "Canceled") {
-          const canceledQuery = gql`
-            query {
-              proposalCanceleds(where: { proposalId: ${proposalId} }) {
-                id
-                blockTimestamp
-                transactionHash
-              }
-            }
-          `;
-          const canceledResponse = await request<CanceledEvent>(subgraphUrl, canceledQuery);
-          const canceledEvent = canceledResponse.proposalCanceleds[0];
-          if (canceledEvent) {
-            result.canceled = {
-              date: new Date(Number(canceledEvent.blockTimestamp) * 1000),
-              txHash: canceledEvent.transactionHash,
-            };
-          }
-        }
-
-        // Fetch vetoed time
-        if (status === "Vetoed") {
-          const vetoedQuery = gql`
-            query {
-              proposalVetoeds(where: { proposalId: ${proposalId} }) {
-                id
-                blockTimestamp
-                transactionHash
-              }
-            }
-          `;
-          const vetoedResponse = await request<VetoedEvent>(subgraphUrl, vetoedQuery);
-          const vetoedEvent = vetoedResponse.proposalVetoeds[0];
-          if (vetoedEvent) {
-            result.vetoed = {
-              date: new Date(Number(vetoedEvent.blockTimestamp) * 1000),
-              txHash: vetoedEvent.transactionHash,
-            };
-          }
-        }
+        const { data: timeline } = await getGovernorProposalsByIdTimeline(String(proposalId));
+        return {
+          queued: toEvent(timeline.queued),
+          executed: toEvent(timeline.executed),
+          canceled: toEvent(timeline.canceled),
+          vetoed: toEvent(timeline.vetoed),
+        };
       } catch (error) {
         console.error("useProposalTimeline", error);
+        return {
+          queued: { ...emptyEvent },
+          executed: { ...emptyEvent },
+          canceled: { ...emptyEvent },
+          vetoed: { ...emptyEvent },
+        };
       }
-
-      return result;
     },
     enabled: !!proposalId && !!status,
   });

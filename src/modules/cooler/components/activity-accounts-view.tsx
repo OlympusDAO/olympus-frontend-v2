@@ -276,10 +276,7 @@ function V1BorrowersView() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const borrowers = useMemo(
-    () => data?.pages.flatMap((page) => page.borrowerStats_collection) ?? [],
-    [data],
-  );
+  const borrowers = useMemo(() => data?.pages.flatMap((page) => page) ?? [], [data]);
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "totalLoans", desc: true }]);
   const [globalFilter, setGlobalFilter] = useState("");

@@ -44,6 +44,7 @@ describe("calculateConversionExposure", () => {
         {
           positionId: "1",
           amountDecimal: "4000",
+          status: "pending",
           loans: { items: [{ status: "active", principalDecimal: "3000" }] },
         },
       ],
@@ -67,6 +68,7 @@ describe("calculateConversionExposure", () => {
           positionId: null,
           receiptTokenId: "rt-1",
           amountDecimal: "1000",
+          status: "pending",
           loans: { items: [{ status: "active", principalDecimal: "967" }] },
         },
       ],
@@ -89,7 +91,7 @@ describe("calculateConversionExposure", () => {
           positionId: null,
           receiptTokenId: "rt-1",
           amountDecimal: "400",
-          finishedEvents: { items: [{}] },
+          status: "finished",
         },
       ],
     });
@@ -107,7 +109,7 @@ describe("calculateConversionExposure", () => {
       // Position 0 keeps its full remainingAmount through a finished redemption — a
       // falsy-zero bug in the indexer that hits only the position whose id is "0".
       positions: [position("0", "20000", "20000", "20")],
-      redemptions: [{ positionId: "0", amountDecimal: "20000", finishedEvents: { items: [{}] } }],
+      redemptions: [{ positionId: "0", amountDecimal: "20000", status: "finished" }],
     });
 
     expect(exposure.grossDepositsUsd).toBe(0);
@@ -121,7 +123,7 @@ describe("calculateConversionExposure", () => {
       // real. Treating "has a balance after a finished redemption" as phantom would
       // wrongly wipe it.
       positions: [position("1", "1000", "600", "20")],
-      redemptions: [{ positionId: "1", amountDecimal: "400", finishedEvents: { items: [{}] } }],
+      redemptions: [{ positionId: "1", amountDecimal: "400", status: "finished" }],
     });
 
     expect(exposure.strikes[0].amountUsd).toBeCloseTo(600, 9);
@@ -141,7 +143,7 @@ describe("calculateConversionExposure", () => {
           positionId: null,
           receiptTokenId: "rt-phantom",
           amountDecimal: "900",
-          finishedEvents: { items: [{}] },
+          status: "finished",
         },
       ],
     });
@@ -164,7 +166,7 @@ describe("calculateConversionExposure", () => {
         positionId: null,
         receiptTokenId: "rt-1",
         amountDecimal: "400",
-        finishedEvents: { items: [{}] },
+        status: "finished",
       },
     ];
 
@@ -200,8 +202,8 @@ describe("calculateConversionExposure", () => {
         {
           positionId: null,
           amountDecimal: "3000",
+          status: "cancelled",
           loans: { items: [{ status: "active", principalDecimal: "2901" }] },
-          cancelledEvents: { items: [{}] },
         },
       ],
     });
@@ -217,8 +219,13 @@ describe("calculateConversionExposure", () => {
     const exposure = calculateConversionExposure({
       positions: [position("1", "1000", "1000", "20")],
       redemptions: [
-        { positionId: "1", amountDecimal: "400", loans: { items: [{ status: "repaid" }] } },
-        { positionId: "1", amountDecimal: "200", loans: { items: [] } },
+        {
+          positionId: "1",
+          amountDecimal: "400",
+          status: "pending",
+          loans: { items: [{ status: "repaid" }] },
+        },
+        { positionId: "1", amountDecimal: "200", status: "pending", loans: { items: [] } },
       ],
     });
 
@@ -245,6 +252,7 @@ describe("calculateConversionExposure", () => {
         {
           positionId: "1",
           amountDecimal: "1000",
+          status: "pending",
           loans: { items: [{ status: "active", principalDecimal: "5000" }] },
         },
       ],

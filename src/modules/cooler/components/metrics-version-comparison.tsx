@@ -46,24 +46,18 @@ export const MetricsVersionComparison: React.FC = () => {
   }
 
   // V1 data
-  const allV1Borrowers =
-    v1BorrowersData?.pages.flatMap((page) => page.borrowerStats_collection) ?? [];
+  const allV1Borrowers = v1BorrowersData?.pages.flatMap((page) => page) ?? [];
   const v1TotalCollateral = allV1Borrowers.reduce(
     (acc, curr) => acc + Number(curr.currentCollateral || 0),
     0,
   );
   const latestV1Util = v1UtilData.length > 0 ? v1UtilData[v1UtilData.length - 1] : null;
   const v1TotalDebt = latestV1Util?.totalPrincipalReceivables ?? 0;
-  const v1TotalBorrowers =
-    v1Stats?.clearinghouseCumulativeStats_collection.reduce(
-      (acc, curr) => acc + curr.totalUniqueBorrowers,
-      0,
-    ) ?? 0;
-  const v1ActiveLoans =
-    v1Stats?.clearinghouseCumulativeStats_collection.reduce(
-      (acc, curr) => acc + curr.currentActiveLoans,
-      0,
-    ) ?? 0;
+  const v1TotalBorrowers = (v1Stats ?? []).reduce(
+    (acc, curr) => acc + curr.totalUniqueBorrowers,
+    0,
+  );
+  const v1ActiveLoans = (v1Stats ?? []).reduce((acc, curr) => acc + curr.currentActiveLoans, 0);
 
   // V2 data
   const v2TotalCollateral = v2Data?.totalCollateral ?? 0;

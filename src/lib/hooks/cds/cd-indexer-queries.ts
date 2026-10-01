@@ -1,243 +1,108 @@
-import { cdsGraphqlClient } from "@/lib/graphql-client";
+import {
+  getConvertibleDepositsClaimedYields,
+  getConvertibleDepositsConvertedDeposits,
+  getConvertibleDepositsLoanEvents,
+  getConvertibleDepositsPositions,
+  getConvertibleDepositsRedemptions,
+} from "@/generated/indexer";
+import { summarizeConversions, type ConversionSummary } from "@/lib/hooks/cds/cd-conversions";
+import { calculateCdRevenue, type CdRevenue } from "@/lib/hooks/cds/cd-revenue";
 import {
   calculateConversionExposure,
   type ConversionExposure,
 } from "@/lib/hooks/cds/conversion-exposure";
-import { calculateCdRevenue, type CdRevenue } from "@/lib/hooks/cds/cd-revenue";
-import { summarizeConversions, type ConversionSummary } from "@/lib/hooks/cds/cd-conversions";
-
-interface PagedResponse<T> {
-  items: T[];
-  pageInfo?: {
-    hasNextPage: boolean;
-    endCursor: string | null;
-  };
-}
-
-type PagedData<T> = Record<string, PagedResponse<T> | undefined>;
-
-const MAX_PAGES = 200;
+import { toRedemptionExposure } from "@/lib/hooks/cds/redemption-exposure";
+import { parseDecimal, unwrap } from "@/lib/indexer/rows";
 
 /**
- * The indexer caps a page at 1000 rows and truncates silently past it, so any
- * collection we total has to be walked to the end rather than read in one shot.
+ * Every route here caps a page at 1000 rows.
  *
- * Both exhaustion cases throw rather than returning a short list. A partial total
- * is indistinguishable from a real one by the time it reaches a card, so it would
- * quietly under-report treasury growth and revenue instead of failing.
+ * Only `positions` offers an offset, so it is the only collection that can be
+ * walked; the rest are read in one request. A total built from a page that came
+ * back FULL is indistinguishable from a real one by the time it reaches a card,
+ * so those throw rather than quietly under-reporting revenue or treasury growth.
+ *
+ * If one of these ever trips, the fix is an offset (or a `sinceId` cursor) on
+ * that route rather than a larger constant here.
  */
-async function fetchAllPages<T>(
-  buildQuery: (after: string | null) => string,
-  select: (data: PagedData<T>) => PagedResponse<T> | undefined,
-): Promise<T[]> {
-  const items: T[] = [];
-  const seenCursors = new Set<string>();
-  let after: string | null = null;
+const PAGE_LIMIT = 1000;
 
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const data = await cdsGraphqlClient.request<PagedData<T>>(buildQuery(after));
-    const result = select(data);
-    items.push(...(result?.items ?? []));
-
-    const pageInfo = result?.pageInfo;
-    if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return items;
-
-    if (seenCursors.has(pageInfo.endCursor)) {
-      throw new Error("CD indexer returned a repeating page cursor; refusing a partial total");
-    }
-    seenCursors.add(pageInfo.endCursor);
-    after = pageInfo.endCursor;
+function assertComplete<T>(rows: readonly T[], collection: string): readonly T[] {
+  if (rows.length >= PAGE_LIMIT) {
+    throw new Error(`CD ${collection} filled a ${PAGE_LIMIT}-row page; refusing a partial total`);
   }
-
-  throw new Error(`CD indexer paged past ${MAX_PAGES} pages; refusing a truncated total`);
+  return rows;
 }
 
-const afterArg = (after: string | null) => (after ? `, after: "${after}"` : "");
+/** The one collection with an offset, so the only one that can be paged. */
+async function fetchAllPositions() {
+  const all: Awaited<ReturnType<typeof getConvertibleDepositsPositions>>["data"] = [];
+  for (let offset = 0; ; offset += PAGE_LIMIT) {
+    const page = await unwrap(getConvertibleDepositsPositions({ limit: PAGE_LIMIT, offset }));
+    all.push(...page);
+    if (page.length < PAGE_LIMIT) return all;
+  }
+}
 
 /**
  * Conversion exposure the treasury carries: gross (every deposit converts), net of
  * the principal already borrowed back out, and the per-claim strikes behind both.
  */
 export async function fetchConversionExposure(): Promise<ConversionExposure> {
-  // The three collections are independent, so they page in parallel rather than
-  // serialising three full walks on every refetch.
-  const positionsPromise = fetchAllPages<{
-    positionId: string;
-    receiptTokenId: string | null;
-    initialAmountDecimal: string;
-    remainingAmountDecimal: string;
-    conversionPriceDecimal: string;
-  }>(
-    (after) => `
-      query GetConvertiblePositions {
-        convertibleDepositPositions(
-          where: { chainId: 1 }
-          orderBy: "positionId"
-          orderDirection: "asc"
-          limit: 1000${afterArg(after)}
-        ) {
-          items {
-            positionId
-            receiptTokenId
-            initialAmountDecimal
-            remainingAmountDecimal
-            conversionPriceDecimal
-          }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.convertibleDepositPositions,
-  );
-
-  const redemptionsPromise = fetchAllPages<{
-    positionId: string | null;
-    receiptTokenId: string | null;
-    amountDecimal: string;
-    loans?: { items?: { status: string; principalDecimal: string }[] };
-    finishedEvents?: { items?: unknown[] };
-    cancelledEvents?: { items?: unknown[] };
-  }>(
-    (after) => `
-      query GetRedemptions {
-        redemptions(
-          where: { chainId: 1 }
-          orderBy: "redemptionId"
-          orderDirection: "asc"
-          limit: 1000${afterArg(after)}
-        ) {
-          items {
-            positionId
-            receiptTokenId
-            amountDecimal
-            loans {
-              items {
-                status
-                principalDecimal
-              }
-            }
-            finishedEvents { items { timestamp } }
-            cancelledEvents { items { timestamp } }
-          }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.redemptions,
-  );
-
-  // Converted deposits are no longer redeemable, so they leave the base alongside
-  // finished redemptions.
-  const conversionsPromise = fetchAllPages<{ depositAmountDecimal: string }>(
-    (after) => `
-      query GetConvertedDepositTotals {
-        convertibleDepositFacilityConvertedDeposits(
-          where: { chainId: 1 }
-          limit: 1000${afterArg(after)}
-        ) {
-          items { depositAmountDecimal }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.convertibleDepositFacilityConvertedDeposits,
-  );
-
-  const [positions, redemptions, conversions] = await Promise.all([
-    positionsPromise,
-    redemptionsPromise,
-    conversionsPromise,
+  // Independent collections, so they are fetched in parallel rather than
+  // serialising three walks on every refetch.
+  const [positions, redemptionsPayload, conversions] = await Promise.all([
+    fetchAllPositions(),
+    unwrap(getConvertibleDepositsRedemptions({ limit: PAGE_LIMIT })),
+    unwrap(getConvertibleDepositsConvertedDeposits({ order: "asc", limit: PAGE_LIMIT })),
   ]);
 
-  const convertedDepositsUsd = conversions.reduce((total, item) => {
-    const parsed = Number(item.depositAmountDecimal);
-    return total + (Number.isFinite(parsed) ? parsed : 0);
-  }, 0);
+  assertComplete(redemptionsPayload.redemptions, "redemptions");
+  // The route caps its two collections independently, so a full `loans` page
+  // under-reports borrowed principal even when `redemptions` came back short.
+  assertComplete(redemptionsPayload.loans, "redemption loans");
+  assertComplete(conversions, "converted deposits");
+
+  // Joins the two flat lists on their composite `id`; see the note there for
+  // why `redemptionId` is the wrong key.
+  const redemptions = toRedemptionExposure(redemptionsPayload);
+
+  const convertedDepositsUsd = conversions.reduce(
+    (total, item) => total + parseDecimal(item.depositAmountDecimal),
+    0,
+  );
 
   return calculateConversionExposure({ positions, redemptions, convertedDepositsUsd });
 }
 
 /** Interest on redemption-vault loans plus deposit yield swept to the treasury. */
 export async function fetchCdRevenue(): Promise<CdRevenue> {
-  // Four independent collections; page them together.
-  const repaidLoansPromise = fetchAllPages<{ interestDecimal: string }>(
-    (after) => `
-      query GetLoanRepayments {
-        depositRedemptionVaultLoanRepaids(
-          where: { chainId: 1 }
-          limit: 1000${afterArg(after)}
-        ) {
-          items { interestDecimal }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.depositRedemptionVaultLoanRepaids,
-  );
-
-  const defaultedLoansPromise = fetchAllPages<{ interestDecimal: string }>(
-    (after) => `
-      query GetLoanDefaults {
-        depositRedemptionVaultLoanDefaulteds(
-          where: { chainId: 1 }
-          limit: 1000${afterArg(after)}
-        ) {
-          items { interestDecimal }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.depositRedemptionVaultLoanDefaulteds,
-  );
-
-  const openLoansPromise = fetchAllPages<{
-    status: string;
-    interestDecimal: string;
-    createdAt: string;
-    dueDate: string;
-  }>(
-    (after) => `
-      query GetOpenLoans {
-        redemptionLoans(
-          where: { chainId: 1, status: "active" }
-          limit: 1000${afterArg(after)}
-        ) {
-          items {
-            status
-            interestDecimal
-            createdAt
-            dueDate
-          }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.redemptionLoans,
-  );
-
-  const claimedYieldsPromise = fetchAllPages<{ amountDecimal: string }>(
-    (after) => `
-      query GetClaimedYields {
-        convertibleDepositFacilityClaimedYields(
-          where: { chainId: 1 }
-          limit: 1000${afterArg(after)}
-        ) {
-          items { amountDecimal }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.convertibleDepositFacilityClaimedYields,
-  );
-
-  const [repaidLoans, defaultedLoans, openLoans, claimedYields] = await Promise.all([
-    repaidLoansPromise,
-    defaultedLoansPromise,
-    openLoansPromise,
-    claimedYieldsPromise,
+  const [loanEvents, redemptionsPayload, claimedYields] = await Promise.all([
+    // Repayments and defaults arrive together: a repayment's interest is
+    // collected, a default's is written off, and revenue needs both.
+    unwrap(getConvertibleDepositsLoanEvents({ limit: PAGE_LIMIT })),
+    unwrap(getConvertibleDepositsRedemptions({ limit: PAGE_LIMIT })),
+    unwrap(getConvertibleDepositsClaimedYields({ order: "asc", limit: PAGE_LIMIT })),
   ]);
 
-  return calculateCdRevenue({ repaidLoans, defaultedLoans, openLoans, claimedYields });
+  assertComplete(loanEvents.repaid, "loan repayments");
+  assertComplete(loanEvents.defaulted, "loan defaults");
+  assertComplete(redemptionsPayload.loans, "redemption loans");
+  assertComplete(claimedYields, "claimed yields");
+
+  // Loan status is trustworthy again as of
+  // OlympusDAO/olympus-protocol-indexer#35, which stopped the handlers writing
+  // each payment's amount over the balance — a full repayment used to leave a
+  // settled loan "active", and an interest-only one used to mark a live loan
+  // "repaid".
+  const openLoans = redemptionsPayload.loans.filter((loan) => loan.status === "active");
+
+  return calculateCdRevenue({
+    repaidLoans: loanEvents.repaid,
+    defaultedLoans: loanEvents.defaulted,
+    openLoans,
+    claimedYields,
+  });
 }
 
 /**
@@ -246,30 +111,10 @@ export async function fetchCdRevenue(): Promise<CdRevenue> {
  * restarting at the window's left edge.
  */
 export async function fetchConversions(windowStartSeconds: number): Promise<ConversionSummary> {
-  const conversions = await fetchAllPages<{
-    timestamp: string;
-    depositAmountDecimal: string;
-    convertedAmountDecimal: string;
-  }>(
-    (after) => `
-      query GetConvertedDeposits {
-        convertibleDepositFacilityConvertedDeposits(
-          where: { chainId: 1 }
-          orderBy: "timestamp"
-          orderDirection: "asc"
-          limit: 1000${afterArg(after)}
-        ) {
-          items {
-            timestamp
-            depositAmountDecimal
-            convertedAmountDecimal
-          }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    `,
-    (data) => data?.convertibleDepositFacilityConvertedDeposits,
+  const conversions = await unwrap(
+    getConvertibleDepositsConvertedDeposits({ order: "asc", limit: PAGE_LIMIT }),
   );
+  assertComplete(conversions, "converted deposits");
 
   return summarizeConversions(
     conversions.map((item) => ({ ...item, timestamp: Number(item.timestamp) })),

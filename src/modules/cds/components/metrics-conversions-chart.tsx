@@ -102,15 +102,20 @@ interface StatProps {
   tooltip: string;
 }
 
+/**
+ * `mt-auto` matters on the mobile grid: a label that wraps to two lines ("OHM
+ * Minted" at a third of a phone's width) would otherwise push its own value down
+ * out of line with the values either side of it.
+ */
 const Stat: React.FC<StatProps> = ({ label, value, tooltip }) => (
-  <div className="flex flex-col gap-0.5">
-    <div className="flex items-center gap-1">
+  <div className="flex flex-col gap-0.5 min-w-0">
+    <div className="flex items-start gap-1">
       <span className="text-sm text-secondary-t">{label}</span>
       <InfoTooltip title={tooltip}>
-        <RiInformationFill size={16} className="text-tertiary-t" />
+        <RiInformationFill size={16} className="text-tertiary-t shrink-0 mt-px" />
       </InfoTooltip>
     </div>
-    <p className="text-lg font-semibold text-primary-t">{value}</p>
+    <p className="text-lg font-semibold text-primary-t mt-auto">{value}</p>
   </div>
 );
 
@@ -132,7 +137,7 @@ export const MetricsConversionsChart: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="w-40 h-6 bg-surface-a5 rounded animate-pulse" />
           <div className="w-24 h-8 bg-surface-a5 rounded animate-pulse" />
@@ -142,16 +147,16 @@ export const MetricsConversionsChart: React.FC = () => {
           <div className="w-24 h-12 bg-surface-a5 rounded animate-pulse" />
           <div className="w-24 h-12 bg-surface-a5 rounded animate-pulse" />
         </div>
-        <div className="w-full h-[220px] bg-surface-a5 rounded-xl animate-pulse" />
+        <div className="w-full h-45 sm:h-[220px] bg-surface-a5 rounded-xl animate-pulse" />
       </Card>
     );
   }
 
   if (isUnavailable) {
     return (
-      <Card className="p-6 flex flex-col gap-3">
+      <Card className="p-4 sm:p-6 flex flex-col gap-3">
         <h3 className="text-xl font-semibold text-primary-t tracking-[0.2px]">Conversions</h3>
-        <div className="w-full h-55 flex flex-col items-center justify-center gap-1 text-center">
+        <div className="w-full h-45 sm:h-55 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">Conversion data unavailable</p>
           <p className="text-xs text-tertiary-t max-w-xs">
             The convertible deposit indexer could not be reached. Showing nothing rather than an
@@ -163,7 +168,7 @@ export const MetricsConversionsChart: React.FC = () => {
   }
 
   return (
-    <Card className="p-6 flex flex-col gap-3">
+    <Card className="p-4 sm:p-6 flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between h-8">
         <h3 className="text-xl font-semibold text-primary-t tracking-[0.2px]">Conversions</h3>
@@ -176,7 +181,7 @@ export const MetricsConversionsChart: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="flex gap-6 items-start">
+      <div className="grid grid-cols-3 gap-3 sm:flex sm:gap-6 sm:items-start">
         <Stat
           label="Converted"
           value={formatCurrency(conversions?.totalConverted ?? 0)}
@@ -196,12 +201,12 @@ export const MetricsConversionsChart: React.FC = () => {
 
       {/* Chart */}
       {chartData.length === 0 ? (
-        <div className="w-full h-55 flex flex-col items-center justify-center gap-1 text-center">
+        <div className="w-full h-45 sm:h-55 flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm text-secondary-t">No conversions in this period</p>
           {hasOhmPrice && moneyness.totalCount > 0 && (
             <p className="text-xs text-tertiary-t max-w-xs">
               {moneyness.inTheMoneyCount > 0
-                ? `${moneyness.inTheMoneyCount} of ${moneyness.totalCount} positions are in the money — ${formatCurrency(moneyness.inTheMoneyUsd)} could convert at today's price.`
+                ? `${moneyness.inTheMoneyCount} of ${moneyness.totalCount} positions are in the money. ${formatCurrency(moneyness.inTheMoneyUsd)} could convert at today's price.`
                 : // movePercentToAverageStrike is the rise OHM needs, not how far below it
                   // sits. Those differ (spot $20 vs a $25 strike is +25% to reach,
                   // but only 20% below), so the wording has to match the maths.
@@ -210,58 +215,62 @@ export const MetricsConversionsChart: React.FC = () => {
           )}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={chartData} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id="conversionsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={CHART_COLORS.areaFill} stopOpacity={0.35} />
-                <stop offset="100%" stopColor={CHART_COLORS.areaFill} stopOpacity={0.03} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-            {/*
-              A time scale, not the default category scale. summarizeConversions only
-              emits days that had a conversion, so on a category axis a Jan -> Mar gap
-              would render the same width as one day and every range would look alike.
-            */}
-            <XAxis
-              dataKey="timestamp"
-              type="number"
-              scale="time"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={formatUtcAxis}
-              stroke="transparent"
-              tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tickFormatter={(value) => formatCurrency(value)}
-              stroke="transparent"
-              tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
-              tickLine={false}
-              axisLine={false}
-              width={44}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{ stroke: CHART_COLORS.text, strokeWidth: 1, strokeDasharray: "4 4" }}
-            />
-            <Area
-              type="monotone"
-              dataKey="cumulativeConverted"
-              stroke={CHART_COLORS.area}
-              fill="url(#conversionsGradient)"
-              strokeWidth={2}
-              activeDot={{
-                r: 4,
-                fill: "var(--green)",
-                stroke: "var(--surface-bg-l2)",
-                strokeWidth: 2,
-              }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        // A CSS breakpoint rather than useIsMobile, so the chart is the right height on
+        // the first paint. See the same note on the conversion ladder.
+        <div className="w-full h-45 sm:h-55">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="conversionsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CHART_COLORS.areaFill} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={CHART_COLORS.areaFill} stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+              {/*
+                A time scale, not the default category scale. summarizeConversions only
+                emits days that had a conversion, so on a category axis a Jan -> Mar gap
+                would render the same width as one day and every range would look alike.
+              */}
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={["dataMin", "dataMax"]}
+                tickFormatter={formatUtcAxis}
+                stroke="transparent"
+                tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tickFormatter={(value) => formatCurrency(value)}
+                stroke="transparent"
+                tick={{ fill: CHART_COLORS.text, fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                width={44}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: CHART_COLORS.text, strokeWidth: 1, strokeDasharray: "4 4" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="cumulativeConverted"
+                stroke={CHART_COLORS.area}
+                fill="url(#conversionsGradient)"
+                strokeWidth={2}
+                activeDot={{
+                  r: 4,
+                  fill: "var(--green)",
+                  stroke: "var(--surface-bg-l2)",
+                  strokeWidth: 2,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </Card>
   );

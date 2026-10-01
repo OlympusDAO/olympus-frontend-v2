@@ -123,7 +123,7 @@ export const ProtocolIncomeChart: React.FC = () => {
     let cumDefaultIncome = 0;
     let cumInterestIncome = 0;
 
-    data.defaultStats_collection.forEach((item) => {
+    data.defaults.forEach((item) => {
       if (!item.timestamp) return;
       const defaultIncome =
         parseFloat(item.totalValueClaimed || "0") - parseFloat(item.totalPrincipalDefaulted || "0");
@@ -138,7 +138,7 @@ export const ProtocolIncomeChart: React.FC = () => {
       });
     });
 
-    data.extensionStats_collection.forEach((item) => {
+    data.extensions.forEach((item) => {
       if (!item.timestamp) return;
       cumInterestIncome += parseFloat(item.totalNewInterest || "0");
       const existing = combinedData.get(item.timestamp) || {
@@ -151,7 +151,7 @@ export const ProtocolIncomeChart: React.FC = () => {
       combinedData.set(item.timestamp, { ...existing, totalNewInterest: item.totalNewInterest });
     });
 
-    data.repaymentStats_collection.forEach((item) => {
+    data.repayments.forEach((item) => {
       if (!item.timestamp) return;
       cumInterestIncome += parseFloat(item.totalInterestPaid || "0");
       const existing = combinedData.get(item.timestamp) || {

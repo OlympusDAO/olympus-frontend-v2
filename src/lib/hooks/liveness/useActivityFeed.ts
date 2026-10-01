@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  CD_SUBGRAPH_URL,
-  BOND_SUBGRAPH_URL,
-  COOLER_SUBGRAPH_URL,
-  COOLER_APR,
-} from "@/lib/constants";
+  getBondsPurchases,
+  getConvertibleDepositsActivity,
+  getCoolerDefaultedLoanEvents,
+  getCoolerMonocoolerActivity,
+} from "@/generated/indexer";
+import { COOLER_APR } from "@/lib/constants";
 
 export type ActivityType =
   | "cd-bid"
@@ -45,136 +46,19 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
     queryFn: async () => {
       const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
 
-      const query = `
-        query GetActivityFeed {
-          convertibleDepositAuctioneerBids(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              depositor
-              depositAmountDecimal
-              convertedAmountDecimal
-              tickPriceDecimal
-            }
-          }
-
-          convertibleDepositFacilityConvertedDeposits(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              depositor
-              depositAmountDecimal
-              convertedAmountDecimal
-            }
-          }
-
-          convertibleDepositFacilityClaimedYields(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              amountDecimal
-            }
-          }
-
-          depositRedemptionVaultLoanCreateds(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              depositor
-              amountDecimal
-            }
-          }
-
-          depositRedemptionVaultLoanRepaids(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              depositor
-              principalDecimal
-              interestDecimal
-            }
-          }
-
-          depositRedemptionVaultRedemptionStarteds(
-            where: {
-              chainId: 1,
-              timestamp_gte: "${thirtyDaysAgo}"
-            }
-            orderBy: "timestamp"
-            orderDirection: "desc"
-            limit: 25
-          ) {
-            items {
-              txHash
-              timestamp
-              depositor
-              amountDecimal
-            }
-          }
-
-          depositRedemptionVaultAssetConfigurations(limit: 1) {
-            items {
-              interestRateDecimal
-            }
-          }
-        }
-      `;
-
-      const response = await fetch(CD_SUBGRAPH_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+      // The CD half of the feed. Seven Ponder roots — bids, conversions,
+      // claimed yield, redemption loans created and repaid, redemptions
+      // started, and the interest-rate config the feed annotates loans with —
+      // in one request. The route exists for this hook.
+      const { data } = await getConvertibleDepositsActivity({
+        sinceTimestamp: String(thirtyDaysAgo),
+        limit: 25,
       });
-
-      if (!response.ok) throw new Error("Failed to fetch activity feed");
-
-      const { data, errors } = await response.json();
-      if (errors) throw new Error(errors[0]?.message || "Activity feed error");
 
       const items: ActivityItem[] = [];
 
       // CD Bids
-      for (const bid of data?.convertibleDepositAuctioneerBids?.items || []) {
+      for (const bid of data.bids) {
         items.push({
           id: `bid-${bid.timestamp}-${bid.depositor}`,
           type: "cd-bid",
@@ -187,7 +71,7 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       }
 
       // CD Conversions
-      for (const conv of data?.convertibleDepositFacilityConvertedDeposits?.items || []) {
+      for (const conv of data.convertedDeposits) {
         items.push({
           id: `conv-${conv.timestamp}-${conv.depositor}`,
           type: "cd-converted",
@@ -200,7 +84,7 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       }
 
       // Yield Claims
-      for (const claim of data?.convertibleDepositFacilityClaimedYields?.items || []) {
+      for (const claim of data.claimedYields) {
         items.push({
           id: `yield-${claim.timestamp}-${claim.txHash}`,
           type: "cd-yield",
@@ -213,12 +97,10 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
 
       // CD interest rate (for revenue projections on loans)
       const cdInterestRate =
-        parseFloat(
-          data?.depositRedemptionVaultAssetConfigurations?.items?.[0]?.interestRateDecimal,
-        ) || 0;
+        Number.parseFloat(data.redemptionConfig?.interestRateDecimal ?? "") || 0;
 
       // CD Loans (borrows against deposits)
-      for (const loan of data?.depositRedemptionVaultLoanCreateds?.items || []) {
+      for (const loan of data.loansCreated) {
         const loanAmount = parseFloat(loan.amountDecimal) || 0;
         const annualRevenue = loanAmount * cdInterestRate;
         items.push({
@@ -236,7 +118,7 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       }
 
       // CD Loan Repayments
-      for (const repay of data?.depositRedemptionVaultLoanRepaids?.items || []) {
+      for (const repay of data.loansRepaid) {
         const principal = parseFloat(repay.principalDecimal) || 0;
         const interest = parseFloat(repay.interestDecimal) || 0;
         items.push({
@@ -254,7 +136,7 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
       }
 
       // CD Redemptions
-      for (const redemption of data?.depositRedemptionVaultRedemptionStarteds?.items || []) {
+      for (const redemption of data.redemptionsStarted) {
         items.push({
           id: `cd-redeem-${redemption.timestamp}-${redemption.depositor}`,
           type: "cd-redemption",
@@ -268,41 +150,24 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
 
       // Fetch YRF bond purchases from bond market subgraph
       try {
-        const bondQuery = `
-          {
-            bondPurchases(
-              first: 25
-              where: { marketId_gte: "650" }
-              orderBy: timestamp
-              orderDirection: desc
-            ) {
-              timestamp
-              amountInQuoteToken
-              payoutInPayoutToken
-              marketId
-              transaction
-            }
-          }
-        `;
-        const bondResponse = await fetch(BOND_SUBGRAPH_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: bondQuery }),
+        // `marketIdGte` is the route's own filter; the subgraph needed it
+        // interpolated into a where clause.
+        const { data: bondPurchases } = await getBondsPurchases({
+          marketIdGte: "650",
+          order: "desc",
+          limit: 25,
         });
-        if (bondResponse.ok) {
-          const bondJson = await bondResponse.json();
-          for (const purchase of bondJson.data?.bondPurchases ?? []) {
-            const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
-            const usdPayout = parseFloat(purchase.payoutInPayoutToken) || 0;
-            items.push({
-              id: `yrf-${purchase.transaction}-${purchase.marketId}`,
-              type: "yrf-purchase",
-              timestamp: Math.round(Number(purchase.timestamp) / 1000),
-              primaryValue: `${ohmAmount.toLocaleString("en-US", { maximumFractionDigits: 1 })} OHM`,
-              secondaryValue: `$${usdPayout.toLocaleString("en-US", { maximumFractionDigits: 0 })} via Market #${purchase.marketId}`,
-              txHash: purchase.transaction || undefined,
-            });
-          }
+        for (const purchase of bondPurchases) {
+          const ohmAmount = parseFloat(purchase.amountInQuoteToken) || 0;
+          const usdPayout = parseFloat(purchase.payoutInPayoutToken) || 0;
+          items.push({
+            id: `yrf-${purchase.transaction}-${purchase.marketId}`,
+            type: "yrf-purchase",
+            timestamp: Math.round(Number(purchase.timestamp) / 1000),
+            primaryValue: `${ohmAmount.toLocaleString("en-US", { maximumFractionDigits: 1 })} OHM`,
+            secondaryValue: `$${usdPayout.toLocaleString("en-US", { maximumFractionDigits: 0 })} via Market #${purchase.marketId}`,
+            txHash: purchase.transaction || undefined,
+          });
         }
       } catch {
         // Bond purchase data is non-critical for the feed
@@ -310,114 +175,78 @@ export function useActivityFeed(options?: { refetchInterval?: number | false }) 
 
       // Fetch Cooler activity: MonoCooler V2 plus Cooler V1 defaults
       try {
-        const coolerQuery = `
-          {
-            monoCoolerActivities(
-              first: 25
-              orderBy: timestamp
-              orderDirection: desc
-            ) {
-              id
-              type
-              account { address }
-              amount
-              collateral
-              debt
-              txHash
-              timestamp
-            }
+        // Two routes rather than one document: MonoCooler activity and the
+        // defaulted-collateral claims, both newest first.
+        const [{ data: coolerActivities }, { data: defaultedClaims }] = await Promise.all([
+          getCoolerMonocoolerActivity({ limit: 25 }),
+          // No `order`: the route is newest-first by construction and rejects
+          // the parameter. Passing it 400d, and the catch below swallowed it —
+          // which silently removed the whole cooler section from the feed.
+          getCoolerDefaultedLoanEvents({ sinceTimestamp: String(thirtyDaysAgo), limit: 25 }),
+        ]);
+        for (const activity of coolerActivities) {
+          const activityType = COOLER_TYPE_MAP[activity.type];
+          if (!activityType) continue;
 
-            claimDefaultedLoanEvents(
-              first: 25
-              where: { blockTimestamp_gte: "${thirtyDaysAgo}" }
-              orderBy: blockTimestamp
-              orderDirection: desc
-            ) {
-              id
-              blockTimestamp
-              transactionHash
-              defaultedPrincipal
-              collateralQuantityClaimed
-              collateralValueClaimed
-              loan {
-                borrower { id }
-                cooler
-                loanId
-              }
-            }
-          }
-        `;
-        const coolerResponse = await fetch(COOLER_SUBGRAPH_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: coolerQuery }),
-        });
-        if (coolerResponse.ok) {
-          const coolerJson = await coolerResponse.json();
-          for (const activity of coolerJson.data?.monoCoolerActivities ?? []) {
-            const activityType = COOLER_TYPE_MAP[activity.type];
-            if (!activityType) continue;
+          // `amount` is WAD (18 decimals) and represents the TX delta:
+          //   borrow/repay → DAI amount, collateralAdd/Withdraw → gOHM amount
+          // `collateral` and `debt` are TOTAL position values (not deltas)
+          const amount = parseFloat(activity.amount) / 1e18;
+          const totalDebt = activity.debt ? parseFloat(activity.debt) / 1e18 : 0;
 
-            // `amount` is WAD (18 decimals) and represents the TX delta:
-            //   borrow/repay → DAI amount, collateralAdd/Withdraw → gOHM amount
-            // `collateral` and `debt` are TOTAL position values (not deltas)
-            const amount = parseFloat(activity.amount) / 1e18;
-            const totalDebt = activity.debt ? parseFloat(activity.debt) / 1e18 : 0;
+          let primaryValue: string;
+          let secondaryValue: string;
 
-            let primaryValue: string;
-            let secondaryValue: string;
-
-            if (activityType === "cooler-borrow") {
-              const annualRevenue = amount * COOLER_APR;
-              primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-              secondaryValue = `$${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr revenue`;
-            } else if (activityType === "cooler-repay") {
-              primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-              secondaryValue =
-                totalDebt > 0
-                  ? `$${totalDebt.toLocaleString("en-US", { maximumFractionDigits: 0 })} remaining`
-                  : "DAI repaid";
-            } else if (activityType === "cooler-add-collateral") {
-              primaryValue = `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM`;
-              secondaryValue = "Collateral added";
-            } else if (activityType === "cooler-withdraw-collateral") {
-              primaryValue = `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM`;
-              secondaryValue = "Collateral withdrawn";
-            } else {
-              // liquidation
-              primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-              secondaryValue = "Liquidated";
-            }
-
-            items.push({
-              id: `cooler-${activity.id}`,
-              type: activityType,
-              timestamp: Number(activity.timestamp),
-              primaryValue,
-              secondaryValue,
-              address: activity.account?.address || undefined,
-              txHash: activity.txHash || undefined,
-            });
+          if (activityType === "cooler-borrow") {
+            const annualRevenue = amount * COOLER_APR;
+            primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+            secondaryValue = `$${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr revenue`;
+          } else if (activityType === "cooler-repay") {
+            primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+            secondaryValue =
+              totalDebt > 0
+                ? `$${totalDebt.toLocaleString("en-US", { maximumFractionDigits: 0 })} remaining`
+                : "DAI repaid";
+          } else if (activityType === "cooler-add-collateral") {
+            primaryValue = `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM`;
+            secondaryValue = "Collateral added";
+          } else if (activityType === "cooler-withdraw-collateral") {
+            primaryValue = `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM`;
+            secondaryValue = "Collateral withdrawn";
+          } else {
+            // liquidation
+            primaryValue = `$${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+            secondaryValue = "Liquidated";
           }
 
-          for (const defaultEvent of coolerJson.data?.claimDefaultedLoanEvents ?? []) {
-            const defaultedPrincipal = parseFloat(defaultEvent.defaultedPrincipal) || 0;
-            const collateralClaimed = parseFloat(defaultEvent.collateralQuantityClaimed) || 0;
-            const collateralValueClaimed = parseFloat(defaultEvent.collateralValueClaimed) || 0;
+          items.push({
+            id: `cooler-${activity.id}`,
+            type: activityType,
+            timestamp: Number(activity.timestamp),
+            primaryValue,
+            secondaryValue,
+            address: activity.account?.address || undefined,
+            txHash: activity.txHash || undefined,
+          });
+        }
 
-            items.push({
-              id: `cooler-v1-default-${defaultEvent.id}`,
-              type: "cooler-v1-default",
-              timestamp: Number(defaultEvent.blockTimestamp),
-              primaryValue: `$${defaultedPrincipal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
-              secondaryValue:
-                collateralValueClaimed > 0
-                  ? `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed ($${collateralValueClaimed.toLocaleString("en-US", { maximumFractionDigits: 0 })})`
-                  : `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed`,
-              address: defaultEvent.loan?.borrower?.id || undefined,
-              txHash: defaultEvent.transactionHash || undefined,
-            });
-          }
+        for (const defaultEvent of defaultedClaims) {
+          const defaultedPrincipal = parseFloat(defaultEvent.defaultedPrincipal) || 0;
+          const collateralClaimed = parseFloat(defaultEvent.collateralQuantityClaimed) || 0;
+          const collateralValueClaimed = parseFloat(defaultEvent.collateralValueClaimed) || 0;
+
+          items.push({
+            id: `cooler-v1-default-${defaultEvent.id}`,
+            type: "cooler-v1-default",
+            timestamp: Number(defaultEvent.blockTimestamp),
+            primaryValue: `$${defaultedPrincipal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+            secondaryValue:
+              collateralValueClaimed > 0
+                ? `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed ($${collateralValueClaimed.toLocaleString("en-US", { maximumFractionDigits: 0 })})`
+                : `${collateralClaimed.toLocaleString("en-US", { maximumFractionDigits: 2 })} gOHM claimed`,
+            address: defaultEvent.loan?.borrower?.id || undefined,
+            txHash: defaultEvent.transactionHash || undefined,
+          });
         }
       } catch {
         // Cooler data is non-critical for the feed
