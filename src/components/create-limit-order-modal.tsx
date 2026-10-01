@@ -24,6 +24,15 @@ interface CreateLimitOrderModalProps {
   incentiveBudget?: string;
 }
 
+// The modal renders while closed, so the form can pass "" or a partial value like "1."
+const safeParseEther = (value: string): bigint => {
+  try {
+    return parseEther(value);
+  } catch {
+    return 0n;
+  }
+};
+
 export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   isOpen,
   onClose,
@@ -44,7 +53,7 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   const { minimumBid } = useAuctionParameters();
 
   // Parse the deposit amount to check allowance
-  const depositAmountBigInt = parseEther(depositAmount);
+  const depositAmountBigInt = safeParseEther(depositAmount);
 
   // Parse term to get period in months
   const getMonthsFromTerm = (term: string): number => {
@@ -63,12 +72,12 @@ export const CreateLimitOrderModal: React.FC<CreateLimitOrderModalProps> = ({
   // Parse min fill size (use auctioneer minimum if not provided)
   const minFillSizeBigInt =
     minFillSize && minFillSize !== "0"
-      ? parseEther(minFillSize)
+      ? safeParseEther(minFillSize)
       : minimumBid || 1000000000000000000n;
 
   // Parse incentive budget
   const incentiveBudgetBigInt =
-    incentiveBudget && incentiveBudget !== "0" ? parseEther(incentiveBudget) : 0n;
+    incentiveBudget && incentiveBudget !== "0" ? safeParseEther(incentiveBudget) : 0n;
 
   // Total amount needed for approval = deposit + incentive
   const totalApprovalAmount = depositAmountBigInt + incentiveBudgetBigInt;
