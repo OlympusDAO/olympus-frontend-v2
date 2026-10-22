@@ -37,7 +37,7 @@ Requires Node.js 24+ and pnpm.
 | `VITE_TREASURY_SUBGRAPH_METRICS_API` | No | Treasury subgraph metrics API override; omitted values use the treasury client default |
 | `VITE_MIGRATION_CLAIMS_BASE_URL` | No | OHM v1 migration claims/proof API base URL override; omitted values use the production API |
 | `VITE_MIGRATION_MERKLE_ROOT_OVERRIDE` | No | OHM v1 migration merkle root override, used before the policy contract has a root set on-chain |
-| `OLYMPUS_API_URL` | No | OpenAPI spec URL for codegen — defaults to the dev endpoint |
+| `OLYMPUS_API_URL` | No | Olympus Units OpenAPI spec URL for codegen; without it, `pnpm codegen` skips the units client |
 
 > **Why are the `VITE_*` keys public?**
 > Vite inlines any `VITE_`-prefixed variable into the client bundle at build time, so these values ship to every visitor's browser and are inherently public — they are project identifiers, not secrets. Each provider enforces access at the edge via allowlisted domains or origins configured in their dashboard, not via key secrecy:
@@ -134,7 +134,7 @@ The Olympus Units API client is generated via [Orval](https://orval.dev) from th
 pnpm codegen   # regenerate src/generated/olympusUnits.ts
 ```
 
-Config lives in `orval.config.ts`. The spec URL is controlled by the `OLYMPUS_API_URL` env var (defaults to the dev endpoint). The generated file is committed to the repo so the app builds without network access, but should be regenerated when the API spec changes.
+Config lives in `orval.config.ts`. The spec URL comes from the `OLYMPUS_API_URL` env var. If it is not set, `pnpm codegen` skips the units client and regenerates only the indexer client. The generated file is committed to the repo so the app builds without network access, but should be regenerated when the API spec changes.
 
 ## Contributing
 

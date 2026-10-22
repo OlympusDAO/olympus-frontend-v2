@@ -4,8 +4,9 @@ import { DEFAULT_INDEXER_API } from "./src/lib/indexer/api-url";
 
 config();
 
-const API_URL =
-  process.env.OLYMPUS_API_URL ?? "https://dev-olympus-api.callisto.finance/openapi.json";
+// The Olympus Units API spec has no public default. Without OLYMPUS_API_URL,
+// codegen skips this target and keeps the committed src/generated/olympusUnits.ts.
+const API_URL = process.env.OLYMPUS_API_URL;
 
 // The consolidated protocol indexer: RBS, bonds, cooler, governance, YRF,
 // emissions and convertible deposits. Public and unauthenticated, so it has its
@@ -14,34 +15,36 @@ const INDEXER_API_URL =
   process.env.PROTOCOL_INDEXER_API_URL ?? `${DEFAULT_INDEXER_API}/openapi.json`;
 
 export default defineConfig({
-  olympusUnits: {
-    input: {
-      target: API_URL,
-    },
-    output: {
-      target: "src/generated/olympusUnits.ts",
-      client: "react-query",
-      clean: true,
-      override: {
-        mutator: {
-          path: "src/api/customHttpClient.ts",
-          name: "customHttpClient",
-        },
-        useTypeOverInterfaces: true,
-        query: {
-          useQuery: true,
-          useMutation: true,
-          useInfinite: false,
-        },
-        fetch: {
-          includeHttpResponseReturnType: false,
+  ...(API_URL && {
+    olympusUnits: {
+      input: {
+        target: API_URL,
+      },
+      output: {
+        target: "src/generated/olympusUnits.ts",
+        client: "react-query",
+        clean: true,
+        override: {
+          mutator: {
+            path: "src/api/customHttpClient.ts",
+            name: "customHttpClient",
+          },
+          useTypeOverInterfaces: true,
+          query: {
+            useQuery: true,
+            useMutation: true,
+            useInfinite: false,
+          },
+          fetch: {
+            includeHttpResponseReturnType: false,
+          },
         },
       },
+      // hooks: {
+      //   afterAllFilesWrite: "biome check --write",
+      // },
     },
-    // hooks: {
-    //   afterAllFilesWrite: "biome check --write",
-    // },
-  },
+  }),
   protocolIndexer: {
     input: {
       target: INDEXER_API_URL,
