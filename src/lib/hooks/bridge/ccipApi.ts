@@ -5,6 +5,10 @@ const OHM_DECIMALS = 9;
 const PAGE_SIZE = 100;
 const DEFAULT_MAX_PAGES = 5;
 
+export function getCcipExplorerUrl(messageId: Hex): string {
+  return `https://ccip.chain.link/msg/${messageId}`;
+}
+
 export type CcipMessage = {
   messageId: Hex;
   sender: string;

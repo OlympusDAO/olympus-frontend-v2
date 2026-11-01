@@ -73,3 +73,48 @@ describe("BridgeHistory", () => {
     expect(screen.getByText("No bridging activity yet.")).toBeInTheDocument();
   });
 });
+
+describe("BridgeHistory CCIP rows", () => {
+  const MESSAGE_ID = `0x${"ab".repeat(32)}` as const;
+  const ccip: BridgeHistoryItem = { ...row, source: "ccip", messageId: MESSAGE_ID };
+
+  beforeEach(() => {
+    state.error = null;
+    state.partialError = false;
+  });
+
+  it.each([
+    ["DELIVERED", "Delivered"],
+    ["INFLIGHT", "In Flight"],
+    ["NEEDS_RETRY", "Needs Retry"],
+    ["NEEDS_RECOVERY", "Needs Recovery"],
+    ["AWAITING_SIGNATURES", "Awaiting Signatures"],
+    ["FAILED", "Failed"],
+  ] as const)("labels %s as %s", (status, label) => {
+    state.history = [{ ...ccip, status }];
+    render(<BridgeHistory />);
+    expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it("offers Retry on a Needs Retry row", () => {
+    state.history = [{ ...ccip, status: "NEEDS_RETRY" }];
+    render(<BridgeHistory />);
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("links a Needs Recovery row to the explorer, with no Retry", () => {
+    state.history = [{ ...ccip, status: "NEEDS_RECOVERY" }];
+    render(<BridgeHistory />);
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Track on CCIP Explorer" })).toHaveAttribute(
+      "href",
+      `https://ccip.chain.link/msg/${MESSAGE_ID}`,
+    );
+  });
+
+  it("has no CCIP Explorer link on a LayerZero row", () => {
+    state.history = [row];
+    render(<BridgeHistory />);
+    expect(screen.queryByRole("link", { name: "Track on CCIP Explorer" })).not.toBeInTheDocument();
+  });
+});

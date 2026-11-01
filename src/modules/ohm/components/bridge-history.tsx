@@ -32,7 +32,10 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table.tsx";
+import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
+import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
+import { useRetryBridgeMessage } from "@/lib/hooks/bridge/useRetryBridgeMessage";
 import { getBridgeChain } from "../utils/constants.ts";
 import { shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
@@ -59,6 +62,50 @@ const BRIDGE_CHAIN_ID_NORMALIZATION: Record<number, number> = {
 
 function normalizeBridgeChainId(chainId: number): number {
   return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
+}
+
+const STATUS_BADGES: Record<
+  BridgeStatus,
+  { label: string; color: "green" | "blue" | "red" | "orange" }
+> = {
+  DELIVERED: { label: "Delivered", color: "green" },
+  INFLIGHT: { label: "In Flight", color: "blue" },
+  NEEDS_RETRY: { label: "Needs Retry", color: "orange" },
+  NEEDS_RECOVERY: { label: "Needs Recovery", color: "orange" },
+  AWAITING_SIGNATURES: { label: "Awaiting Signatures", color: "blue" },
+  FAILED: { label: "Failed", color: "red" },
+};
+
+function RetryButton({ item }: { item: BridgeHistoryItem }) {
+  const { retry, isPending } = useRetryBridgeMessage();
+  return (
+    <Button size="xs" variant="secondary" disabled={isPending} onClick={() => retry(item)}>
+      Retry
+    </Button>
+  );
+}
+
+function StatusCell({ item }: { item: BridgeHistoryItem }) {
+  const { label, color } = STATUS_BADGES[item.status];
+  return (
+    <div className="flex items-center justify-end gap-x-2">
+      {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
+      <Badge variant="filled" color={color}>
+        {label}
+      </Badge>
+      {item.messageId && (
+        <a
+          href={getCcipExplorerUrl(item.messageId)}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Track on CCIP Explorer"
+          className="text-tertiary-t hover:text-secondary-t transition-colors"
+        >
+          <RiExternalLinkLine size={16} />
+        </a>
+      )}
+    </div>
+  );
 }
 
 const columnHelper = createColumnHelper<BridgeHistoryItem>();
@@ -133,22 +180,10 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor("status", {
+  columnHelper.display({
+    id: "status",
     header: () => <div className="text-right w-full">Status</div>,
-    cell: ({ getValue }) => {
-      const value = getValue();
-      const isDelivered = value === "DELIVERED";
-      const isInflight = value === "INFLIGHT";
-      const label = isDelivered ? "Delivered" : isInflight ? "In Flight" : "Failed";
-
-      return (
-        <div className="flex justify-end">
-          <Badge variant="filled" color={isDelivered ? "green" : isInflight ? "blue" : "red"}>
-            {label}
-          </Badge>
-        </div>
-      );
-    },
+    cell: ({ row }) => <StatusCell item={row.original} />,
   }),
 ];
 

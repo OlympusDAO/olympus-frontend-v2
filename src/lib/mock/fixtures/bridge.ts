@@ -80,3 +80,36 @@ export const BRIDGE_NEAR_LIMIT: MockBridge = {
   inboundTokens: "110000000000",
   poolLiquidity: "130000000000",
 };
+
+export const BRIDGE_NEEDS_RETRY: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  history: [
+    {
+      source: "ccip",
+      srcChainId: 1,
+      dstChainId: 42161,
+      timestamp: new Date(now - 1 * HOUR).toISOString(),
+      amount: "40",
+      srcTxHash: "0x9f1e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4",
+      status: "NEEDS_RETRY",
+      messageId: "0x1111111111111111111111111111111111111111111111111111111111111111",
+    },
+    {
+      source: "ccip",
+      srcChainId: 8453,
+      dstChainId: 1,
+      timestamp: new Date(now - 3 * HOUR).toISOString(),
+      amount: "12",
+      srcTxHash: "0x8e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3",
+      status: "NEEDS_RECOVERY",
+      messageId: "0x2222222222222222222222222222222222222222222222222222222222222222",
+    },
+    ...MOCK_HISTORY,
+  ],
+};
+
+export const BRIDGE_HISTORY_ERROR: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  history: [],
+  historyError: true,
+};

@@ -11,11 +11,23 @@ import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
 import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
 import { addTrackedTransfer } from "@/lib/hooks/bridge/trackedTransfers";
+import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
+import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
+import { useBridgeMessageStatus } from "@/lib/hooks/bridge/useBridgeMessageStatus";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
 import { getBridgeChain } from "../utils/constants.ts";
 import { Link } from "react-router";
+
+const DELIVERY_COPY: Record<BridgeStatus, string> = {
+  DELIVERED: "Delivered",
+  INFLIGHT: "In flight",
+  NEEDS_RETRY: "Delivery failed. Retry it from your bridge history.",
+  NEEDS_RECOVERY: "Delivery failed. It can be recovered on CCIP Explorer.",
+  AWAITING_SIGNATURES: "Awaiting signatures",
+  FAILED: "Failed",
+};
 
 interface BridgeConfirmModalProps {
   isOpen: boolean;
@@ -76,6 +88,8 @@ export function BridgeConfirmModal({
     messageId,
   } = useBridgeOhm();
 
+  const deliveryStatus = useBridgeMessageStatus(messageId, destinationChainId);
+
   useEffect(() => {
     if (!bridgeSuccess || !address) return;
     addTrackedTransfer({
@@ -92,6 +106,7 @@ export function BridgeConfirmModal({
       srcChain: sourceChain?.name ?? String(sourceChainId),
       dstChain: destChain?.name ?? String(destinationChainId),
       txHash: bridgeHash,
+      messageId,
     });
   }, [bridgeSuccess]);
 
@@ -213,6 +228,21 @@ export function BridgeConfirmModal({
               </div>
             ))}
           </div>
+
+          {messageId && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary-t">{DELIVERY_COPY[deliveryStatus]}</span>
+              <a
+                href={getCcipExplorerUrl(messageId)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-blue hover:text-blue-800"
+              >
+                CCIP Explorer
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          )}
 
           <Button onClick={onClose} className="w-full">
             Close
