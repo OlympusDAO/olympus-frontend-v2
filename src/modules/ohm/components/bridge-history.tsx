@@ -6,6 +6,7 @@ import {
   RiWalletFill,
   RiArrowRightSLine,
   RiExternalLinkLine,
+  RiInformationLine,
 } from "@remixicon/react";
 import { useAccount } from "wagmi";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
@@ -18,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 import { Icon } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -96,17 +98,21 @@ const columns = [
   }),
   columnHelper.accessor("amount", {
     header: "Amount",
-    cell: ({ getValue }) => (
-      <div className="flex items-center gap-x-1">
-        <Icon name="OHMTokenIcon" size={20} />
-        <NumberFlow
-          className="text-xs/4 font-semibold text-primary-t"
-          value={Number(getValue())}
-          format={{ style: "decimal" }}
-          suffix="OHM"
-        />
-      </div>
-    ),
+    cell: ({ getValue }) => {
+      const amount = getValue();
+      if (amount === undefined) return <span className="text-secondary-t">—</span>;
+      return (
+        <div className="flex items-center gap-x-1">
+          <Icon name="OHMTokenIcon" size={20} />
+          <NumberFlow
+            className="text-xs/4 font-semibold text-primary-t"
+            value={Number(amount)}
+            format={{ style: "decimal" }}
+            suffix="OHM"
+          />
+        </div>
+      );
+    },
   }),
   columnHelper.accessor((row) => ({ hash: row.srcTxHash, chainId: row.srcChainId }), {
     id: "transactions",
@@ -148,7 +154,7 @@ const columns = [
 
 export function BridgeHistory() {
   const { address } = useAccount();
-  const { history, isLoading } = useBridgeHistory();
+  const { history, isLoading, error, partialError } = useBridgeHistory();
 
   const data = useMemo(
     () =>
@@ -196,7 +202,23 @@ export function BridgeHistory() {
     );
   }
 
-  if (data.length === 0) {
+  if (error) {
+    return (
+      <Card className="flex items-center justify-center min-h-[240px]">
+        <div className="flex flex-col items-center justify-center text-center py-16 px-8">
+          <RiExchangeFill className="text-surface-a10 mb-4 rotate-90" size={40} />
+          <p className="text-sm/5 font-semibold text-secondary-t mb-1">
+            Couldn't load bridge history.
+          </p>
+          <p className="text-xs/4 font-normal text-secondary-t">
+            This doesn't affect bridging. It'll try again shortly.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (data.length === 0 && !partialError) {
     return (
       <Card className="flex items-center justify-center min-h-[240px]">
         <div className="flex flex-col items-center justify-center text-center py-16 px-8">
@@ -217,6 +239,14 @@ export function BridgeHistory() {
 
   return (
     <div className="space-y-4">
+      {partialError && (
+        <Alert variant="compact" type="warning" size="sm" className="w-full">
+          <RiInformationLine size={16} />
+          <AlertDescription className="text-xs font-semibold text-primary-t">
+            Some bridge history couldn't be loaded. It'll try again shortly.
+          </AlertDescription>
+        </Alert>
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

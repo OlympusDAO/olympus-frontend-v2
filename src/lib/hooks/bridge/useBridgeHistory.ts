@@ -1,157 +1,114 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
-import { formatUnits } from "viem";
+import { useMemo } from "react";
+import { useAccount, useConfig } from "wagmi";
+import { getPublicClient } from "wagmi/actions";
+import type { Address, Hex } from "viem";
+import CCIPCrossChainBridgeAbi from "@/abis/CCIPCrossChainBridge";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import { BRIDGE_CHAINS } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
+import { BRIDGE_CHAINS, CCIP_CHAIN_SELECTORS } from "@/modules/ohm/utils/constants";
+import type { BridgeStatus } from "./bridgeStatus";
+import { fetchBridgeMessages, fetchMessage, filterByOrigin, type CcipMessage } from "./ccipApi";
+import { mergeHistory, summarizeHistorySources, toCcipRow } from "./mergeHistory";
+import { useTrackedTransfers } from "./trackedTransfers";
+import { useLayerZeroHistory } from "./useLayerZeroHistory";
 
 export interface BridgeHistoryItem {
+  source: "ccip" | "layerzero";
   srcChainId: number;
   dstChainId: number;
   timestamp: string;
-  amount: string;
+  /** Undefined when the source doesn't report one. */
+  amount?: string;
   srcTxHash: string;
   dstTxHash?: string;
-  status: "DELIVERED" | "INFLIGHT" | "FAILED" | string;
+  status: BridgeStatus;
+  messageId?: Hex;
 }
 
-// LayerZero v2 endpoint ID → EVM chain ID mapping
-const LZ_EID_TO_EVM: Record<number, number> = {
-  30101: 1, // Ethereum
-  30110: 42161, // Arbitrum
-  30184: 8453, // Base
-  30362: 80094, // Berachain
-};
-
-function lzEidToEvmChainId(eid: number): number {
-  return LZ_EID_TO_EVM[eid] ?? eid;
+/** All messages this wallet signed, across every source chain. */
+async function fetchWalletMessages(wallet: Address): Promise<CcipMessage[]> {
+  const perChain = await Promise.all(
+    BRIDGE_CHAINS.map(({ chainId }) => {
+      const bridge = getContractAddress(ContractName.CCIP_BRIDGE, chainId);
+      const selector = CCIP_CHAIN_SELECTORS[chainId];
+      return bridge && selector !== undefined ? fetchBridgeMessages(bridge, selector) : [];
+    }),
+  );
+  return filterByOrigin(perChain.flat(), wallet);
 }
 
-/**
- * Fetch bridge history from LayerZero Scan API.
- * Uses GET /v1/messages/wallet/{srcAddress} endpoint.
- */
+/** Tracked messages the wallet filter missed. One the API doesn't have yet stays locally tracked. */
+async function fetchMissingMessages(messageIds: Hex[]): Promise<CcipMessage[]> {
+  const results = await Promise.allSettled(messageIds.map(fetchMessage));
+  return results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
+}
+
+/** Merges CCIP, locally tracked and LayerZero transfers. A history failure never blocks bridging. */
 export function useBridgeHistory() {
   const { address } = useAccount();
+  const config = useConfig();
   const mock = useMockData();
+  const tracked = useTrackedTransfers(address);
+  const layerZero = useLayerZeroHistory();
 
-  // Collect all bridge contract addresses for filtering
-  const bridgeAddresses = BRIDGE_CHAINS.map((chain) =>
-    getContractAddress(ContractName.CROSS_CHAIN_BRIDGE, chain.chainId),
-  ).filter(Boolean);
+  const trackedIds = useMemo(
+    () => tracked.flatMap((transfer) => (transfer.messageId ? [transfer.messageId] : [])),
+    [tracked],
+  );
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["bridgeHistory", address],
-    enabled: !mock && !!address && bridgeAddresses.length > 0,
+  const ccip = useQuery({
+    queryKey: ["bridgeHistory", "ccip", address, trackedIds],
+    enabled: !mock && !!address,
     queryFn: async () => {
-      const url = `https://scan.layerzero-api.com/v1/messages/wallet/${address}?limit=100`;
+      const found = await fetchWalletMessages(address as Address);
+      const foundIds = new Set(found.map((message) => message.messageId));
+      const missing = await fetchMissingMessages(trackedIds.filter((id) => !foundIds.has(id)));
+      const messages = [...found, ...missing];
 
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`LayerZero API error: ${response.status}`);
-      }
-
-      const json = await response.json();
-      const messages: LzMessage[] = json.data ?? [];
-
-      // Filter to only our OHM bridge contract messages
-      const bridgeAddressSet = new Set(bridgeAddresses.map((a) => a!.toLowerCase()));
-
-      const items: BridgeHistoryItem[] = messages
-        .filter((msg) => {
-          const senderAddr = msg.pathway?.sender?.address?.toLowerCase();
-          return senderAddr && bridgeAddressSet.has(senderAddr);
-        })
-        .map((msg) => {
-          const srcChainId = lzEidToEvmChainId(msg.pathway.srcEid);
-          const dstChainId = lzEidToEvmChainId(msg.pathway.dstEid);
-
-          return {
-            srcChainId,
-            dstChainId,
-            timestamp: msg.created,
-            amount: parseAmountFromPayload(msg.source?.tx?.payload),
-            srcTxHash: msg.source?.tx?.txHash ?? "",
-            dstTxHash: msg.destination?.tx?.txHash ?? undefined,
-            status: msg.status?.name ?? "INFLIGHT",
-          } satisfies BridgeHistoryItem;
-        });
-
-      return items;
+      // CCIP's SUCCESS isn't proof of delivery, so ask each destination bridge.
+      return Promise.all(
+        messages.map(async (message) => {
+          if (message.status !== "SUCCESS") return toCcipRow(message, false);
+          const chainId = Number(message.destNetworkInfo.chainId);
+          const bridge = getContractAddress(ContractName.CCIP_BRIDGE, chainId);
+          const client = getPublicClient(config, { chainId });
+          if (!bridge || !client) return toCcipRow(message, undefined);
+          try {
+            const stored = await client.readContract({
+              address: bridge,
+              abi: CCIPCrossChainBridgeAbi,
+              functionName: "getFailedMessage",
+              args: [message.messageId],
+            });
+            return toCcipRow(message, stored.sourceChainSelector !== 0n);
+          } catch {
+            return toCcipRow(message, undefined);
+          }
+        }),
+      );
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
 
+  const history = useMemo(
+    () => mergeHistory(ccip.data ?? [], tracked, layerZero.data ?? []),
+    [ccip.data, tracked, layerZero.data],
+  );
+
   if (mock?.scenario.bridge) {
     return {
       history: mock.scenario.bridge.history,
       isLoading: false,
-      error: null,
+      error: mock.scenario.bridge.historyError ? new Error("History unavailable") : null,
+      partialError: false,
     };
   }
 
   return {
-    history: data ?? [],
-    isLoading,
-    error: error as Error | null,
+    history,
+    isLoading: ccip.isLoading || layerZero.isLoading,
+    ...summarizeHistorySources(ccip.error, layerZero.error),
   };
-}
-
-/**
- * Parse OHM amount from LayerZero message payload.
- * The bridge contract encodes: recipient address (20 bytes) + amount (uint256).
- * OHM has 9 decimals.
- */
-function parseAmountFromPayload(payload?: string): string {
-  if (!payload || payload.length < 66) return "0";
-  try {
-    // Skip the 0x prefix + first bytes (varies by encoding),
-    // look for the amount in the payload.
-    // OFT v1 payload format: abi.encode(address to, uint256 amount)
-    // = 32 bytes (address padded) + 32 bytes (amount) = 64 hex chars each
-    // After 0x prefix, that's positions 2..66 (address) and 66..130 (amount)
-    const amountHex = `0x${payload.slice(66, 130)}`;
-    const amount = BigInt(amountHex);
-    if (amount === 0n) return "0";
-    return formatUnits(amount, 9);
-  } catch {
-    return "0";
-  }
-}
-
-// Type for LayerZero Scan API response messages
-interface LzMessage {
-  pathway: {
-    srcEid: number;
-    dstEid: number;
-    sender: { address: string; id?: string; name?: string; chain?: string };
-    receiver: { address: string; id?: string; name?: string; chain?: string };
-    nonce: number;
-  };
-  source: {
-    status: string;
-    tx: {
-      txHash: string;
-      blockNumber: string;
-      blockTimestamp: number;
-      from: string;
-      payload: string;
-    };
-  };
-  destination?: {
-    status?: string;
-    tx?: {
-      txHash: string;
-      blockNumber?: string;
-      blockTimestamp?: number;
-    };
-  };
-  status: {
-    name: string;
-    message?: string;
-  };
-  guid: string;
-  created: string;
-  updated: string;
 }

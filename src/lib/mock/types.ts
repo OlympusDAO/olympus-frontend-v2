@@ -20,6 +20,7 @@ export type MockBridge = {
   inboundTokens?: string;
   poolLiquidity?: string;
   history: BridgeHistoryItem[];
+  historyError?: boolean;
 };
 
 export type MockScenario = {

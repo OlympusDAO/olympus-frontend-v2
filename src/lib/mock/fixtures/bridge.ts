@@ -7,6 +7,7 @@ const DAY = 86_400_000;
 
 const MOCK_HISTORY: BridgeHistoryItem[] = [
   {
+    source: "ccip",
     srcChainId: 1,
     dstChainId: 42161,
     timestamp: new Date(now - 2 * HOUR).toISOString(),
@@ -16,6 +17,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 42161,
     dstChainId: 8453,
     timestamp: new Date(now - 6 * HOUR).toISOString(),
@@ -24,6 +26,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "INFLIGHT",
   },
   {
+    source: "ccip",
     srcChainId: 8453,
     dstChainId: 1,
     timestamp: new Date(now - 1 * DAY).toISOString(),
@@ -33,6 +36,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 1,
     dstChainId: 80094,
     timestamp: new Date(now - 2 * DAY).toISOString(),
@@ -42,6 +46,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 80094,
     dstChainId: 42161,
     timestamp: new Date(now - 3 * DAY).toISOString(),

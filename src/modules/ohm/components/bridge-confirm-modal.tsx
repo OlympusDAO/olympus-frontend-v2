@@ -10,6 +10,7 @@ import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
 import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
+import { addTrackedTransfer } from "@/lib/hooks/bridge/trackedTransfers";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
@@ -72,10 +73,20 @@ export function BridgeConfirmModal({
     isSuccess: bridgeSuccess,
     error: bridgeError,
     hash: bridgeHash,
+    messageId,
   } = useBridgeOhm();
 
   useEffect(() => {
-    if (!bridgeSuccess) return;
+    if (!bridgeSuccess || !address) return;
+    addTrackedTransfer({
+      srcChainId: sourceChainId,
+      dstChainId: destinationChainId,
+      amount,
+      srcTxHash: bridgeHash,
+      messageId,
+      timestamp: new Date().toISOString(),
+      address,
+    });
     trackBridgeOhm({
       amount,
       srcChain: sourceChain?.name ?? String(sourceChainId),
