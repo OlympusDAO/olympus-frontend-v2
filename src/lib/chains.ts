@@ -72,30 +72,33 @@ export const allChains = isTestnetMode
   : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**
- * Mainnet RPC URL. In dev, override via VITE_MAINNET_RPC_URL to point at a local anvil
- * fork (e.g. http://localhost:8545) for testing; defaults to a public node. The override
- * is DEV-gated so a fork URL lingering in a shared build env can never be baked into a
+ * In dev, VITE_<CHAIN>_RPC_URL points a chain at a local anvil fork (see scripts/fork-testing.md).
+ * Overrides are DEV-gated so a fork URL lingering in a shared build env can never be baked into a
  * production bundle.
  */
-const mainnetRpcUrl =
-  (import.meta.env.DEV
-    ? (import.meta.env.VITE_MAINNET_RPC_URL as string | undefined)
-    : undefined) || "https://ethereum-rpc.publicnode.com";
+const rpcUrl = (override: string | undefined, fallback: string) =>
+  (import.meta.env.DEV ? override : undefined) || fallback;
+
+const env = import.meta.env;
 
 /**
  * Custom RPC transports per chain.
  */
 export const transports: Record<number, Transport> = {
-  [mainnet.id]: http(mainnetRpcUrl, { batch: true }),
-  [arbitrum.id]: http("https://arbitrum-rpc.publicnode.com"),
+  [mainnet.id]: http(rpcUrl(env.VITE_MAINNET_RPC_URL, "https://ethereum-rpc.publicnode.com"), {
+    batch: true,
+  }),
+  [arbitrum.id]: http(rpcUrl(env.VITE_ARBITRUM_RPC_URL, "https://arbitrum-rpc.publicnode.com")),
   [polygon.id]: http("https://polygon-bor-rpc.publicnode.com"),
-  [optimism.id]: http("https://optimism-rpc.publicnode.com"),
+  [optimism.id]: http(rpcUrl(env.VITE_OPTIMISM_RPC_URL, "https://optimism-rpc.publicnode.com")),
   [avalanche.id]: http("https://avalanche-c-chain-rpc.publicnode.com"),
   [boba.id]: http("https://mainnet.boba.network"),
   [fantom.id]: http("https://fantom.drpc.org"),
-  [base.id]: http("https://base-rpc.publicnode.com"),
-  [berachain.id]: http("https://berachain-rpc.publicnode.com"),
-  [robinhood.id]: http("https://rpc.mainnet.chain.robinhood.com"),
+  [base.id]: http(rpcUrl(env.VITE_BASE_RPC_URL, "https://base-rpc.publicnode.com")),
+  [berachain.id]: http(rpcUrl(env.VITE_BERACHAIN_RPC_URL, "https://berachain-rpc.publicnode.com")),
+  [robinhood.id]: http(
+    rpcUrl(env.VITE_ROBINHOOD_RPC_URL, "https://rpc.mainnet.chain.robinhood.com"),
+  ),
   [sepolia.id]: http("https://ethereum-sepolia.publicnode.com"),
 };
 

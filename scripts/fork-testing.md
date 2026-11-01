@@ -81,3 +81,29 @@ VITE_MAINNET_RPC_URL=http://localhost:8545 pnpm dev
   This `make-test-tree` script is local/UI testing only.
 - The migrator's real mainnet `merkleRoot` is still `0x0`; it must be set on mainnet (by an
   address with the `legacy_migration_admin`/admin role) before production migration works.
+
+---
+
+# CCIP Bridge — Local Fork Testing
+
+Test the bridge against forks in the state they'll be in after OCG proposal 19 and the L2 rollout.
+Forks need state from a recent block for the whole run, so use an RPC that keeps it. The publicnode
+endpoints reject older state on L2s; `https://gateway.tenderly.co/public/{mainnet,arbitrum,base}`
+works without a key.
+
+```bash
+anvil --fork-url $MAINNET_RPC_URL --port 8545 --chain-id 1
+anvil --fork-url $ARBITRUM_RPC_URL --port 8546 --chain-id 42161
+anvil --fork-url $BASE_RPC_URL --port 8547 --chain-id 8453
+
+node scripts/ccip-fork-setup.ts --chains mainnet,arbitrum,base
+```
+
+The script replays proposal 19's real calldata from the OCG timelock, runs the runbook's finalize
+and periphery steps by impersonating the local admins, gives anvil account #0 5000 OHM on each fork,
+and checks every route with the same reads as the frontend. Start the app with the `VITE_*_RPC_URL`
+lines it prints. Chains without a fork keep their real state, so their routes show as unavailable.
+
+Forks can't talk to each other, and the Chainlink API doesn't know about fork messages, so a send
+stays In Flight. To finish one, call `ccipReceive` on the destination bridge as its router, after
+giving the bridge the OHM the pool would have minted or released.
