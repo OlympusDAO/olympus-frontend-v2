@@ -15,6 +15,10 @@ export type MockBridge = {
   isActive: boolean;
   /** Mock native fee in wei (bigint serialized as string for fixture convenience) */
   nativeFeeWei: string;
+  /** Route limits in OHM base units, as strings. Omitted means no limit. */
+  outboundTokens?: string;
+  inboundTokens?: string;
+  poolLiquidity?: string;
   history: BridgeHistoryItem[];
 };
 
