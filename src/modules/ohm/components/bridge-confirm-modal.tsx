@@ -116,7 +116,6 @@ export function BridgeConfirmModal({
       destinationChainId,
       recipientAddress,
       amount: amountBigInt,
-      nativeFee,
       queryKey,
     });
   };

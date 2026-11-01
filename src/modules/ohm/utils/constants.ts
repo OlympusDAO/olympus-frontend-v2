@@ -1,17 +1,6 @@
 import { mainnet, arbitrum, base, berachain, optimism, robinhood } from "@/lib/chains";
 import type { IconName } from "@/components/icon";
 
-/**
- * LayerZero chain ID mapping (EVM chain ID → LayerZero chain ID).
- * Used when calling the bridge contract's sendOhm and estimateSendFee.
- */
-export const LAYER_ZERO_CHAIN_IDS: Record<number, number> = {
-  [mainnet.id]: 101,
-  [arbitrum.id]: 110,
-  [base.id]: 184,
-  [berachain.id]: 362,
-};
-
 /** CCIP chain selectors, from olympus-v3 src/scripts/env.json. */
 export const CCIP_CHAIN_SELECTORS: Record<number, bigint> = {
   [mainnet.id]: 5009297550715157269n,

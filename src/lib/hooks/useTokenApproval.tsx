@@ -73,11 +73,13 @@ export function useTokenApproval() {
     spender,
     amount,
     queryKey,
+    chainId,
   }: {
     tokenAddress: Address;
     spender: Address;
     amount: bigint;
     queryKey?: readonly unknown[];
+    chainId?: number;
   }) => {
     // Reset both Wagmi state and toast state for new transaction
     resetWrite();
@@ -93,6 +95,7 @@ export function useTokenApproval() {
       abi: erc20Abi,
       functionName: "approve",
       args: [spender, amount],
+      chainId,
     });
   };
 
