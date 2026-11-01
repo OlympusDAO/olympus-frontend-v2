@@ -146,9 +146,14 @@ function useRoutePairs(sourceChainId: number, destinations: readonly number[]) {
     let offset = 0;
     for (const { destination, source, remote } of entries) {
       if (mock?.scenario.bridge) {
-        states[destination] = mock.scenario.bridge.isActive
-          ? { status: "available" }
-          : { status: "unavailable", reason: "bridge-disabled" };
+        const { routes } = mock.scenario.bridge;
+        states[destination] =
+          routes === "available"
+            ? { status: "available" }
+            : {
+                status: "unavailable",
+                reason: routes === "route-paused" ? "route-paused" : "bridge-disabled",
+              };
         continue;
       }
 

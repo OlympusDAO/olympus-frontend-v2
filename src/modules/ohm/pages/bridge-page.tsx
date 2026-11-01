@@ -7,6 +7,7 @@ import { BridgeConfirmModal } from "../components/bridge-confirm-modal";
 import { BridgeChainSelectorModal } from "../components/bridge-chain-selector-modal.tsx";
 import { BridgeSettingsModal } from "../components/bridge-settings-modal";
 import type { Address } from "viem";
+import { useBridgeRoutes } from "@/lib/hooks/bridge/useBridgeRoute";
 import {
   BRIDGE_CHAINS,
   BRIDGEABLE_DESTINATIONS,
@@ -58,6 +59,8 @@ export function BridgePage() {
     const destIds = BRIDGEABLE_DESTINATIONS[sourceChainId] ?? [];
     return BRIDGE_CHAINS.filter((c) => destIds.includes(c.chainId));
   }, [sourceChainId]);
+
+  const destinationRoutes = useBridgeRoutes(sourceChainId);
 
   const handleSourceChainSelect = (chainId: number) => {
     if (chainId !== sourceChainId) {
@@ -132,6 +135,7 @@ export function BridgePage() {
         chains={availableDestChains}
         selectedChainId={destinationChainId}
         onSelect={handleDestChainSelect}
+        routeStates={destinationRoutes}
       />
 
       {/* Settings Modal */}

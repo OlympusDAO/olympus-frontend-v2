@@ -52,13 +52,26 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
 ];
 
 export const BRIDGE_ACTIVE: MockBridge = {
-  isActive: true,
+  routes: "available",
   nativeFeeWei: "350000000000000", // ~0.00035 ETH
   history: MOCK_HISTORY,
 };
 
 export const BRIDGE_INACTIVE: MockBridge = {
-  isActive: false,
+  routes: "unavailable",
   nativeFeeWei: "0",
   history: [],
+};
+
+export const BRIDGE_ROUTE_PAUSED: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  routes: "route-paused",
+};
+
+// A 100 OHM route limit, so the near-limit and over-limit states are reachable by typing an amount.
+export const BRIDGE_NEAR_LIMIT: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  outboundTokens: "100000000000",
+  inboundTokens: "110000000000",
+  poolLiquidity: "130000000000",
 };
