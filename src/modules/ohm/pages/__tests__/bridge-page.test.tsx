@@ -13,11 +13,12 @@ const state = vi.hoisted(() => ({
   feeCalls: [] as Array<{ recipientAddress?: string }>,
   nativeFee: 1000n as bigint | undefined,
   feeError: null as Error | null,
+  chainId: 1,
 }));
 
 vi.mock("wagmi", () => ({
   useAccount: () => ({ address: state.address, isConnected: !!state.address }),
-  useChainId: () => 1,
+  useChainId: () => state.chainId,
   useSwitchChain: () => ({ switchChain: vi.fn() }),
   useBalance: () => ({ data: { value: 10n ** 18n } }),
   useBytecode: () => ({ data: undefined }),
@@ -51,8 +52,18 @@ vi.mock("../../components/bridge-history", () => ({
   BridgeHistory: () => <div>history</div>,
 }));
 vi.mock("../../components/bridge-confirm-modal", () => ({
-  BridgeConfirmModal: ({ recipientAddress }: { recipientAddress: string }) => (
-    <div data-testid="confirm-modal">{recipientAddress}</div>
+  BridgeConfirmModal: ({
+    recipientAddress,
+    sourceChainId,
+    destinationChainId,
+  }: {
+    recipientAddress: string;
+    sourceChainId: number;
+    destinationChainId: number;
+  }) => (
+    <div data-testid="confirm-modal">
+      {recipientAddress} {sourceChainId}-{destinationChainId}
+    </div>
   ),
 }));
 
@@ -67,6 +78,7 @@ describe("BridgePage", () => {
     state.feeCalls = [];
     state.nativeFee = 1000n;
     state.feeError = null;
+    state.chainId = 1;
   });
 
   it("sends to the new wallet after switching accounts", () => {
@@ -117,5 +129,42 @@ describe("BridgePage", () => {
     render(<BridgePage />);
     await userEvent.type(screen.getByPlaceholderText("0.00"), input);
     expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+  });
+
+  it("keeps the confirm modal on the route it opened for when the wallet changes network", async () => {
+    const { rerender } = render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    await userEvent.click(screen.getByRole("button", { name: "Bridge OHM" }));
+    expect(screen.getByTestId("confirm-modal")).toHaveTextContent("1-42161");
+
+    state.chainId = 8453;
+    await act(async () => rerender(<BridgePage />));
+
+    expect(screen.getByTestId("confirm-modal")).toHaveTextContent("1-42161");
+  });
+
+  it("drops a custom recipient when the wallet changes", async () => {
+    const { rerender } = render(<BridgePage />);
+    await userEvent.click(screen.getByRole("button", { name: /Recipient/ }));
+    const input = screen.getByLabelText("Recipient Address");
+    await userEvent.clear(input);
+    await userEvent.type(input, "0x00000000000000000000000000000000000000d1");
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+    expect(lastRecipient()).toBe("0x00000000000000000000000000000000000000d1");
+
+    state.address = WALLET_B;
+    await act(async () => rerender(<BridgePage />));
+
+    expect(lastRecipient()).toBe(WALLET_B);
+  });
+
+  it.each([
+    ["1.1234567899", "1.123456789"],
+    ["12x", "12"],
+  ])("shows %j in the input as %j, the amount it will send", async (typed, shown) => {
+    render(<BridgePage />);
+    const input = screen.getByPlaceholderText("0.00");
+    await userEvent.type(input, typed);
+    expect(input).toHaveValue(shown);
   });
 });

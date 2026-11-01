@@ -5,6 +5,7 @@ import {
   fetchBridgeMessages,
   fetchMessage,
   filterByOrigin,
+  onBridgeChains,
   getCcipAmount,
   type CcipMessage,
 } from "../ccipApi";
@@ -92,5 +93,18 @@ describe("getCcipAmount", () => {
 
   it("is undefined when the API has no token amount", () => {
     expect(getCcipAmount({ ...real, sourceTokenAmount: null })).toBeUndefined();
+  });
+});
+
+describe("onBridgeChains", () => {
+  it("drops messages to chains the UI doesn't support, like Solana", () => {
+    const solana = {
+      ...real,
+      destNetworkInfo: {
+        chainId: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+        chainSelector: "124615329519749607",
+      },
+    };
+    expect(onBridgeChains([real, solana])).toEqual([real]);
   });
 });

@@ -8,9 +8,20 @@ import { ContractName, getContractAddress } from "@/lib/contracts";
 import { useMockData } from "@/lib/mock/provider";
 import { BRIDGE_CHAINS, CCIP_CHAIN_SELECTORS } from "@/modules/ohm/utils/constants";
 import type { BridgeStatus } from "./bridgeStatus";
-import { fetchBridgeMessages, fetchMessage, filterByOrigin, type CcipMessage } from "./ccipApi";
+import {
+  fetchBridgeMessages,
+  fetchMessage,
+  filterByOrigin,
+  onBridgeChains,
+  type CcipMessage,
+} from "./ccipApi";
 import { mergeHistory, summarizeHistorySources, toCcipRow } from "./mergeHistory";
-import { useTrackedTransfers } from "./trackedTransfers";
+import {
+  addTrackedTransfer,
+  removeTrackedTransfer,
+  resolveTrackedTransfer,
+  useTrackedTransfers,
+} from "./trackedTransfers";
 import { useLayerZeroHistory } from "./useLayerZeroHistory";
 
 export interface BridgeHistoryItem {
@@ -35,7 +46,7 @@ async function fetchWalletMessages(wallet: Address): Promise<CcipMessage[]> {
       return bridge && selector !== undefined ? fetchBridgeMessages(bridge, selector) : [];
     }),
   );
-  return filterByOrigin(perChain.flat(), wallet);
+  return onBridgeChains(filterByOrigin(perChain.flat(), wallet));
 }
 
 /** Tracked messages the wallet filter missed. One the API doesn't have yet stays locally tracked. */
@@ -56,6 +67,36 @@ export function useBridgeHistory() {
     () => tracked.flatMap((transfer) => (transfer.messageId ? [transfer.messageId] : [])),
     [tracked],
   );
+
+  // A send is recorded as soon as it has a hash, so the modal can close before its receipt. This
+  // finds out what happened to those: failed ones go, and the rest get a message ID to follow.
+  const unresolved = useMemo(
+    () => tracked.filter((transfer) => transfer.srcTxHash && !transfer.messageId),
+    [tracked],
+  );
+  useQuery({
+    queryKey: ["bridgeHistory", "resolveTracked", unresolved.map((t) => t.srcTxHash)],
+    enabled: !mock && unresolved.length > 0,
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      await Promise.all(
+        unresolved.map(async (transfer) => {
+          const client = getPublicClient(config, { chainId: transfer.srcChainId });
+          const bridge = getContractAddress(ContractName.CCIP_BRIDGE, transfer.srcChainId);
+          if (!client || !bridge) return;
+          const receipt = await client
+            .getTransactionReceipt({ hash: transfer.srcTxHash as Hex })
+            .catch(() => undefined);
+          const resolution = resolveTrackedTransfer(receipt, bridge);
+          if (resolution.state === "reverted") removeTrackedTransfer(transfer.srcTxHash as string);
+          if (resolution.state === "sent" && resolution.messageId) {
+            addTrackedTransfer({ ...transfer, messageId: resolution.messageId });
+          }
+        }),
+      );
+      return null;
+    },
+  });
 
   const ccip = useQuery({
     queryKey: ["bridgeHistory", "ccip", address, trackedIds],

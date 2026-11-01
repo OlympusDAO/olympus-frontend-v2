@@ -87,4 +87,15 @@ describe("evaluateAmount", () => {
         .status,
     ).toBe("ok");
   });
+
+  it("doesn't pass an amount going into mainnet while the pool's liquidity is unread", () => {
+    expect(
+      evaluateAmount({
+        amount: ohm("1"),
+        outboundTokens: ohm("100"),
+        inboundTokens: ohm("100"),
+        poolLiquidity: null,
+      }).status,
+    ).toBe("unverified");
+  });
 });

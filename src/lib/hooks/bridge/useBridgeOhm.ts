@@ -40,6 +40,19 @@ export function useBridgeOhm() {
   const { address } = useAccount();
   const [isQuoting, setIsQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<Error | null>(null);
+  const [sourceChain, setSourceChain] = useState<number>();
+
+  // A send that starts must not finish for a wallet that's no longer connected, or after the modal
+  // has closed. The fee read leaves a gap where either can happen.
+  const addressRef = useRef(address);
+  addressRef.current = address;
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const {
     data: hash,
@@ -57,21 +70,27 @@ export function useBridgeOhm() {
   } = useWaitForTransactionReceipt({
     hash,
     confirmations: 1,
+    // The wallet can change network while this waits.
+    chainId: sourceChain,
   });
 
+  const isReverted = receipt?.status === "reverted";
+  const isSent = isConfirmed && !isReverted;
+  const revertError = isReverted ? new Error("The bridge transaction reverted.") : null;
+
   useEffect(() => {
-    if (isConfirmed && queryKeyRef.current) {
+    if (isSent && queryKeyRef.current) {
       queryClient.invalidateQueries({ queryKey: queryKeyRef.current });
       queryKeyRef.current = undefined;
     }
-  }, [isConfirmed, queryClient]);
+  }, [isSent, queryClient]);
 
   const { reset: resetToast } = useTransactionToast({
     hash,
     isWritePending,
-    isConfirmed,
-    writeError,
-    confirmError,
+    isConfirmed: isSent,
+    writeError: quoteError ?? writeError,
+    confirmError: confirmError ?? revertError,
     config: toastConfig,
   });
 
@@ -97,6 +116,7 @@ export function useBridgeOhm() {
     resetWrite();
     resetToast();
     setQuoteError(null);
+    setSourceChain(sourceChainId);
     bridgeAddressRef.current = bridgeAddress;
     if (queryKey) queryKeyRef.current = queryKey;
 
@@ -120,7 +140,10 @@ export function useBridgeOhm() {
       setIsQuoting(false);
     }
 
+    if (!isMountedRef.current || addressRef.current !== address) return;
+
     writeContract({
+      account: address,
       address: bridgeAddress,
       abi: CCIPCrossChainBridgeAbi,
       functionName: "sendToEVM",
@@ -144,8 +167,8 @@ export function useBridgeOhm() {
   return {
     bridge,
     isPending: isQuoting || isWritePending || isConfirming,
-    isSuccess: isConfirmed,
-    error: quoteError || writeError || confirmError,
+    isSuccess: isSent,
+    error: quoteError || writeError || confirmError || revertError,
     hash,
     messageId,
     reset,

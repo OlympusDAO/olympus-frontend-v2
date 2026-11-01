@@ -237,7 +237,7 @@ export function BridgeHistory() {
     );
   }
 
-  if (error) {
+  if (error && data.length === 0) {
     return (
       <Card className="flex items-center justify-center min-h-[240px]">
         <div className="flex flex-col items-center justify-center text-center py-16 px-8">
@@ -274,7 +274,7 @@ export function BridgeHistory() {
 
   return (
     <div className="space-y-4">
-      {partialError && (
+      {(partialError || error) && (
         <Alert variant="compact" type="warning" size="sm" className="w-full">
           <RiInformationLine size={16} />
           <AlertDescription className="text-xs font-semibold text-primary-t">

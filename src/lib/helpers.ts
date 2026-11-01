@@ -108,6 +108,8 @@ const BLOCK_EXPLORER_URLS: Record<number, string> = {
   42161: "https://arbiscan.io",
   8453: "https://basescan.org",
   80094: "https://berascan.com",
+  10: "https://optimistic.etherscan.io",
+  4663: "https://robinhoodchain.blockscout.com",
 };
 
 export function getBlockExplorerTxUrl(chainId: number, txHash: string): string {

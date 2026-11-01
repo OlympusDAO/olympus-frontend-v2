@@ -74,6 +74,18 @@ describe("BridgeHistory", () => {
   });
 });
 
+describe("BridgeHistory with both sources down", () => {
+  it("still shows locally tracked rows, with the notice", () => {
+    state.history = [{ ...row, source: "ccip", status: "INFLIGHT" }];
+    state.error = new Error("down");
+    state.partialError = false;
+    render(<BridgeHistory />);
+
+    expect(screen.getByText("In Flight")).toBeInTheDocument();
+    expect(screen.getByText(/Some bridge history couldn't be loaded/)).toBeInTheDocument();
+  });
+});
+
 describe("BridgeHistory CCIP rows", () => {
   const MESSAGE_ID = `0x${"ab".repeat(32)}` as const;
   const ccip: BridgeHistoryItem = { ...row, source: "ccip", messageId: MESSAGE_ID };

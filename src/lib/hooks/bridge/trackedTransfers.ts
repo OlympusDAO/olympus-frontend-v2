@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
-import type { Hex } from "viem";
+import type { Address, Hex, Log } from "viem";
+import { parseBridgedMessageId } from "./parseBridged";
 
 /**
  * A transfer this browser sent, kept so it shows immediately and stays visible for wallets the API's
@@ -32,10 +33,22 @@ function readRaw(): string {
   }
 }
 
+function isTrackedTransfer(item: unknown): item is TrackedTransfer {
+  const candidate = item as Partial<TrackedTransfer> | null;
+  return (
+    typeof candidate?.address === "string" &&
+    typeof candidate.srcChainId === "number" &&
+    typeof candidate.dstChainId === "number" &&
+    typeof candidate.amount === "string" &&
+    typeof candidate.timestamp === "string" &&
+    !Number.isNaN(new Date(candidate.timestamp).getTime())
+  );
+}
+
 function parse(raw: string): TrackedTransfer[] {
   try {
     const items = JSON.parse(raw);
-    return Array.isArray(items) ? items : [];
+    return Array.isArray(items) ? items.filter(isTrackedTransfer) : [];
   } catch {
     return [];
   }
@@ -55,17 +68,37 @@ function sameTransfer(a: TrackedTransfer, b: TrackedTransfer): boolean {
   return matches(a.srcTxHash, b.srcTxHash) || matches(a.safeTxHash, b.safeTxHash);
 }
 
-export function addTrackedTransfer(transfer: TrackedTransfer): void {
-  const others = parse(readRaw()).filter((item) => !sameTransfer(item, transfer));
+function write(items: TrackedTransfer[]): void {
   try {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([transfer, ...others].slice(0, MAX_ENTRIES)),
-    );
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_ENTRIES)));
   } catch {
     return;
   }
   for (const listener of listeners) listener();
+}
+
+export function addTrackedTransfer(transfer: TrackedTransfer): void {
+  write([transfer, ...parse(readRaw()).filter((item) => !sameTransfer(item, transfer))]);
+}
+
+export function removeTrackedTransfer(srcTxHash: string): void {
+  const target = srcTxHash.toLowerCase();
+  write(parse(readRaw()).filter((item) => item.srcTxHash?.toLowerCase() !== target));
+}
+
+export type TrackedTransferResolution =
+  | { state: "pending" }
+  | { state: "reverted" }
+  | { state: "sent"; messageId?: Hex };
+
+/** Works out from a tracked send's receipt whether it went through, and its message ID. */
+export function resolveTrackedTransfer(
+  receipt: { status: "success" | "reverted"; logs: Log[] } | undefined,
+  bridge: string,
+): TrackedTransferResolution {
+  if (!receipt) return { state: "pending" };
+  if (receipt.status === "reverted") return { state: "reverted" };
+  return { state: "sent", messageId: parseBridgedMessageId(receipt.logs, bridge as Address) };
 }
 
 function subscribe(callback: () => void): () => void {

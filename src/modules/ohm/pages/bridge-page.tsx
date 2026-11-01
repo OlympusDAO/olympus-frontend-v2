@@ -33,14 +33,21 @@ export function BridgePage() {
   const recipientAddress = resolveRecipient(customRecipient, address);
 
   // Modal state
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // Pinned when the modal opens, as the form's route follows the wallet's network.
+  const [confirmation, setConfirmation] = useState<{
+    sourceChainId: number;
+    destinationChainId: number;
+    amount: string;
+    recipientAddress: Address;
+  } | null>(null);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [isDestModalOpen, setIsDestModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Whatever was being confirmed belonged to the previous wallet.
+  // What was being confirmed, and where it was going, belonged to the previous wallet.
   useEffect(() => {
-    setIsConfirmOpen(false);
+    setConfirmation(null);
+    setCustomRecipient(undefined);
   }, [address]);
 
   // Sync source chain with wallet network changes
@@ -91,8 +98,8 @@ export function BridgePage() {
   };
 
   const handleSubmit = () => {
-    if (amount && parseFloat(amount) > 0) {
-      setIsConfirmOpen(true);
+    if (amount && parseFloat(amount) > 0 && recipientAddress) {
+      setConfirmation({ sourceChainId, destinationChainId, amount, recipientAddress });
     }
   };
 
@@ -149,17 +156,14 @@ export function BridgePage() {
       />
 
       {/* Confirm Modal */}
-      {isConfirmOpen && recipientAddress && (
+      {confirmation && (
         <BridgeConfirmModal
-          isOpen={isConfirmOpen}
+          isOpen
           onClose={() => {
-            setIsConfirmOpen(false);
+            setConfirmation(null);
             setAmount("");
           }}
-          sourceChainId={sourceChainId}
-          destinationChainId={destinationChainId}
-          amount={amount}
-          recipientAddress={recipientAddress}
+          {...confirmation}
         />
       )}
     </div>

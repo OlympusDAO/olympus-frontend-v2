@@ -1,4 +1,5 @@
 import { formatUnits, type Address, type Hex } from "viem";
+import { isBridgeableChain } from "@/modules/ohm/utils/constants";
 
 const CCIP_API = "https://api.ccip.chain.link/v2/messages";
 const OHM_DECIMALS = 9;
@@ -72,6 +73,15 @@ export function fetchMessage(messageId: Hex): Promise<CcipMessage> {
 export function filterByOrigin(messages: CcipMessage[], wallet: Address): CcipMessage[] {
   const target = wallet.toLowerCase();
   return messages.filter((message) => message.origin.toLowerCase() === target);
+}
+
+/** The Ethereum bridge also serves Solana, which the UI doesn't support yet. */
+export function onBridgeChains(messages: CcipMessage[]): CcipMessage[] {
+  return messages.filter(
+    (message) =>
+      isBridgeableChain(Number(message.sourceNetworkInfo.chainId)) &&
+      isBridgeableChain(Number(message.destNetworkInfo.chainId)),
+  );
 }
 
 export function getCcipAmount(message: CcipMessage): string | undefined {

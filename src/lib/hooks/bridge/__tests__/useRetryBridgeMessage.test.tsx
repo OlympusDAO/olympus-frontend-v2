@@ -7,7 +7,9 @@ import type { BridgeHistoryItem } from "../useBridgeHistory";
 
 const writeContract = vi.fn();
 const switchChainAsync = vi.fn();
-const state = vi.hoisted(() => ({ chainId: 42161 }));
+const state = vi.hoisted(() => ({ chainId: 42161, writeError: null as Error | null }));
+const toast = vi.hoisted(() => vi.fn(() => ({ reset: vi.fn() })));
+const waitArgs = vi.hoisted(() => vi.fn());
 
 vi.mock("wagmi", () => ({
   useChainId: () => state.chainId,
@@ -16,11 +18,16 @@ vi.mock("wagmi", () => ({
     data: undefined,
     writeContract,
     isPending: false,
-    error: null,
+    error: state.writeError,
     reset: vi.fn(),
   }),
-  useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false, error: null }),
+  useWaitForTransactionReceipt: (args: unknown) => {
+    waitArgs(args);
+    return { isLoading: false, isSuccess: false, error: null };
+  },
 }));
+
+vi.mock("../../useTransactionToast", () => ({ useTransactionToast: toast }));
 
 const MESSAGE_ID = `0x${"ab".repeat(32)}` as const;
 const item: BridgeHistoryItem = {
@@ -39,6 +46,7 @@ describe("useRetryBridgeMessage", () => {
     writeContract.mockReset();
     switchChainAsync.mockReset();
     state.chainId = 42161;
+    state.writeError = null;
   });
 
   it("calls retryFailedMessage on the destination chain's bridge", async () => {
@@ -75,5 +83,20 @@ describe("useRetryBridgeMessage", () => {
     await act(() => result.current.retry(item));
 
     expect(writeContract).not.toHaveBeenCalled();
+  });
+
+  it("tells the user when a retry fails", () => {
+    state.writeError = new Error("reverted");
+    renderHookWithProviders(() => useRetryBridgeMessage());
+    expect(toast).toHaveBeenLastCalledWith(
+      expect.objectContaining({ writeError: state.writeError }),
+    );
+  });
+
+  it("waits for the retry's receipt on the destination chain", async () => {
+    const { result, rerender } = renderHookWithProviders(() => useRetryBridgeMessage());
+    await act(() => result.current.retry(item));
+    rerender();
+    expect(waitArgs).toHaveBeenLastCalledWith(expect.objectContaining({ chainId: 42161 }));
   });
 });

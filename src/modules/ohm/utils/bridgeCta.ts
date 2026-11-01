@@ -41,6 +41,7 @@ export function getBridgeCta(input: BridgeCtaInput): BridgeCta {
   if (ohmBalance !== undefined && amount > ohmBalance) return blocked("Insufficient OHM Balance");
   if (amountStatus === "exceeds-route-limit") return blocked("Exceeds Route Limit");
   if (amountStatus === "exceeds-liquidity") return blocked("Exceeds Available Liquidity");
+  if (amountStatus === "unverified") return blocked("Checking Bridge…");
   if (nativeFee !== undefined && nativeBalance !== undefined && nativeBalance < nativeFee) {
     return blocked(`Insufficient ${source.nativeCurrencySymbol} for Fees`);
   }
@@ -49,6 +50,29 @@ export function getBridgeCta(input: BridgeCtaInput): BridgeCta {
     return { label: "Approve OHM for Bridging", disabled: false, action: "confirm" };
   }
   return { label: "Bridge OHM", disabled: false, action: "confirm" };
+}
+
+/**
+ * What stops the send from going ahead in the confirm modal, which stays open while route state,
+ * capacity and the wallet's network can all change.
+ */
+export function getConfirmBlock({
+  walletChainId,
+  source,
+  route,
+  amountStatus,
+}: Pick<BridgeCtaInput, "walletChainId" | "source" | "route" | "amountStatus">):
+  | BridgeCta
+  | undefined {
+  if (route.status === "loading") return blocked("Checking Bridge…");
+  if (route.status === "unavailable") return blocked("Bridge Unavailable");
+  if (walletChainId !== source.chainId) {
+    return { label: `Switch to ${source.name}`, disabled: false, action: "switch" };
+  }
+  if (amountStatus === "exceeds-route-limit") return blocked("Exceeds Route Limit");
+  if (amountStatus === "exceeds-liquidity") return blocked("Exceeds Available Liquidity");
+  if (amountStatus === "unverified") return blocked("Checking Bridge…");
+  return undefined;
 }
 
 export function parseOhmAmount(value: string): bigint {

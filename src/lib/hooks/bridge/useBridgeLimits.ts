@@ -46,7 +46,7 @@ export function useBridgeLimits(sourceChainId: number, destinationChainId: numbe
       amount,
       outboundTokens: availableTokens(route.outbound),
       inboundTokens: availableTokens(route.inbound),
-      poolLiquidity: intoMainnet ? poolBalance : undefined,
+      poolLiquidity: intoMainnet ? (poolBalance ?? null) : undefined,
     }),
     isLoading: route.status === "loading" || isLiquidityLoading,
   };

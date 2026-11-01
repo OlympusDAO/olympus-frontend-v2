@@ -1,4 +1,9 @@
-export type AmountStatus = "ok" | "near-limit" | "exceeds-route-limit" | "exceeds-liquidity";
+export type AmountStatus =
+  | "ok"
+  | "near-limit"
+  | "exceeds-route-limit"
+  | "exceeds-liquidity"
+  | "unverified";
 
 /** Warn above this share of the tightest limit, since other wallets can use up the capacity. */
 const NEAR_LIMIT_PERCENT = 90n;
@@ -18,8 +23,8 @@ export function evaluateAmount({
   amount: bigint;
   outboundTokens?: bigint | null;
   inboundTokens?: bigint | null;
-  /** The mainnet pool's OHM balance. Set only when the destination is mainnet. */
-  poolLiquidity?: bigint;
+  /** The mainnet pool's OHM balance, null while unread. Undefined when the destination isn't mainnet. */
+  poolLiquidity?: bigint | null;
 }): { status: AmountStatus } {
   if (amount <= 0n) return { status: "ok" };
 
@@ -32,6 +37,7 @@ export function evaluateAmount({
   ) {
     return { status: "exceeds-route-limit" };
   }
+  if (poolLiquidity === null) return { status: "unverified" };
   if (poolLiquidity !== undefined && amount > poolLiquidity) {
     return { status: "exceeds-liquidity" };
   }

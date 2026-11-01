@@ -42,6 +42,7 @@ describe("getBridgeCta", () => {
       true,
       "none",
     ],
+    ["liquidity unread", { amountStatus: "unverified" }, "Checking Bridge…", true, "none"],
     ["no native for fee", { nativeBalance: 999n }, "Insufficient ETH for Fees", true, "none"],
     ["fee not yet read", { nativeFee: undefined }, "Estimating Fee…", true, "none"],
     [

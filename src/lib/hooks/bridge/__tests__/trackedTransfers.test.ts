@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
 import {
   addTrackedTransfer,
   readTrackedTransfers,
+  removeTrackedTransfer,
+  resolveTrackedTransfer,
   type TrackedTransfer,
 } from "../trackedTransfers";
 
@@ -60,5 +62,48 @@ describe("trackedTransfers", () => {
     });
     expect(readTrackedTransfers(WALLET)).toEqual([]);
     expect(() => addTrackedTransfer(transfer())).not.toThrow();
+  });
+
+  it.each([
+    ["null entries", [null]],
+    ["number entries", [1]],
+    ["entries with no address", [{ foo: 1 }]],
+    ["an unparseable timestamp", [{ ...transfer(), timestamp: "not a date" }]],
+  ])("drops %s rather than crashing", (_name, stored) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    expect(readTrackedTransfers(WALLET)).toEqual([]);
+    expect(() => addTrackedTransfer(transfer())).not.toThrow();
+  });
+
+  it("keeps good entries alongside bad ones", () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([null, transfer()]));
+    expect(readTrackedTransfers(WALLET)).toHaveLength(1);
+  });
+
+  it("removes a transfer by source tx", () => {
+    addTrackedTransfer(transfer());
+    removeTrackedTransfer(transfer().srcTxHash as string);
+    expect(readTrackedTransfers(WALLET)).toEqual([]);
+  });
+});
+
+describe("resolveTrackedTransfer", () => {
+  const BRIDGE = "0x00000000000000000000000000000000000000a1";
+
+  it("is unresolved while there's no receipt", () => {
+    expect(resolveTrackedTransfer(undefined, BRIDGE)).toEqual({ state: "pending" });
+  });
+
+  it("reports a reverted send so it can be dropped", () => {
+    expect(resolveTrackedTransfer({ status: "reverted", logs: [] }, BRIDGE)).toEqual({
+      state: "reverted",
+    });
+  });
+
+  it("is sent with no message ID when the log is missing", () => {
+    expect(resolveTrackedTransfer({ status: "success", logs: [] }, BRIDGE)).toEqual({
+      state: "sent",
+      messageId: undefined,
+    });
   });
 });

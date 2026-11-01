@@ -142,7 +142,9 @@ export function BridgeForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleaned = clampOhmDecimals(handleInputNumberChange(e.target.value));
-    onAmountChange(cleaned.slice(0, 20));
+    const next = cleaned.slice(0, 20);
+    onAmountChange(next);
+    return next;
   };
 
   const handleMax = () => {
@@ -176,8 +178,7 @@ export function BridgeForm({
                   onChainClick={onOpenSourceChainModal}
                   amount={field.value}
                   onChange={(e) => {
-                    handleChange(e);
-                    field.onChange(e);
+                    field.onChange(handleChange(e));
                   }}
                   isInput
                   ohmToken={ohmToken}
