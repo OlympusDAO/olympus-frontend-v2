@@ -15,6 +15,8 @@ import ethereumIcon from "@/icons/chains/ethereum.svg";
 import arbitrumIcon from "@/icons/chains/arbitrum.svg";
 import baseIcon from "@/icons/chains/base.svg";
 import berachainIcon from "@/icons/chains/berachain.svg";
+import optimismIcon from "@/icons/chains/optimism.svg";
+import robinhoodIcon from "@/icons/chains/robinhood.svg";
 import sepoliaIcon from "@/icons/chains/sepolia.svg";
 
 const withIcon = <T extends { id: number }>(chain: T, iconUrl: string) => ({
@@ -27,6 +29,8 @@ const mainnetWithIcon = withIcon(mainnet, ethereumIcon);
 const arbitrumWithIcon = withIcon(arbitrum, arbitrumIcon);
 const baseWithIcon = withIcon(base, baseIcon);
 const berachainWithIcon = withIcon(berachain, berachainIcon);
+const optimismWithIcon = withIcon(optimism, optimismIcon);
+const robinhoodWithIcon = withIcon(robinhood, robinhoodIcon);
 const sepoliaWithIcon = withIcon(sepolia, sepoliaIcon);
 
 /**
@@ -39,7 +43,13 @@ export const PRODUCTION_CHAINS = [mainnetWithIcon] as const;
  * Additional chains needed for bridge chain switching.
  * Not shown in the default wallet network selector UI.
  */
-export const BRIDGE_EXTRA_CHAINS = [arbitrumWithIcon, baseWithIcon, berachainWithIcon] as const;
+export const BRIDGE_EXTRA_CHAINS = [
+  arbitrumWithIcon,
+  baseWithIcon,
+  berachainWithIcon,
+  optimismWithIcon,
+  robinhoodWithIcon,
+] as const;
 
 /**
  * Whether testnet mode is enabled via environment variable.
@@ -85,6 +95,7 @@ export const transports: Record<number, Transport> = {
   [fantom.id]: http("https://fantom.drpc.org"),
   [base.id]: http("https://base-rpc.publicnode.com"),
   [berachain.id]: http("https://berachain-rpc.publicnode.com"),
+  [robinhood.id]: http("https://rpc.mainnet.chain.robinhood.com"),
   [sepolia.id]: http("https://ethereum-sepolia.publicnode.com"),
 };
 

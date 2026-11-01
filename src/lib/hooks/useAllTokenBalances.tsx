@@ -16,6 +16,7 @@ import {
   fantom,
   base,
   berachain,
+  robinhood,
   sepolia,
 } from "@/lib/chains";
 
@@ -29,6 +30,7 @@ const CHAIN_MAP: Record<number, Chain> = {
   [fantom.id]: fantom,
   [base.id]: base,
   [berachain.id]: berachain,
+  [robinhood.id]: robinhood,
   [sepolia.id]: sepolia,
 };
 
