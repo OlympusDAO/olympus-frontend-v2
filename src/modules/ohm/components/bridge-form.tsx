@@ -2,23 +2,30 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { ChevronDownIcon, Settings } from "lucide-react";
 import { RiInformationLine } from "@remixicon/react";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits } from "viem";
 import { formatTokenAmount } from "@/lib/math";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, useBytecode, useChainId } from "wagmi";
 import { Icon } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { Form, FormField, FormItem } from "@/components/ui/form.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
-import { useToken } from "@/lib/hooks/useToken.tsx";
+import { mainnet } from "@/lib/chains";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
+import { useTokenBalance } from "@/lib/hooks/useTokenBalance";
+import { useTokenPrice } from "@/lib/hooks/useTokenPrice.tsx";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
-import { handleInputNumberChange } from "@/lib/helpers.ts";
-import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee.ts";
-import { useBridgeActive } from "@/lib/hooks/bridge/useBridgeActive.ts";
+import { handleInputNumberChange, shortenAddress } from "@/lib/helpers.ts";
+import { ROUTE_UNAVAILABLE_COPY } from "@/lib/hooks/bridge/routeState";
+import { useBridgeLimits } from "@/lib/hooks/bridge/useBridgeLimits";
+import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
+import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
+import { clampOhmDecimals, getBridgeCta, parseOhmAmount } from "../utils/bridgeCta.ts";
 import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../utils/constants.ts";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+
+const OHM_DECIMALS = 9;
 
 interface BridgeFormProps {
   sourceChainId: number;
@@ -30,6 +37,7 @@ interface BridgeFormProps {
   onOpenDestChainModal: () => void;
   onOpenSettingsModal: () => void;
   onSwapChains: () => void;
+  onSwitchNetwork: () => void;
   onSubmit: () => void;
 }
 
@@ -43,9 +51,11 @@ export function BridgeForm({
   onOpenDestChainModal,
   onOpenSettingsModal,
   onSwapChains,
+  onSwitchNetwork,
   onSubmit,
 }: BridgeFormProps) {
   const { address } = useAccount();
+  const walletChainId = useChainId();
 
   const form = useForm<{ amount: string }>({
     defaultValues: { amount: "" },
@@ -58,105 +68,98 @@ export function BridgeForm({
   const sourceChain = getBridgeChain(sourceChainId);
   const destChain = getBridgeChain(destinationChainId);
 
-  // OHM balance on source chain (wallet should be on source chain)
-  const ohmToken = useToken(TokenName.OHM, address);
+  // Read everything from the source chain, which the wallet may not be on yet.
+  const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
+  const { balance: ohmBalance } = useTokenBalance(ohmAddress, address, sourceChainId);
+  const { price: ohmPrice } = useTokenPrice(mainnet.id, getTokenAddress(TokenName.OHM, mainnet.id));
+  const ohmToken = { balance: ohmBalance, decimals: OHM_DECIMALS, price: ohmPrice };
 
-  // Native balance for fee validation
   const { data: nativeBalance } = useBalance({
     address,
     chainId: sourceChainId,
   });
 
-  // Parse amount to bigint
-  const amountBigInt = useMemo(() => {
-    try {
-      return amount ? parseUnits(amount, 9) : 0n;
-    } catch {
-      return 0n;
-    }
-  }, [amount]);
+  const amountBigInt = useMemo(() => parseOhmAmount(amount), [amount]);
 
-  // Approval check — OHM must be approved to the Minter contract
-  const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
-  const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance } = useTokenAllowance(ohmAddress as `0x${string}`, address, minterAddress);
-
+  const bridgeAddress = getContractAddress(ContractName.CCIP_BRIDGE, sourceChainId);
+  const { allowance } = useTokenAllowance(
+    ohmAddress as `0x${string}`,
+    address,
+    bridgeAddress,
+    sourceChainId,
+  );
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
 
-  // Fee estimation
-  const { nativeFee, isLoading: isFeeLoading } = useEstimateBridgeFee({
+  const {
+    nativeFee,
+    isLoading: isFeeLoading,
+    error: feeError,
+  } = useEstimateBridgeFee({
     sourceChainId,
     destinationChainId,
     recipientAddress,
     amount: amountBigInt,
   });
 
-  // Bridge active check
-  const { isActive: isBridgeActive } = useBridgeActive(sourceChainId);
+  const route = useBridgeRoute(sourceChainId, destinationChainId);
+  const { status: amountStatus } = useBridgeLimits(sourceChainId, destinationChainId, amountBigInt);
 
-  // Insufficient balance checks
-  const hasInsufficientOhm = useMemo(() => {
-    if (!amount || !ohmToken.balance) return false;
-    return amountBigInt > ohmToken.balance;
-  }, [amount, ohmToken.balance, amountBigInt]);
+  // A wallet with code may not exist at the same address on the destination. EIP-7702 EOAs have
+  // delegation code too, but they do control their address everywhere.
+  const { data: walletCode } = useBytecode({
+    address,
+    chainId: sourceChainId,
+    query: { enabled: !!address },
+  });
+  const isContractWallet = !!walletCode && !walletCode.startsWith("0xef0100");
 
-  const hasInsufficientNative = useMemo(() => {
-    if (!nativeFee || !nativeBalance) return false;
-    return nativeBalance.value < nativeFee;
-  }, [nativeFee, nativeBalance]);
+  const isCustomRecipient =
+    !!recipientAddress && !!address && recipientAddress.toLowerCase() !== address.toLowerCase();
 
-  // Can swap chains?
   const canSwap = useMemo(() => {
     const destRoutes = BRIDGEABLE_DESTINATIONS[destinationChainId];
     return destRoutes?.includes(sourceChainId) ?? false;
   }, [sourceChainId, destinationChainId]);
 
-  // Button state
-  const buttonState = useMemo(() => {
-    if (!address) return { disabled: true, label: "Connect Wallet" };
-    if (isBridgeActive === false) return { disabled: true, label: "Bridge Inactive" };
-    if (!amount || parseFloat(amount) === 0) return { disabled: true, label: "Enter Amount" };
-    if (hasInsufficientOhm) return { disabled: true, label: "Insufficient OHM Balance" };
-    if (!hasSufficientAllowance) return { disabled: false, label: "Approve OHM for Bridging" };
-    if (hasInsufficientNative)
-      return {
-        disabled: true,
-        label: `Insufficient ${sourceChain?.nativeCurrencySymbol} for Fees`,
-      };
-    return { disabled: false, label: "Bridge OHM" };
-  }, [
-    address,
-    amount,
-    hasInsufficientOhm,
+  const cta = getBridgeCta({
+    isConnected: !!address,
+    walletChainId,
+    source: {
+      chainId: sourceChainId,
+      name: sourceChain?.name ?? "",
+      nativeCurrencySymbol: sourceChain?.nativeCurrencySymbol ?? "ETH",
+    },
+    route,
+    amount: amountBigInt,
+    ohmBalance,
+    amountStatus,
+    nativeBalance: nativeBalance?.value,
+    nativeFee,
+    feeFailed: !!feeError,
     hasSufficientAllowance,
-    hasInsufficientNative,
-    isBridgeActive,
-    sourceChain,
-  ]);
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cleaned = handleInputNumberChange(e.target.value);
+    const cleaned = clampOhmDecimals(handleInputNumberChange(e.target.value));
     onAmountChange(cleaned.slice(0, 20));
   };
 
   const handleMax = () => {
     if (ohmToken.balance) {
-      onAmountChange(formatUnits(ohmToken.balance, 9));
+      onAmountChange(formatUnits(ohmToken.balance, OHM_DECIMALS));
     }
   };
 
-  const formattedFee = nativeFee ? formatUnits(nativeFee, 18) : undefined;
-  // const displayFee = formattedFee
-  //   ? `${Number(formattedFee).toFixed(6)} ${sourceChain?.nativeCurrencySymbol ?? "ETH"}`
-  //   : "N/A";
+  const formattedFee = nativeFee == null ? undefined : formatUnits(nativeFee, 18);
 
   return (
     <Form {...form}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit();
+          if (cta.action === "switch") onSwitchNetwork();
+          else if (cta.action === "confirm") onSubmit();
         }}
         className="space-y-4"
       >
@@ -210,7 +213,61 @@ export function BridgeForm({
           />
         </div>
 
-        {/* Warning Banner */}
+        {/* Recipient Row */}
+        <button
+          type="button"
+          onClick={onOpenSettingsModal}
+          className="flex w-full items-center justify-between rounded-2xl bg-surface-a3 border border-a3-b px-4 py-3 transition-colors hover:bg-surface-a5"
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-secondary-t">Recipient</span>
+            {isCustomRecipient && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-blue rounded-full border border-blue/30 px-1.5 py-0.5">
+                Custom
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-sm font-medium text-primary-t">
+            <span>
+              {recipientAddress ? shortenAddress(recipientAddress, 4) : "Connected wallet"}
+            </span>
+            <Settings className="h-3.5 w-3.5 text-secondary-t" />
+          </div>
+        </button>
+
+        {/* Route state */}
+        {route.status === "unavailable" && (
+          <Alert variant="compact" type="warning" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              {ROUTE_UNAVAILABLE_COPY[route.reason]}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Contract wallets may not exist at the same address on the destination */}
+        {isContractWallet && !isCustomRecipient && (
+          <Alert variant="compact" type="warning" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              You're using a contract wallet. Check that you control this address on{" "}
+              {destChain?.name}, or set a different recipient.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Near rate-limit warning */}
+        {address && amountStatus === "near-limit" && (
+          <Alert variant="compact" type="warning" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              This amount is close to the route's daily limit. If capacity runs out first, delivery
+              can be delayed. Consider sending less.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Allowance note */}
         {address && amountBigInt > 0n && !hasSufficientAllowance && (
           <Alert variant="compact" type="info" size="sm" className="w-full">
             <RiInformationLine size={16} />
@@ -221,29 +278,21 @@ export function BridgeForm({
         )}
 
         {/* CTA Button */}
-        <Button type="submit" className="w-full" disabled={buttonState.disabled}>
-          {buttonState.label}
+        <Button type="submit" className="w-full" disabled={cta.disabled}>
+          {cta.label}
         </Button>
 
         {/* Info Text */}
         <p className="text-xs text-tertiary-t text-center">
-          When bridging OHM, the OHM on the sending chain gets burned and new OHM gets minted on the
-          other side. Bridge in peace OHMie.
+          OHM is locked on Ethereum and burned on other chains, then released or minted on the
+          destination. Delivery can take a while, so track it in your history. Powered by Chainlink
+          CCIP.
         </p>
 
-        {/* Fees + Settings Row */}
+        {/* Fees Row */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-secondary-t">Base Bridge Fees</span>
-            <button
-              type="button"
-              onClick={onOpenSettingsModal}
-              className="text-secondary-t hover:text-primary-t transition-colors"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          {isFeeLoading ? (
+          <span className="text-xs text-secondary-t">Estimated Bridge Fee</span>
+          {formattedFee != null ? (
             <div className="flex items-center gap-x-1">
               {sourceChain && <ChainIcon size={16} chainId={sourceChain.chainId} />}
               <NumberFlow
@@ -252,7 +301,7 @@ export function BridgeForm({
               />
             </div>
           ) : (
-            <span className="text-xs font-medium text-primary-t">N/A</span>
+            <span className="text-xs font-medium text-primary-t">{isFeeLoading ? "…" : "N/A"}</span>
           )}
         </div>
       </form>

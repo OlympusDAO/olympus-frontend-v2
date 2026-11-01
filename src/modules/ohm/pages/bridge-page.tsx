@@ -6,14 +6,14 @@ import { BridgeHistory } from "../components/bridge-history";
 import { BridgeConfirmModal } from "../components/bridge-confirm-modal";
 import { BridgeChainSelectorModal } from "../components/bridge-chain-selector-modal.tsx";
 import { BridgeSettingsModal } from "../components/bridge-settings-modal";
-import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
-import { parseUnits } from "viem";
+import type { Address } from "viem";
 import {
   BRIDGE_CHAINS,
   BRIDGEABLE_DESTINATIONS,
   DEFAULT_DESTINATION,
   isBridgeableChain,
 } from "../utils/constants.ts";
+import { resolveRecipient } from "../utils/recipient.ts";
 
 export function BridgePage() {
   const { address } = useAccount();
@@ -28,7 +28,8 @@ export function BridgePage() {
     () => DEFAULT_DESTINATION[sourceChainId] ?? 42161,
   );
   const [amount, setAmount] = useState("");
-  const [recipientAddress, setRecipientAddress] = useState<string>("");
+  const [customRecipient, setCustomRecipient] = useState<Address>();
+  const recipientAddress = resolveRecipient(customRecipient, address);
 
   // Modal state
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -36,12 +37,10 @@ export function BridgePage() {
   const [isDestModalOpen, setIsDestModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Keep recipient in sync with connected wallet
+  // Whatever was being confirmed belonged to the previous wallet.
   useEffect(() => {
-    if (address && !recipientAddress) {
-      setRecipientAddress(address);
-    }
-  }, [address, recipientAddress]);
+    setIsConfirmOpen(false);
+  }, [address]);
 
   // Sync source chain with wallet network changes
   useEffect(() => {
@@ -59,23 +58,6 @@ export function BridgePage() {
     const destIds = BRIDGEABLE_DESTINATIONS[sourceChainId] ?? [];
     return BRIDGE_CHAINS.filter((c) => destIds.includes(c.chainId));
   }, [sourceChainId]);
-
-  // Parse amount for fee estimate and allowance check
-  const amountBigInt = useMemo(() => {
-    try {
-      return amount ? parseUnits(amount, 9) : 0n;
-    } catch {
-      return 0n;
-    }
-  }, [amount]);
-
-  // Fee estimate (for passing to confirm modal)
-  const { nativeFee } = useEstimateBridgeFee({
-    sourceChainId,
-    destinationChainId,
-    recipientAddress: recipientAddress as `0x${string}`,
-    amount: amountBigInt,
-  });
 
   const handleSourceChainSelect = (chainId: number) => {
     if (chainId !== sourceChainId) {
@@ -119,12 +101,13 @@ export function BridgePage() {
             sourceChainId={sourceChainId}
             destinationChainId={destinationChainId}
             amount={amount}
-            recipientAddress={recipientAddress as `0x${string}`}
+            recipientAddress={recipientAddress}
             onAmountChange={setAmount}
             onOpenSourceChainModal={() => setIsSourceModalOpen(true)}
             onOpenDestChainModal={() => setIsDestModalOpen(true)}
             onOpenSettingsModal={() => setIsSettingsOpen(true)}
             onSwapChains={handleSwapChains}
+            onSwitchNetwork={() => switchChain({ chainId: sourceChainId })}
             onSubmit={handleSubmit}
           />
         </Card>
@@ -155,12 +138,14 @@ export function BridgePage() {
       <BridgeSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        recipientAddress={recipientAddress}
-        onRecipientChange={setRecipientAddress}
+        recipientAddress={recipientAddress ?? ""}
+        onRecipientChange={(next) =>
+          setCustomRecipient(next?.toLowerCase() === address?.toLowerCase() ? undefined : next)
+        }
       />
 
       {/* Confirm Modal */}
-      {isConfirmOpen && nativeFee && (
+      {isConfirmOpen && recipientAddress && (
         <BridgeConfirmModal
           isOpen={isConfirmOpen}
           onClose={() => {
@@ -170,8 +155,7 @@ export function BridgePage() {
           sourceChainId={sourceChainId}
           destinationChainId={destinationChainId}
           amount={amount}
-          recipientAddress={recipientAddress as `0x${string}`}
-          nativeFee={nativeFee}
+          recipientAddress={recipientAddress}
         />
       )}
     </div>

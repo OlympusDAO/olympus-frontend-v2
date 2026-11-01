@@ -23,7 +23,6 @@ interface BridgeConfirmModalProps {
   destinationChainId: number;
   amount: string;
   recipientAddress: Address;
-  nativeFee: bigint;
 }
 
 export function BridgeConfirmModal({
@@ -33,7 +32,6 @@ export function BridgeConfirmModal({
   destinationChainId,
   amount,
   recipientAddress,
-  nativeFee,
 }: BridgeConfirmModalProps) {
   const { address } = useAccount();
 
@@ -50,8 +48,13 @@ export function BridgeConfirmModal({
 
   // Approval
   const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
-  const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance, queryKey } = useTokenAllowance(ohmAddress!, address, minterAddress);
+  const bridgeAddress = getContractAddress(ContractName.CCIP_BRIDGE, sourceChainId);
+  const { allowance, queryKey } = useTokenAllowance(
+    ohmAddress!,
+    address,
+    bridgeAddress,
+    sourceChainId,
+  );
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
 
@@ -101,12 +104,13 @@ export function BridgeConfirmModal({
   };
 
   const handleApprove = () => {
-    if (!ohmAddress || !minterAddress) return;
+    if (!ohmAddress || !bridgeAddress) return;
     approve({
       tokenAddress: ohmAddress,
-      spender: minterAddress,
+      spender: bridgeAddress,
       amount: amountBigInt,
       queryKey,
+      chainId: sourceChainId,
     });
   };
 
@@ -154,8 +158,8 @@ export function BridgeConfirmModal({
             </div>
             <DialogTitle className="text-xl font-semibold mb-2">Bridge submitted!</DialogTitle>
             <p className="text-sm text-secondary-t mb-6">
-              Your OHM is being bridged from {sourceChain?.name} to {destChain?.name}. It may take a
-              few minutes to arrive.
+              Your OHM is on its way from {sourceChain?.name} to {destChain?.name}. Delivery can
+              take a while, so track it in your bridge history.
             </p>
           </div>
 

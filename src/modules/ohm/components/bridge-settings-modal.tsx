@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { isAddress } from "viem";
+import type { Address } from "viem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { validateRecipient } from "../utils/recipient.ts";
 
 interface BridgeSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipientAddress: string;
-  onRecipientChange: (address: string) => void;
+  /** Undefined goes back to the connected wallet. */
+  onRecipientChange: (address: Address | undefined) => void;
 }
 
 export function BridgeSettingsModal({
@@ -26,14 +28,16 @@ export function BridgeSettingsModal({
 
   const handleSave = () => {
     if (!localAddress) {
-      setError("Please enter an address.");
+      onRecipientChange(undefined);
+      onClose();
       return;
     }
-    if (!isAddress(localAddress)) {
-      setError("Invalid Ethereum address.");
+    const validationError = validateRecipient(localAddress);
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    onRecipientChange(localAddress);
+    onRecipientChange(localAddress as Address);
     onClose();
   };
 
