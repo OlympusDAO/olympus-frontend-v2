@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   allowance: 10n ** 18n,
   hash: undefined as string | undefined,
   isSuccess: false,
+  isReverted: false,
 }));
 const bridge = vi.hoisted(() => vi.fn());
 const switchChain = vi.hoisted(() => vi.fn());
@@ -46,6 +47,7 @@ vi.mock("@/lib/hooks/bridge/useBridgeOhm.ts", () => ({
     error: null,
     hash: state.hash,
     messageId: undefined,
+    isReverted: state.isReverted,
   }),
 }));
 
@@ -73,6 +75,7 @@ describe("BridgeConfirmModal", () => {
     state.allowance = 10n ** 18n;
     state.hash = undefined;
     state.isSuccess = false;
+    state.isReverted = false;
   });
 
   it("sends when everything checks out", async () => {
@@ -122,5 +125,18 @@ describe("BridgeConfirmModal", () => {
     state.hash = HASH;
     renderModal();
     expect(readTrackedTransfers(WALLET)).toMatchObject([{ srcTxHash: HASH, dstChainId: 42161 }]);
+  });
+
+  it("won't send again once a transaction is out, even if its receipt never arrives", async () => {
+    state.hash = HASH;
+    renderModal();
+    expect(screen.getByRole("button", { name: "Submitted, check your wallet" })).toBeDisabled();
+  });
+
+  it("lets a reverted send be tried again", () => {
+    state.hash = HASH;
+    state.isReverted = true;
+    renderModal();
+    expect(screen.getByRole("button", { name: "Bridge OHM" })).toBeEnabled();
   });
 });

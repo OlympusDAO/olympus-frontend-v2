@@ -98,7 +98,11 @@ export function BridgeConfirmModal({
     error: bridgeError,
     hash: bridgeHash,
     messageId,
+    isReverted,
   } = useBridgeOhm();
+
+  // With no receipt, as from a contract wallet that queues it, a hash still means it may go through.
+  const isSubmitted = !!bridgeHash && !isReverted && !bridgeSuccess;
 
   const deliveryStatus = useBridgeMessageStatus(messageId, destinationChainId);
 
@@ -369,7 +373,7 @@ export function BridgeConfirmModal({
                 else if (currentStep === 1) handleApprove();
                 else handleBridge();
               }}
-              disabled={isApproving || isBridging || (block?.disabled ?? false)}
+              disabled={isApproving || isBridging || isSubmitted || (block?.disabled ?? false)}
               className="w-full"
             >
               {isApproving ? (
@@ -382,6 +386,8 @@ export function BridgeConfirmModal({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Confirming Bridge In Your Wallet
                 </>
+              ) : isSubmitted ? (
+                "Submitted, check your wallet"
               ) : block ? (
                 block.label
               ) : currentStep === 2 ? (

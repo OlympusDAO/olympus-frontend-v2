@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useAccount, useConfig } from "wagmi";
+import { useAccount, useChainId, useConfig } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import type { Address, Hex } from "viem";
 import CCIPCrossChainBridgeAbi from "@/abis/CCIPCrossChainBridge";
@@ -11,11 +11,22 @@ import type { BridgeStatus } from "./bridgeStatus";
 import {
   fetchBridgeMessages,
   fetchMessage,
-  filterByOrigin,
+  filterByWallet,
   onBridgeChains,
   type CcipMessage,
 } from "./ccipApi";
 import { mergeHistory, summarizeHistorySources, toCcipRow } from "./mergeHistory";
+import {
+  fetchSafeExecutedTxs,
+  fetchSafeNonce,
+  fetchSafeQueuedBridgeTxs,
+  fetchSafeTx,
+  isFeeShort,
+  isNotFound,
+  resolveMissingProposal,
+  resolveSafeTransfer,
+  SAFE_SERVICE_SLUGS,
+} from "./safeService";
 import {
   addTrackedTransfer,
   removeTrackedTransfer,
@@ -23,6 +34,7 @@ import {
   useTrackedTransfers,
 } from "./trackedTransfers";
 import { useLayerZeroHistory } from "./useLayerZeroHistory";
+import { useSafeContext } from "./useSafeContext";
 
 export interface BridgeHistoryItem {
   source: "ccip" | "layerzero";
@@ -35,10 +47,19 @@ export interface BridgeHistoryItem {
   dstTxHash?: string;
   status: BridgeStatus;
   messageId?: Hex;
+  safeTxHash?: Hex;
+  safeProgress?: { confirmations: number; required: number; queueUrl: string };
+  /** What a queued Safe proposal will send, to compare with the fee now. */
+  safeSend?: { value: string; selector: bigint; recipient: Address; amount: bigint };
+  /** A short explanation shown under the status. */
+  note?: string;
 }
 
 /** All messages this wallet signed, across every source chain. */
-async function fetchWalletMessages(wallet: Address): Promise<CcipMessage[]> {
+async function fetchWalletMessages(
+  wallet: Address,
+  safeTxHashes: ReadonlySet<string>,
+): Promise<CcipMessage[]> {
   const perChain = await Promise.all(
     BRIDGE_CHAINS.map(({ chainId }) => {
       const bridge = getContractAddress(ContractName.CCIP_BRIDGE, chainId);
@@ -46,7 +67,7 @@ async function fetchWalletMessages(wallet: Address): Promise<CcipMessage[]> {
       return bridge && selector !== undefined ? fetchBridgeMessages(bridge, selector) : [];
     }),
   );
-  return onBridgeChains(filterByOrigin(perChain.flat(), wallet));
+  return onBridgeChains(filterByWallet(perChain.flat(), wallet, safeTxHashes));
 }
 
 /** Tracked messages the wallet filter missed. One the API doesn't have yet stays locally tracked. */
@@ -55,6 +76,9 @@ async function fetchMissingMessages(messageIds: Hex[]): Promise<CcipMessage[]> {
   return results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
 }
 
+/** The Safe service's free quota is small, so it's read far less often than the CCIP API. */
+const SAFE_POLL_INTERVAL = 5 * 60_000;
+
 /** Merges CCIP, locally tracked and LayerZero transfers. A history failure never blocks bridging. */
 export function useBridgeHistory() {
   const { address } = useAccount();
@@ -62,6 +86,112 @@ export function useBridgeHistory() {
   const mock = useMockData();
   const tracked = useTrackedTransfers(address);
   const layerZero = useLayerZeroHistory();
+  const walletChainId = useChainId();
+  const { kind: walletKind } = useSafeContext(walletChainId);
+  const isSafe = walletKind === "safe";
+
+  const proposals = useMemo(
+    () => tracked.filter((transfer) => transfer.safeTxHash && !transfer.srcTxHash),
+    [tracked],
+  );
+  const proposalHashes = useMemo(() => proposals.map((t) => t.safeTxHash), [proposals]);
+
+  // A Safe is one contract on one chain, so only the connected chain is read.
+  const safeEnabled = !mock && !!address && isSafe && walletChainId in SAFE_SERVICE_SLUGS;
+  const safeExecuted = useQuery({
+    queryKey: ["bridgeHistory", "safeExecuted", address, walletChainId],
+    enabled: safeEnabled,
+    retry: false,
+    staleTime: SAFE_POLL_INTERVAL,
+    refetchInterval: SAFE_POLL_INTERVAL,
+    queryFn: async () => {
+      const executed = await fetchSafeExecutedTxs(walletChainId, address as Address);
+      return executed.flatMap((tx) =>
+        tx.transactionHash ? [tx.transactionHash.toLowerCase()] : [],
+      );
+    },
+  });
+  const safeTxHashes = safeExecuted.data;
+
+  const safeQueued = useQuery({
+    // Keyed on this browser's proposals, so a new one shows its signing progress straight away.
+    queryKey: ["bridgeHistory", "safeQueued", address, walletChainId, proposalHashes],
+    enabled: safeEnabled,
+    placeholderData: keepPreviousData,
+    retry: false,
+    staleTime: SAFE_POLL_INTERVAL,
+    refetchInterval: SAFE_POLL_INTERVAL,
+    queryFn: async () => {
+      const rows = await fetchSafeQueuedBridgeTxs(walletChainId, address as Address);
+      const client = getPublicClient(config, { chainId: walletChainId });
+      const bridge = getContractAddress(ContractName.CCIP_BRIDGE, walletChainId);
+      if (!client || !bridge) return rows;
+
+      // A proposal whose fee has risen past what it pays would fail at execution and sit in the
+      // queue, blocking later Safe transactions, so say so rather than leave it Awaiting.
+      return Promise.all(
+        rows.map(async (row) => {
+          if (!row.safeSend) return row;
+          const { value, selector, recipient, amount } = row.safeSend;
+          const fee = await client
+            .readContract({
+              address: bridge,
+              abi: CCIPCrossChainBridgeAbi,
+              functionName: "getFeeEVM",
+              args: [selector, recipient, amount],
+            })
+            .catch(() => undefined);
+          return fee !== undefined && isFeeShort(value, fee)
+            ? { ...row, note: "Fee rose past what this sends: replace it" }
+            : row;
+        }),
+      );
+    },
+  });
+
+  // Follows this browser's Safe proposals until they execute, revert or get replaced.
+  useQuery({
+    queryKey: ["bridgeHistory", "resolveProposals", proposalHashes],
+    enabled: !mock && proposals.length > 0,
+    retry: false,
+    refetchInterval: SAFE_POLL_INTERVAL,
+    queryFn: async () => {
+      await Promise.allSettled(
+        proposals.map(async (transfer) => {
+          const hash = transfer.safeTxHash as Hex;
+          // The nonce comes first: read the other way round, a transaction executing in between
+          // would look replaced and get dropped.
+          const nonce = await fetchSafeNonce(transfer.srcChainId, transfer.address as Address);
+          try {
+            const resolution = resolveSafeTransfer(
+              await fetchSafeTx(transfer.srcChainId, hash),
+              nonce,
+            );
+            if (resolution.state === "replaced") removeTrackedTransfer(hash);
+            if (resolution.state === "executed" || resolution.state === "reverted") {
+              addTrackedTransfer({
+                ...transfer,
+                srcTxHash: resolution.hash,
+                failed: resolution.state === "reverted",
+              });
+            }
+          } catch (error) {
+            if (!isNotFound(error)) return;
+            const receipt = await getPublicClient(config, { chainId: transfer.srcChainId })
+              ?.getTransactionReceipt({ hash })
+              .catch(() => undefined);
+            const age = Date.now() - new Date(transfer.timestamp).getTime();
+            const outcome = resolveMissingProposal(!!receipt, age);
+            if (outcome === "drop") removeTrackedTransfer(hash);
+            if (outcome === "promote") {
+              addTrackedTransfer({ ...transfer, srcTxHash: hash, safeTxHash: undefined });
+            }
+          }
+        }),
+      );
+      return null;
+    },
+  });
 
   const trackedIds = useMemo(
     () => tracked.flatMap((transfer) => (transfer.messageId ? [transfer.messageId] : [])),
@@ -71,7 +201,7 @@ export function useBridgeHistory() {
   // A send is recorded as soon as it has a hash, so the modal can close before its receipt. This
   // finds out what happened to those: failed ones go, and the rest get a message ID to follow.
   const unresolved = useMemo(
-    () => tracked.filter((transfer) => transfer.srcTxHash && !transfer.messageId),
+    () => tracked.filter((t) => t.srcTxHash && !t.messageId && !t.failed),
     [tracked],
   );
   useQuery({
@@ -99,10 +229,12 @@ export function useBridgeHistory() {
   });
 
   const ccip = useQuery({
-    queryKey: ["bridgeHistory", "ccip", address, trackedIds],
-    enabled: !mock && !!address,
+    queryKey: ["bridgeHistory", "ccip", address, trackedIds, safeTxHashes],
+    // A Safe's messages can only be recognized once its execution hashes have loaded.
+    enabled: !mock && !!address && (!isSafe || !safeExecuted.isLoading),
+    placeholderData: keepPreviousData,
     queryFn: async () => {
-      const found = await fetchWalletMessages(address as Address);
+      const found = await fetchWalletMessages(address as Address, new Set(safeTxHashes));
       const foundIds = new Set(found.map((message) => message.messageId));
       const missing = await fetchMissingMessages(trackedIds.filter((id) => !foundIds.has(id)));
       const messages = [...found, ...missing];
@@ -134,8 +266,8 @@ export function useBridgeHistory() {
   });
 
   const history = useMemo(
-    () => mergeHistory(ccip.data ?? [], tracked, layerZero.data ?? []),
-    [ccip.data, tracked, layerZero.data],
+    () => mergeHistory(ccip.data ?? [], tracked, layerZero.data ?? [], safeQueued.data ?? []),
+    [ccip.data, tracked, layerZero.data, safeQueued.data],
   );
 
   if (mock?.scenario.bridge) {
@@ -147,9 +279,16 @@ export function useBridgeHistory() {
     };
   }
 
+  const sources = summarizeHistorySources(ccip.error, layerZero.error);
+
   return {
     history,
     isLoading: ccip.isLoading || layerZero.isLoading,
-    ...summarizeHistorySources(ccip.error, layerZero.error),
+    error: sources.error,
+    partialError:
+      sources.partialError ||
+      !!safeExecuted.error ||
+      !!safeQueued.error ||
+      walletKind === "unknown",
   };
 }

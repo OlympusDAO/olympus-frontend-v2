@@ -14,6 +14,8 @@ export interface TrackedTransfer {
   messageId?: Hex;
   /** Set for a Safe proposal, which has no on-chain hash until it's executed. */
   safeTxHash?: Hex;
+  /** A Safe's execution reverted. */
+  failed?: boolean;
   timestamp: string;
   /** The wallet that sent it. */
   address: string;
@@ -81,9 +83,15 @@ export function addTrackedTransfer(transfer: TrackedTransfer): void {
   write([transfer, ...parse(readRaw()).filter((item) => !sameTransfer(item, transfer))]);
 }
 
-export function removeTrackedTransfer(srcTxHash: string): void {
-  const target = srcTxHash.toLowerCase();
-  write(parse(readRaw()).filter((item) => item.srcTxHash?.toLowerCase() !== target));
+/** Takes a transfer's source tx hash, or a Safe proposal's hash. */
+export function removeTrackedTransfer(hash: string): void {
+  const target = hash.toLowerCase();
+  write(
+    parse(readRaw()).filter(
+      (item) =>
+        item.srcTxHash?.toLowerCase() !== target && item.safeTxHash?.toLowerCase() !== target,
+    ),
+  );
 }
 
 export type TrackedTransferResolution =

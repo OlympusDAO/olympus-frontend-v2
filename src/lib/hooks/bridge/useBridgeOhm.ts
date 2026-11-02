@@ -168,6 +168,7 @@ export function useBridgeOhm() {
     bridge,
     isPending: isQuoting || isWritePending || isConfirming,
     isSuccess: isSent,
+    isReverted,
     error: quoteError || writeError || confirmError || revertError,
     hash,
     messageId,

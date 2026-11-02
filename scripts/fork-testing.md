@@ -107,3 +107,7 @@ lines it prints. Chains without a fork keep their real state, so their routes sh
 Forks can't talk to each other, and the Chainlink API doesn't know about fork messages, so a send
 stays In Flight. To finish one, call `ccipReceive` on the destination bridge as its router, after
 giving the bridge the OHM the pool would have minted or released.
+
+To test the Safe flow, connect as a Safe that exists on the fork, such as the DAO MS. Its code and
+`getThreshold` are what mark it as a Safe. Have its owners call `approveHash` and `execTransaction`,
+impersonated, to execute a proposal.

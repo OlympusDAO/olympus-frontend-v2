@@ -35,7 +35,9 @@ import {
 import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
 import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
+import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
 import { useRetryBridgeMessage } from "@/lib/hooks/bridge/useRetryBridgeMessage";
+import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import { getBridgeChain } from "../utils/constants.ts";
 import { shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
@@ -64,6 +66,9 @@ function normalizeBridgeChainId(chainId: number): number {
   return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
 }
 
+// Table cells don't wrap, and these are long enough to push the status off the table.
+const STATUS_NOTE_CLASS = "text-xs text-secondary-t text-right whitespace-normal max-w-36";
+
 const STATUS_BADGES: Record<
   BridgeStatus,
   { label: string; color: "green" | "blue" | "red" | "orange" }
@@ -78,6 +83,17 @@ const STATUS_BADGES: Record<
 
 function RetryButton({ item }: { item: BridgeHistoryItem }) {
   const { retry, isPending } = useRetryBridgeMessage();
+  const { kind } = useSafeContext(item.dstChainId);
+
+  // A Safe may not be on that chain, the Safe App can't switch to it, and proposing a retry would
+  // wait on signers for no reason. Retrying is permissionless anyway.
+  if (kind === "safe") {
+    return (
+      <span className={STATUS_NOTE_CLASS}>
+        Any wallet can retry this on {getBridgeChain(item.dstChainId)?.name}
+      </span>
+    );
+  }
   return (
     <Button size="xs" variant="secondary" disabled={isPending} onClick={() => retry(item)}>
       Retry
@@ -85,25 +101,53 @@ function RetryButton({ item }: { item: BridgeHistoryItem }) {
   );
 }
 
+/** The route was checked at proposal, but execution can come days later. */
+function ClosedRouteWarning({ item }: { item: BridgeHistoryItem }) {
+  const route = useBridgeRoute(item.srcChainId, item.dstChainId);
+  if (route.status !== "unavailable") return null;
+  return <span className={STATUS_NOTE_CLASS}>Route is closed: don't execute</span>;
+}
+
 function StatusCell({ item }: { item: BridgeHistoryItem }) {
   const { label, color } = STATUS_BADGES[item.status];
+  const { safeProgress, note } = item;
   return (
-    <div className="flex items-center justify-end gap-x-2">
-      {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
-      <Badge variant="filled" color={color}>
-        {label}
-      </Badge>
-      {item.messageId && (
-        <a
-          href={getCcipExplorerUrl(item.messageId)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Track on CCIP Explorer"
-          className="text-tertiary-t hover:text-secondary-t transition-colors"
-        >
-          <RiExternalLinkLine size={16} />
-        </a>
+    <div className="flex flex-col items-end gap-y-1">
+      <div className="flex items-center justify-end gap-x-2">
+        {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
+        <Badge variant="filled" color={color}>
+          {label}
+        </Badge>
+        {safeProgress && (
+          <a
+            href={safeProgress.queueUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open Safe queue"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+        {item.messageId && (
+          <a
+            href={getCcipExplorerUrl(item.messageId)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Track on CCIP Explorer"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+      </div>
+      {safeProgress && (
+        <span className={STATUS_NOTE_CLASS}>
+          {safeProgress.confirmations} of {safeProgress.required}
+        </span>
       )}
+      {note && <span className={STATUS_NOTE_CLASS}>{note}</span>}
+      {item.status === "AWAITING_SIGNATURES" && <ClosedRouteWarning item={item} />}
     </div>
   );
 }
@@ -204,7 +248,8 @@ export function BridgeHistory() {
   const table = useReactTable({
     data,
     columns,
-    getRowId: (row) => `${row.srcTxHash}-${row.srcChainId}`,
+    // A Safe proposal has no tx hash until it executes.
+    getRowId: (row) => `${row.srcTxHash || row.safeTxHash}-${row.srcChainId}`,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: PAGE_SIZE, pageIndex: 0 } },
