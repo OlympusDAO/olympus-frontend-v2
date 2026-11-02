@@ -23,6 +23,12 @@ export type BridgeCtaInput = {
   /** The fee quote reverted, which means the route can't send whatever the other reads say. */
   feeFailed?: boolean;
   hasSufficientAllowance: boolean;
+  /** A Safe proposes approve and send together, so it has one step. */
+  isSafe?: boolean;
+  /** Inside the Safe App the chain is fixed. */
+  isSafeApp?: boolean;
+  /** A Safe with no code on the destination can't default to its own address there. */
+  needsRecipient?: boolean;
 };
 
 const blocked = (label: string): BridgeCta => ({ label, disabled: true, action: "none" });
@@ -34,10 +40,12 @@ export function getBridgeCta(input: BridgeCtaInput): BridgeCta {
   if (route.status === "loading") return blocked("Checking Bridge…");
   if (route.status === "unavailable") return blocked("Bridge Unavailable");
   if (input.walletChainId !== source.chainId) {
+    if (input.isSafeApp) return blocked(`Open this Safe on ${source.name}`);
     return { label: `Switch to ${source.name}`, disabled: false, action: "switch" };
   }
   if (amount <= 0n) return blocked("Enter Amount");
   if (input.feeFailed) return blocked("Bridge Unavailable");
+  if (input.needsRecipient) return blocked("Enter a Recipient");
   if (ohmBalance !== undefined && amount > ohmBalance) return blocked("Insufficient OHM Balance");
   if (amountStatus === "exceeds-route-limit") return blocked("Exceeds Route Limit");
   if (amountStatus === "exceeds-liquidity") return blocked("Exceeds Available Liquidity");
@@ -46,6 +54,7 @@ export function getBridgeCta(input: BridgeCtaInput): BridgeCta {
     return blocked(`Insufficient ${source.nativeCurrencySymbol} for Fees`);
   }
   if (nativeFee === undefined) return blocked("Estimating Fee…");
+  if (input.isSafe) return { label: "Propose in Safe", disabled: false, action: "confirm" };
   if (!input.hasSufficientAllowance) {
     return { label: "Approve OHM for Bridging", disabled: false, action: "confirm" };
   }

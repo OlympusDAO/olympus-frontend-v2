@@ -21,6 +21,8 @@ import { ROUTE_UNAVAILABLE_COPY } from "@/lib/hooks/bridge/routeState";
 import { useBridgeLimits } from "@/lib/hooks/bridge/useBridgeLimits";
 import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
 import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
+import { getSafeFee } from "@/lib/hooks/bridge/safeFee";
+import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import { clampOhmDecimals, getBridgeCta, parseOhmAmount } from "../utils/bridgeCta.ts";
 import { getBridgeChain, BRIDGEABLE_DESTINATIONS, type BridgeChain } from "../utils/constants.ts";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
@@ -105,22 +107,24 @@ export function BridgeForm({
   const route = useBridgeRoute(sourceChainId, destinationChainId);
   const { status: amountStatus } = useBridgeLimits(sourceChainId, destinationChainId, amountBigInt);
 
-  // A wallet with code may not exist at the same address on the destination. EIP-7702 EOAs have
-  // delegation code too, but they do control their address everywhere.
-  const { data: walletCode } = useBytecode({
+  const { kind: walletKind, isSafeApp } = useSafeContext(sourceChainId);
+  const isSafe = walletKind === "safe";
+  const { data: destinationCode } = useBytecode({
     address,
-    chainId: sourceChainId,
-    query: { enabled: !!address },
+    chainId: destinationChainId,
+    query: { enabled: !!address && isSafe },
   });
-  const isContractWallet = !!walletCode && !walletCode.startsWith("0xef0100");
 
   const isCustomRecipient =
     !!recipientAddress && !!address && recipientAddress.toLowerCase() !== address.toLowerCase();
 
+  // Fail closed: until the read says otherwise, a Safe isn't known to exist on the destination.
+  const needsRecipient = isSafe && !isCustomRecipient && !destinationCode;
+
   const canSwap = useMemo(() => {
     const destRoutes = BRIDGEABLE_DESTINATIONS[destinationChainId];
-    return destRoutes?.includes(sourceChainId) ?? false;
-  }, [sourceChainId, destinationChainId]);
+    return !isSafeApp && (destRoutes?.includes(sourceChainId) ?? false);
+  }, [sourceChainId, destinationChainId, isSafeApp]);
 
   const cta = getBridgeCta({
     isConnected: !!address,
@@ -135,9 +139,15 @@ export function BridgeForm({
     ohmBalance,
     amountStatus,
     nativeBalance: nativeBalance?.value,
-    nativeFee,
+    nativeFee:
+      isSafe && nativeFee !== undefined
+        ? getSafeFee(nativeFee, destinationChainId).value
+        : nativeFee,
     feeFailed: !!feeError,
     hasSufficientAllowance,
+    isSafe,
+    isSafeApp,
+    needsRecipient,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +185,7 @@ export function BridgeForm({
                 <ChainInputSection
                   label="From"
                   chain={sourceChain}
-                  onChainClick={onOpenSourceChainModal}
+                  onChainClick={isSafeApp ? undefined : onOpenSourceChainModal}
                   amount={field.value}
                   onChange={(e) => {
                     field.onChange(handleChange(e));
@@ -246,8 +256,17 @@ export function BridgeForm({
           </Alert>
         )}
 
+        {needsRecipient && amountBigInt > 0n && (
+          <Alert variant="compact" type="warning" size="sm" className="w-full">
+            <RiInformationLine size={16} />
+            <AlertDescription className="text-xs font-semibold text-primary-t">
+              This Safe isn't deployed on {destChain?.name}. Enter a recipient you control there.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Contract wallets may not exist at the same address on the destination */}
-        {isContractWallet && !isCustomRecipient && (
+        {walletKind !== "eoa" && !isCustomRecipient && !needsRecipient && (
           <Alert variant="compact" type="warning" size="sm" className="w-full">
             <RiInformationLine size={16} />
             <AlertDescription className="text-xs font-semibold text-primary-t">
@@ -269,7 +288,7 @@ export function BridgeForm({
         )}
 
         {/* Allowance note */}
-        {address && amountBigInt > 0n && !hasSufficientAllowance && (
+        {address && amountBigInt > 0n && !hasSufficientAllowance && !isSafe && (
           <Alert variant="compact" type="info" size="sm" className="w-full">
             <RiInformationLine size={16} />
             <AlertDescription className="text-xs font-semibold text-primary-t">
@@ -340,6 +359,7 @@ function ChainInputSection({
       {/* Chain Selector Row */}
       <button
         type="button"
+        disabled={!onChainClick}
         onClick={onChainClick}
         className="flex w-full items-center gap-2 bg-surface-a5 border border-a3-b rounded-t-2xl px-4 py-3 hover:bg-surface-a10 transition-colors cursor-pointer"
       >

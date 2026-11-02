@@ -69,6 +69,32 @@ describe("getBridgeCta", () => {
   });
 });
 
+describe("getBridgeCta for a Safe", () => {
+  it("requires a recipient when the Safe isn't on the destination", () => {
+    expect(getBridgeCta({ ...ready, needsRecipient: true })).toEqual({
+      label: "Enter a Recipient",
+      disabled: true,
+      action: "none",
+    });
+  });
+
+  it("never offers a network switch inside the Safe App", () => {
+    expect(getBridgeCta({ ...ready, walletChainId: 1, isSafeApp: true })).toEqual({
+      label: "Open this Safe on Arbitrum",
+      disabled: true,
+      action: "none",
+    });
+  });
+
+  it("offers one proposal step even without an allowance", () => {
+    expect(getBridgeCta({ ...ready, isSafe: true, hasSufficientAllowance: false })).toEqual({
+      label: "Propose in Safe",
+      disabled: false,
+      action: "confirm",
+    });
+  });
+});
+
 describe("parseOhmAmount", () => {
   it.each([
     ["", 0n],

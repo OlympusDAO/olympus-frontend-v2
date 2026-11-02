@@ -14,6 +14,9 @@ const state = vi.hoisted(() => ({
   nativeFee: 1000n as bigint | undefined,
   feeError: null as Error | null,
   chainId: 1,
+  walletKind: "eoa",
+  isSafeApp: false,
+  destinationCode: undefined as string | undefined,
 }));
 
 vi.mock("wagmi", () => ({
@@ -21,13 +24,22 @@ vi.mock("wagmi", () => ({
   useChainId: () => state.chainId,
   useSwitchChain: () => ({ switchChain: vi.fn() }),
   useBalance: () => ({ data: { value: 10n ** 18n } }),
-  useBytecode: () => ({ data: undefined }),
+  useBytecode: ({ chainId }: { chainId: number }) => ({
+    data: chainId === 1 ? undefined : state.destinationCode,
+    isFetched: true,
+  }),
 }));
 // vitest has no svgr transform, so `?react` icons can't render.
 vi.mock("@/components/chain-icon.tsx", () => ({ ChainIcon: () => null }));
 vi.mock("@/components/icon.tsx", () => ({ Icon: () => null }));
 // number-flow's web component doesn't work in jsdom.
 vi.mock("@/components/ui/number-flow.tsx", () => ({ NumberFlow: () => null }));
+vi.mock("@/lib/hooks/bridge/useSafeContext", () => ({
+  useSafeContext: () => ({ kind: state.walletKind, isSafeApp: state.isSafeApp }),
+}));
+vi.mock("../../components/bridge-safe-confirm-modal", () => ({
+  BridgeSafeConfirmModal: () => <div data-testid="safe-modal" />,
+}));
 vi.mock("@/lib/hooks/bridge/useBridgeRoute", () => ({
   useBridgeRoute: () => state.route,
   useBridgeRoutes: () => ({}),
@@ -79,6 +91,9 @@ describe("BridgePage", () => {
     state.nativeFee = 1000n;
     state.feeError = null;
     state.chainId = 1;
+    state.walletKind = "eoa";
+    state.isSafeApp = false;
+    state.destinationCode = undefined;
   });
 
   it("sends to the new wallet after switching accounts", () => {
@@ -166,5 +181,32 @@ describe("BridgePage", () => {
     const input = screen.getByPlaceholderText("0.00");
     await userEvent.type(input, typed);
     expect(input).toHaveValue(shown);
+  });
+
+  it("opens the Safe flow for a Safe that exists on the destination", async () => {
+    state.walletKind = "safe";
+    state.destinationCode = "0x6080";
+    render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    await userEvent.click(screen.getByRole("button", { name: "Propose in Safe" }));
+    expect(screen.getByTestId("safe-modal")).toBeInTheDocument();
+    expect(screen.queryByTestId("confirm-modal")).not.toBeInTheDocument();
+  });
+
+  it("makes a Safe enter a recipient when it isn't on the destination", async () => {
+    state.walletKind = "safe";
+    render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    expect(screen.getByRole("button", { name: "Enter a Recipient" })).toBeDisabled();
+    expect(screen.getByText(/isn't deployed on Arbitrum/)).toBeInTheDocument();
+  });
+
+  it("locks the source chain inside the Safe App", async () => {
+    state.walletKind = "safe";
+    state.isSafeApp = true;
+    state.destinationCode = "0x6080";
+    render(<BridgePage />);
+    await userEvent.click(screen.getByRole("button", { name: /^From/ }));
+    expect(screen.queryByText("Select Source Chain")).not.toBeInTheDocument();
   });
 });
