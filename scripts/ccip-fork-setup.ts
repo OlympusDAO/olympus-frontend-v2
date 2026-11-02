@@ -126,10 +126,54 @@ const adminAbi = parseAbi([
   "function getTokenConfig(address) view returns ((address administrator, address pendingAdministrator, address tokenPool))",
   "function setPool(address, address)",
   "function timelock() view returns (address)",
-  "function hasRole(bytes32, address) view returns (bool)",
-  "function kernel() view returns (address)",
-  "function executor() view returns (address)",
+  "function getCurrentOutboundRateLimiterState(uint64) view returns ((uint128 tokens, uint32 lastUpdated, bool isEnabled, uint128 capacity, uint128 rate))",
+  "function getCurrentInboundRateLimiterState(uint64) view returns ((uint128 tokens, uint32 lastUpdated, bool isEnabled, uint128 capacity, uint128 rate))",
 ]);
+
+/** Parses `name=url,name=url`. Only the first `=` separates them, as a URL can hold more. */
+export function parseRpcOverrides(value: string | undefined): Record<string, string> {
+  return Object.fromEntries(
+    (value ?? "")
+      .split(",")
+      .filter(Boolean)
+      .map((pair) => {
+        const separator = pair.indexOf("=");
+        return [pair.slice(0, separator), pair.slice(separator + 1)];
+      }),
+  );
+}
+
+type Bucket = { capacity: bigint; rate: bigint };
+
+/** The rate limiter config `CCIPTokenPoolConfig.disableChain` writes to contain a route. */
+const isContained = ({ capacity, rate }: Bucket) => capacity === 2n && rate === 1n;
+
+/** The same criteria as the frontend's `evaluateRoute`, for one end of a route. */
+export function isRouteReady(reads: {
+  bridgeEnabled: boolean;
+  trustedRemote: { remoteAddress: Address; isSet: boolean };
+  expectedRemote: Address;
+  gasLimit: number;
+  registeredPool: Address;
+  expectedPool: Address;
+  poolSupportsRemote: boolean;
+  /** Undefined on the mainnet lock/release pool, which has no such function. */
+  poolEnabled: boolean | undefined;
+  outbound: Bucket;
+  inbound: Bucket;
+}): boolean {
+  return (
+    reads.bridgeEnabled &&
+    reads.trustedRemote.isSet &&
+    reads.trustedRemote.remoteAddress.toLowerCase() === reads.expectedRemote.toLowerCase() &&
+    reads.gasLimit === GAS_LIMIT &&
+    reads.registeredPool.toLowerCase() === reads.expectedPool.toLowerCase() &&
+    reads.poolSupportsRemote &&
+    reads.poolEnabled !== false &&
+    !isContained(reads.outbound) &&
+    !isContained(reads.inbound)
+  );
+}
 
 function arg(name: string): string | undefined {
   const index = process.argv.indexOf(`--${name}`);
@@ -312,12 +356,7 @@ async function main() {
   const names = (arg("chains") ?? "mainnet,arbitrum,base").split(",") as ChainName[];
   const wallet = (arg("wallet") ?? ANVIL_ACCOUNT_0) as Address;
   const balance = parseUnits(arg("balance") ?? "5000", 9);
-  const rpcOverrides = Object.fromEntries(
-    (arg("rpc") ?? "")
-      .split(",")
-      .filter(Boolean)
-      .map((pair) => pair.split("=")),
-  );
+  const rpcOverrides = parseRpcOverrides(arg("rpc"));
 
   const forks = names.map(
     (name, index) => new Fork(name, rpcOverrides[name] ?? `http://localhost:${8545 + index}`),
@@ -337,40 +376,44 @@ async function main() {
     for (const other of forks) {
       if (other === fork) continue;
       const selector = other.config.selector;
-      const [enabled, remote, gas, registered, supported] = await Promise.all([
-        fork.client.readContract({ address: bridge, abi: adminAbi, functionName: "isEnabled" }),
+      const read = <T>(address: Address, functionName: string, args: unknown[] = []) =>
         fork.client.readContract({
-          address: bridge,
+          address,
           abi: adminAbi,
-          functionName: "getTrustedRemoteEVM",
-          args: [selector],
-        }),
-        fork.client.readContract({
-          address: bridge,
-          abi: adminAbi,
-          functionName: "getGasLimit",
-          args: [selector],
-        }),
-        fork.client.readContract({
-          address: registry,
-          abi: adminAbi,
-          functionName: "getPool",
-          args: [ohm],
-        }),
-        fork.client.readContract({
-          address: pool,
-          abi: adminAbi,
-          functionName: "isSupportedChain",
-          args: [selector],
-        }),
+          functionName,
+          args,
+        } as never) as Promise<T>;
+      const [
+        bridgeEnabled,
+        trustedRemote,
+        gasLimit,
+        registeredPool,
+        poolSupportsRemote,
+        poolEnabled,
+        outbound,
+        inbound,
+      ] = await Promise.all([
+        read<boolean>(bridge, "isEnabled"),
+        read<{ remoteAddress: Address; isSet: boolean }>(bridge, "getTrustedRemoteEVM", [selector]),
+        read<number>(bridge, "getGasLimit", [selector]),
+        read<Address>(registry, "getPool", [ohm]),
+        read<boolean>(pool, "isSupportedChain", [selector]),
+        fork.name === "mainnet" ? undefined : read<boolean>(pool, "isEnabled"),
+        read<Bucket>(pool, "getCurrentOutboundRateLimiterState", [selector]),
+        read<Bucket>(pool, "getCurrentInboundRateLimiterState", [selector]),
       ]);
-      const ok =
-        enabled &&
-        remote.isSet &&
-        remote.remoteAddress.toLowerCase() === other.config.bridge.toLowerCase() &&
-        gas === GAS_LIMIT &&
-        registered.toLowerCase() === pool.toLowerCase() &&
-        supported;
+      const ok = isRouteReady({
+        bridgeEnabled,
+        trustedRemote,
+        expectedRemote: other.config.bridge,
+        gasLimit,
+        registeredPool,
+        expectedPool: pool,
+        poolSupportsRemote,
+        poolEnabled,
+        outbound,
+        inbound,
+      });
       console.log(`${fork.name} -> ${other.name}: ${ok ? "ok" : "NOT READY"}`);
       if (!ok) process.exitCode = 1;
     }
@@ -380,7 +423,9 @@ async function main() {
   for (const fork of forks) console.log(`${ENV_NAMES[fork.name]}=${fork.rpc}`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

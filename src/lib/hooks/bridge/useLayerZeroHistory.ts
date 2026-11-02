@@ -19,6 +19,22 @@ function lzEidToEvmChainId(eid: number): number {
   return LZ_EID_TO_EVM[eid] ?? eid;
 }
 
+/** LayerZero Scan's code for a wallet with no messages, sent as a 404. */
+const NO_MESSAGES_CODE = 4040;
+
+export async function fetchLayerZeroMessages(wallet: string): Promise<LzMessage[]> {
+  const response = await fetch(
+    `https://scan.layerzero-api.com/v1/messages/wallet/${wallet}?limit=100`,
+  );
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    if (response.status === 404 && body?.code === NO_MESSAGES_CODE) return [];
+    throw new Error(`LayerZero API error: ${response.status}`);
+  }
+  const json = await response.json();
+  return json.data ?? [];
+}
+
 /**
  * Read-only history of transfers through the closed LayerZero bridge, from LayerZero Scan.
  */
@@ -34,15 +50,7 @@ export function useLayerZeroHistory() {
     queryKey: ["bridgeHistory", "layerzero", address],
     enabled: !mock && !!address && bridgeAddresses.length > 0,
     queryFn: async (): Promise<BridgeHistoryItem[]> => {
-      const url = `https://scan.layerzero-api.com/v1/messages/wallet/${address}?limit=100`;
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`LayerZero API error: ${response.status}`);
-      }
-
-      const json = await response.json();
-      const messages: LzMessage[] = json.data ?? [];
+      const messages = await fetchLayerZeroMessages(address as string);
       const bridgeAddressSet = new Set(bridgeAddresses.map((a) => a!.toLowerCase()));
 
       return messages
