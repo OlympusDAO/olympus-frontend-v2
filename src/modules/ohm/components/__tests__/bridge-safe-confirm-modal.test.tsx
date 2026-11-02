@@ -8,6 +8,7 @@ const state = vi.hoisted(() => ({
   amountStatus: "ok",
   safeTxHash: undefined as string | undefined,
   price: 2000 as number | undefined,
+  safeStatus: { confirmations: 1, required: 3 } as Record<string, unknown>,
 }));
 const propose = vi.hoisted(() => vi.fn());
 
@@ -34,7 +35,7 @@ vi.mock("@/lib/hooks/bridge/useSafeBridge", () => ({
   useSafeBridge: () => ({ propose, safeTxHash: state.safeTxHash, isPending: false, error: null }),
 }));
 vi.mock("@/lib/hooks/bridge/useSafeTransferStatus", () => ({
-  useSafeTransferStatus: () => ({ confirmations: 1, required: 3 }),
+  useSafeTransferStatus: () => state.safeStatus,
 }));
 
 function renderModal() {
@@ -58,6 +59,7 @@ describe("BridgeSafeConfirmModal", () => {
     state.amountStatus = "ok";
     state.safeTxHash = undefined;
     state.price = 2000;
+    state.safeStatus = { confirmations: 1, required: 3 };
   });
 
   it("shows the exact fee and most it can overpay, in native token and USD, before signing", () => {
@@ -97,5 +99,21 @@ describe("BridgeSafeConfirmModal", () => {
       "href",
       "https://app.safe.global/transactions/queue?safe=eth:0x00000000000000000000000000000000000000c1",
     );
+  });
+
+  it("tells signers to propose again after a reverted execution", () => {
+    state.safeTxHash = `0x${"a".repeat(64)}`;
+    state.safeStatus = { isExecuted: true, isSuccessful: false };
+    renderModal();
+    expect(screen.getByText("Execution reverted, propose again")).toBeInTheDocument();
+  });
+
+  it("points to history once executed", () => {
+    state.safeTxHash = `0x${"a".repeat(64)}`;
+    state.safeStatus = { isExecuted: true, isSuccessful: true };
+    renderModal();
+    expect(
+      screen.getByText("Executed. Track delivery in your bridge history."),
+    ).toBeInTheDocument();
   });
 });

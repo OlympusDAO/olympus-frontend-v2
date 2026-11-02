@@ -75,6 +75,20 @@ export function filterByOrigin(messages: CcipMessage[], wallet: Address): CcipMe
   return messages.filter((message) => message.origin.toLowerCase() === target);
 }
 
+/** Also finds a Safe's messages by execution hash, as their `origin` is whoever executed them. */
+export function filterByWallet(
+  messages: CcipMessage[],
+  wallet: Address,
+  txHashes: ReadonlySet<string>,
+): CcipMessage[] {
+  const target = wallet.toLowerCase();
+  return messages.filter(
+    (message) =>
+      message.origin.toLowerCase() === target ||
+      txHashes.has(message.sendTransactionHash.toLowerCase()),
+  );
+}
+
 /** The Ethereum bridge also serves Solana, which the UI doesn't support yet. */
 export function onBridgeChains(messages: CcipMessage[]): CcipMessage[] {
   return messages.filter(

@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   history: [] as BridgeHistoryItem[],
   error: null as Error | null,
   partialError: false,
+  isSafeApp: false,
 }));
 
 vi.mock("wagmi", () => ({
@@ -14,6 +15,9 @@ vi.mock("wagmi", () => ({
 }));
 vi.mock("@/lib/hooks/bridge/useBridgeHistory.ts", () => ({
   useBridgeHistory: () => ({ ...state, isLoading: false }),
+}));
+vi.mock("@/lib/hooks/bridge/useSafeContext", () => ({
+  useSafeContext: () => ({ kind: state.isSafeApp ? "safe" : "eoa", isSafeApp: state.isSafeApp }),
 }));
 vi.mock("@/lib/hooks/bridge/useRetryBridgeMessage", () => ({
   useRetryBridgeMessage: () => ({ retry: vi.fn(), isPending: false }),
@@ -128,5 +132,67 @@ describe("BridgeHistory CCIP rows", () => {
     state.history = [row];
     render(<BridgeHistory />);
     expect(screen.queryByRole("link", { name: "Track on CCIP Explorer" })).not.toBeInTheDocument();
+  });
+});
+
+describe("BridgeHistory Safe rows", () => {
+  const MESSAGE_ID = `0x${"ab".repeat(32)}` as const;
+  const SAFE_TX = `0x${"ee".repeat(32)}` as const;
+
+  beforeEach(() => {
+    state.error = null;
+    state.partialError = false;
+    state.isSafeApp = false;
+  });
+
+  it("shows signing progress and a queue link on an awaiting row", () => {
+    state.history = [
+      {
+        ...row,
+        source: "ccip",
+        srcTxHash: "",
+        status: "AWAITING_SIGNATURES",
+        safeTxHash: SAFE_TX,
+        safeProgress: { confirmations: 1, required: 3, queueUrl: "https://queue" },
+      },
+    ];
+    render(<BridgeHistory />);
+
+    expect(screen.getByText("1 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Safe queue" })).toHaveAttribute(
+      "href",
+      "https://queue",
+    );
+  });
+
+  it("keeps two awaiting rows apart, though neither has a tx hash yet", () => {
+    const awaiting = {
+      ...row,
+      source: "ccip" as const,
+      srcTxHash: "",
+      status: "AWAITING_SIGNATURES" as const,
+    };
+    state.history = [
+      { ...awaiting, safeTxHash: SAFE_TX, amount: "1" },
+      { ...awaiting, safeTxHash: `0x${"dd".repeat(32)}`, amount: "2" },
+    ];
+    render(<BridgeHistory />);
+    expect(screen.getAllByText("Awaiting Signatures")).toHaveLength(2);
+  });
+
+  it("shows why a reverted execution failed", () => {
+    state.history = [
+      { ...row, source: "ccip", status: "FAILED", note: "Execution reverted, propose again" },
+    ];
+    render(<BridgeHistory />);
+    expect(screen.getByText("Execution reverted, propose again")).toBeInTheDocument();
+  });
+
+  it("explains that any wallet can retry inside the Safe App, which can't switch chain", () => {
+    state.isSafeApp = true;
+    state.history = [{ ...row, source: "ccip", status: "NEEDS_RETRY", messageId: MESSAGE_ID }];
+    render(<BridgeHistory />);
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Any wallet can retry this on Arbitrum/)).toBeInTheDocument();
   });
 });

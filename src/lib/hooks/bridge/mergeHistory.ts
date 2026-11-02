@@ -31,7 +31,7 @@ export function toCcipRow(
 }
 
 function trackedToRow(transfer: TrackedTransfer): BridgeHistoryItem {
-  return {
+  const row: BridgeHistoryItem = {
     source: "ccip",
     srcChainId: transfer.srcChainId,
     dstChainId: transfer.dstChainId,
@@ -40,7 +40,14 @@ function trackedToRow(transfer: TrackedTransfer): BridgeHistoryItem {
     srcTxHash: transfer.srcTxHash ?? "",
     status: "INFLIGHT",
     messageId: transfer.messageId,
+    safeTxHash: transfer.safeTxHash,
   };
+  if (transfer.failed) {
+    return { ...row, status: "FAILED", note: "Execution reverted, propose again" };
+  }
+  return transfer.safeTxHash && !transfer.srcTxHash
+    ? { ...row, status: "AWAITING_SIGNATURES" }
+    : row;
 }
 
 const normalize = (value?: string) => value?.toLowerCase();
@@ -50,19 +57,22 @@ export function mergeHistory(
   ccip: BridgeHistoryItem[],
   tracked: TrackedTransfer[],
   layerZero: BridgeHistoryItem[],
+  safeQueued: BridgeHistoryItem[] = [],
 ): BridgeHistoryItem[] {
   const messageIds = new Set<Hex | undefined>(ccip.map((row) => row.messageId));
   const txHashes = new Set(ccip.map((row) => normalize(row.srcTxHash)));
+  const safeHashes = new Set(safeQueued.map((row) => normalize(row.safeTxHash)));
 
   const pending = tracked
     .filter(
       (transfer) =>
         !(transfer.messageId && messageIds.has(transfer.messageId)) &&
-        !(transfer.srcTxHash && txHashes.has(normalize(transfer.srcTxHash))),
+        !(transfer.srcTxHash && txHashes.has(normalize(transfer.srcTxHash))) &&
+        !(transfer.safeTxHash && safeHashes.has(normalize(transfer.safeTxHash))),
     )
     .map(trackedToRow);
 
-  return [...ccip, ...pending, ...layerZero].sort(
+  return [...ccip, ...pending, ...layerZero, ...safeQueued].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
 }

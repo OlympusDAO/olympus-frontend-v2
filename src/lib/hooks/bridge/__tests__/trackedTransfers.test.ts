@@ -80,6 +80,13 @@ describe("trackedTransfers", () => {
     expect(readTrackedTransfers(WALLET)).toHaveLength(1);
   });
 
+  it("removes a proposal by its Safe hash", () => {
+    const safeTxHash = `0x${"e".repeat(64)}` as const;
+    addTrackedTransfer(transfer({ srcTxHash: undefined, safeTxHash }));
+    removeTrackedTransfer(safeTxHash);
+    expect(readTrackedTransfers(WALLET)).toEqual([]);
+  });
+
   it("removes a transfer by source tx", () => {
     addTrackedTransfer(transfer());
     removeTrackedTransfer(transfer().srcTxHash as string);

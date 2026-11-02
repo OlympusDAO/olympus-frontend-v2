@@ -36,6 +36,7 @@ import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
 import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
 import { useRetryBridgeMessage } from "@/lib/hooks/bridge/useRetryBridgeMessage";
+import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import { getBridgeChain } from "../utils/constants.ts";
 import { shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
@@ -78,6 +79,16 @@ const STATUS_BADGES: Record<
 
 function RetryButton({ item }: { item: BridgeHistoryItem }) {
   const { retry, isPending } = useRetryBridgeMessage();
+  const { isSafeApp } = useSafeContext(item.dstChainId);
+
+  // The Safe App can't switch chain, and retrying is permissionless anyway.
+  if (isSafeApp) {
+    return (
+      <span className="text-xs text-secondary-t">
+        Any wallet can retry this on {getBridgeChain(item.dstChainId)?.name}
+      </span>
+    );
+  }
   return (
     <Button size="xs" variant="secondary" disabled={isPending} onClick={() => retry(item)}>
       Retry
@@ -87,23 +98,43 @@ function RetryButton({ item }: { item: BridgeHistoryItem }) {
 
 function StatusCell({ item }: { item: BridgeHistoryItem }) {
   const { label, color } = STATUS_BADGES[item.status];
+  const { safeProgress, note } = item;
   return (
-    <div className="flex items-center justify-end gap-x-2">
-      {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
-      <Badge variant="filled" color={color}>
-        {label}
-      </Badge>
-      {item.messageId && (
-        <a
-          href={getCcipExplorerUrl(item.messageId)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Track on CCIP Explorer"
-          className="text-tertiary-t hover:text-secondary-t transition-colors"
-        >
-          <RiExternalLinkLine size={16} />
-        </a>
-      )}
+    <div className="flex flex-col items-end gap-y-1">
+      <div className="flex items-center justify-end gap-x-2">
+        {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
+        {safeProgress && (
+          <span className="text-xs text-secondary-t">
+            {safeProgress.confirmations} of {safeProgress.required}
+          </span>
+        )}
+        <Badge variant="filled" color={color}>
+          {label}
+        </Badge>
+        {safeProgress && (
+          <a
+            href={safeProgress.queueUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open Safe queue"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+        {item.messageId && (
+          <a
+            href={getCcipExplorerUrl(item.messageId)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Track on CCIP Explorer"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+      </div>
+      {note && <span className="text-xs text-secondary-t">{note}</span>}
     </div>
   );
 }
@@ -204,7 +235,8 @@ export function BridgeHistory() {
   const table = useReactTable({
     data,
     columns,
-    getRowId: (row) => `${row.srcTxHash}-${row.srcChainId}`,
+    // A Safe proposal has no tx hash until it executes.
+    getRowId: (row) => `${row.srcTxHash || row.safeTxHash}-${row.srcChainId}`,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: PAGE_SIZE, pageIndex: 0 } },

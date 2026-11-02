@@ -124,3 +124,45 @@ describe("summarizeHistorySources", () => {
     expect(summarizeHistorySources(null, null)).toEqual({ error: null, partialError: false });
   });
 });
+
+describe("Safe rows", () => {
+  const SAFE_TX = `0x${"ee".repeat(32)}` as const;
+  const proposal: TrackedTransfer = {
+    srcChainId: 1,
+    dstChainId: 42161,
+    amount: "5",
+    safeTxHash: SAFE_TX,
+    timestamp: "2026-11-01T11:00:00.000Z",
+    address: "0x00000000000000000000000000000000000000c1",
+  };
+  const queued: BridgeHistoryItem = {
+    source: "ccip",
+    srcChainId: 1,
+    dstChainId: 42161,
+    timestamp: "2026-11-01T11:00:00.000Z",
+    amount: "5",
+    srcTxHash: "",
+    status: "AWAITING_SIGNATURES",
+    safeTxHash: SAFE_TX,
+    safeProgress: { confirmations: 1, required: 3, queueUrl: "https://queue" },
+  };
+
+  it("shows an unexecuted proposal as awaiting signatures", () => {
+    const [row] = mergeHistory([], [proposal], []);
+    expect(row).toMatchObject({ status: "AWAITING_SIGNATURES", safeTxHash: SAFE_TX });
+  });
+
+  it("prefers the service's row, which has signing progress", () => {
+    expect(mergeHistory([], [proposal], [], [queued])).toEqual([queued]);
+  });
+
+  it("shows an executed proposal as in flight until the API has it", () => {
+    const [row] = mergeHistory([], [{ ...proposal, srcTxHash: "0xexec" }], []);
+    expect(row).toMatchObject({ status: "INFLIGHT", srcTxHash: "0xexec" });
+  });
+
+  it("shows a reverted execution with a note to propose again", () => {
+    const [row] = mergeHistory([], [{ ...proposal, srcTxHash: "0xexec", failed: true }], []);
+    expect(row).toMatchObject({ status: "FAILED", note: "Execution reverted, propose again" });
+  });
+});

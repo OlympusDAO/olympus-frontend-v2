@@ -5,6 +5,7 @@ import {
   fetchBridgeMessages,
   fetchMessage,
   filterByOrigin,
+  filterByWallet,
   onBridgeChains,
   getCcipAmount,
   type CcipMessage,
@@ -106,5 +107,20 @@ describe("onBridgeChains", () => {
       },
     };
     expect(onBridgeChains([real, solana])).toEqual([real]);
+  });
+});
+
+describe("filterByWallet", () => {
+  const wallet = "0x00000000000000000000000000000000000000c1" as Address;
+
+  it("matches a Safe's message by its execution hash, as its origin is the executor", () => {
+    const other = { ...real, sendTransactionHash: "0xother" };
+    const hashes = new Set([real.sendTransactionHash.toLowerCase()]);
+    expect(filterByWallet([real, other], wallet, hashes)).toEqual([real]);
+  });
+
+  it("still matches by origin", () => {
+    const signed = { ...real, origin: wallet };
+    expect(filterByWallet([signed], wallet, new Set())).toEqual([signed]);
   });
 });

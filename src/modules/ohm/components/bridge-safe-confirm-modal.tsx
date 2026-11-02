@@ -68,7 +68,10 @@ export function BridgeSafeConfirmModal({
   );
 
   const { propose, safeTxHash, isProposed, isPending, error } = useSafeBridge();
-  const { confirmations, required } = useSafeTransferStatus(sourceChainId, safeTxHash);
+  const { confirmations, required, isExecuted, isSuccessful } = useSafeTransferStatus(
+    sourceChainId,
+    safeTxHash,
+  );
 
   const block = getConfirmBlock({
     walletChainId,
@@ -140,9 +143,13 @@ export function BridgeSafeConfirmModal({
           {proposed ? (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-primary-t text-center">
-                {confirmations !== undefined && required !== undefined
-                  ? `Awaiting signatures (${confirmations} of ${required})`
-                  : "Awaiting signatures"}
+                {isExecuted
+                  ? isSuccessful
+                    ? "Executed. Track delivery in your bridge history."
+                    : "Execution reverted, propose again"
+                  : confirmations !== undefined && required !== undefined
+                    ? `Awaiting signatures (${confirmations} of ${required})`
+                    : "Awaiting signatures"}
               </p>
               {queueUrl && (
                 <a
