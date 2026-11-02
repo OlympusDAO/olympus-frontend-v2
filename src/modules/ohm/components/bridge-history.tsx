@@ -67,7 +67,7 @@ function normalizeBridgeChainId(chainId: number): number {
 }
 
 // Table cells don't wrap, and these are long enough to push the status off the table.
-const STATUS_NOTE_CLASS = "text-xs text-secondary-t text-right whitespace-normal max-w-44";
+const STATUS_NOTE_CLASS = "text-xs text-secondary-t text-right whitespace-normal max-w-36";
 
 const STATUS_BADGES: Record<
   BridgeStatus,
@@ -115,11 +115,6 @@ function StatusCell({ item }: { item: BridgeHistoryItem }) {
     <div className="flex flex-col items-end gap-y-1">
       <div className="flex items-center justify-end gap-x-2">
         {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
-        {safeProgress && (
-          <span className="text-xs text-secondary-t">
-            {safeProgress.confirmations} of {safeProgress.required}
-          </span>
-        )}
         <Badge variant="filled" color={color}>
           {label}
         </Badge>
@@ -146,6 +141,11 @@ function StatusCell({ item }: { item: BridgeHistoryItem }) {
           </a>
         )}
       </div>
+      {safeProgress && (
+        <span className={STATUS_NOTE_CLASS}>
+          {safeProgress.confirmations} of {safeProgress.required}
+        </span>
+      )}
       {note && <span className={STATUS_NOTE_CLASS}>{note}</span>}
       {item.status === "AWAITING_SIGNATURES" && <ClosedRouteWarning item={item} />}
     </div>
