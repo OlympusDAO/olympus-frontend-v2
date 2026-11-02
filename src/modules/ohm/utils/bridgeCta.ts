@@ -27,7 +27,9 @@ export type BridgeCtaInput = {
   isSafe?: boolean;
   /** Inside the Safe App the chain is fixed. */
   isSafeApp?: boolean;
-  /** A Safe with no code on the destination can't default to its own address there. */
+  /** The wallet's kind isn't known yet, so neither is which flow is safe for it. */
+  walletUnknown?: boolean;
+  /** A contract wallet with no code on the destination can't default to its own address there. */
   needsRecipient?: boolean;
 };
 
@@ -45,6 +47,7 @@ export function getBridgeCta(input: BridgeCtaInput): BridgeCta {
   }
   if (amount <= 0n) return blocked("Enter Amount");
   if (input.feeFailed) return blocked("Bridge Unavailable");
+  if (input.walletUnknown) return blocked("Checking Wallet…");
   if (input.needsRecipient) return blocked("Enter a Recipient");
   if (ohmBalance !== undefined && amount > ohmBalance) return blocked("Insufficient OHM Balance");
   if (amountStatus === "exceeds-route-limit") return blocked("Exceeds Route Limit");

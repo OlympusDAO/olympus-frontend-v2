@@ -70,6 +70,14 @@ describe("getBridgeCta", () => {
 });
 
 describe("getBridgeCta for a Safe", () => {
+  it("waits until it knows what kind of wallet this is", () => {
+    expect(getBridgeCta({ ...ready, walletUnknown: true })).toEqual({
+      label: "Checking Wallet…",
+      disabled: true,
+      action: "none",
+    });
+  });
+
   it("requires a recipient when the Safe isn't on the destination", () => {
     expect(getBridgeCta({ ...ready, needsRecipient: true })).toEqual({
       label: "Enter a Recipient",

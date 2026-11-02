@@ -66,9 +66,21 @@ describe("BridgeSafeConfirmModal", () => {
     renderModal();
     expect(screen.getByText("Exact fee now")).toBeInTheDocument();
     expect(screen.getByText("0.001 ETH ($2.00)")).toBeInTheDocument();
-    expect(screen.getByText("Most you can overpay")).toBeInTheDocument();
+    expect(screen.getByText("Buffer")).toBeInTheDocument();
     expect(screen.getByText("0.00025 ETH ($0.50)")).toBeInTheDocument();
+    expect(screen.getByText("Sent with the transaction")).toBeInTheDocument();
+    expect(screen.getByText("0.00125 ETH ($2.50)")).toBeInTheDocument();
     expect(screen.getByText(/isn't refunded/)).toBeInTheDocument();
+  });
+
+  it("is honest that a falling fee can cost more than the buffer", () => {
+    renderModal();
+    expect(screen.getByText(/If the fee falls, more than the buffer is kept/)).toBeInTheDocument();
+  });
+
+  it("warns that the route is only checked now, not at execution", () => {
+    renderModal();
+    expect(screen.getByText(/Check the route is still open before executing/)).toBeInTheDocument();
   });
 
   it("leaves USD out when there's no price", () => {
@@ -81,7 +93,12 @@ describe("BridgeSafeConfirmModal", () => {
     renderModal();
     await userEvent.click(screen.getByRole("button", { name: "Propose in Safe" }));
     expect(propose).toHaveBeenCalledWith(
-      expect.objectContaining({ needsApproval: true, destinationChainId: 42161, amount: "1" }),
+      expect.objectContaining({
+        needsApproval: true,
+        destinationChainId: 42161,
+        amount: "1",
+        quote: 10n ** 15n,
+      }),
     );
   });
 

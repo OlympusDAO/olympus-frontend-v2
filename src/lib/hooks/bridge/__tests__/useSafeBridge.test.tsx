@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   account: { address: "0x00000000000000000000000000000000000000c1" },
   capabilities: undefined as unknown,
   capabilityArgs: vi.fn(),
-  readContract: vi.fn(),
+  getCapabilitiesGate: undefined as Promise<void> | undefined,
   writeContractAsync: vi.fn(),
   sendCallsAsync: vi.fn(),
 }));
@@ -27,9 +27,9 @@ vi.mock("wagmi", () => ({
   useWriteContract: () => ({ writeContractAsync: mocks.writeContractAsync }),
 }));
 vi.mock("wagmi/actions", () => ({
-  getPublicClient: () => ({ readContract: mocks.readContract }),
   getCapabilities: async (_config: unknown, args: unknown) => {
     mocks.capabilityArgs(args);
+    await mocks.getCapabilitiesGate;
     if (mocks.capabilities === "throws") throw new Error("unsupported");
     return mocks.capabilities;
   },
@@ -41,6 +41,7 @@ const args = {
   recipientAddress: RECIPIENT,
   amount: "1",
   needsApproval: true,
+  quote: 100n,
 } as const;
 
 describe("useSafeBridge", () => {
@@ -48,7 +49,7 @@ describe("useSafeBridge", () => {
     localStorage.clear();
     mocks.account.address = SAFE;
     mocks.capabilities = undefined;
-    mocks.readContract.mockReset().mockResolvedValue(100n);
+    mocks.getCapabilitiesGate = undefined;
     mocks.writeContractAsync.mockReset();
     mocks.sendCallsAsync.mockReset();
   });
@@ -145,9 +146,16 @@ describe("useSafeBridge", () => {
     expect(readTrackedTransfers(SAFE)).toEqual([]);
   });
 
-  it("doesn't propose if the account changed while the fee was being read", async () => {
-    let resolveFee: (fee: bigint) => void = () => {};
-    mocks.readContract.mockReturnValue(new Promise((resolve) => (resolveFee = resolve)));
+  it("signs exactly the fee it disclosed, without re-quoting", async () => {
+    mocks.writeContractAsync.mockResolvedValue(SAFE_TX);
+    const { result } = renderHookWithProviders(() => useSafeBridge());
+    await act(() => result.current.propose({ ...args, needsApproval: false, quote: 400n }));
+    expect(mocks.writeContractAsync.mock.calls[0][0].value).toBe(500n);
+  });
+
+  it("doesn't propose if the account changed while waiting on the wallet", async () => {
+    let open: () => void = () => {};
+    mocks.getCapabilitiesGate = new Promise((resolve) => (open = resolve));
     const { result, rerender } = renderHookWithProviders(() => useSafeBridge());
 
     let pending: Promise<void> = Promise.resolve();
@@ -157,10 +165,11 @@ describe("useSafeBridge", () => {
     mocks.account.address = "0x00000000000000000000000000000000000000c2";
     rerender();
     await act(async () => {
-      resolveFee(100n);
+      open();
       await pending;
     });
 
     expect(mocks.writeContractAsync).not.toHaveBeenCalled();
+    expect(mocks.sendCallsAsync).not.toHaveBeenCalled();
   });
 });

@@ -41,6 +41,7 @@ export function BridgePage() {
     destinationChainId: number;
     amount: string;
     recipientAddress: Address;
+    isSafe: boolean;
   } | null>(null);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [isDestModalOpen, setIsDestModalOpen] = useState(false);
@@ -71,7 +72,6 @@ export function BridgePage() {
 
   const destinationRoutes = useBridgeRoutes(sourceChainId);
   const { kind: walletKind } = useSafeContext(sourceChainId);
-  const ConfirmModal = walletKind === "safe" ? BridgeSafeConfirmModal : BridgeConfirmModal;
 
   const handleSourceChainSelect = (chainId: number) => {
     if (chainId !== sourceChainId) {
@@ -103,7 +103,13 @@ export function BridgePage() {
 
   const handleSubmit = () => {
     if (amount && parseFloat(amount) > 0 && recipientAddress) {
-      setConfirmation({ sourceChainId, destinationChainId, amount, recipientAddress });
+      setConfirmation({
+        sourceChainId,
+        destinationChainId,
+        amount,
+        recipientAddress,
+        isSafe: walletKind === "safe",
+      });
     }
   };
 
@@ -160,16 +166,21 @@ export function BridgePage() {
       />
 
       {/* Confirm Modal */}
-      {confirmation && (
-        <ConfirmModal
-          isOpen
-          onClose={() => {
-            setConfirmation(null);
-            setAmount("");
-          }}
-          {...confirmation}
-        />
-      )}
+      {confirmation &&
+        (() => {
+          const { isSafe, ...route } = confirmation;
+          const ConfirmModal = isSafe ? BridgeSafeConfirmModal : BridgeConfirmModal;
+          return (
+            <ConfirmModal
+              isOpen
+              onClose={() => {
+                setConfirmation(null);
+                setAmount("");
+              }}
+              {...route}
+            />
+          );
+        })()}
     </div>
   );
 }

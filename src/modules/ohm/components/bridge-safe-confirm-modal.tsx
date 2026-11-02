@@ -120,9 +120,15 @@ export function BridgeSafeConfirmModal({
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-secondary-t">Most you can overpay</dt>
+                  <dt className="text-secondary-t">Buffer</dt>
                   <dd className="font-medium text-primary-t">
                     {formatNative(fee.maxOverpay, symbol, price)}
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-secondary-t">Sent with the transaction</dt>
+                  <dd className="font-medium text-primary-t">
+                    {formatNative(fee.value, symbol, price)}
                   </dd>
                 </div>
               </>
@@ -133,8 +139,10 @@ export function BridgeSafeConfirmModal({
             <Info className="w-4 h-4 text-blue mt-0.5 shrink-0" />
             <p className="text-xs text-primary-t">
               The fee is paid when signers execute, so this includes a buffer in case it rises.
-              Anything above the fee stays in the bridge and isn't refunded. If the fee rises past
-              the buffer, execution reverts, no OHM moves, and you can propose again.
+              Anything above the fee at that point stays in the bridge and isn't refunded. If the
+              fee falls, more than the buffer is kept, up to the total sent. If it rises past the
+              buffer, execution fails, no OHM moves, and you can propose again. Check the route is
+              still open before executing, as OHM sent on a closed route can get stuck.
             </p>
           </div>
 
@@ -180,6 +188,7 @@ export function BridgeSafeConfirmModal({
                   destinationChainId,
                   recipientAddress,
                   amount,
+                  quote: nativeFee as bigint,
                   needsApproval: allowance === undefined || allowance < amountBigInt,
                 });
               }}

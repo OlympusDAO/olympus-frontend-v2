@@ -10,6 +10,8 @@ import {
   fetchSafeNonce,
   fetchSafeQueuedBridgeTxs,
   getSafeQueueUrl,
+  isFeeShort,
+  resolveMissingProposal,
   resolveSafeTransfer,
   toQueuedRow,
   type SafeMultisigTx,
@@ -46,7 +48,10 @@ function respondWith(...responses: unknown[]) {
   return fetchMock;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe("real response shape", () => {
   it("has the fields the code reads", () => {
@@ -69,6 +74,34 @@ describe("toQueuedRow", () => {
       safeTxHash: `0x${"a".repeat(64)}`,
       safeProgress: { confirmations: 1, required: 3 },
     });
+  });
+
+  it("keeps what the send pays, to compare with the fee later", () => {
+    expect(
+      toQueuedRow(queued({ to: BRIDGE, data: sendData, value: "125" }), mainnet.id)?.safeSend,
+    ).toEqual({
+      value: "125",
+      selector: CCIP_CHAIN_SELECTORS[arbitrum.id],
+      recipient: SAFE,
+      amount: parseUnits("2.5", 9),
+    });
+  });
+
+  it("reads what a batched send pays from the batch's call", () => {
+    const row = toQueuedRow(
+      queued({
+        to: "0x9641d764fc13c8B624c04430C7356C1C7C8102e2",
+        value: "0",
+        dataDecoded: {
+          method: "multiSend",
+          parameters: [
+            { name: "transactions", valueDecoded: [{ to: BRIDGE, value: "125", data: sendData }] },
+          ],
+        },
+      }),
+      mainnet.id,
+    );
+    expect(row?.safeSend?.value).toBe("125");
   });
 
   it("reads a send inside a MultiSend batch", () => {
@@ -147,7 +180,69 @@ describe("resolveSafeTransfer", () => {
   });
 });
 
+describe("isFeeShort", () => {
+  it("is true when the fee has risen past what the proposal pays", () => {
+    expect(isFeeShort("125", 126n)).toBe(true);
+  });
+
+  it("is false at or below it", () => {
+    expect(isFeeShort("125", 125n)).toBe(false);
+  });
+});
+
+describe("resolveMissingProposal", () => {
+  const DAY = 86_400_000;
+
+  it("promotes a hash that's really an on-chain tx, as an instantly executed send returns", () => {
+    expect(resolveMissingProposal(true, 0)).toBe("promote");
+  });
+
+  it("waits while the service might still be indexing", () => {
+    expect(resolveMissingProposal(false, DAY / 2)).toBe("wait");
+  });
+
+  it("drops a proposal that's been missing for over a day, as a deleted one is", () => {
+    expect(resolveMissingProposal(false, DAY + 1)).toBe("drop");
+  });
+});
+
 describe("fetchers", () => {
+  it("sends the API key when one is configured", async () => {
+    vi.stubEnv("VITE_OLYMPUS_SAFE_API_KEY", "test-key");
+    const fetchMock = respondWith({ results: [] });
+    await fetchSafeExecutedTxs(mainnet.id, SAFE);
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer test-key" });
+  });
+
+  it("only asks for executions since the CCIP bridge launched", async () => {
+    const fetchMock = respondWith({ results: [] });
+    await fetchSafeExecutedTxs(mainnet.id, SAFE);
+    expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get("execution_date__gte")).toBe(
+      "2026-10-20T00:00:00Z",
+    );
+  });
+
+  it("follows pages, so an older send on a busy Safe isn't lost", async () => {
+    const fetchMock = respondWith(
+      { results: [real], next: "https://api.safe.global/tx-service/eth/next" },
+      { results: [real], next: null },
+    );
+    await expect(fetchSafeExecutedTxs(mainnet.id, SAFE)).resolves.toHaveLength(2);
+    expect(fetchMock.mock.calls[1][0]).toBe("https://api.safe.global/tx-service/eth/next");
+  });
+
+  it("stops at a page cap", async () => {
+    const page = { results: [real], next: "https://api.safe.global/tx-service/eth/next" };
+    const fetchMock = respondWith(page, page, page, page, page, page, page);
+    await fetchSafeExecutedTxs(mainnet.id, SAFE);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
+
+  it("doesn't mistake a rate limit for a Safe that isn't deployed", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 429 }));
+    await expect(fetchSafeNonce(mainnet.id, SAFE)).rejects.toThrow("429");
+  });
+
   it("checksums the Safe address, which the service requires", async () => {
     const fetchMock = respondWith({ results: [real] });
     await expect(fetchSafeExecutedTxs(mainnet.id, LOWER_SAFE)).resolves.toEqual([real]);

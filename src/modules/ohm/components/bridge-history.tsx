@@ -35,6 +35,7 @@ import {
 import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
 import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
+import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
 import { useRetryBridgeMessage } from "@/lib/hooks/bridge/useRetryBridgeMessage";
 import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import { getBridgeChain } from "../utils/constants.ts";
@@ -79,10 +80,11 @@ const STATUS_BADGES: Record<
 
 function RetryButton({ item }: { item: BridgeHistoryItem }) {
   const { retry, isPending } = useRetryBridgeMessage();
-  const { isSafeApp } = useSafeContext(item.dstChainId);
+  const { kind } = useSafeContext(item.dstChainId);
 
-  // The Safe App can't switch chain, and retrying is permissionless anyway.
-  if (isSafeApp) {
+  // A Safe may not be on that chain, the Safe App can't switch to it, and proposing a retry would
+  // wait on signers for no reason. Retrying is permissionless anyway.
+  if (kind === "safe") {
     return (
       <span className="text-xs text-secondary-t">
         Any wallet can retry this on {getBridgeChain(item.dstChainId)?.name}
@@ -94,6 +96,13 @@ function RetryButton({ item }: { item: BridgeHistoryItem }) {
       Retry
     </Button>
   );
+}
+
+/** The route was checked at proposal, but execution can come days later. */
+function ClosedRouteWarning({ item }: { item: BridgeHistoryItem }) {
+  const route = useBridgeRoute(item.srcChainId, item.dstChainId);
+  if (route.status !== "unavailable") return null;
+  return <span className="text-xs text-secondary-t">Route is closed: don't execute</span>;
 }
 
 function StatusCell({ item }: { item: BridgeHistoryItem }) {
@@ -135,6 +144,7 @@ function StatusCell({ item }: { item: BridgeHistoryItem }) {
         )}
       </div>
       {note && <span className="text-xs text-secondary-t">{note}</span>}
+      {item.status === "AWAITING_SIGNATURES" && <ClosedRouteWarning item={item} />}
     </div>
   );
 }

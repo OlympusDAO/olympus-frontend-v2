@@ -33,13 +33,31 @@ export type SafeMultisigTx = {
   confirmations: unknown[] | null;
   dataDecoded?: {
     method: string;
-    parameters?: { name: string; valueDecoded?: { to: Address; data: Hex | null }[] | null }[];
+    parameters?: {
+      name: string;
+      valueDecoded?: { to: Address; value?: string; data: Hex | null }[] | null;
+    }[];
   } | null;
 };
 
+class SafeServiceError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`Safe service error: ${status}`);
+    this.status = status;
+  }
+}
+
+export function isNotFound(error: unknown): boolean {
+  return error instanceof SafeServiceError && error.status === 404;
+}
+
 async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Safe service error: ${response.status}`);
+  // The unauthenticated quota is small and shared (5000 requests over about 18 days when measured).
+  const key = import.meta.env.VITE_OLYMPUS_SAFE_API_KEY;
+  const response = await fetch(url, { headers: key ? { Authorization: `Bearer ${key}` } : {} });
+  if (!response.ok) throw new SafeServiceError(response.status);
   return response.json();
 }
 
@@ -62,19 +80,32 @@ export async function fetchSafeNonce(chainId: number, safe: Address): Promise<nu
   try {
     const { nonce } = await getJson<{ nonce: string }>(safeUrl(chainId, safe, "v1/safes/{safe}/"));
     return Number(nonce);
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFound(error)) return undefined;
+    throw error;
   }
 }
+
+/** The CCIP bridge didn't carry EVM traffic before this, so older Safe transactions can't match. */
+const BRIDGE_LAUNCH = "2026-10-20T00:00:00Z";
+const MAX_EXECUTED_PAGES = 5;
 
 export async function fetchSafeExecutedTxs(
   chainId: number,
   safe: Address,
 ): Promise<SafeMultisigTx[]> {
-  const { results } = await getJson<{ results: SafeMultisigTx[] }>(
-    safeUrl(chainId, safe, "v2/safes/{safe}/multisig-transactions/?executed=true&limit=100"),
+  const transactions: SafeMultisigTx[] = [];
+  let url: string | null | undefined = safeUrl(
+    chainId,
+    safe,
+    `v2/safes/{safe}/multisig-transactions/?executed=true&execution_date__gte=${BRIDGE_LAUNCH}&limit=100`,
   );
-  return results;
+  for (let page = 0; url && page < MAX_EXECUTED_PAGES; page++) {
+    const result: { results: SafeMultisigTx[]; next?: string | null } = await getJson(url);
+    transactions.push(...result.results);
+    url = result.next;
+  }
+  return transactions;
 }
 
 export async function fetchSafeQueuedBridgeTxs(
@@ -94,9 +125,9 @@ export async function fetchSafeQueuedBridgeTxs(
 }
 
 /** A Safe transaction's calls: the batch's if it's a MultiSend, otherwise its own. */
-function safeTxCalls(tx: SafeMultisigTx): { to: Address; data: Hex | null }[] {
+function safeTxCalls(tx: SafeMultisigTx): { to: Address; value?: string; data: Hex | null }[] {
   const batch = tx.dataDecoded?.parameters?.find((p) => p.name === "transactions")?.valueDecoded;
-  return batch ?? [{ to: tx.to, data: tx.data }];
+  return batch ?? [{ to: tx.to, value: tx.value, data: tx.data }];
 }
 
 /** Reads a queued Safe transaction as a pending bridge row, if it contains a bridge send. */
@@ -110,7 +141,7 @@ export function toQueuedRow(tx: SafeMultisigTx, chainId: number): BridgeHistoryI
         data: call.data,
       });
       if (functionName !== "sendToEVM") continue;
-      const [selector, , amount] = args;
+      const [selector, recipient, amount] = args;
       const destination = Object.entries(CCIP_CHAIN_SELECTORS).find(([, s]) => s === selector);
       if (!destination) continue;
       return {
@@ -122,6 +153,7 @@ export function toQueuedRow(tx: SafeMultisigTx, chainId: number): BridgeHistoryI
         srcTxHash: "",
         status: "AWAITING_SIGNATURES",
         safeTxHash: tx.safeTxHash,
+        safeSend: { value: call.value ?? "0", selector, recipient, amount },
         safeProgress: {
           confirmations: tx.confirmations?.length ?? 0,
           required: tx.confirmationsRequired,
@@ -149,4 +181,23 @@ export function resolveSafeTransfer(
   }
   if (safeNonce !== undefined && Number(tx.nonce) < safeNonce) return { state: "replaced" };
   return { state: "awaiting" };
+}
+
+/** The fee rose past what a queued proposal pays, so executing it would fail. */
+export function isFeeShort(value: string, fee: bigint): boolean {
+  return BigInt(value) < fee;
+}
+
+const MISSING_GRACE = 86_400_000;
+
+/**
+ * For a proposal the service has no record of. A wallet that executes a send on the spot returns its
+ * on-chain hash rather than a Safe hash; otherwise the proposal was deleted, or isn't indexed yet.
+ */
+export function resolveMissingProposal(
+  hasReceipt: boolean,
+  ageMs: number,
+): "promote" | "wait" | "drop" {
+  if (hasReceipt) return "promote";
+  return ageMs > MISSING_GRACE ? "drop" : "wait";
 }

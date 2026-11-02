@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAccount, useConfig, useSendCalls, useWriteContract } from "wagmi";
-import { getCapabilities, getPublicClient } from "wagmi/actions";
+import { getCapabilities } from "wagmi/actions";
 import { erc20Abi, isHash, parseUnits, type Address, type Hex } from "viem";
 import CCIPCrossChainBridgeAbi from "@/abis/CCIPCrossChainBridge";
 import { ContractName, getContractAddress } from "@/lib/contracts";
@@ -16,7 +16,7 @@ type Capabilities = {
   atomicBatch?: { supported?: boolean };
 };
 
-/** viem normalizes to `atomic`, while the Safe App provider reports the older `atomicBatch`. */
+/** Wallets report either the current `atomic` or the older `atomicBatch`, and some report both. */
 function supportsBatching(capabilities: Capabilities | undefined): boolean {
   const status = capabilities?.atomic?.status;
   return status === "supported" || status === "ready" || !!capabilities?.atomicBatch?.supported;
@@ -54,18 +54,20 @@ export function useSafeBridge() {
     recipientAddress,
     amount,
     needsApproval,
+    quote,
   }: {
     sourceChainId: number;
     destinationChainId: number;
     recipientAddress: Address;
     amount: string;
     needsApproval: boolean;
+    /** The fee the signer was shown. Signing this one keeps what was disclosed true. */
+    quote: bigint;
   }) => {
     const bridge = getContractAddress(ContractName.CCIP_BRIDGE, sourceChainId);
     const ohm = getTokenAddress(TokenName.OHM, sourceChainId);
     const selector = CCIP_CHAIN_SELECTORS[destinationChainId];
-    const client = getPublicClient(config, { chainId: sourceChainId });
-    if (!address || !bridge || !ohm || selector === undefined || !client) return;
+    if (!address || !bridge || !ohm || selector === undefined) return;
 
     setError(null);
     setIsPending(true);
@@ -73,14 +75,6 @@ export function useSafeBridge() {
     try {
       const amountBase = parseUnits(amount, OHM_DECIMALS);
       const sendArgs = [selector, recipientAddress, amountBase] as const;
-      const quote = await client.readContract({
-        address: bridge,
-        abi: CCIPCrossChainBridgeAbi,
-        functionName: "getFeeEVM",
-        args: sendArgs,
-      });
-      if (!isMountedRef.current || addressRef.current !== address) return;
-
       const { value } = getSafeFee(quote, destinationChainId);
       const approve = {
         abi: erc20Abi,
@@ -102,6 +96,8 @@ export function useSafeBridge() {
             () => undefined,
           )) as Capabilities | undefined,
         );
+      if (!isMountedRef.current || addressRef.current !== address) return;
+
       if (canBatch) {
         const { id } = await sendCallsAsync({
           account: address,

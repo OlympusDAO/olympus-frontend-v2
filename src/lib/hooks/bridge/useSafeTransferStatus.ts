@@ -8,7 +8,7 @@ export function useSafeTransferStatus(chainId: number, safeTxHash?: Hex) {
     queryKey: ["safeTx", chainId, safeTxHash],
     enabled: !!safeTxHash,
     queryFn: () => fetchSafeTx(chainId, safeTxHash as Hex),
-    refetchInterval: (query) => (query.state.data?.isExecuted ? false : 15_000),
+    refetchInterval: (query) => (query.state.data?.isExecuted ? false : 60_000),
     retry: false,
   });
   return {

@@ -209,4 +209,32 @@ describe("BridgePage", () => {
     await userEvent.click(screen.getByRole("button", { name: /^From/ }));
     expect(screen.queryByText("Select Source Chain")).not.toBeInTheDocument();
   });
+
+  it("blocks while the wallet kind is unknown, rather than treating a Safe as an EOA", async () => {
+    state.walletKind = "unknown";
+    render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    expect(screen.getByRole("button", { name: "Checking Wallet…" })).toBeDisabled();
+  });
+
+  it("makes a generic contract wallet enter a recipient too, without code on the destination", async () => {
+    state.walletKind = "contract";
+    render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    expect(screen.getByRole("button", { name: "Enter a Recipient" })).toBeDisabled();
+  });
+
+  it("keeps the Safe modal open if the wallet kind flickers", async () => {
+    state.walletKind = "safe";
+    state.destinationCode = "0x6080";
+    const { rerender } = render(<BridgePage />);
+    await userEvent.type(screen.getByPlaceholderText("0.00"), "1");
+    await userEvent.click(screen.getByRole("button", { name: "Propose in Safe" }));
+
+    state.walletKind = "unknown";
+    await act(async () => rerender(<BridgePage />));
+
+    expect(screen.getByTestId("safe-modal")).toBeInTheDocument();
+    expect(screen.queryByTestId("confirm-modal")).not.toBeInTheDocument();
+  });
 });

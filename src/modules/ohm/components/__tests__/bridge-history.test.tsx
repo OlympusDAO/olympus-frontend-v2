@@ -8,6 +8,7 @@ const state = vi.hoisted(() => ({
   error: null as Error | null,
   partialError: false,
   isSafeApp: false,
+  route: { status: "available" } as Record<string, unknown>,
 }));
 
 vi.mock("wagmi", () => ({
@@ -19,6 +20,7 @@ vi.mock("@/lib/hooks/bridge/useBridgeHistory.ts", () => ({
 vi.mock("@/lib/hooks/bridge/useSafeContext", () => ({
   useSafeContext: () => ({ kind: state.isSafeApp ? "safe" : "eoa", isSafeApp: state.isSafeApp }),
 }));
+vi.mock("@/lib/hooks/bridge/useBridgeRoute", () => ({ useBridgeRoute: () => state.route }));
 vi.mock("@/lib/hooks/bridge/useRetryBridgeMessage", () => ({
   useRetryBridgeMessage: () => ({ retry: vi.fn(), isPending: false }),
 }));
@@ -143,6 +145,16 @@ describe("BridgeHistory Safe rows", () => {
     state.error = null;
     state.partialError = false;
     state.isSafeApp = false;
+    state.route = { status: "available" };
+  });
+
+  it("warns signers off executing when the route has since closed", () => {
+    state.route = { status: "unavailable", reason: "route-paused" };
+    state.history = [
+      { ...row, source: "ccip", srcTxHash: "", status: "AWAITING_SIGNATURES", safeTxHash: SAFE_TX },
+    ];
+    render(<BridgeHistory />);
+    expect(screen.getByText("Route is closed: don't execute")).toBeInTheDocument();
   });
 
   it("shows signing progress and a queue link on an awaiting row", () => {
@@ -188,7 +200,7 @@ describe("BridgeHistory Safe rows", () => {
     expect(screen.getByText("Execution reverted, propose again")).toBeInTheDocument();
   });
 
-  it("explains that any wallet can retry inside the Safe App, which can't switch chain", () => {
+  it("explains that any wallet can retry to a Safe, which may not be on that chain", () => {
     state.isSafeApp = true;
     state.history = [{ ...row, source: "ccip", status: "NEEDS_RETRY", messageId: MESSAGE_ID }];
     render(<BridgeHistory />);

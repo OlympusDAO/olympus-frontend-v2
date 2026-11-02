@@ -109,17 +109,18 @@ export function BridgeForm({
 
   const { kind: walletKind, isSafeApp } = useSafeContext(sourceChainId);
   const isSafe = walletKind === "safe";
+  const isContractWallet = isSafe || walletKind === "contract";
   const { data: destinationCode } = useBytecode({
     address,
     chainId: destinationChainId,
-    query: { enabled: !!address && isSafe },
+    query: { enabled: !!address && isContractWallet },
   });
 
   const isCustomRecipient =
     !!recipientAddress && !!address && recipientAddress.toLowerCase() !== address.toLowerCase();
 
-  // Fail closed: until the read says otherwise, a Safe isn't known to exist on the destination.
-  const needsRecipient = isSafe && !isCustomRecipient && !destinationCode;
+  // Fail closed: until the read says otherwise, the wallet isn't known to exist on the destination.
+  const needsRecipient = isContractWallet && !isCustomRecipient && !destinationCode;
 
   const canSwap = useMemo(() => {
     const destRoutes = BRIDGEABLE_DESTINATIONS[destinationChainId];
@@ -147,6 +148,7 @@ export function BridgeForm({
     hasSufficientAllowance,
     isSafe,
     isSafeApp,
+    walletUnknown: walletKind === "unknown",
     needsRecipient,
   });
 
@@ -260,13 +262,13 @@ export function BridgeForm({
           <Alert variant="compact" type="warning" size="sm" className="w-full">
             <RiInformationLine size={16} />
             <AlertDescription className="text-xs font-semibold text-primary-t">
-              This Safe isn't deployed on {destChain?.name}. Enter a recipient you control there.
+              This wallet isn't deployed on {destChain?.name}. Enter a recipient you control there.
             </AlertDescription>
           </Alert>
         )}
 
         {/* Contract wallets may not exist at the same address on the destination */}
-        {walletKind !== "eoa" && !isCustomRecipient && !needsRecipient && (
+        {isContractWallet && !isCustomRecipient && !needsRecipient && (
           <Alert variant="compact" type="warning" size="sm" className="w-full">
             <RiInformationLine size={16} />
             <AlertDescription className="text-xs font-semibold text-primary-t">

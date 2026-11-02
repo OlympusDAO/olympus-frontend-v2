@@ -190,6 +190,7 @@ describe("useBridgeOhm with a reverted send", () => {
     const { result } = renderHookWithProviders(() => fresh());
 
     expect(result.current.isSuccess).toBe(false);
+    expect(result.current.isReverted).toBe(true);
     expect(result.current.error?.message).toMatch(/reverted/i);
   });
 });
