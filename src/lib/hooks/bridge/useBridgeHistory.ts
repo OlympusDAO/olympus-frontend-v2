@@ -142,7 +142,7 @@ export function useBridgeHistory() {
             })
             .catch(() => undefined);
           return fee !== undefined && isFeeShort(value, fee)
-            ? { ...row, note: "Fee now above what this sends: replace it in your Safe" }
+            ? { ...row, note: "Fee rose past what this sends: replace it" }
             : row;
         }),
       );

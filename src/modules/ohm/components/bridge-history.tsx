@@ -66,6 +66,9 @@ function normalizeBridgeChainId(chainId: number): number {
   return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
 }
 
+// Table cells don't wrap, and these are long enough to push the status off the table.
+const STATUS_NOTE_CLASS = "text-xs text-secondary-t text-right whitespace-normal max-w-44";
+
 const STATUS_BADGES: Record<
   BridgeStatus,
   { label: string; color: "green" | "blue" | "red" | "orange" }
@@ -86,7 +89,7 @@ function RetryButton({ item }: { item: BridgeHistoryItem }) {
   // wait on signers for no reason. Retrying is permissionless anyway.
   if (kind === "safe") {
     return (
-      <span className="text-xs text-secondary-t">
+      <span className={STATUS_NOTE_CLASS}>
         Any wallet can retry this on {getBridgeChain(item.dstChainId)?.name}
       </span>
     );
@@ -102,7 +105,7 @@ function RetryButton({ item }: { item: BridgeHistoryItem }) {
 function ClosedRouteWarning({ item }: { item: BridgeHistoryItem }) {
   const route = useBridgeRoute(item.srcChainId, item.dstChainId);
   if (route.status !== "unavailable") return null;
-  return <span className="text-xs text-secondary-t">Route is closed: don't execute</span>;
+  return <span className={STATUS_NOTE_CLASS}>Route is closed: don't execute</span>;
 }
 
 function StatusCell({ item }: { item: BridgeHistoryItem }) {
@@ -143,7 +146,7 @@ function StatusCell({ item }: { item: BridgeHistoryItem }) {
           </a>
         )}
       </div>
-      {note && <span className="text-xs text-secondary-t">{note}</span>}
+      {note && <span className={STATUS_NOTE_CLASS}>{note}</span>}
       {item.status === "AWAITING_SIGNATURES" && <ClosedRouteWarning item={item} />}
     </div>
   );
