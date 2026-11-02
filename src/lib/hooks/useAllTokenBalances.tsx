@@ -18,6 +18,7 @@ import {
   berachain,
   robinhood,
   sepolia,
+  baseSepolia,
 } from "@/lib/chains";
 
 const CHAIN_MAP: Record<number, Chain> = {
@@ -32,6 +33,7 @@ const CHAIN_MAP: Record<number, Chain> = {
   [berachain.id]: berachain,
   [robinhood.id]: robinhood,
   [sepolia.id]: sepolia,
+  [baseSepolia.id]: baseSepolia,
 };
 
 // Cache public clients at module level — never recreated

@@ -1,6 +1,15 @@
 import { decodeFunctionData, formatUnits, getAddress, type Address, type Hex } from "viem";
 import CCIPCrossChainBridgeAbi from "@/abis/CCIPCrossChainBridge";
-import { arbitrum, base, berachain, mainnet, optimism, robinhood } from "@/lib/chains";
+import {
+  arbitrum,
+  base,
+  baseSepolia,
+  berachain,
+  mainnet,
+  optimism,
+  robinhood,
+  sepolia,
+} from "@/lib/chains";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { CCIP_CHAIN_SELECTORS } from "@/modules/ohm/utils/constants";
 import type { BridgeHistoryItem } from "./useBridgeHistory";
@@ -15,6 +24,8 @@ export const SAFE_SERVICE_SLUGS: Record<number, string> = {
   [optimism.id]: "oeth",
   [berachain.id]: "berachain",
   [robinhood.id]: "robinhood",
+  [sepolia.id]: "sep",
+  [baseSepolia.id]: "basesep",
 };
 
 export type SafeMultisigTx = {

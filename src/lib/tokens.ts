@@ -13,6 +13,7 @@ import {
   berachain,
   robinhood,
   sepolia,
+  baseSepolia,
 } from "@/lib/chains";
 
 export type TokenInfo = {
@@ -51,6 +52,7 @@ export const TOKENS: Record<TokenName, TokenInfo> = {
       [optimism.id]: "0x060cb087a9730E13aa191f31A6d86bFF8DfcdCC0",
       [robinhood.id]: "0x9c859Dc91DB65bD7375660341231227336dAa134",
       [sepolia.id]: "0x784cA0C006b8651BAB183829A99fA46BeCe50dBc",
+      [baseSepolia.id]: "0x18878Df23e2a36f81e820e4b47b4A40576D3159C",
     },
     symbol: "OHM",
     decimals: 9,

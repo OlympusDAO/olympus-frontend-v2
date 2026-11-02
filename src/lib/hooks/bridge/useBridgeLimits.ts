@@ -1,9 +1,7 @@
 import { useReadContract } from "wagmi";
 import { erc20Abi } from "viem";
-import { mainnet } from "@/lib/chains";
-import { ContractName, getContractAddress } from "@/lib/contracts";
 import { useMockData } from "@/lib/mock/provider";
-import { getTokenAddress, TokenName } from "@/lib/tokens";
+import { getLiquidityPool } from "@/modules/ohm/utils/constants";
 import { evaluateAmount } from "./amountLimits";
 import type { TokenBucket } from "./routeState";
 import { useBridgeRoute } from "./useBridgeRoute";
@@ -16,15 +14,16 @@ function availableTokens(bucket?: TokenBucket): bigint | null | undefined {
 export function useBridgeLimits(sourceChainId: number, destinationChainId: number, amount: bigint) {
   const mock = useMockData();
   const route = useBridgeRoute(sourceChainId, destinationChainId);
-  const intoMainnet = destinationChainId === mainnet.id;
+  const liquidity = getLiquidityPool(destinationChainId);
+  const intoMainnet = !!liquidity;
 
   const { data: poolBalance, isLoading: isLiquidityLoading } = useReadContract({
-    address: getTokenAddress(TokenName.OHM, mainnet.id),
+    address: liquidity?.ohm,
     abi: erc20Abi,
     functionName: "balanceOf",
-    args: [getContractAddress(ContractName.CCIP_TOKEN_POOL, mainnet.id)!],
-    chainId: mainnet.id,
-    query: { enabled: !mock && intoMainnet, refetchInterval: 60_000 },
+    args: [liquidity?.pool as `0x${string}`],
+    chainId: destinationChainId,
+    query: { enabled: !mock && !!liquidity, refetchInterval: 60_000 },
   });
 
   if (mock?.scenario.bridge) {

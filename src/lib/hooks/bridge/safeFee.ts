@@ -1,4 +1,4 @@
-import { mainnet } from "@/lib/chains";
+import { isLockReleasePool } from "@/modules/ohm/utils/constants";
 
 /**
  * A Safe's fee is quoted at proposal but paid at execution, possibly days later, and the bridge
@@ -14,7 +14,7 @@ export function getSafeFee(
   quote: bigint,
   destinationChainId: number,
 ): { value: bigint; maxOverpay: bigint } {
-  const bps = destinationChainId === mainnet.id ? BUFFER_BPS_INTO_MAINNET : BUFFER_BPS;
+  const bps = isLockReleasePool(destinationChainId) ? BUFFER_BPS_INTO_MAINNET : BUFFER_BPS;
   const maxOverpay = (quote * bps) / BPS;
   return { value: quote + maxOverpay, maxOverpay };
 }

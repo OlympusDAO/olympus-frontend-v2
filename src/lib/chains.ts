@@ -9,7 +9,7 @@ import {
   base,
   sepolia,
 } from "viem/chains";
-import { berachain, robinhood } from "viem/chains";
+import { baseSepolia, berachain, robinhood } from "viem/chains";
 import { http, type Transport } from "viem";
 import ethereumIcon from "@/icons/chains/ethereum.svg";
 import arbitrumIcon from "@/icons/chains/arbitrum.svg";
@@ -32,6 +32,7 @@ const berachainWithIcon = withIcon(berachain, berachainIcon);
 const optimismWithIcon = withIcon(optimism, optimismIcon);
 const robinhoodWithIcon = withIcon(robinhood, robinhoodIcon);
 const sepoliaWithIcon = withIcon(sepolia, sepoliaIcon);
+const baseSepoliaWithIcon = withIcon(baseSepolia, baseIcon);
 
 /**
  * Chains available in the wallet network selector.
@@ -68,7 +69,7 @@ export const activeChains = isTestnetMode
  * All chains for the wagmi config (includes bridge chains for useSwitchChain).
  */
 export const allChains = isTestnetMode
-  ? ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS, sepoliaWithIcon] as const)
+  ? ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS, sepoliaWithIcon, baseSepoliaWithIcon] as const)
   : ([...PRODUCTION_CHAINS, ...BRIDGE_EXTRA_CHAINS] as const);
 
 /**
@@ -99,6 +100,7 @@ export const transports: Record<number, Transport> = {
   [berachain.id]: http(devBerachainRpc || "https://berachain-rpc.publicnode.com"),
   [robinhood.id]: http(devRobinhoodRpc || "https://rpc.mainnet.chain.robinhood.com"),
   [sepolia.id]: http("https://ethereum-sepolia.publicnode.com"),
+  [baseSepolia.id]: http("https://base-sepolia-rpc.publicnode.com"),
 };
 
 // Re-export chain objects for convenience
@@ -114,4 +116,5 @@ export {
   berachain,
   robinhood,
   sepolia,
+  baseSepolia,
 };
