@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseUnits, type Address } from "viem";
@@ -44,15 +44,21 @@ export function useMonoCoolerDelegations() {
     },
   });
 
-  const delegations: AccountDelegation[] | undefined = rawDelegations
-    ? (rawDelegations as readonly { delegate: Address; amount: bigint; escrow: Address }[]).map(
-        (d) => ({
-          delegate: d.delegate,
-          amount: d.amount,
-          escrow: d.escrow,
-        }),
-      )
-    : undefined;
+  // Memoized because consumers sync form state from this array in an effect: a new
+  // reference on every render would reset that state in an endless render loop.
+  const delegations = useMemo<AccountDelegation[] | undefined>(
+    () =>
+      rawDelegations
+        ? (rawDelegations as readonly { delegate: Address; amount: bigint; escrow: Address }[]).map(
+            (d) => ({
+              delegate: d.delegate,
+              amount: d.amount,
+              escrow: d.escrow,
+            }),
+          )
+        : undefined,
+    [rawDelegations],
+  );
 
   // Write contract for applying delegations
   const requestsRef = useRef<DelegationRequest[]>([]);
