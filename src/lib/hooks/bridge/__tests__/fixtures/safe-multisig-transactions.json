@@ -1,0 +1,126 @@
+{
+  "count": 2,
+  "next": null,
+  "results": [
+    {
+      "safe": "0x245cc372C84B3645Bf0Ffe6538620B04a217988B",
+      "to": "0xfdaFc9d1902f4e0b84f65F49f244b32b31013b74",
+      "value": "0",
+      "data": null,
+      "operation": 0,
+      "nonce": "1995",
+      "submissionDate": "2026-10-27T16:01:51.992705Z",
+      "executionDate": "2026-10-28T04:54:35Z",
+      "isExecuted": true,
+      "isSuccessful": true,
+      "transactionHash": "0xaaf38b3f3f2c7ee1dbc73232ab4b73c4b3c323660b146cc3a52336347390e006",
+      "safeTxHash": "0x1b7c098a3f201350cd47516463db58b8717c7fff1fc26dfdc8b82b0ac84f6c9a",
+      "confirmationsRequired": 4,
+      "confirmations": [
+        {
+          "owner": "0x680FF9bd827ABE38212fC7d447Fb8545eEA47Ff3"
+        },
+        {
+          "owner": "0xcb4524B63F2c532fF52FCbbBcd3C137D32c1D966"
+        },
+        {
+          "owner": "0xb7eb90494B0312407Afb40f2B5F203A038e9D1e8"
+        },
+        {
+          "owner": "0xd8Eb6D9B93b6cbB39aBF62b719BbCCcd2b16F56b"
+        }
+      ],
+      "dataDecoded": {
+        "method": "createWithContext",
+        "parameters": [
+          {
+            "name": "params",
+            "type": "(address,bytes32,bytes)",
+            "value": [
+              "0x6cF1e9cA41f7611dEf408122793c358a3d11E5a5",
+              "0x000000000000000000000000000000000000000000000000000001a17e180aee",
+              "0x0000000000000000000000009d39a5de30e57443bff2a8307a4256c8797a34970000000000000000000000002260fac5e5542a773aa44fbcfedf7c193bc2c599000000000000000000000000245cc372c84b3645bf0ffe6538620b04a217988b000000000000000000000000000000000000000000000098e6e348e7147a06530000000000000000000000000000000000000000000000000000000000411999000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000002a300000000000000000000000000000000000000000000000000000000000000000786f0bced0a1334923e5d13bf9a0cce4421dd1f36e7b212abfeb755551f29ce5"
+            ]
+          },
+          {
+            "name": "factory",
+            "type": "address",
+            "value": "0x52eD56Da04309Aca4c3FECC595298d80C2f16BAc"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "value": "0x"
+          },
+          {
+            "name": "dispatch",
+            "type": "bool",
+            "value": "True"
+          }
+        ]
+      }
+    },
+    {
+      "safe": "0x245cc372C84B3645Bf0Ffe6538620B04a217988B",
+      "to": "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+      "value": "0",
+      "data": null,
+      "operation": 1,
+      "nonce": "1994",
+      "submissionDate": "2026-10-20T09:34:35.151444Z",
+      "executionDate": "2026-10-22T04:51:47Z",
+      "isExecuted": true,
+      "isSuccessful": true,
+      "transactionHash": "0x1224548b99b91f056d9c5484e06fe3c8af20211402eeb059afbf9d1db5f1e6fb",
+      "safeTxHash": "0x864bb7283ff168f01d37f92326f35690884b0306d3cc686f7035d65152286a6f",
+      "confirmationsRequired": 4,
+      "confirmations": [
+        {
+          "owner": "0xd8Eb6D9B93b6cbB39aBF62b719BbCCcd2b16F56b"
+        },
+        {
+          "owner": "0xcb4524B63F2c532fF52FCbbBcd3C137D32c1D966"
+        },
+        {
+          "owner": "0xb7eb90494B0312407Afb40f2B5F203A038e9D1e8"
+        },
+        {
+          "owner": "0xf0be8F756389C2D22DD644cC9a3C979F568f3454"
+        }
+      ],
+      "dataDecoded": {
+        "method": "multiSend",
+        "parameters": [
+          {
+            "name": "transactions",
+            "type": "bytes",
+            "value": "0x0064aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000a5588e518ce5ee0e4628c005e4edabd5e87de3ad000000000000000000000000000000000000000000000000000076e3ce012b0b",
+            "valueDecoded": [
+              {
+                "operation": 0,
+                "to": "0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5",
+                "value": "0",
+                "data": "0xa9059cbb000000000000000000000000a5588e518ce5ee0e4628c005e4edabd5e87de3ad000000000000000000000000000000000000000000000000000076e3ce012b0b",
+                "dataDecoded": {
+                  "method": "transfer",
+                  "parameters": [
+                    {
+                      "name": "recipient",
+                      "type": "address",
+                      "value": "0xa5588e518CE5ee0e4628C005E4edAbD5e87de3aD"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "uint256",
+                      "value": "130720785836811"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

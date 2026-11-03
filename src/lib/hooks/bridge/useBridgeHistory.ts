@@ -1,157 +1,294 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
-import { formatUnits } from "viem";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useAccount, useChainId, useConfig } from "wagmi";
+import { getPublicClient } from "wagmi/actions";
+import type { Address, Hex } from "viem";
+import CCIPCrossChainBridgeAbi from "@/abis/CCIPCrossChainBridge";
 import { ContractName, getContractAddress } from "@/lib/contracts";
-import { BRIDGE_CHAINS } from "@/modules/ohm/utils/constants";
 import { useMockData } from "@/lib/mock/provider";
+import { BRIDGE_CHAINS, CCIP_CHAIN_SELECTORS } from "@/modules/ohm/utils/constants";
+import type { BridgeStatus } from "./bridgeStatus";
+import {
+  fetchBridgeMessages,
+  fetchMessage,
+  filterByWallet,
+  onBridgeChains,
+  type CcipMessage,
+} from "./ccipApi";
+import { mergeHistory, summarizeHistorySources, toCcipRow } from "./mergeHistory";
+import {
+  fetchSafeExecutedTxs,
+  fetchSafeNonce,
+  fetchSafeQueuedBridgeTxs,
+  fetchSafeTx,
+  isFeeShort,
+  isNotFound,
+  resolveMissingProposal,
+  resolveSafeTransfer,
+  SAFE_SERVICE_SLUGS,
+} from "./safeService";
+import {
+  addTrackedTransfer,
+  removeTrackedTransfer,
+  resolveTrackedTransfer,
+  useTrackedTransfers,
+} from "./trackedTransfers";
+import { useLayerZeroHistory } from "./useLayerZeroHistory";
+import { useSafeContext } from "./useSafeContext";
 
 export interface BridgeHistoryItem {
+  source: "ccip" | "layerzero";
   srcChainId: number;
   dstChainId: number;
   timestamp: string;
-  amount: string;
+  /** Undefined when the source doesn't report one. */
+  amount?: string;
   srcTxHash: string;
   dstTxHash?: string;
-  status: "DELIVERED" | "INFLIGHT" | "FAILED" | string;
+  status: BridgeStatus;
+  messageId?: Hex;
+  safeTxHash?: Hex;
+  safeProgress?: { confirmations: number; required: number; queueUrl: string };
+  /** What a queued Safe proposal will send, to compare with the fee now. */
+  safeSend?: { value: string; selector: bigint; recipient: Address; amount: bigint };
+  /** A short explanation shown under the status. */
+  note?: string;
 }
 
-// LayerZero v2 endpoint ID → EVM chain ID mapping
-const LZ_EID_TO_EVM: Record<number, number> = {
-  30101: 1, // Ethereum
-  30110: 42161, // Arbitrum
-  30184: 8453, // Base
-  30362: 80094, // Berachain
-};
-
-function lzEidToEvmChainId(eid: number): number {
-  return LZ_EID_TO_EVM[eid] ?? eid;
+/** All messages this wallet signed, across every source chain. */
+async function fetchWalletMessages(
+  wallet: Address,
+  safeTxHashes: ReadonlySet<string>,
+): Promise<CcipMessage[]> {
+  const perChain = await Promise.all(
+    BRIDGE_CHAINS.map(({ chainId }) => {
+      const bridge = getContractAddress(ContractName.CCIP_BRIDGE, chainId);
+      const selector = CCIP_CHAIN_SELECTORS[chainId];
+      return bridge && selector !== undefined ? fetchBridgeMessages(bridge, selector) : [];
+    }),
+  );
+  return onBridgeChains(filterByWallet(perChain.flat(), wallet, safeTxHashes));
 }
 
-/**
- * Fetch bridge history from LayerZero Scan API.
- * Uses GET /v1/messages/wallet/{srcAddress} endpoint.
- */
+/** Tracked messages the wallet filter missed. One the API doesn't have yet stays locally tracked. */
+async function fetchMissingMessages(messageIds: Hex[]): Promise<CcipMessage[]> {
+  const results = await Promise.allSettled(messageIds.map(fetchMessage));
+  return results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
+}
+
+/** The Safe service's free quota is small, so it's read far less often than the CCIP API. */
+const SAFE_POLL_INTERVAL = 5 * 60_000;
+
+/** Merges CCIP, locally tracked and LayerZero transfers. A history failure never blocks bridging. */
 export function useBridgeHistory() {
   const { address } = useAccount();
+  const config = useConfig();
   const mock = useMockData();
+  const tracked = useTrackedTransfers(address);
+  const layerZero = useLayerZeroHistory();
+  const walletChainId = useChainId();
+  const { kind: walletKind } = useSafeContext(walletChainId);
+  const isSafe = walletKind === "safe";
 
-  // Collect all bridge contract addresses for filtering
-  const bridgeAddresses = BRIDGE_CHAINS.map((chain) =>
-    getContractAddress(ContractName.CROSS_CHAIN_BRIDGE, chain.chainId),
-  ).filter(Boolean);
+  const proposals = useMemo(
+    () => tracked.filter((transfer) => transfer.safeTxHash && !transfer.srcTxHash),
+    [tracked],
+  );
+  const proposalHashes = useMemo(() => proposals.map((t) => t.safeTxHash), [proposals]);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["bridgeHistory", address],
-    enabled: !mock && !!address && bridgeAddresses.length > 0,
+  // A Safe is one contract on one chain, so only the connected chain is read.
+  const safeEnabled = !mock && !!address && isSafe && walletChainId in SAFE_SERVICE_SLUGS;
+  const safeExecuted = useQuery({
+    queryKey: ["bridgeHistory", "safeExecuted", address, walletChainId],
+    enabled: safeEnabled,
+    retry: false,
+    staleTime: SAFE_POLL_INTERVAL,
+    refetchInterval: SAFE_POLL_INTERVAL,
     queryFn: async () => {
-      const url = `https://scan.layerzero-api.com/v1/messages/wallet/${address}?limit=100`;
+      const executed = await fetchSafeExecutedTxs(walletChainId, address as Address);
+      return executed.flatMap((tx) =>
+        tx.transactionHash ? [tx.transactionHash.toLowerCase()] : [],
+      );
+    },
+  });
+  const safeTxHashes = safeExecuted.data;
 
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`LayerZero API error: ${response.status}`);
-      }
+  const safeQueued = useQuery({
+    // Keyed on this browser's proposals, so a new one shows its signing progress straight away.
+    queryKey: ["bridgeHistory", "safeQueued", address, walletChainId, proposalHashes],
+    enabled: safeEnabled,
+    placeholderData: keepPreviousData,
+    retry: false,
+    staleTime: SAFE_POLL_INTERVAL,
+    refetchInterval: SAFE_POLL_INTERVAL,
+    queryFn: async () => {
+      const rows = await fetchSafeQueuedBridgeTxs(walletChainId, address as Address);
+      const client = getPublicClient(config, { chainId: walletChainId });
+      const bridge = getContractAddress(ContractName.CCIP_BRIDGE, walletChainId);
+      if (!client || !bridge) return rows;
 
-      const json = await response.json();
-      const messages: LzMessage[] = json.data ?? [];
+      // A proposal whose fee has risen past what it pays would fail at execution and sit in the
+      // queue, blocking later Safe transactions, so say so rather than leave it Awaiting.
+      return Promise.all(
+        rows.map(async (row) => {
+          if (!row.safeSend) return row;
+          const { value, selector, recipient, amount } = row.safeSend;
+          const fee = await client
+            .readContract({
+              address: bridge,
+              abi: CCIPCrossChainBridgeAbi,
+              functionName: "getFeeEVM",
+              args: [selector, recipient, amount],
+            })
+            .catch(() => undefined);
+          return fee !== undefined && isFeeShort(value, fee)
+            ? { ...row, note: "Fee rose past what this sends: replace it" }
+            : row;
+        }),
+      );
+    },
+  });
 
-      // Filter to only our OHM bridge contract messages
-      const bridgeAddressSet = new Set(bridgeAddresses.map((a) => a!.toLowerCase()));
+  // Follows this browser's Safe proposals until they execute, revert or get replaced.
+  useQuery({
+    queryKey: ["bridgeHistory", "resolveProposals", proposalHashes],
+    enabled: !mock && proposals.length > 0,
+    retry: false,
+    refetchInterval: SAFE_POLL_INTERVAL,
+    queryFn: async () => {
+      await Promise.allSettled(
+        proposals.map(async (transfer) => {
+          const hash = transfer.safeTxHash as Hex;
+          // The nonce comes first: read the other way round, a transaction executing in between
+          // would look replaced and get dropped.
+          const nonce = await fetchSafeNonce(transfer.srcChainId, transfer.address as Address);
+          try {
+            const resolution = resolveSafeTransfer(
+              await fetchSafeTx(transfer.srcChainId, hash),
+              nonce,
+            );
+            if (resolution.state === "replaced") removeTrackedTransfer(hash);
+            if (resolution.state === "executed" || resolution.state === "reverted") {
+              addTrackedTransfer({
+                ...transfer,
+                srcTxHash: resolution.hash,
+                failed: resolution.state === "reverted",
+              });
+            }
+          } catch (error) {
+            if (!isNotFound(error)) return;
+            const receipt = await getPublicClient(config, { chainId: transfer.srcChainId })
+              ?.getTransactionReceipt({ hash })
+              .catch(() => undefined);
+            const age = Date.now() - new Date(transfer.timestamp).getTime();
+            const outcome = resolveMissingProposal(!!receipt, age);
+            if (outcome === "drop") removeTrackedTransfer(hash);
+            if (outcome === "promote") {
+              addTrackedTransfer({ ...transfer, srcTxHash: hash, safeTxHash: undefined });
+            }
+          }
+        }),
+      );
+      return null;
+    },
+  });
 
-      const items: BridgeHistoryItem[] = messages
-        .filter((msg) => {
-          const senderAddr = msg.pathway?.sender?.address?.toLowerCase();
-          return senderAddr && bridgeAddressSet.has(senderAddr);
-        })
-        .map((msg) => {
-          const srcChainId = lzEidToEvmChainId(msg.pathway.srcEid);
-          const dstChainId = lzEidToEvmChainId(msg.pathway.dstEid);
+  const trackedIds = useMemo(
+    () => tracked.flatMap((transfer) => (transfer.messageId ? [transfer.messageId] : [])),
+    [tracked],
+  );
 
-          return {
-            srcChainId,
-            dstChainId,
-            timestamp: msg.created,
-            amount: parseAmountFromPayload(msg.source?.tx?.payload),
-            srcTxHash: msg.source?.tx?.txHash ?? "",
-            dstTxHash: msg.destination?.tx?.txHash ?? undefined,
-            status: msg.status?.name ?? "INFLIGHT",
-          } satisfies BridgeHistoryItem;
-        });
+  // A send is recorded as soon as it has a hash, so the modal can close before its receipt. This
+  // finds out what happened to those: failed ones go, and the rest get a message ID to follow.
+  const unresolved = useMemo(
+    () => tracked.filter((t) => t.srcTxHash && !t.messageId && !t.failed),
+    [tracked],
+  );
+  useQuery({
+    queryKey: ["bridgeHistory", "resolveTracked", unresolved.map((t) => t.srcTxHash)],
+    enabled: !mock && unresolved.length > 0,
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      await Promise.all(
+        unresolved.map(async (transfer) => {
+          const client = getPublicClient(config, { chainId: transfer.srcChainId });
+          const bridge = getContractAddress(ContractName.CCIP_BRIDGE, transfer.srcChainId);
+          if (!client || !bridge) return;
+          const receipt = await client
+            .getTransactionReceipt({ hash: transfer.srcTxHash as Hex })
+            .catch(() => undefined);
+          const resolution = resolveTrackedTransfer(receipt, bridge);
+          if (resolution.state === "reverted") removeTrackedTransfer(transfer.srcTxHash as string);
+          if (resolution.state === "sent" && resolution.messageId) {
+            addTrackedTransfer({ ...transfer, messageId: resolution.messageId });
+          }
+        }),
+      );
+      return null;
+    },
+  });
 
-      return items;
+  const ccip = useQuery({
+    queryKey: ["bridgeHistory", "ccip", address, trackedIds, safeTxHashes],
+    // A Safe's messages can only be recognized once its execution hashes have loaded.
+    enabled: !mock && !!address && (!isSafe || !safeExecuted.isLoading),
+    placeholderData: keepPreviousData,
+    queryFn: async () => {
+      const found = await fetchWalletMessages(address as Address, new Set(safeTxHashes));
+      const foundIds = new Set(found.map((message) => message.messageId));
+      const missing = await fetchMissingMessages(trackedIds.filter((id) => !foundIds.has(id)));
+      const messages = [...found, ...missing];
+
+      // CCIP's SUCCESS isn't proof of delivery, so ask each destination bridge.
+      return Promise.all(
+        messages.map(async (message) => {
+          if (message.status !== "SUCCESS") return toCcipRow(message, false);
+          const chainId = Number(message.destNetworkInfo.chainId);
+          const bridge = getContractAddress(ContractName.CCIP_BRIDGE, chainId);
+          const client = getPublicClient(config, { chainId });
+          if (!bridge || !client) return toCcipRow(message, undefined);
+          try {
+            const stored = await client.readContract({
+              address: bridge,
+              abi: CCIPCrossChainBridgeAbi,
+              functionName: "getFailedMessage",
+              args: [message.messageId],
+            });
+            return toCcipRow(message, stored.sourceChainSelector !== 0n);
+          } catch {
+            return toCcipRow(message, undefined);
+          }
+        }),
+      );
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
 
+  const history = useMemo(
+    () => mergeHistory(ccip.data ?? [], tracked, layerZero.data ?? [], safeQueued.data ?? []),
+    [ccip.data, tracked, layerZero.data, safeQueued.data],
+  );
+
   if (mock?.scenario.bridge) {
     return {
       history: mock.scenario.bridge.history,
       isLoading: false,
-      error: null,
+      error: mock.scenario.bridge.historyError ? new Error("History unavailable") : null,
+      partialError: false,
     };
   }
+
+  const sources = summarizeHistorySources(ccip.error, layerZero.error);
 
   return {
-    history: data ?? [],
-    isLoading,
-    error: error as Error | null,
+    history,
+    isLoading: ccip.isLoading || layerZero.isLoading,
+    error: sources.error,
+    partialError:
+      sources.partialError ||
+      !!safeExecuted.error ||
+      !!safeQueued.error ||
+      walletKind === "unknown",
   };
-}
-
-/**
- * Parse OHM amount from LayerZero message payload.
- * The bridge contract encodes: recipient address (20 bytes) + amount (uint256).
- * OHM has 9 decimals.
- */
-function parseAmountFromPayload(payload?: string): string {
-  if (!payload || payload.length < 66) return "0";
-  try {
-    // Skip the 0x prefix + first bytes (varies by encoding),
-    // look for the amount in the payload.
-    // OFT v1 payload format: abi.encode(address to, uint256 amount)
-    // = 32 bytes (address padded) + 32 bytes (amount) = 64 hex chars each
-    // After 0x prefix, that's positions 2..66 (address) and 66..130 (amount)
-    const amountHex = `0x${payload.slice(66, 130)}`;
-    const amount = BigInt(amountHex);
-    if (amount === 0n) return "0";
-    return formatUnits(amount, 9);
-  } catch {
-    return "0";
-  }
-}
-
-// Type for LayerZero Scan API response messages
-interface LzMessage {
-  pathway: {
-    srcEid: number;
-    dstEid: number;
-    sender: { address: string; id?: string; name?: string; chain?: string };
-    receiver: { address: string; id?: string; name?: string; chain?: string };
-    nonce: number;
-  };
-  source: {
-    status: string;
-    tx: {
-      txHash: string;
-      blockNumber: string;
-      blockTimestamp: number;
-      from: string;
-      payload: string;
-    };
-  };
-  destination?: {
-    status?: string;
-    tx?: {
-      txHash: string;
-      blockNumber?: string;
-      blockTimestamp?: number;
-    };
-  };
-  status: {
-    name: string;
-    message?: string;
-  };
-  guid: string;
-  created: string;
-  updated: string;
 }

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import type { Address } from "viem";
 import { erc20Abi } from "viem";
@@ -8,6 +8,7 @@ import { useTransactionToast, type TransactionToastConfig } from "./useTransacti
 export function useTokenApproval() {
   const queryClient = useQueryClient();
   const queryKeyRef = useRef<readonly unknown[] | undefined>(undefined);
+  const [approvalChain, setApprovalChain] = useState<number>();
 
   const {
     data: hash,
@@ -23,6 +24,7 @@ export function useTokenApproval() {
     error: confirmError,
   } = useWaitForTransactionReceipt({
     hash,
+    chainId: approvalChain,
     confirmations: 1,
   });
 
@@ -73,15 +75,18 @@ export function useTokenApproval() {
     spender,
     amount,
     queryKey,
+    chainId,
   }: {
     tokenAddress: Address;
     spender: Address;
     amount: bigint;
     queryKey?: readonly unknown[];
+    chainId?: number;
   }) => {
     // Reset both Wagmi state and toast state for new transaction
     resetWrite();
     resetToast();
+    setApprovalChain(chainId);
 
     // Store queryKey for invalidation after confirmation
     if (queryKey) {
@@ -93,6 +98,7 @@ export function useTokenApproval() {
       abi: erc20Abi,
       functionName: "approve",
       args: [spender, amount],
+      chainId,
     });
   };
 

@@ -15,7 +15,9 @@ import {
   fantom,
   base,
   berachain,
+  robinhood,
   sepolia,
+  baseSepolia,
 } from "@/lib/chains";
 
 const ACTIVE_CHAIN_IDS: Set<number> = new Set(allChains.map((c) => c.id));
@@ -30,7 +32,9 @@ const CHAIN_MAP: Record<number, Chain> = {
   [fantom.id]: fantom,
   [base.id]: base,
   [berachain.id]: berachain,
+  [robinhood.id]: robinhood,
   [sepolia.id]: sepolia,
+  [baseSepolia.id]: baseSepolia,
 };
 
 export type ChainBalance = {

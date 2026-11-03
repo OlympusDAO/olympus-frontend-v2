@@ -13,6 +13,7 @@ import {
   polygon,
   robinhood,
   sepolia,
+  baseSepolia,
 } from "@/lib/chains";
 
 import EthereumIcon from "@/icons/chains/ethereum.svg?react";
@@ -34,6 +35,7 @@ type ChainMeta = {
 
 const CHAIN_META: Record<number, ChainMeta> = {
   [mainnet.id]: { label: mainnet.name, Icon: EthereumIcon },
+  [baseSepolia.id]: { label: baseSepolia.name, Icon: BaseIcon },
   [sepolia.id]: { label: sepolia.name, Icon: SepoliaIcon },
   [arbitrum.id]: { label: arbitrum.name, Icon: ArbitrumIcon },
   [polygon.id]: { label: polygon.name, Icon: PolygonIcon },
