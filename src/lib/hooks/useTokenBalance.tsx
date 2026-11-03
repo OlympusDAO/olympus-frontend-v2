@@ -2,7 +2,7 @@ import { useReadContract } from "wagmi";
 import type { Address } from "viem";
 import { erc20Abi } from "viem";
 
-export function useTokenBalance(tokenAddress?: Address, account?: Address) {
+export function useTokenBalance(tokenAddress?: Address, account?: Address, chainId?: number) {
   const {
     data: result,
     isLoading,
@@ -12,6 +12,7 @@ export function useTokenBalance(tokenAddress?: Address, account?: Address) {
     abi: erc20Abi,
     functionName: "balanceOf",
     args: [account!],
+    chainId,
     query: {
       enabled: !!account && !!tokenAddress,
     },

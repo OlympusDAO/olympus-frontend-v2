@@ -7,6 +7,7 @@ const DAY = 86_400_000;
 
 const MOCK_HISTORY: BridgeHistoryItem[] = [
   {
+    source: "ccip",
     srcChainId: 1,
     dstChainId: 42161,
     timestamp: new Date(now - 2 * HOUR).toISOString(),
@@ -16,6 +17,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 42161,
     dstChainId: 8453,
     timestamp: new Date(now - 6 * HOUR).toISOString(),
@@ -24,6 +26,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "INFLIGHT",
   },
   {
+    source: "ccip",
     srcChainId: 8453,
     dstChainId: 1,
     timestamp: new Date(now - 1 * DAY).toISOString(),
@@ -33,6 +36,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 1,
     dstChainId: 80094,
     timestamp: new Date(now - 2 * DAY).toISOString(),
@@ -42,6 +46,7 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
     status: "DELIVERED",
   },
   {
+    source: "ccip",
     srcChainId: 80094,
     dstChainId: 42161,
     timestamp: new Date(now - 3 * DAY).toISOString(),
@@ -52,13 +57,59 @@ const MOCK_HISTORY: BridgeHistoryItem[] = [
 ];
 
 export const BRIDGE_ACTIVE: MockBridge = {
-  isActive: true,
+  routes: "available",
   nativeFeeWei: "350000000000000", // ~0.00035 ETH
   history: MOCK_HISTORY,
 };
 
 export const BRIDGE_INACTIVE: MockBridge = {
-  isActive: false,
+  routes: "unavailable",
   nativeFeeWei: "0",
   history: [],
+};
+
+export const BRIDGE_ROUTE_PAUSED: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  routes: "route-paused",
+};
+
+// A 100 OHM route limit, so the near-limit and over-limit states are reachable by typing an amount.
+export const BRIDGE_NEAR_LIMIT: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  outboundTokens: "100000000000",
+  inboundTokens: "110000000000",
+  poolLiquidity: "130000000000",
+};
+
+export const BRIDGE_NEEDS_RETRY: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  history: [
+    {
+      source: "ccip",
+      srcChainId: 1,
+      dstChainId: 42161,
+      timestamp: new Date(now - 1 * HOUR).toISOString(),
+      amount: "40",
+      srcTxHash: "0x9f1e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4",
+      status: "NEEDS_RETRY",
+      messageId: "0x1111111111111111111111111111111111111111111111111111111111111111",
+    },
+    {
+      source: "ccip",
+      srcChainId: 8453,
+      dstChainId: 1,
+      timestamp: new Date(now - 3 * HOUR).toISOString(),
+      amount: "12",
+      srcTxHash: "0x8e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3",
+      status: "NEEDS_RECOVERY",
+      messageId: "0x2222222222222222222222222222222222222222222222222222222222222222",
+    },
+    ...MOCK_HISTORY,
+  ],
+};
+
+export const BRIDGE_HISTORY_ERROR: MockBridge = {
+  ...BRIDGE_ACTIVE,
+  history: [],
+  historyError: true,
 };

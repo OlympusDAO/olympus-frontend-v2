@@ -2,19 +2,34 @@ import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CheckIcon, Loader2, ExternalLink, Info } from "lucide-react";
-import { parseUnits } from "viem";
 import type { Address } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { trackBridgeOhm, trackTransactionFailed } from "@/lib/analytics.ts";
 import { ChainIcon } from "@/components/chain-icon.tsx";
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance.tsx";
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval.tsx";
 import { useBridgeOhm } from "@/lib/hooks/bridge/useBridgeOhm.ts";
+import { addTrackedTransfer } from "@/lib/hooks/bridge/trackedTransfers";
+import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
+import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
+import { useBridgeMessageStatus } from "@/lib/hooks/bridge/useBridgeMessageStatus";
 import { ContractName, getContractAddress } from "@/lib/contracts.ts";
 import { TokenName, getTokenAddress } from "@/lib/tokens.ts";
-import { getBlockExplorerTxUrl } from "@/lib/helpers.ts";
+import { getBlockExplorerTxUrl, shortenAddress } from "@/lib/helpers.ts";
+import { useBridgeLimits } from "@/lib/hooks/bridge/useBridgeLimits";
+import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
+import { getConfirmBlock, parseOhmAmount } from "../utils/bridgeCta.ts";
 import { getBridgeChain } from "../utils/constants.ts";
 import { Link } from "react-router";
+
+const DELIVERY_COPY: Record<BridgeStatus, string> = {
+  DELIVERED: "Delivered",
+  INFLIGHT: "In flight",
+  NEEDS_RETRY: "Delivery failed. Retry it from your bridge history.",
+  NEEDS_RECOVERY: "Delivery failed. It can be recovered on CCIP Explorer.",
+  AWAITING_SIGNATURES: "Awaiting signatures",
+  FAILED: "Failed",
+};
 
 interface BridgeConfirmModalProps {
   isOpen: boolean;
@@ -23,7 +38,6 @@ interface BridgeConfirmModalProps {
   destinationChainId: number;
   amount: string;
   recipientAddress: Address;
-  nativeFee: bigint;
 }
 
 export function BridgeConfirmModal({
@@ -33,25 +47,39 @@ export function BridgeConfirmModal({
   destinationChainId,
   amount,
   recipientAddress,
-  nativeFee,
 }: BridgeConfirmModalProps) {
   const { address } = useAccount();
 
   const sourceChain = getBridgeChain(sourceChainId);
   const destChain = getBridgeChain(destinationChainId);
 
-  const amountBigInt = (() => {
-    try {
-      return parseUnits(amount || "0", 9);
-    } catch {
-      return 0n;
-    }
-  })();
+  const amountBigInt = parseOhmAmount(amount);
+
+  // Everything here can change while the modal is open, so it's checked again before sending.
+  const walletChainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const route = useBridgeRoute(sourceChainId, destinationChainId);
+  const { status: amountStatus } = useBridgeLimits(sourceChainId, destinationChainId, amountBigInt);
+  const block = getConfirmBlock({
+    walletChainId,
+    source: {
+      chainId: sourceChainId,
+      name: sourceChain?.name ?? "",
+      nativeCurrencySymbol: sourceChain?.nativeCurrencySymbol ?? "ETH",
+    },
+    route,
+    amountStatus,
+  });
 
   // Approval
   const ohmAddress = getTokenAddress(TokenName.OHM, sourceChainId);
-  const minterAddress = getContractAddress(ContractName.CROSS_CHAIN_MINTER, sourceChainId);
-  const { allowance, queryKey } = useTokenAllowance(ohmAddress!, address, minterAddress);
+  const bridgeAddress = getContractAddress(ContractName.CCIP_BRIDGE, sourceChainId);
+  const { allowance, queryKey } = useTokenAllowance(
+    ohmAddress!,
+    address,
+    bridgeAddress,
+    sourceChainId,
+  );
   const hasSufficientAllowance =
     allowance != null && amountBigInt > 0n && allowance >= amountBigInt;
 
@@ -69,7 +97,28 @@ export function BridgeConfirmModal({
     isSuccess: bridgeSuccess,
     error: bridgeError,
     hash: bridgeHash,
+    messageId,
+    isReverted,
   } = useBridgeOhm();
+
+  // With no receipt, as from a contract wallet that queues it, a hash still means it may go through.
+  const isSubmitted = !!bridgeHash && !isReverted && !bridgeSuccess;
+
+  const deliveryStatus = useBridgeMessageStatus(messageId, destinationChainId);
+
+  // Recorded on the hash, not the receipt, so closing the modal now doesn't lose the transfer.
+  useEffect(() => {
+    if (!bridgeHash || !address) return;
+    addTrackedTransfer({
+      srcChainId: sourceChainId,
+      dstChainId: destinationChainId,
+      amount,
+      srcTxHash: bridgeHash,
+      messageId,
+      timestamp: new Date().toISOString(),
+      address,
+    });
+  }, [bridgeHash, messageId]);
 
   useEffect(() => {
     if (!bridgeSuccess) return;
@@ -78,6 +127,7 @@ export function BridgeConfirmModal({
       srcChain: sourceChain?.name ?? String(sourceChainId),
       dstChain: destChain?.name ?? String(destinationChainId),
       txHash: bridgeHash,
+      messageId,
     });
   }, [bridgeSuccess]);
 
@@ -101,12 +151,13 @@ export function BridgeConfirmModal({
   };
 
   const handleApprove = () => {
-    if (!ohmAddress || !minterAddress) return;
+    if (!ohmAddress || !bridgeAddress) return;
     approve({
       tokenAddress: ohmAddress,
-      spender: minterAddress,
+      spender: bridgeAddress,
       amount: amountBigInt,
       queryKey,
+      chainId: sourceChainId,
     });
   };
 
@@ -116,7 +167,6 @@ export function BridgeConfirmModal({
       destinationChainId,
       recipientAddress,
       amount: amountBigInt,
-      nativeFee,
       queryKey,
     });
   };
@@ -155,8 +205,8 @@ export function BridgeConfirmModal({
             </div>
             <DialogTitle className="text-xl font-semibold mb-2">Bridge submitted!</DialogTitle>
             <p className="text-sm text-secondary-t mb-6">
-              Your OHM is being bridged from {sourceChain?.name} to {destChain?.name}. It may take a
-              few minutes to arrive.
+              Your OHM is on its way from {sourceChain?.name} to {destChain?.name}. Delivery can
+              take a while, so track it in your bridge history.
             </p>
           </div>
 
@@ -200,6 +250,21 @@ export function BridgeConfirmModal({
             ))}
           </div>
 
+          {messageId && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-secondary-t">{DELIVERY_COPY[deliveryStatus]}</span>
+              <a
+                href={getCcipExplorerUrl(messageId)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-blue hover:text-blue-800"
+              >
+                CCIP Explorer
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          )}
+
           <Button onClick={onClose} className="w-full">
             Close
           </Button>
@@ -229,6 +294,12 @@ export function BridgeConfirmModal({
             <span className="text-secondary-t">→</span>
             {destChain && <ChainIcon chainId={destChain.chainId} size={24} />}
             <span className="text-sm text-secondary-t">{destChain?.name}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs mb-4">
+            <span className="text-secondary-t">Recipient</span>
+            <span className="font-medium text-primary-t">
+              {shortenAddress(recipientAddress, 4)}
+            </span>
           </div>
 
           <div className="bg-surface-a3 border border-a3-b rounded-3xl">
@@ -297,8 +368,12 @@ export function BridgeConfirmModal({
 
           <div className="mt-6">
             <Button
-              onClick={currentStep === 1 ? handleApprove : handleBridge}
-              disabled={isApproving || isBridging}
+              onClick={() => {
+                if (block?.action === "switch") switchChain({ chainId: sourceChainId });
+                else if (currentStep === 1) handleApprove();
+                else handleBridge();
+              }}
+              disabled={isApproving || isBridging || isSubmitted || (block?.disabled ?? false)}
               className="w-full"
             >
               {isApproving ? (
@@ -311,6 +386,10 @@ export function BridgeConfirmModal({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Confirming Bridge In Your Wallet
                 </>
+              ) : isSubmitted ? (
+                "Submitted, check your wallet"
+              ) : block ? (
+                block.label
               ) : currentStep === 2 ? (
                 "Bridge OHM"
               ) : (

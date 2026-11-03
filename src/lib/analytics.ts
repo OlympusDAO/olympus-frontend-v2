@@ -232,12 +232,14 @@ export function trackBridgeOhm(params: {
   srcChain: string;
   dstChain: string;
   txHash?: string;
+  messageId?: string;
 }): void {
   trackTransaction("ohm", "bridge", {
     amount: params.amount,
     src_chain: params.srcChain,
     dst_chain: params.dstChain,
     tx_hash: params.txHash,
+    message_id: params.messageId,
   });
 }
 

@@ -6,6 +6,7 @@ import {
   RiWalletFill,
   RiArrowRightSLine,
   RiExternalLinkLine,
+  RiInformationLine,
 } from "@remixicon/react";
 import { useAccount } from "wagmi";
 import { NumberFlow } from "@/components/ui/number-flow.tsx";
@@ -18,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 import { Icon } from "@/components/icon.tsx";
 import { ChainIcon } from "@/components/chain-icon.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -30,7 +32,12 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table.tsx";
+import type { BridgeStatus } from "@/lib/hooks/bridge/bridgeStatus";
+import { getCcipExplorerUrl } from "@/lib/hooks/bridge/ccipApi";
 import { useBridgeHistory, type BridgeHistoryItem } from "@/lib/hooks/bridge/useBridgeHistory.ts";
+import { useBridgeRoute } from "@/lib/hooks/bridge/useBridgeRoute";
+import { useRetryBridgeMessage } from "@/lib/hooks/bridge/useRetryBridgeMessage";
+import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import { getBridgeChain } from "../utils/constants.ts";
 import { shortenAddress } from "@/lib/helpers.ts";
 import type { Address } from "viem";
@@ -57,6 +64,92 @@ const BRIDGE_CHAIN_ID_NORMALIZATION: Record<number, number> = {
 
 function normalizeBridgeChainId(chainId: number): number {
   return BRIDGE_CHAIN_ID_NORMALIZATION[chainId] ?? chainId;
+}
+
+// Table cells don't wrap, and these are long enough to push the status off the table.
+const STATUS_NOTE_CLASS = "text-xs text-secondary-t text-right whitespace-normal max-w-36";
+
+const STATUS_BADGES: Record<
+  BridgeStatus,
+  { label: string; color: "green" | "blue" | "red" | "orange" }
+> = {
+  DELIVERED: { label: "Delivered", color: "green" },
+  INFLIGHT: { label: "In Flight", color: "blue" },
+  NEEDS_RETRY: { label: "Needs Retry", color: "orange" },
+  NEEDS_RECOVERY: { label: "Needs Recovery", color: "orange" },
+  AWAITING_SIGNATURES: { label: "Awaiting Signatures", color: "blue" },
+  FAILED: { label: "Failed", color: "red" },
+};
+
+function RetryButton({ item }: { item: BridgeHistoryItem }) {
+  const { retry, isPending } = useRetryBridgeMessage();
+  const { kind } = useSafeContext(item.dstChainId);
+
+  // A Safe may not be on that chain, the Safe App can't switch to it, and proposing a retry would
+  // wait on signers for no reason. Retrying is permissionless anyway.
+  if (kind === "safe") {
+    return (
+      <span className={STATUS_NOTE_CLASS}>
+        Any wallet can retry this on {getBridgeChain(item.dstChainId)?.name}
+      </span>
+    );
+  }
+  return (
+    <Button size="xs" variant="secondary" disabled={isPending} onClick={() => retry(item)}>
+      Retry
+    </Button>
+  );
+}
+
+/** The route was checked at proposal, but execution can come days later. */
+function ClosedRouteWarning({ item }: { item: BridgeHistoryItem }) {
+  const route = useBridgeRoute(item.srcChainId, item.dstChainId);
+  if (route.status !== "unavailable") return null;
+  return <span className={STATUS_NOTE_CLASS}>Route is closed: don't execute</span>;
+}
+
+function StatusCell({ item }: { item: BridgeHistoryItem }) {
+  const { label, color } = STATUS_BADGES[item.status];
+  const { safeProgress, note } = item;
+  return (
+    <div className="flex flex-col items-end gap-y-1">
+      <div className="flex items-center justify-end gap-x-2">
+        {item.status === "NEEDS_RETRY" && item.messageId && <RetryButton item={item} />}
+        <Badge variant="filled" color={color}>
+          {label}
+        </Badge>
+        {safeProgress && (
+          <a
+            href={safeProgress.queueUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open Safe queue"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+        {item.messageId && (
+          <a
+            href={getCcipExplorerUrl(item.messageId)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Track on CCIP Explorer"
+            className="text-tertiary-t hover:text-secondary-t transition-colors"
+          >
+            <RiExternalLinkLine size={16} />
+          </a>
+        )}
+      </div>
+      {safeProgress && (
+        <span className={STATUS_NOTE_CLASS}>
+          {safeProgress.confirmations} of {safeProgress.required}
+        </span>
+      )}
+      {note && <span className={STATUS_NOTE_CLASS}>{note}</span>}
+      {item.status === "AWAITING_SIGNATURES" && <ClosedRouteWarning item={item} />}
+    </div>
+  );
 }
 
 const columnHelper = createColumnHelper<BridgeHistoryItem>();
@@ -96,17 +189,21 @@ const columns = [
   }),
   columnHelper.accessor("amount", {
     header: "Amount",
-    cell: ({ getValue }) => (
-      <div className="flex items-center gap-x-1">
-        <Icon name="OHMTokenIcon" size={20} />
-        <NumberFlow
-          className="text-xs/4 font-semibold text-primary-t"
-          value={Number(getValue())}
-          format={{ style: "decimal" }}
-          suffix="OHM"
-        />
-      </div>
-    ),
+    cell: ({ getValue }) => {
+      const amount = getValue();
+      if (amount === undefined) return <span className="text-secondary-t">—</span>;
+      return (
+        <div className="flex items-center gap-x-1">
+          <Icon name="OHMTokenIcon" size={20} />
+          <NumberFlow
+            className="text-xs/4 font-semibold text-primary-t"
+            value={Number(amount)}
+            format={{ style: "decimal" }}
+            suffix="OHM"
+          />
+        </div>
+      );
+    },
   }),
   columnHelper.accessor((row) => ({ hash: row.srcTxHash, chainId: row.srcChainId }), {
     id: "transactions",
@@ -127,28 +224,16 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor("status", {
+  columnHelper.display({
+    id: "status",
     header: () => <div className="text-right w-full">Status</div>,
-    cell: ({ getValue }) => {
-      const value = getValue();
-      const isDelivered = value === "DELIVERED";
-      const isInflight = value === "INFLIGHT";
-      const label = isDelivered ? "Delivered" : isInflight ? "In Flight" : "Failed";
-
-      return (
-        <div className="flex justify-end">
-          <Badge variant="filled" color={isDelivered ? "green" : isInflight ? "blue" : "red"}>
-            {label}
-          </Badge>
-        </div>
-      );
-    },
+    cell: ({ row }) => <StatusCell item={row.original} />,
   }),
 ];
 
 export function BridgeHistory() {
   const { address } = useAccount();
-  const { history, isLoading } = useBridgeHistory();
+  const { history, isLoading, error, partialError } = useBridgeHistory();
 
   const data = useMemo(
     () =>
@@ -163,7 +248,8 @@ export function BridgeHistory() {
   const table = useReactTable({
     data,
     columns,
-    getRowId: (row) => `${row.srcTxHash}-${row.srcChainId}`,
+    // A Safe proposal has no tx hash until it executes.
+    getRowId: (row) => `${row.srcTxHash || row.safeTxHash}-${row.srcChainId}`,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: PAGE_SIZE, pageIndex: 0 } },
@@ -196,7 +282,23 @@ export function BridgeHistory() {
     );
   }
 
-  if (data.length === 0) {
+  if (error && data.length === 0) {
+    return (
+      <Card className="flex items-center justify-center min-h-[240px]">
+        <div className="flex flex-col items-center justify-center text-center py-16 px-8">
+          <RiExchangeFill className="text-surface-a10 mb-4 rotate-90" size={40} />
+          <p className="text-sm/5 font-semibold text-secondary-t mb-1">
+            Couldn't load bridge history.
+          </p>
+          <p className="text-xs/4 font-normal text-secondary-t">
+            This doesn't affect bridging. It'll try again shortly.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (data.length === 0 && !partialError) {
     return (
       <Card className="flex items-center justify-center min-h-[240px]">
         <div className="flex flex-col items-center justify-center text-center py-16 px-8">
@@ -217,6 +319,14 @@ export function BridgeHistory() {
 
   return (
     <div className="space-y-4">
+      {(partialError || error) && (
+        <Alert variant="compact" type="warning" size="sm" className="w-full">
+          <RiInformationLine size={16} />
+          <AlertDescription className="text-xs font-semibold text-primary-t">
+            Some bridge history couldn't be loaded. It'll try again shortly.
+          </AlertDescription>
+        </Alert>
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

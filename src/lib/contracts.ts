@@ -12,7 +12,9 @@ import {
   fantom,
   base,
   berachain,
+  robinhood,
   sepolia,
+  baseSepolia,
 } from "@/lib/chains";
 
 /**
@@ -60,7 +62,9 @@ export enum ContractName {
 
   // Bridge
   CROSS_CHAIN_BRIDGE = "CROSS_CHAIN_BRIDGE",
-  CROSS_CHAIN_MINTER = "CROSS_CHAIN_MINTER",
+  CCIP_BRIDGE = "CCIP_BRIDGE",
+  CCIP_TOKEN_POOL = "CCIP_TOKEN_POOL",
+  CCIP_TOKEN_ADMIN_REGISTRY = "CCIP_TOKEN_ADMIN_REGISTRY",
 }
 
 type ContractAddresses = {
@@ -197,17 +201,41 @@ export const CONTRACTS: ContractAddresses = {
   },
 
   // ── Bridge ──────────────────────────────────────────
+  [ContractName.CCIP_BRIDGE]: {
+    [mainnet.id]: "0xFbf6383dC3F6010d403Ecdf12DDC1311701D143D",
+    [arbitrum.id]: "0xb4f620c39F3BA4a1E7aD264fEd6239B0C618DB50",
+    [base.id]: "0xEBDe552D851DD6Dfd3D360C596D3F4aF6e5F9678",
+    [berachain.id]: "0xF35193DA8C10e44aF10853Ba5a3a1a6F7529E39a",
+    [optimism.id]: "0xcb4E21Eb404d80F3e1dB781aAd9AD6A1217fbbf2",
+    [robinhood.id]: "0x5261fBA7B50aA22B19B9edF939b771D109dE991F",
+    [sepolia.id]: "0xCfe75Cca2b7A9354F7c25e889b1216F977DEC6a5",
+    [baseSepolia.id]: "0xD28D3910191900699558c9d8066080DF644d9DB3",
+  },
+  [ContractName.CCIP_TOKEN_POOL]: {
+    [mainnet.id]: "0xa5588e518CE5ee0e4628C005E4edAbD5e87de3aD",
+    [arbitrum.id]: "0xF35193DA8C10e44aF10853Ba5a3a1a6F7529E39a",
+    [base.id]: "0x20a3d8510f2e1176E8Db4CeA9883a8287a9029Db",
+    [berachain.id]: "0xEBDe552D851DD6Dfd3D360C596D3F4aF6e5F9678",
+    [optimism.id]: "0xD98B5b2E4D5d6Cd554115DE19EfB7A9084BEddd1",
+    [robinhood.id]: "0x5824850D8A6E46a473445a5AF214C7EbD46c5ECB",
+    [sepolia.id]: "0xF166375E8Ee42565F93e244C606b8c09b9F67dbc",
+    [baseSepolia.id]: "0x6577CFD3B625A6bD0b708dA1f066855C19ac8360",
+  },
+  [ContractName.CCIP_TOKEN_ADMIN_REGISTRY]: {
+    [mainnet.id]: "0xb22764f98dD05c789929716D677382Df22C05Cb6",
+    [arbitrum.id]: "0x39AE1032cF4B334a1Ed41cdD0833bdD7c7E7751E",
+    [base.id]: "0x6f6C373d09C07425BaAE72317863d7F6bb731e37",
+    [berachain.id]: "0x0944C3Fb1dB7D165336569221995B31cBE6c8A55",
+    [optimism.id]: "0x657c42abE4CD8aa731Aec322f871B5b90cf6274F",
+    [robinhood.id]: "0x1912C3cFafE8A76A32a92861d815aC2837F237Ca",
+    [sepolia.id]: "0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82",
+    [baseSepolia.id]: "0x736D0bBb318c1B27Ff686cd19804094E66250e17",
+  },
   [ContractName.CROSS_CHAIN_BRIDGE]: {
     [mainnet.id]: "0x45e563c39cddba8699a90078f42353a57509543a",
     [arbitrum.id]: "0x20B3834091f038Ce04D8686FAC99CA44A0FB285c",
     [base.id]: "0x6CA1a916e883c7ce2BFBcF59dc70F2c1EF9dac6e",
     [berachain.id]: "0xBA42BE149e5260EbA4B82418A6306f55D532eA47",
-  },
-  [ContractName.CROSS_CHAIN_MINTER]: {
-    [mainnet.id]: "0xa90bFe53217da78D900749eb6Ef513ee5b6a491e",
-    [arbitrum.id]: "0x8f6406eDbFA393e327822D4A08BcF15503570D87",
-    [base.id]: "0x623164A9Ee2556D524b08f34F1d2389d7B4e1A1C",
-    [berachain.id]: "0xbC9eE0D911739cBc72cd094ADA26F56E0C49EeAE",
   },
 };
 

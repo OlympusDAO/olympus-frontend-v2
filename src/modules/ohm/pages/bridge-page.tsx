@@ -4,16 +4,19 @@ import { Card } from "@/components/ui/card";
 import { BridgeForm } from "../components/bridge-form";
 import { BridgeHistory } from "../components/bridge-history";
 import { BridgeConfirmModal } from "../components/bridge-confirm-modal";
+import { BridgeSafeConfirmModal } from "../components/bridge-safe-confirm-modal";
 import { BridgeChainSelectorModal } from "../components/bridge-chain-selector-modal.tsx";
 import { BridgeSettingsModal } from "../components/bridge-settings-modal";
-import { useEstimateBridgeFee } from "@/lib/hooks/bridge/useEstimateBridgeFee";
-import { parseUnits } from "viem";
+import type { Address } from "viem";
+import { useBridgeRoutes } from "@/lib/hooks/bridge/useBridgeRoute";
+import { useSafeContext } from "@/lib/hooks/bridge/useSafeContext";
 import {
   BRIDGE_CHAINS,
   BRIDGEABLE_DESTINATIONS,
   DEFAULT_DESTINATION,
   isBridgeableChain,
 } from "../utils/constants.ts";
+import { resolveRecipient } from "../utils/recipient.ts";
 
 export function BridgePage() {
   const { address } = useAccount();
@@ -28,20 +31,27 @@ export function BridgePage() {
     () => DEFAULT_DESTINATION[sourceChainId] ?? 42161,
   );
   const [amount, setAmount] = useState("");
-  const [recipientAddress, setRecipientAddress] = useState<string>("");
+  const [customRecipient, setCustomRecipient] = useState<Address>();
+  const recipientAddress = resolveRecipient(customRecipient, address);
 
   // Modal state
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // Pinned when the modal opens, as the form's route follows the wallet's network.
+  const [confirmation, setConfirmation] = useState<{
+    sourceChainId: number;
+    destinationChainId: number;
+    amount: string;
+    recipientAddress: Address;
+    isSafe: boolean;
+  } | null>(null);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [isDestModalOpen, setIsDestModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Keep recipient in sync with connected wallet
+  // What was being confirmed, and where it was going, belonged to the previous wallet.
   useEffect(() => {
-    if (address && !recipientAddress) {
-      setRecipientAddress(address);
-    }
-  }, [address, recipientAddress]);
+    setConfirmation(null);
+    setCustomRecipient(undefined);
+  }, [address]);
 
   // Sync source chain with wallet network changes
   useEffect(() => {
@@ -60,22 +70,8 @@ export function BridgePage() {
     return BRIDGE_CHAINS.filter((c) => destIds.includes(c.chainId));
   }, [sourceChainId]);
 
-  // Parse amount for fee estimate and allowance check
-  const amountBigInt = useMemo(() => {
-    try {
-      return amount ? parseUnits(amount, 9) : 0n;
-    } catch {
-      return 0n;
-    }
-  }, [amount]);
-
-  // Fee estimate (for passing to confirm modal)
-  const { nativeFee } = useEstimateBridgeFee({
-    sourceChainId,
-    destinationChainId,
-    recipientAddress: recipientAddress as `0x${string}`,
-    amount: amountBigInt,
-  });
+  const destinationRoutes = useBridgeRoutes(sourceChainId);
+  const { kind: walletKind } = useSafeContext(sourceChainId);
 
   const handleSourceChainSelect = (chainId: number) => {
     if (chainId !== sourceChainId) {
@@ -106,8 +102,14 @@ export function BridgePage() {
   };
 
   const handleSubmit = () => {
-    if (amount && parseFloat(amount) > 0) {
-      setIsConfirmOpen(true);
+    if (amount && parseFloat(amount) > 0 && recipientAddress) {
+      setConfirmation({
+        sourceChainId,
+        destinationChainId,
+        amount,
+        recipientAddress,
+        isSafe: walletKind === "safe",
+      });
     }
   };
 
@@ -119,12 +121,13 @@ export function BridgePage() {
             sourceChainId={sourceChainId}
             destinationChainId={destinationChainId}
             amount={amount}
-            recipientAddress={recipientAddress as `0x${string}`}
+            recipientAddress={recipientAddress}
             onAmountChange={setAmount}
             onOpenSourceChainModal={() => setIsSourceModalOpen(true)}
             onOpenDestChainModal={() => setIsDestModalOpen(true)}
             onOpenSettingsModal={() => setIsSettingsOpen(true)}
             onSwapChains={handleSwapChains}
+            onSwitchNetwork={() => switchChain({ chainId: sourceChainId })}
             onSubmit={handleSubmit}
           />
         </Card>
@@ -149,31 +152,35 @@ export function BridgePage() {
         chains={availableDestChains}
         selectedChainId={destinationChainId}
         onSelect={handleDestChainSelect}
+        routeStates={destinationRoutes}
       />
 
       {/* Settings Modal */}
       <BridgeSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        recipientAddress={recipientAddress}
-        onRecipientChange={setRecipientAddress}
+        recipientAddress={recipientAddress ?? ""}
+        onRecipientChange={(next) =>
+          setCustomRecipient(next?.toLowerCase() === address?.toLowerCase() ? undefined : next)
+        }
       />
 
       {/* Confirm Modal */}
-      {isConfirmOpen && nativeFee && (
-        <BridgeConfirmModal
-          isOpen={isConfirmOpen}
-          onClose={() => {
-            setIsConfirmOpen(false);
-            setAmount("");
-          }}
-          sourceChainId={sourceChainId}
-          destinationChainId={destinationChainId}
-          amount={amount}
-          recipientAddress={recipientAddress as `0x${string}`}
-          nativeFee={nativeFee}
-        />
-      )}
+      {confirmation &&
+        (() => {
+          const { isSafe, ...route } = confirmation;
+          const ConfirmModal = isSafe ? BridgeSafeConfirmModal : BridgeConfirmModal;
+          return (
+            <ConfirmModal
+              isOpen
+              onClose={() => {
+                setConfirmation(null);
+                setAmount("");
+              }}
+              {...route}
+            />
+          );
+        })()}
     </div>
   );
 }

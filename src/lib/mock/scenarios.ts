@@ -6,7 +6,14 @@ import {
   LEGACY_BALANCES,
   MULTI_CHAIN_BALANCES,
 } from "./fixtures/balances";
-import { BRIDGE_ACTIVE, BRIDGE_INACTIVE } from "./fixtures/bridge";
+import {
+  BRIDGE_ACTIVE,
+  BRIDGE_HISTORY_ERROR,
+  BRIDGE_INACTIVE,
+  BRIDGE_NEAR_LIMIT,
+  BRIDGE_NEEDS_RETRY,
+  BRIDGE_ROUTE_PAUSED,
+} from "./fixtures/bridge";
 
 export const SCENARIOS: Record<string, MockScenario> = {
   whale: {
@@ -47,6 +54,38 @@ export const SCENARIOS: Record<string, MockScenario> = {
     prices: DEFAULT_PRICES,
     balances: WHALE_BALANCES,
     bridge: BRIDGE_ACTIVE,
+  },
+  "bridge-route-paused": {
+    name: "bridge-route-paused",
+    description: "Routes contained on-chain",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: MULTI_CHAIN_BALANCES,
+    bridge: BRIDGE_ROUTE_PAUSED,
+  },
+  "bridge-near-limit": {
+    name: "bridge-near-limit",
+    description: "Route with a 100 OHM limit",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: MULTI_CHAIN_BALANCES,
+    bridge: BRIDGE_NEAR_LIMIT,
+  },
+  "bridge-needs-retry": {
+    name: "bridge-needs-retry",
+    description: "History with failed deliveries to retry or recover",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: MULTI_CHAIN_BALANCES,
+    bridge: BRIDGE_NEEDS_RETRY,
+  },
+  "bridge-history-error": {
+    name: "bridge-history-error",
+    description: "Bridge history can't be loaded",
+    isConnected: true,
+    prices: DEFAULT_PRICES,
+    balances: MULTI_CHAIN_BALANCES,
+    bridge: BRIDGE_HISTORY_ERROR,
   },
   "bridge-inactive": {
     name: "bridge-inactive",

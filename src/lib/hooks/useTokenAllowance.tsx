@@ -2,7 +2,12 @@ import { useReadContract } from "wagmi";
 import type { Address } from "viem";
 import { erc20Abi } from "viem";
 
-export function useTokenAllowance(tokenAddress: Address, owner?: Address, spender?: Address) {
+export function useTokenAllowance(
+  tokenAddress: Address,
+  owner?: Address,
+  spender?: Address,
+  chainId?: number,
+) {
   const {
     data: result,
     isLoading,
@@ -14,6 +19,7 @@ export function useTokenAllowance(tokenAddress: Address, owner?: Address, spende
     abi: erc20Abi,
     functionName: "allowance",
     args: [owner!, spender!],
+    chainId,
     query: {
       enabled: !!owner && !!spender,
     },
