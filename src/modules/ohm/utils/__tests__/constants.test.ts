@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getAddress } from "viem";
 import { arbitrum, base, berachain, mainnet, optimism, robinhood } from "@/lib/chains";
 import { ContractName, getContractAddress } from "@/lib/contracts";
 import { getTokenAddress, TokenName } from "@/lib/tokens";
@@ -56,6 +57,16 @@ describe("CCIP bridge config", () => {
     for (const chainId of ALL) {
       expect(BRIDGEABLE_DESTINATIONS[chainId]).toContain(DEFAULT_DESTINATION[chainId]);
     }
+  });
+
+  it.each(ALL)("chain %i has every bridge address in checksummed form", (chainId) => {
+    const addresses = [
+      getContractAddress(ContractName.CCIP_BRIDGE, chainId),
+      getContractAddress(ContractName.CCIP_TOKEN_POOL, chainId),
+      getContractAddress(ContractName.CCIP_TOKEN_ADMIN_REGISTRY, chainId),
+      getTokenAddress(TokenName.OHM, chainId),
+    ];
+    for (const address of addresses) expect(address).toBe(getAddress(address as string));
   });
 
   it("treats only mainnet as a lock/release pool", () => {
