@@ -1,4 +1,4 @@
-import { type Address, hexToSignature } from "viem";
+import { type Address, parseSignature } from "viem";
 import type { useSignTypedData } from "wagmi";
 
 export interface AuthorizationStruct {
@@ -68,11 +68,13 @@ export async function getAuthorizationSignature({
     },
   });
 
-  const { v, r, s } = hexToSignature(sig);
+  // Wallets return v as 27/28 or as a 0/1 y-parity byte (e.g. Ledger). viem only sets `v` for
+  // the former, so derive it from yParity: the contract's ecrecover needs 27/28.
+  const { r, s, yParity } = parseSignature(sig);
 
   return {
     auth,
-    signature: { v: Number(v), r, s },
+    signature: { v: yParity + 27, r, s },
   };
 }
 
