@@ -35,12 +35,19 @@ export function useTreasuryHistory(days = 7) {
         await treasurySubgraphClient.getDailyMetrics({
           start,
           autoPaginate: true,
+          includeRecords: true,
         })
       ).filter((r) => r.crossChainComplete);
 
       const points = rows.map((r) => {
         const backedSupply = parseEnvioNumber(r.ohmBackedSupply);
-        const treasuryMarketValue = parseEnvioNumber(r.treasuryMarketValue);
+        if (!r.treasuryMarketValueRecords) {
+          throw new Error("Treasury asset records are required to calculate total backing");
+        }
+        // OHM cannot back itself. Retain non-OHM LP assets and illiquid reserves.
+        const treasuryMarketValue = Object.values(r.treasuryMarketValueRecords)
+          .flat()
+          .reduce((total, asset) => total + parseEnvioNumber(asset.valueExcludingOhm), 0);
         const totalBackingPerOhm = backedSupply > 0 ? treasuryMarketValue / backedSupply : 0;
         return {
           date: r.date,
